@@ -32,7 +32,6 @@ data{
   int nteams;
   int team1[N];
   int team2[N];
-  vector[nteams] ranking;
   int team1_prev[N_prev];
   int team2_prev[N_prev];
 }
@@ -41,25 +40,23 @@ parameters{
   vector[nteams] def_raw;
   real<lower=0> sigma_att;
   real<lower=0> sigma_def;
-  real beta;
+  real home;
   real<lower=0> rho;
 }
 transformed parameters{
   vector[nteams] att;
   vector[nteams] def;
   vector[3] theta[N];
-  
+
   for (t in 1:nteams){
     att[t] = att_raw[t]-mean(att_raw);
     def[t] = def_raw[t]-mean(def_raw);
    }
- 
+
   for (n in 1:N){
-    theta[n,1] = exp(att[team1[n]]+def[team2[n]]+
-             beta*(ranking[team1[n]]-ranking[team2[n]]));
-    theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-             beta*(ranking[team1[n]]-ranking[team2[n]]));
-    theta[n,3] = rho;         
+    theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]);
+    theta[n,2] = exp(att[team2[n]]+def[team1[n]]);
+    theta[n,3] = rho;
    }
 }
 model{
@@ -70,7 +67,7 @@ model{
   }
   target+=cauchy_lpdf(sigma_att|0, 5);
   target+=cauchy_lpdf(sigma_def|0, 5);
-  target+=normal_lpdf(beta|0,2);
+  target+=normal_lpdf(home|0,5);
   target+=normal_lpdf(rho|0,5);
   // likelihood
   for (n in 1:N){
@@ -83,7 +80,7 @@ generated quantities{
   int y_prev[N_prev,2];
   vector[3] theta_prev[N_prev];
   vector[N] log_lik;
-  
+
   //in-sample replications
   for (n in 1:N){
     y_rep[n,1] = poisson_rng(theta[n,1]);
@@ -93,15 +90,11 @@ generated quantities{
   }
   //out-of-sample predictions
   for (n in 1:N_prev){
-    theta_prev[n,1] = exp(att[team1_prev[n]]+
-                          def[team2_prev[n]]+
-                          beta*
-            (ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+    theta_prev[n,1] = exp(home+att[team1_prev[n]]+
+                          def[team2_prev[n]]);
     theta_prev[n,2] = exp(att[team2_prev[n]]+
-                          def[team1_prev[n]]-
-                          beta*
-            (ranking[team1_prev[n]]-ranking[team2_prev[n]]));
-    theta_prev[n,3] = rho;        
+                          def[team1_prev[n]]);
+    theta_prev[n,3] = rho;
   y_prev[n,1] = poisson_rng(theta_prev[n,1]+theta_prev[n,3]);
   y_prev[n,2] = poisson_rng(theta_prev[n,2]+theta_prev[n,3]);
         }
