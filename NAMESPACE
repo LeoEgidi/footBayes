@@ -1,2 +1,2 @@
 exportPattern("^[[:alpha:]]+")
-export(fit_foot)
+export(stan_foot)

@@ -17,7 +17,8 @@
 #'
 
 
-fit_foot <- function(data, model, predict, n.iter = 2000){
+stan_foot <- function(data, model, predict, n.iter = 2000,
+                     chains =4 ){
 
   if (missing(predict)){
     N <- dim(data)[1]
@@ -39,20 +40,23 @@ fit_foot <- function(data, model, predict, n.iter = 2000){
   team1_prev <- team_home[(N+1):(N+N_prev)]
   team2_prev <- team_away[(N+1):(N+N_prev)]
   y <- matrix(NA, N, 2)
-  y[,1] <- as.numeric(as.vector(data$homegoals))
-  y[,2] <- as.numeric(as.vector(data$awaygoals))
+  y[,1] <- as.numeric(as.vector(data$homegoals)[1:N])
+  y[,2] <- as.numeric(as.vector(data$awaygoals)[1:N])
+  diff_y <- y[,1]-y[,2]
 
   # Stan data
-  data_poisson <- list( y=y,
-                        N=N,
-                        N_prev = N_prev,
-                        nteams=nteams,
-                        team1 = team1,
-                        team2=team2,
-                        team1_prev= team1_prev,
-                        team2_prev=team2_prev)
+  data <- list( y=y,
+                spi_std = rep(0, nteams),
+                diff_y = diff_y,
+                N=N,
+                N_prev = N_prev,
+                nteams=nteams,
+                team1 = team1,
+                team2=team2,
+                team1_prev= team1_prev,
+                team2_prev=team2_prev)
   stan_poisson <- stan(file=paste(model,"_", type, ".stan", sep=""),
-                       data= data_poisson,
+                       data= data,
                        iter=n.iter,
                        chains=4)
 
