@@ -18,7 +18,7 @@
 
 
 stan_foot <- function(data, model, predict, n.iter = 2000,
-                     chains =4 ){
+                     chains =4, trend = FALSE ){
 
   if (missing(predict)){
     N <- dim(data)[1]
@@ -28,6 +28,12 @@ stan_foot <- function(data, model, predict, n.iter = 2000,
     N <- dim(data)[1]-predict
     N_prev <- predict
     type <- "prev"
+  }
+
+  if (trend ==TRUE){
+    dyn <- "dynamic_"
+  }else{
+    dyn <-""
   }
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
@@ -54,8 +60,11 @@ stan_foot <- function(data, model, predict, n.iter = 2000,
                 team1 = team1,
                 team2=team2,
                 team1_prev= team1_prev,
-                team2_prev=team2_prev)
-  stan_poisson <- stan(file=paste(model,"_", type, ".stan", sep=""),
+                team2_prev=team2_prev,
+                ntimes = 2,
+                time =c(1,2),
+                instants = c(rep(1, N/2), rep(2, N/2)))
+  fit <- stan(file=paste(model,"_", dyn, type, ".stan", sep=""),
                        data= data,
                        iter=n.iter,
                        chains=4)
