@@ -68,22 +68,7 @@ stan_foot <- function(data, model, predict, n.iter = 200,
                        data= data,
                        iter=n.iter,
                        chains=4)
+  return(fit)
 
 }
 
-stan_foot(data = ristr_italy,
-         model="double_pois", trend = FALSE )
-stan_foot(data = ristr_italy,
-         model="biv_pois", trend = FALSE )
-stan_foot(data = ristr_italy,
-         model="skellam", trend = FALSE )
-stan_foot(data = ristr_italy,
-         model="student_t", trend = FALSE )
-stan_foot(data = ristr_italy,
-         model="double_pois", trend = TRUE )
-stan_foot(data = ristr_italy,
-         model="biv_pois", trend = TRUE )
-stan_foot(data = ristr_italy,
-         model="skellam", trend = TRUE )
-stan_foot(data = ristr_italy,
-         model="student_t", trend = TRUE )
