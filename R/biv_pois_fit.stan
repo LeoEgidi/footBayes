@@ -79,8 +79,8 @@ generated quantities{
 
   //in-sample replications
   for (n in 1:N){
-    y_rep[n,1] = poisson_rng(theta[n,1]);
-    y_rep[n,2] = poisson_rng(theta[n,2]);
+    y_rep[n,1] = poisson_rng(theta[n,1]+theta[n,3]);
+    y_rep[n,2] = poisson_rng(theta[n,2]+theta[n,3]);
     log_lik[n] =bipois_lpmf(y[n,]| theta[n,1],
                             theta[n,2], theta[n,3]);
   }
