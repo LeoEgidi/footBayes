@@ -17,7 +17,6 @@ parameters{
   vector[nteams] def_raw;
   real<lower=0> sigma_att;
   real<lower=0> sigma_def;
-  real<lower=0> rho;
   real home;
 }
 transformed parameters{
@@ -43,7 +42,6 @@ model{
   }
   target+=cauchy_lpdf(sigma_att|0, 5);
   target+=cauchy_lpdf(sigma_def|0, 5);
-  target+=normal_lpdf(rho|0,5);
   target+=normal_lpdf(home|0,5);
   // likelihood
   for (n in 1:N){

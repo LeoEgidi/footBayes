@@ -17,7 +17,7 @@
 #'
 
 
-stan_foot <- function(data, model, predict, n.iter = 2000,
+stan_foot <- function(data, model, predict, n.iter = 200,
                      chains =4, trend = FALSE ){
 
   if (missing(predict)){
@@ -70,3 +70,20 @@ stan_foot <- function(data, model, predict, n.iter = 2000,
                        chains=4)
 
 }
+
+stan_foot(data = ristr_italy,
+         model="double_pois", trend = FALSE )
+stan_foot(data = ristr_italy,
+         model="biv_pois", trend = FALSE )
+stan_foot(data = ristr_italy,
+         model="skellam", trend = FALSE )
+stan_foot(data = ristr_italy,
+         model="student_t", trend = FALSE )
+stan_foot(data = ristr_italy,
+         model="double_pois", trend = TRUE )
+stan_foot(data = ristr_italy,
+         model="biv_pois", trend = TRUE )
+stan_foot(data = ristr_italy,
+         model="skellam", trend = TRUE )
+stan_foot(data = ristr_italy,
+         model="student_t", trend = TRUE )
