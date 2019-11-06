@@ -127,7 +127,15 @@ stan_foot <- function(data,
                        data= data_stan,
                        iter=n.iter,
                        chains=4)
-  return(fit)
+  return(list(fit=fit,
+              nteams = nteams,
+              teams = teams,
+              team1 = team1,
+              team2= team2,
+              team1_prev = team1_prev,
+              team2_prev = team2_prev,
+              instants = instants,
+              instants_prev = instants_prev))
 
 }
 
