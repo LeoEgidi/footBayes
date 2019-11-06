@@ -1,6 +1,6 @@
 data {
   int N;   // number of matches
-  int N_prev; // number of predictedmatched
+  int N_prev;
   int nteams;   // number of teams
   vector[nteams] spi_std;  // per-team ranking
   // this is a 4-column data table of per-game outcomes
@@ -9,27 +9,54 @@ data {
   int team1_prev[N_prev];
   int team2_prev[N_prev];
   matrix[N,2] y;
+  int ntimes;                 // dynamic periods
+  int time[ntimes];
+  int instants[N];
+  int instants_prev[N_prev];
 }
 transformed data {
   vector[N] diff_y = y[,1] - y[,2];  // "modeled" data
 }
 parameters {
   real beta;            // common intercept
-  vector[nteams] alpha;    // vector of per-team weights
+  matrix[ntimes, nteams] alpha;    // vector of per-team weights
   real<lower=0> sigma_a;   // common variance
   real<lower=0> sigma_y;   // noise term in our estimate
 }
 transformed parameters {
+  cov_matrix[ntimes] Sigma_alpha;
   // "mixed effects" model - common intercept + random effects
-  vector[nteams] ability = beta * spi_std + alpha * sigma_a;
+  matrix[ntimes, nteams] ability;
+  matrix[ntimes, nteams] mu_alpha;
+
+  for (t in 1: ntimes){
+    ability[t]= to_row_vector(beta*spi_std) + alpha[t]*sigma_a;
+  }
+
+   // Gaussian process covariance functions
+   for (i in 1:(ntimes)){
+     for (j in 1:(ntimes)){
+       Sigma_alpha[i, j] = exp(-pow(time[i] - time[j], 2))
+       + (i == j ? 0.1 : 0.0);
+     }}
+
+     // Lagged prior mean for attack/defense parameters
+   for (t in 2:(ntimes)){
+     mu_alpha[1]=rep_row_vector(0,nteams);
+     mu_alpha[t]=rep_row_vector(0,nteams);
+     }
+
 }
 model {
-  alpha ~ normal(0, 1); // priors on all parameters
+  for (h in 1:(nteams)){
+     alpha[,h]~multi_normal(mu_alpha[,h], Sigma_alpha);
+  }
   beta ~ normal(0, 2.5);
   sigma_a ~ normal(0, 2.5);
   sigma_y ~ normal(0, 2.5);
 
-  diff_y ~ student_t(7, ability[team1] - ability[team2], sigma_y);
+  for (n in 1:N)
+  diff_y[n] ~ student_t(7, ability[instants[n], team1[n]] - ability[instants[n], team2[n]], sigma_y);
 }
 generated quantities {
   // posterior predictive check - carry along uncertainty!!!
@@ -39,15 +66,14 @@ generated quantities {
   vector[N] log_lik;
   vector[N_prev] diff_y_prev;
 
+
   for (n in 1:N) {
-    diff_y_rep[n] = student_t_rng(7, ability[team1[n]] - ability[team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| 7, ability[team1] - ability[team2], sigma_y);
+    diff_y_rep[n] = student_t_rng(7, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
+    log_lik[n] = student_t_lpdf(diff_y[n]| 7, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
   }
 
   for (n in 1:N_prev) {
-    diff_y_prev[n] = student_t_rng(7, ability[team1_prev[n]] - ability[team2_prev[n]], sigma_y);
+    diff_y_prev[n] = student_t_rng(7, ability[instants_prev[n], team1_prev[n]] - ability[instants_prev[n], team2_prev[n]], sigma_y);
   }
-
-
 
 }

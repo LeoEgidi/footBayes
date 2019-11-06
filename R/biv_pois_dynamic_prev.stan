@@ -1,68 +1,133 @@
+functions{
+
+real bipois_lpmf(int[] r , real mu1,real mu2,real mu3) {
+     real ss;
+     real log_s;
+     real mus;
+     int  miny;
+
+     miny = min(r[1], r[2]);
+
+     ss = poisson_lpmf(r[1] | mu1) + poisson_lpmf(r[2] | mu2) -
+            exp(mu3);
+     if(miny > 0) {
+       mus = -mu1-mu2+mu3;
+       log_s = ss;
+
+       for(k in 1:miny) {
+            log_s = log_s + log(r[1] - k + 1) + mus
+                           + log(r[2] - k + 1)
+                           - log(k);
+            ss = log_sum_exp(ss, log_s);
+       }
+     }
+     return(ss);
+   }
+}
 data{
-  int N;                      // number of games
-  int N_prev;                 // number of predicted games
-  int y[N,2];                 // scores
-  int nteams;                 // number of teams
-  int team1[N];               // home team index
-  int team2[N];               // away team index
-  int team1_prev[N_prev];     // home team for pred.
-  int team2_prev[N_prev];     // away team for pred.
+  int N;   // number of games
+  int N_prev;
+  int y[N,2];
+  int nteams;
+  int team1[N];
+  int team2[N];
+  int team1_prev[N_prev];
+  int team2_prev[N_prev];
+  int ntimes;                 // dynamic periods
+  int time[ntimes];
+  int instants[N];
+  int instants_prev[N_prev];
 }
 parameters{
-  vector[nteams] att_raw;
-  vector[nteams] def_raw;
-  real<lower=0> sigma_att;
-  real<lower=0> sigma_def;
+  matrix[ntimes, nteams] att_raw;        // raw attack ability
+  matrix[ntimes, nteams] def_raw;        // raw defense ability
+  real<lower=0> rho;
   real home;
 }
 transformed parameters{
-  vector[nteams] att;        // attack parameters
-  vector[nteams] def;        // defence parameters
-  vector[2] theta[N];        // exponentiated linear pred.
+  matrix[ntimes, nteams] att;            // attack abilities
+  matrix[ntimes, nteams] def;            // defense abilities
+  cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
+  cov_matrix[ntimes] Sigma_def;          // Gaussian process defense cov.funct.
+  matrix[ntimes, nteams] mu_att;         // attack hyperparameter
+  matrix[ntimes, nteams] mu_def;         // defense hyperparameter
+  vector[N] theta_home;                    // exponentiated linear pred.
+  vector[N] theta_away;
+  vector[N] theta_corr;
 
-  for (t in 1:nteams){
-    att[t] = att_raw[t]-mean(att_raw);
-    def[t] = def_raw[t]-mean(def_raw);
-   }
+    // Gaussian process covariance functions
+   for (i in 1:(ntimes)){
+     for (j in 1:(ntimes)){
+       Sigma_att[i, j] = exp(-pow(time[i] - time[j], 2))
+       + (i == j ? 0.1 : 0.0);
+       Sigma_def[i, j] = exp(-pow(time[i] - time[j], 2))
+                   + (i == j ? 0.1 : 0.0);
+     }}
+
+  // Sum-to-zero constraint for attack/defense parameters
+  att[1]=att_raw[1]-mean(att_raw[1]);
+  def[1]=def_raw[1]-mean(def_raw[1]);
+   for (t in 2:ntimes){
+      att[t]=att_raw[t]-mean(att_raw[t]);
+      def[t]=def_raw[t]-mean(def_raw[t]);
+     }
+
+  // Lagged prior mean for attack/defense parameters
+   for (t in 2:(ntimes)){
+     mu_att[1]=rep_row_vector(0,nteams);
+     mu_att[t]=rep_row_vector(0,nteams);
+
+     mu_def[1]=rep_row_vector(0,nteams);
+     mu_def[t]=rep_row_vector(0,nteams);
+
+     }
+
 
   for (n in 1:N){
-    theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]);
-    theta[n,2] = exp(att[team2[n]]+def[team1[n]]);
+    theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]);
+    theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]);
+    theta_corr[n] = rho;
    }
 }
 model{
   // priors
-  for (t in 1:(nteams)){
-    target+=normal_lpdf(att_raw[t]|0, sigma_att);
-    target+=normal_lpdf(def_raw[t]|0, sigma_def);
-  }
-  target+=cauchy_lpdf(sigma_att|0, 5);
-  target+=cauchy_lpdf(sigma_def|0, 5);
+  for (h in 1:(nteams)){
+     att_raw[,h]~multi_normal(mu_att[,h], Sigma_att);
+     def_raw[,h]~multi_normal(mu_def[,h], Sigma_def);
+   }
   target+=normal_lpdf(home|0,5);
+  target+=normal_lpdf(rho|0,5);
   // likelihood
+
   for (n in 1:N){
-    target+=poisson_lpmf(y[n,1]| theta[n,1]);
-    target+=poisson_lpmf(y[n,2]| theta[n,2]);
-  }
+    target+=bipois_lpmf(y[n,]| theta_home[n],
+                        theta_away[n], theta_corr[n]);
+    }
 }
 generated quantities{
   int y_rep[N,2];
-  int y_prev[N_prev,2];
-  vector[2] theta_prev[N_prev];
   vector[N] log_lik;
+  int y_prev[N_prev,2];
+  vector[N_prev] theta_home_prev;                    // exponentiated linear pred.
+  vector[N_prev] theta_away_prev;
+  vector[N_prev] theta_corr_prev;
+
 
   //in-sample replications
   for (n in 1:N){
-    y_rep[n,1] = poisson_rng(theta[n,1]);
-    y_rep[n,2] = poisson_rng(theta[n,2]);
-    log_lik[n] =poisson_lpmf(y[n,1]| theta[n,1])+
-                poisson_lpmf(y[n,2]| theta[n,2]);
+    y_rep[n,1] = poisson_rng(theta_home[n]+theta_corr[n]);
+    y_rep[n,2] = poisson_rng(theta_away[n]+theta_corr[n]);
+    log_lik[n] =bipois_lpmf(y[n,]| theta_home[n],
+                            theta_away[n], theta_corr[n]);
   }
-  //out-of-sample predictions
+
   for (n in 1:N_prev){
-    theta_prev[n,1] = exp(home+att[team1_prev[n]]+def[team2_prev[n]]);
-    theta_prev[n,2] = exp(att[team2_prev[n]]+def[team1_prev[n]]);
-    y_prev[n,1] = poisson_rng(theta_prev[n,1]);
-    y_prev[n,2] = poisson_rng(theta_prev[n,2]);
-        }
+    theta_home_prev[n] = exp(home+att[instants_prev[n], team1_prev[n]]+
+                          def[instants_prev[n], team2_prev[n]]);
+    theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
+                          def[instants_prev[n], team1_prev[n]]);
+    theta_corr_prev[n] = rho;
+  y_prev[n,1] = poisson_rng(theta_home_prev[n]+theta_corr_prev[n]);
+  y_prev[n,2] = poisson_rng(theta_away_prev[n]+theta_corr_prev[n]);
+  }
 }

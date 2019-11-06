@@ -13,31 +13,86 @@
 #'ristr_italy <- as_data_frame(italy)
 #'ristr_italy<- ristr_italy %>%
 #'  select(Season, home, visitor, hgoal,vgoal) %>%
-#'  filter(Season=="2000")
-#'
+#'  filter(Season=="2000" |  Season=="2001")
 
 
-stan_foot <- function(data, model, predict, n.iter = 200,
-                     chains =4, trend = FALSE ){
+stan_foot <- function(data,
+                      model,
+                      predict,
+                      n.iter = 200,
+                      chains =4,
+                      dynamic_type = FALSE){
 
-  if (missing(predict)){
-    N <- dim(data)[1]
-    N_prev <- 0
-    type <- "fit"
-  }else{
-    N <- dim(data)[1]-predict
-    N_prev <- predict
-    type <- "prev"
-  }
 
-  if (trend ==TRUE){
-    dyn <- "dynamic_"
-  }else{
-    dyn <-""
-  }
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
   nteams<- length(unique(data$home))
+
+  if (missing(predict)){ # check on predict
+    predict <- 0
+    N <- dim(data)[1]
+    N_prev <- 0
+    type <- "fit"
+  }else if (is.numeric(predict)){
+    N <- dim(data)[1]-predict
+    N_prev <- predict
+    type <- "prev"
+  }else{
+    stop("The number of out-of-sample matches is ill posed!
+         Pick up an integer number.")
+  }
+
+  if (missing(dynamic_type)){
+    dyn <-""
+  }else if (dynamic_type == "weekly" ){
+      dyn <- "dynamic_"
+      if (length(unique(data$season))!=1){
+        stop("When using weekly dynamics,
+              please consider one season only.")
+      }else{
+      weak_count <- ((N+predict)*2)/(nteams)
+      if ((N*2)%%(nteams)!=0){
+        stop("The number of total matches is not
+              the same for all the teams. Please,
+              provide an adequate number of matches
+              (hint: proportional to the number
+              of matches for each match day).")
+      }
+      weak <- rep(seq(1, weak_count ), each = nteams/2)
+      data <- data %>%
+        mutate(weak)
+      ntimes <- length(unique(weak))
+      #time_tot <- c(1:length(unique(weak[1:(N+N_prev)])))
+      time <- c(1:length(unique(weak)))
+      instants <- weak[1:N]
+      #ntimes_prev <- length(unique(weak[1:(N+N_prev)]))-length(unique(weak[1:N]))
+      #time_prev <- setdiff(time_tot, time)
+      instants_prev <- weak[(N+1):(N+N_prev)]
+      }
+    }else if(dynamic_type=="seasonal"){
+      dyn <- "dynamic_"
+      if (length(unique(data$season))==1){
+        dyn <-""
+        warning("When using seasonal dynamics,
+              please consider more than one season.")
+      }
+      season_count <- length(unique(data$season))
+      season <- match(data$season, unique(data$season))
+      ntimes <- season_count
+      #time_tot <- c(1:length(unique(data$season)))
+      time <- c(1:season_count)
+      instants <- season[1:N]
+      #ntimes_prev <- length(unique(season[1:(N+N_prev)]))-length(unique(season[1:N]))
+      #time_prev <- setdiff(time_tot, time)
+      instants_prev <- season[(N+1):(N+N_prev)]
+    }else if (dynamic_type =="FALSE"){
+      dyn <-""
+    }else{
+      stop("The type of dynamics is not correct.
+           Choose one among 'weekly' or 'seasonal'.")
+    }
+
+
   teams <- unique(data$home)
   team_home <- match( data$home, teams)
   team_away <- match( data$away, teams)
@@ -51,7 +106,7 @@ stan_foot <- function(data, model, predict, n.iter = 200,
   diff_y <- y[,1]-y[,2]
 
   # Stan data
-  data <- list( y=y,
+  data_stan <- list( y=y,
                 spi_std = rep(0, nteams),
                 diff_y = diff_y,
                 N=N,
@@ -60,12 +115,16 @@ stan_foot <- function(data, model, predict, n.iter = 200,
                 team1 = team1,
                 team2=team2,
                 team1_prev= team1_prev,
-                team2_prev=team2_prev,
-                ntimes = 2,
-                time =c(1,2),
-                instants = c(rep(1, N/2), rep(2, N/2)))
+                team2_prev=team2_prev)
+
+  if (!missing(dynamic_type)){
+    data_stan$ntimes <- ntimes
+    data_stan$instants <- instants
+    data_stan$time <- time
+    data_stan$instants_prev <- instants_prev
+  }
   fit <- stan(file=paste(model,"_", dyn, type, ".stan", sep=""),
-                       data= data,
+                       data= data_stan,
                        iter=n.iter,
                        chains=4)
   return(fit)

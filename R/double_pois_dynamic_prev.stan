@@ -10,8 +10,6 @@ data{
   int ntimes;                 // dynamic periods
   int time[ntimes];
   int instants[N];
-  int ntimes_prev;
-  int time_prev[ntimes_prev];
   int instants_prev[N_prev];
 }
 parameters{
