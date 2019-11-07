@@ -10,7 +10,7 @@ foot_plot <- function(fit, type){
 
   if (type=="abilities"){
 
-  sims <- extract(fit)
+  sims <- extract(fit$fit)
   teams <- fit$teams
   att <- sims$att
   def <- sims$def
@@ -43,15 +43,15 @@ foot_plot <- function(fit, type){
 
   mt_att_025 <- melt(att_025_mat)
   mt_att_25 <- melt(att_25_mat)
-  mt_att_50 <- melt(att_50))
-  mt_att_75 <- melt(t(att_75))
-  mt_att_975 <- melt(t(att_975))
+  mt_att_50 <- melt(att_50_mat)
+  mt_att_75 <- melt(att_75_mat)
+  mt_att_975 <- melt(att_975_mat)
 
-  mt_def_025=melt(def_025_mat)
-  mt_def_25=melt(def_25_mat)
-  mt_def_50=melt(def_50_mat)
-  mt_def_75=melt(def_75_mat)
-  mt_def_975=melt(def_975_mat)
+  mt_def_025 <- melt(def_025_mat)
+  mt_def_25 <- melt(def_25_mat)
+  mt_def_50 <- melt(def_50_mat)
+  mt_def_75 <- melt(def_75_mat)
+  mt_def_975 <- melt(def_975_mat)
 
   teams_fac_rep <- rep(teams, T)
   times_rep <- rep(1:T, each=length(teams))
