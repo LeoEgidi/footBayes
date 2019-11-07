@@ -38,7 +38,7 @@
 #' fit5 <-stan_foot(data = italy_2000_2002,
 #'                        model="biv_pois", predict =306,
 #'                        dynamic_type = "seasonal")   # bivariate poisson
-#' teams <- unique(italy_2000_2002)
+#' teams <- unique(italy_2000_2002$home)
 #' foot_abilities(fit5, teams)
 #'
 #' ### weekly dynamics, predict the last four weeks

@@ -18,9 +18,10 @@ parameters {
   matrix[ntimes, nteams] alpha;    // vector of per-team weights
   real<lower=0> sigma_a;   // common variance
   real<lower=0> sigma_y;   // noise term in our estimate
+  real<lower=0> sigma_alpha;
 }
 transformed parameters {
-  cov_matrix[ntimes] Sigma_alpha;
+  //cov_matrix[ntimes] Sigma_alpha;
   // "mixed effects" model - common intercept + random effects
   matrix[ntimes, nteams] ability;
   matrix[ntimes, nteams] mu_alpha;
@@ -30,11 +31,11 @@ transformed parameters {
   }
 
    // Gaussian process covariance functions
-   for (i in 1:(ntimes)){
-     for (j in 1:(ntimes)){
-       Sigma_alpha[i, j] = exp(-pow(time[i] - time[j], 2))
-       + (i == j ? 0.1 : 0.0);
-     }}
+   // for (i in 1:(ntimes)){
+   //   for (j in 1:(ntimes)){
+   //     Sigma_alpha[i, j] = exp(-pow(time[i] - time[j], 2))
+   //     + (i == j ? 0.1 : 0.0);
+   //   }}
 
      // Lagged prior mean for attack/defense parameters
    for (t in 2:(ntimes)){
@@ -46,11 +47,12 @@ transformed parameters {
 }
 model {
   for (h in 1:(nteams)){
-     alpha[,h]~multi_normal(mu_alpha[,h], Sigma_alpha);
+     alpha[,h]~multi_normal(mu_alpha[,h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
   }
   beta ~ normal(0, 2.5);
   sigma_a ~ normal(0, 2.5);
   sigma_y ~ normal(0, 2.5);
+  sigma_alpha ~ normal(0, 2.5);
 
   for (n in 1:N)
   diff_y[n] ~ student_t(7, ability[instants[n], team1[n]] - ability[instants[n], team2[n]], sigma_y);

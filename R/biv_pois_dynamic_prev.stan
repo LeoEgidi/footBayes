@@ -43,12 +43,14 @@ parameters{
   matrix[ntimes, nteams] def_raw;        // raw defense ability
   real<lower=0> rho;
   real home;
+  real<lower=0> sigma_att;
+  real<lower=0> sigma_def;
 }
 transformed parameters{
   matrix[ntimes, nteams] att;            // attack abilities
   matrix[ntimes, nteams] def;            // defense abilities
-  cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
-  cov_matrix[ntimes] Sigma_def;          // Gaussian process defense cov.funct.
+  //cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
+  //cov_matrix[ntimes] Sigma_def;          // Gaussian process defense cov.funct.
   matrix[ntimes, nteams] mu_att;         // attack hyperparameter
   matrix[ntimes, nteams] mu_def;         // defense hyperparameter
   vector[N] theta_home;                    // exponentiated linear pred.
@@ -56,13 +58,13 @@ transformed parameters{
   vector[N] theta_corr;
 
     // Gaussian process covariance functions
-   for (i in 1:(ntimes)){
-     for (j in 1:(ntimes)){
-       Sigma_att[i, j] = exp(-pow(time[i] - time[j], 2))
-       + (i == j ? 0.1 : 0.0);
-       Sigma_def[i, j] = exp(-pow(time[i] - time[j], 2))
-                   + (i == j ? 0.1 : 0.0);
-     }}
+   // for (i in 1:(ntimes)){
+   //   for (j in 1:(ntimes)){
+   //     Sigma_att[i, j] = exp(-pow(time[i] - time[j], 2))
+   //     + (i == j ? 0.1 : 0.0);
+   //     Sigma_def[i, j] = exp(-pow(time[i] - time[j], 2))
+   //                 + (i == j ? 0.1 : 0.0);
+   //   }}
 
   // Sum-to-zero constraint for attack/defense parameters
   att[1]=att_raw[1]-mean(att_raw[1]);
@@ -94,11 +96,13 @@ transformed parameters{
 model{
   // priors
   for (h in 1:(nteams)){
-     att_raw[,h]~multi_normal(mu_att[,h], Sigma_att);
-     def_raw[,h]~multi_normal(mu_def[,h], Sigma_def);
+     att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+     def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
    }
   target+=normal_lpdf(home|0,5);
   target+=normal_lpdf(rho|0,5);
+  target+=cauchy_lpdf(sigma_att| 0,2.5);
+  target+=cauchy_lpdf(sigma_def| 0,2.5);
   // likelihood
 
   for (n in 1:N){
@@ -124,10 +128,10 @@ generated quantities{
   }
 
   for (n in 1:N_prev){
-    theta_home_prev[n] = exp(home+att[instants[N], team1_prev[n]]+
-                          def[instants[N], team2_prev[n]]);
-    theta_away_prev[n] = exp(att[instants[N], team2_prev[n]]+
-                          def[instants[N], team1_prev[n]]);
+    theta_home_prev[n] = exp(home+att[instants_prev[n], team1_prev[n]]+
+                          def[instants_prev[n], team2_prev[n]]);
+    theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
+                          def[instants_prev[n], team1_prev[n]]);
     theta_corr_prev[n] = rho;
   y_prev[n,1] = poisson_rng(theta_home_prev[n]+theta_corr_prev[n]);
   y_prev[n,2] = poisson_rng(theta_away_prev[n]+theta_corr_prev[n]);
