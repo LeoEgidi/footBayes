@@ -17,6 +17,8 @@
 #'                        dynamic_type = "seasonal")
 #'  teams <- unique(ristr_italy$home)
 #'  foot_abilities(fit, teams)
+#'
+#'  @export
 
 
 foot_abilities <- function(object, teams){
