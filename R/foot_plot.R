@@ -144,9 +144,6 @@ foot_abilities <- function(object, teams){
     #          cex.var=1, mar=c(1,7,4,2), lwd=2,
     #          cex.main=0.9,pch=16, col="red")
 
-
-
-
   }
 
 }
