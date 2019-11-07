@@ -32,18 +32,18 @@ italy_2000_2002<- italy \%>\%
 
 fit1 <- stan_foot(data = italy_2000_2002,
                 model="double_pois") # double poisson
-print(fit1, pars =c("home", "sigma_att", 
+print(fit1, pars =c("home", "sigma_att",
                     "sigma_def"))
 
 fit2 <- stan_foot(data = italy_2000_2002,
                 model="biv_pois")    # bivariate poisson
-print(fit2, pars =c("home", "rho" 
+print(fit2, pars =c("home", "rho"
                     "sigma_att", "sigma_def"))
 
 fit3 <- stan_foot(data = italy_2000_2002,
                 model="skellam")     # skellam
-print(fit3, pars =c("home", "sigma_att", 
-                    "sigma_def"))                 
+print(fit3, pars =c("home", "sigma_att",
+                    "sigma_def"))
 
 fit4 <- stan_foot(data = italy_2000_2002,
                 model="student_t")   # student_t
@@ -54,15 +54,15 @@ print(fit4, pars =c("home", "beta")
 fit5 <- stan_foot(data = italy_2000_2002,
                 model="double_pois",
                 dynamic_type ="seasonal") # double poisson
-print(fit5, pars =c("home", "Sigma_att", 
-                    "Sigma_def")) 
-                    
+print(fit5, pars =c("home", "Sigma_att",
+                    "Sigma_def"))
+
 ## seasonal dynamics, prediction for the last season
 
 fit6 <- stan_foot(data = italy_2000_2002,
                 model="double_pois",
                 dynamic_type ="seasonal",
                 predict = 306) # double poisson
-print(fit6, pars =c("home", "Sigma_att", 
-                    "Sigma_def")) 
+print(fit6, pars =c("home", "Sigma_att",
+                    "Sigma_def"))
 }
