@@ -7,16 +7,57 @@
 #' @examples
 #' library(engsoccerdata)
 #' library(tidyverse)
+#' italy <- as_tibble(italy)
 #'
-#' ristr_italy <- as_data_frame(italy)
-#' ristr_italy<- ristr_italy %>%
-#'  select(Season, home, visitor, hgoal,vgoal) %>%
-#'  filter(Season=="2000" |  Season=="2001"| Season =="2002")
-#' fit<-stan_foot(data = ristr_italy,
+#' ### no dynamics, no prediction
+#'
+#' italy_2000_2002<- italy %>%
+#'  dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
+#'  filter(Season=="2000" |  Season=="2001" | Season =="2002")
+#'
+#' fit1 <- stan_foot(data = italy_2000_2002,
+#'                 model="double_pois") # double poisson
+#'
+#' fit2 <- stan_foot(data = italy_2000_2002,
+#'                 model="biv_pois")    # bivariate poisson
+#'
+#' fit3 <- stan_foot(data = italy_2000_2002,
+#'                 model="skellam")     # skellam
+#'
+#' fit4 <- stan_foot(data = italy_2000_2002,
+#'                 model="student_t")   # student_t
+#'
+#' teams <- unique(italy_2000_2002$home)
+#' foot_abilities(fit1, teams)
+#' foot_abilities(fit2, teams)
+#' foot_abilities(fit3, teams)
+#' foot_abilities(fit4, teams)
+#'
+#' ### seasonal dynamics, predict the last season
+#'
+#' fit5 <-stan_foot(data = italy_2000_2002,
 #'                        model="biv_pois", predict =306,
-#'                        dynamic_type = "seasonal")
-#' teams <- unique(ristr_italy$home)
-#' foot_abilities(fit, teams)
+#'                        dynamic_type = "seasonal")   # bivariate poisson
+#' teams <- unique(italy_2000_2002)
+#' foot_abilities(fit5, teams)
+#'
+#' ### weekly dynamics, predict the last four weeks
+#'
+#' italy_2000<- italy %>%
+#'   select(Season, home, visitor, hgoal,vgoal) %>%
+#'   filter(Season=="2000")
+#'
+#' fit6 <- stan_foot(data = italy_2000,
+#'                 model="double_pois", predict =36,
+#'                 dynamic_type = "weekly")  # double poisson
+#'
+#' fit7 <- stan_foot(data = italy_2000,
+#'                 model="student_t", predict =36,
+#'                 dynamic_type = "weekly")  # student_t
+#'
+#' teams <- unique(italy_2000$home)
+#' foot_abilities(fit6, teams)
+#' foot_abilities(fit7, teams)
 #'
 #'  @export
 
@@ -136,7 +177,7 @@ foot_abilities <- function(object, teams){
 
     posterior <- as.array(object)
     #mcmc_intervals(posterior, regex_pars=c("att"))
-    ord <- sort.int(att_mean, decreasing =FALSE,
+    ord <- sort.int(att_mean, decreasing =TRUE,
                     index.return = TRUE)$ix
 
     coefplot(rev(att_mean[ord]), rev(att_sd[ord]), CI=2,
@@ -147,6 +188,98 @@ foot_abilities <- function(object, teams){
              varnames=rev(teams[ord]), main="Defense abilities (95% post. intervals)\n",
              cex.var=1, mar=c(1,7,4,2), lwd=2,
              cex.main=0.9,pch=16, col="blue", add=TRUE)
+
+  }else if (length(dim(att))==0){ # student_t case
+
+    ability <- sims$ability
+
+    if (length(dim(ability))==3){
+
+      T <- dim(ability)[2]
+      nteams <- dim(ability)[3]
+      ability_med=apply(ability,c(2,3), median)
+      ability_025=apply(ability, c(2,3), function(x) quantile(x, 0.025))
+      ability_25=apply(ability, c(2,3), function(x) quantile(x, 0.25))
+      ability_75=apply(ability, c(2,3), function(x) quantile(x, 0.75))
+      ability_975=apply(ability, c(2,3), function(x) quantile(x, 0.975))
+
+      mt_ability_025 <- melt(ability_025)
+      mt_ability_25 <- melt(ability_25)
+      mt_ability_50 <- melt(ability_med)
+      mt_ability_75 <- melt(ability_75)
+      mt_ability_975 <- melt(ability_975)
+
+      teams_fac_rep <- rep(teams, each = T)
+      times_rep <- rep(1:T, length(teams))
+
+      ability_data=data.frame(
+        teams=teams_fac_rep,
+        times=times_rep,
+        mid=mt_ability_50$value,
+        lo=mt_ability_25$value,
+        hi=mt_ability_75$value
+      )
+
+      position_lookup <-
+        ability_data %>%
+        group_by(teams) %>%
+        summarise(pos=first(teams))
+      label_w_position <- function(team_name) {
+        paste0(team_name, " (", with(position_lookup, pos[teams == player_name]),")")
+      }
+      ggplot() +
+        geom_ribbon(
+          aes(x = times, ymin = lo, ymax = hi),
+          data = ability_data,
+          fill = color_scheme_get("red")[[2]]
+        ) +
+        geom_line(
+          aes(x = times, y = mid),
+          data = ability_data,
+          size = 1,
+          color = color_scheme_get("orange")[[4]]
+        )+
+        scale_color_manual(values = c(color_scheme_get("blue")[[4]],
+                                      color_scheme_get("red")[[4]]))+
+        facet_wrap("teams", scales = "free")+
+        lims(y = c( min(ability_25-0.2), max(ability_75+0.2))) +
+        #scale_x_discrete( limits=c("07/08","","","", "11/12","", "","","", "16/17")  ) +
+        labs(x = "Times", y = "Teams' effects",
+             title = "Global abilities effects (50% posterior bars)"
+             #,
+             #subtitle = "for teams of Premier League 2016/2017"
+        ) +
+        yaxis_text(size=rel(1.2))+
+        xaxis_text( size = rel(1.2))+
+        theme(plot.title = element_text(size = 16),
+              strip.text = element_text(size = 8),
+              axis.text.x = element_text(size=11),
+              axis.text.y = element_text(size=11),
+              plot.subtitle=element_text(size=12))
+
+
+    }else if (length(dim(ability))==2){
+      ability_mean <- apply(ability, 2, mean)
+      ability_sd <- apply(ability, 2, sd)
+      ability_025 <- apply(ability, 2, function(x) quantile(x, 0.025))
+      ability_975 <- apply(ability, 2, function(x) quantile(x, 0.975))
+
+      par(mfrow=c(1,1), oma =c(1,1,1,1))
+      par(mfrow=c(1,1), oma =c(1,1,1,1))
+
+      posterior <- as.array(object)
+      #mcmc_intervals(posterior, regex_pars=c("ability"))
+      ord <- sort.int(ability_mean, decreasing =TRUE,
+                      index.return = TRUE)$ix
+
+      coefplot(rev(ability_mean[ord]), rev(ability_sd[ord]), CI=2,
+               varnames=rev(teams[ord]), main="Global abilities (95% post. intervals)\n",
+               cex.var=1, mar=c(1,7,4,2), lwd=2,
+               cex.main=0.9,pch=16, col="orange")
+
+
+    }
+
 
   }
 
