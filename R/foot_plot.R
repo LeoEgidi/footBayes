@@ -5,7 +5,7 @@
 #' @param teams Character vector with the list of teams as extracted from the dataset.
 #'
 #' @examples
-library(engsoccerdata)
+#'library(engsoccerdata)
 #'library(tidyverse)
 #'
 #'ristr_italy <- as_data_frame(italy)
@@ -149,103 +149,103 @@ foot_abilities <- function(object, teams){
 }
 
 
-foot_rank <- function(x, teams){
-  # Fra-Cro
-
-  previsioni1_pois<-sims_poisson$y_prev[, 1,1]
-  previsioni2_pois<-sims_poisson$y_prev[, 1,2]
-
-  previsioni1_bivpois<-sims_bivpois$y_prev[, 1,1]
-  previsioni2_bivpois<-sims_bivpois$y_prev[, 1,2]
-
-
-  posterior_prop1_pois<-table(subset(previsioni1_pois, previsioni1_pois<15))
-  posterior_prop2_pois<-table(subset(previsioni2_pois, previsioni2_pois<15))
-
-  posterior_prop1_bivpois<-table(subset(previsioni1_bivpois, previsioni1_bivpois<15))
-  posterior_prop2_bivpois<-table(subset(previsioni2_bivpois, previsioni2_bivpois<15))
-
-
-  teamaa=teams[team1_prev[1]]
-  teamab=teams[team2_prev[1]]
-
-  x_min=y_min=min(length(posterior_prop1_pois), length(posterior_prop2_pois))
-
-  counts_mix_pois<-matrix(0, min(length(posterior_prop1_pois), length(posterior_prop2_pois)),
-                          min(length(posterior_prop1_pois), length(posterior_prop2_pois)))
-
-  counts_mix_bivpois<-matrix(0, min(length(posterior_prop1_bivpois), length(posterior_prop2_bivpois)),
-                             min(length(posterior_prop1_bivpois), length(posterior_prop2_bivpois)))
-
-
-  for (j in 1: min(length(posterior_prop1_pois), length(posterior_prop2_pois))){
-    for (t in 1: min(length(posterior_prop1_pois), length(posterior_prop2_pois))){
-      counts_mix_pois[j,t]<-posterior_prop1_pois[j]*posterior_prop2_pois[t]
-    }}
-
-  for (j in 1: min(length(posterior_prop1_bivpois), length(posterior_prop2_bivpois))){
-    for (t in 1: min(length(posterior_prop1_bivpois), length(posterior_prop2_bivpois))){
-      counts_mix_bivpois[j,t]<-posterior_prop1_bivpois[j]*posterior_prop2_bivpois[t]
-    }}
-
-
-  x <- seq(0,5, length.out=6)
-  y <- seq(0,5, length.out=6)
-  data <- expand.grid(Home=x, Away=y)
-  data$Prob=as.double(counts_mix_pois[1:6, 1:6]/(M*M))
-
-
-  # To change the color of the gradation :
-
-  ggplot(data, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
-    theme_bw() +
-    scale_fill_gradient(low="white", high="black") +
-    geom_rect(aes(xmin = as.numeric(as.vector(gol_vero1))[1]-0.5,
-                  xmax = as.numeric(as.vector(gol_vero1))[1]+0.5,
-                  ymin = as.numeric(as.vector(gol_vero2))[1]-0.5,
-                  ymax =as.numeric(as.vector(gol_vero2))[1]+0.5),
-              fill = "transparent", color = "red", size = 1.5)+
-    labs(title=paste(  teams[team1_prev[1]],"-", teams[team2_prev[1]]))+
-    yaxis_text(size=12)+
-    xaxis_text( size = rel(12))+
-    theme(plot.title = element_text(size = 22),
-          strip.text = element_text(size = 18),
-          axis.text.x = element_text(size=22),
-          axis.text.y = element_text(size=22),
-          plot.subtitle=element_text(size=13),
-          axis.title=element_text(size=18,face="bold"),
-          legend.text=element_text(size=14))
-  ggsave(file=paste(teams[team1_prev[1]],"-", teams[team2_prev[1]], "Heatmap_pois.pdf", sep=""), width=6, height=6)
-
-
-  x <- seq(0,5, length.out=6)
-  y <- seq(0,5, length.out=6)
-  data <- expand.grid(Home=x, Away=y)
-  data$Prob=as.double(counts_mix_bivpois[1:6, 1:6]/(M*M))
-
-
-  # To change the color of the gradation :
-
-  ggplot(data, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
-    theme_bw() +
-    scale_fill_gradient(low="white", high="black") +
-    geom_rect(aes(xmin = as.numeric(as.vector(gol_vero1))[1]-0.5,
-                  xmax = as.numeric(as.vector(gol_vero1))[1]+0.5,
-                  ymin = as.numeric(as.vector(gol_vero2))[1]-0.5,
-                  ymax =as.numeric(as.vector(gol_vero2))[1]+0.5),
-              fill = "transparent", color = "red", size = 1.5)+
-    labs(title=paste(  teams[team1_prev[1]],"-", teams[team2_prev[1]]))+
-    yaxis_text(size=12)+
-    xaxis_text( size = rel(12))+
-    theme(plot.title = element_text(size = 22),
-          strip.text = element_text(size = 18),
-          axis.text.x = element_text(size=22),
-          axis.text.y = element_text(size=22),
-          plot.subtitle=element_text(size=13),
-          axis.title=element_text(size=18,face="bold"),
-          legend.text=element_text(size=14))
-  ggsave(file=paste(teams[team1_prev[1]],"-", teams[team2_prev[1]], "Heatmap_bivpois.pdf", sep=""), width=6, height=6)
-
-}
-
-foot_prob <- function()
+# foot_rank <- function(x, teams){
+#   # Fra-Cro
+#
+#   previsioni1_pois<-sims_poisson$y_prev[, 1,1]
+#   previsioni2_pois<-sims_poisson$y_prev[, 1,2]
+#
+#   previsioni1_bivpois<-sims_bivpois$y_prev[, 1,1]
+#   previsioni2_bivpois<-sims_bivpois$y_prev[, 1,2]
+#
+#
+#   posterior_prop1_pois<-table(subset(previsioni1_pois, previsioni1_pois<15))
+#   posterior_prop2_pois<-table(subset(previsioni2_pois, previsioni2_pois<15))
+#
+#   posterior_prop1_bivpois<-table(subset(previsioni1_bivpois, previsioni1_bivpois<15))
+#   posterior_prop2_bivpois<-table(subset(previsioni2_bivpois, previsioni2_bivpois<15))
+#
+#
+#   teamaa=teams[team1_prev[1]]
+#   teamab=teams[team2_prev[1]]
+#
+#   x_min=y_min=min(length(posterior_prop1_pois), length(posterior_prop2_pois))
+#
+#   counts_mix_pois<-matrix(0, min(length(posterior_prop1_pois), length(posterior_prop2_pois)),
+#                           min(length(posterior_prop1_pois), length(posterior_prop2_pois)))
+#
+#   counts_mix_bivpois<-matrix(0, min(length(posterior_prop1_bivpois), length(posterior_prop2_bivpois)),
+#                              min(length(posterior_prop1_bivpois), length(posterior_prop2_bivpois)))
+#
+#
+#   for (j in 1: min(length(posterior_prop1_pois), length(posterior_prop2_pois))){
+#     for (t in 1: min(length(posterior_prop1_pois), length(posterior_prop2_pois))){
+#       counts_mix_pois[j,t]<-posterior_prop1_pois[j]*posterior_prop2_pois[t]
+#     }}
+#
+#   for (j in 1: min(length(posterior_prop1_bivpois), length(posterior_prop2_bivpois))){
+#     for (t in 1: min(length(posterior_prop1_bivpois), length(posterior_prop2_bivpois))){
+#       counts_mix_bivpois[j,t]<-posterior_prop1_bivpois[j]*posterior_prop2_bivpois[t]
+#     }}
+#
+#
+#   x <- seq(0,5, length.out=6)
+#   y <- seq(0,5, length.out=6)
+#   data <- expand.grid(Home=x, Away=y)
+#   data$Prob=as.double(counts_mix_pois[1:6, 1:6]/(M*M))
+#
+#
+#   # To change the color of the gradation :
+#
+#   ggplot(data, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
+#     theme_bw() +
+#     scale_fill_gradient(low="white", high="black") +
+#     geom_rect(aes(xmin = as.numeric(as.vector(gol_vero1))[1]-0.5,
+#                   xmax = as.numeric(as.vector(gol_vero1))[1]+0.5,
+#                   ymin = as.numeric(as.vector(gol_vero2))[1]-0.5,
+#                   ymax =as.numeric(as.vector(gol_vero2))[1]+0.5),
+#               fill = "transparent", color = "red", size = 1.5)+
+#     labs(title=paste(  teams[team1_prev[1]],"-", teams[team2_prev[1]]))+
+#     yaxis_text(size=12)+
+#     xaxis_text( size = rel(12))+
+#     theme(plot.title = element_text(size = 22),
+#           strip.text = element_text(size = 18),
+#           axis.text.x = element_text(size=22),
+#           axis.text.y = element_text(size=22),
+#           plot.subtitle=element_text(size=13),
+#           axis.title=element_text(size=18,face="bold"),
+#           legend.text=element_text(size=14))
+#   ggsave(file=paste(teams[team1_prev[1]],"-", teams[team2_prev[1]], "Heatmap_pois.pdf", sep=""), width=6, height=6)
+#
+#
+#   x <- seq(0,5, length.out=6)
+#   y <- seq(0,5, length.out=6)
+#   data <- expand.grid(Home=x, Away=y)
+#   data$Prob=as.double(counts_mix_bivpois[1:6, 1:6]/(M*M))
+#
+#
+#   # To change the color of the gradation :
+#
+#   ggplot(data, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
+#     theme_bw() +
+#     scale_fill_gradient(low="white", high="black") +
+#     geom_rect(aes(xmin = as.numeric(as.vector(gol_vero1))[1]-0.5,
+#                   xmax = as.numeric(as.vector(gol_vero1))[1]+0.5,
+#                   ymin = as.numeric(as.vector(gol_vero2))[1]-0.5,
+#                   ymax =as.numeric(as.vector(gol_vero2))[1]+0.5),
+#               fill = "transparent", color = "red", size = 1.5)+
+#     labs(title=paste(  teams[team1_prev[1]],"-", teams[team2_prev[1]]))+
+#     yaxis_text(size=12)+
+#     xaxis_text( size = rel(12))+
+#     theme(plot.title = element_text(size = 22),
+#           strip.text = element_text(size = 18),
+#           axis.text.x = element_text(size=22),
+#           axis.text.y = element_text(size=22),
+#           plot.subtitle=element_text(size=13),
+#           axis.title=element_text(size=18,face="bold"),
+#           legend.text=element_text(size=14))
+#   ggsave(file=paste(teams[team1_prev[1]],"-", teams[team2_prev[1]], "Heatmap_bivpois.pdf", sep=""), width=6, height=6)
+#
+# }
+#
+# foot_prob <- function()
