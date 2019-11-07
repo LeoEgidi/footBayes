@@ -47,10 +47,12 @@ transformed parameters{
   // Lagged prior mean for attack/defense parameters
    for (t in 2:(ntimes)){
      mu_att[1]=rep_row_vector(0,nteams);
-     mu_att[t]=rep_row_vector(0,nteams);
+     mu_att[t]= att[t-1];
+     //rep_row_vector(0,nteams);
 
      mu_def[1]=rep_row_vector(0,nteams);
-     mu_def[t]=rep_row_vector(0,nteams);
+     mu_def[t]=def[t-1];
+     //rep_row_vector(0,nteams);
 
      }
 
