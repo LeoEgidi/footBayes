@@ -1,2 +1,3 @@
 exportPattern("^[[:alpha:]]+")
 export(stan_foot)
+export(foot_abilities)
