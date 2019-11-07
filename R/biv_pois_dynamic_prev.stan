@@ -124,10 +124,10 @@ generated quantities{
   }
 
   for (n in 1:N_prev){
-    theta_home_prev[n] = exp(home+att[instants_prev[n], team1_prev[n]]+
-                          def[instants_prev[n], team2_prev[n]]);
-    theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
-                          def[instants_prev[n], team1_prev[n]]);
+    theta_home_prev[n] = exp(home+att[instants[N], team1_prev[n]]+
+                          def[instants[N], team2_prev[n]]);
+    theta_away_prev[n] = exp(att[instants[N], team2_prev[n]]+
+                          def[instants[N], team1_prev[n]]);
     theta_corr_prev[n] = rho;
   y_prev[n,1] = poisson_rng(theta_home_prev[n]+theta_corr_prev[n]);
   y_prev[n,2] = poisson_rng(theta_away_prev[n]+theta_corr_prev[n]);

@@ -313,10 +313,10 @@ foot_prob <- function(object, teams, data, home_team, away_team,
       counts_mix[j,t]<-posterior_prop1[j]*posterior_prop2[t]
     }}
 
-  x <- seq(0,5, length.out=6)
-  y <- seq(0,5, length.out=6)
+  x <- seq(0,5, length.out=dim(counts_mix)[1])
+  y <- seq(0,5, length.out=dim(counts_mix)[2])
   data <- expand.grid(Home=x, Away=y)
-  data$Prob=as.double(counts_mix[1:6, 1:6]/(M*M))
+  data$Prob <- as.double(counts_mix/(M*M))
 
 
   # To change the color of the gradation :
