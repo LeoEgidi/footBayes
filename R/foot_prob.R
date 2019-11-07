@@ -15,8 +15,8 @@
 #'                  dynamic_type = "weekly")  # double poisson
 #'
 #' teams <- unique(italy_2000$home)
-#' foot_prob(fit, teams, italy_2000, "AS Roma",
-#'           "Lazio Roma", predict = 18)
+#' foot_prob(fit, teams, italy_2000, "Inter",
+#'           "Bologna FC", predict = 18)
 #' @export
 
 
