@@ -17,16 +17,57 @@ Plots
 \examples{
 library(engsoccerdata)
 library(tidyverse)
+italy <- as_tibble(italy)
 
-ristr_italy <- as_data_frame(italy)
-ristr_italy<- ristr_italy \%>\%
- select(Season, home, visitor, hgoal,vgoal) \%>\%
- filter(Season=="2000" |  Season=="2001"| Season =="2002")
-fit<-stan_foot(data = ristr_italy,
+### no dynamics, no prediction
+
+italy_2000_2002<- italy \%>\%
+ dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+ filter(Season=="2000" |  Season=="2001" | Season =="2002")
+
+fit1 <- stan_foot(data = italy_2000_2002,
+                model="double_pois") # double poisson
+
+fit2 <- stan_foot(data = italy_2000_2002,
+                model="biv_pois")    # bivariate poisson
+
+fit3 <- stan_foot(data = italy_2000_2002,
+                model="skellam")     # skellam
+
+fit4 <- stan_foot(data = italy_2000_2002,
+                model="student_t")   # student_t
+
+teams <- unique(italy_2000_2002$home)
+foot_abilities(fit1, teams)
+foot_abilities(fit2, teams)
+foot_abilities(fit3, teams)
+foot_abilities(fit4, teams)
+
+### seasonal dynamics, predict the last season
+
+fit5 <-stan_foot(data = italy_2000_2002,
                        model="biv_pois", predict =306,
-                       dynamic_type = "seasonal")
-teams <- unique(ristr_italy$home)
-foot_abilities(fit, teams)
+                       dynamic_type = "seasonal")   # bivariate poisson
+teams <- unique(italy_2000_2002)
+foot_abilities(fit5, teams)
+
+### weekly dynamics, predict the last four weeks
+
+italy_2000<- italy \%>\%
+  select(Season, home, visitor, hgoal,vgoal) \%>\%
+  filter(Season=="2000")
+
+fit6 <- stan_foot(data = italy_2000,
+                model="double_pois", predict =36,
+                dynamic_type = "weekly")  # double poisson
+
+fit7 <- stan_foot(data = italy_2000,
+                model="student_t", predict =36,
+                dynamic_type = "weekly")  # student_t
+
+teams <- unique(italy_2000$home)
+foot_abilities(fit6, teams)
+foot_abilities(fit7, teams)
 
  @export
 }
