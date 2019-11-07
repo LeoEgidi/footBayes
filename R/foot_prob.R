@@ -1,6 +1,6 @@
 #' Probabilities
 #'
-#' @param
+#' @param object
 #'
 #' @examples
 #'
