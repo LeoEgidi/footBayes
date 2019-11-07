@@ -54,7 +54,7 @@ foot_abilities(fit5, teams)
 ### weekly dynamics, predict the last four weeks
 
 italy_2000<- italy \%>\%
-  select(Season, home, visitor, hgoal,vgoal) \%>\%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
   filter(Season=="2000")
 
 fit6 <- stan_foot(data = italy_2000,
