@@ -129,20 +129,20 @@ foot_abilities <- function(object, teams){
     def_025 <- apply(def, 2, function(x) quantile(x, 0.025))
     def_975 <- apply(def, 2, function(x) quantile(x, 0.975))
 
-    par(mfrow=c(1,2), oma =c(1,1,1,1))
-    par(mfrow=c(1,2), oma =c(1,1,1,1))
+    par(mfrow=c(1,1), oma =c(1,1,1,1))
+    par(mfrow=c(1,1), oma =c(1,1,1,1))
 
     posterior <- as.array(object)
-    mcmc_intervals(posterior, regex_pars=c("att"))
+    #mcmc_intervals(posterior, regex_pars=c("att"))
 
-    # coefplot(rev(att_mean), rev(att_sd), CI=2,
-    #          varnames=rev(teams), main="Attack abilities (95% post. intervals)\n",
-    #          cex.var=1, mar=c(1,7,4,2), lwd=2,
-    #          cex.main=0.9,pch=16, col="red")
-    # coefplot(rev(def_mean), rev(def_sd), CI=2,
-    #          varnames=rev(teams), main="Point abilities (95% post. intervals)\n",
-    #          cex.var=1, mar=c(1,7,4,2), lwd=2,
-    #          cex.main=0.9,pch=16, col="red")
+    coefplot(rev(att_mean), rev(att_sd), CI=2,
+             varnames=rev(teams), main="Attack/Defense abilities (95% post. intervals)\n",
+             cex.var=1, mar=c(1,7,4,2), lwd=2,
+             cex.main=0.9,pch=16, col="red")
+    coefplot(rev(def_mean), rev(def_sd), CI=2,
+             varnames=rev(teams), main="Defense abilities (95% post. intervals)\n",
+             cex.var=1, mar=c(1,7,4,2), lwd=2,
+             cex.main=0.9,pch=16, col="blue", add=TRUE)
 
   }
 
