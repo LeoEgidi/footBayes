@@ -69,5 +69,4 @@ teams <- unique(italy_2000$home)
 foot_abilities(fit6, teams)
 foot_abilities(fit7, teams)
 
- @export
 }

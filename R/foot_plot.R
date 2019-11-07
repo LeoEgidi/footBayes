@@ -286,19 +286,21 @@ foot_abilities <- function(object, teams){
 }
 
 
-foot_prob <- function(object, teams, home_team, away_team,
-                      true_gol_home = 7, true_gol_away = 7){
+foot_prob <- function(object, teams, data, home_team, away_team,
+                      predict,
+                      true_gol_home = 0, true_gol_away = 0){
 
-
+  data_prev <- data[(dim(data)[1]-predict +1):(dim(data)[1]),]
+  find_match <- which(data_prev$home==home_team & data_prev$visitor == away_team )
   sims <- extract(object)
   M <- dim(sims$y_prev)[1]
-  previsioni1<-sims$y_prev[, ,1]
-  previsioni2<-sims$y_prev[, ,2]
+  previsioni1<-sims$y_prev[, find_match ,1]
+  previsioni2<-sims$y_prev[, find_match,2]
   posterior_prop1<-table(subset(previsioni1, previsioni1<15))
   posterior_prop2<-table(subset(previsioni2, previsioni2<15))
 
-  teamaa=teams[team1_prev[1]]
-  teamab=teams[team2_prev[1]]
+  teamaa=home_team
+  teamab=away_team
 
   x_min=y_min=min(length(posterior_prop1),
                   length(posterior_prop2))
@@ -322,12 +324,12 @@ foot_prob <- function(object, teams, home_team, away_team,
   ggplot(data, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
     theme_bw() +
     scale_fill_gradient(low="white", high="black") +
-    geom_rect(aes(xmin = as.numeric(as.vector(gol_vero1))[1]-0.5,
-                  xmax = as.numeric(as.vector(gol_vero1))[1]+0.5,
-                  ymin = as.numeric(as.vector(gol_vero2))[1]-0.5,
-                  ymax =as.numeric(as.vector(gol_vero2))[1]+0.5),
+    geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))[1]-0.5,
+                  xmax = as.numeric(as.vector(true_gol_home))[1]+0.5,
+                  ymin = as.numeric(as.vector(true_gol_away))[1]-0.5,
+                  ymax =as.numeric(as.vector(true_gol_away))[1]+0.5),
               fill = "transparent", color = "red", size = 1.5)+
-    labs(title=paste(  teams[team1_prev[1]],"-", teams[team2_prev[1]]))+
+    labs(title=paste(  teamaa,"-", teamab))+
     yaxis_text(size=12)+
     xaxis_text( size = rel(12))+
     theme(plot.title = element_text(size = 22),
