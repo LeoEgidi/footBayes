@@ -14,3 +14,19 @@ foot_abilities(object, teams)
 \description{
 Plots
 }
+\examples{
+library(engsoccerdata)
+library(tidyverse)
+
+ristr_italy <- as_data_frame(italy)
+ristr_italy<- ristr_italy \%>\%
+ select(Season, home, visitor, hgoal,vgoal) \%>\%
+ filter(Season=="2000" |  Season=="2001"| Season =="2002")
+fit<-stan_foot(data = ristr_italy,
+                       model="biv_pois", predict =306,
+                       dynamic_type = "seasonal")
+teams <- unique(ristr_italy$home)
+foot_abilities(fit, teams)
+
+ @export
+}

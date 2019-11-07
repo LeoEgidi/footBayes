@@ -136,13 +136,15 @@ foot_abilities <- function(object, teams){
 
     posterior <- as.array(object)
     #mcmc_intervals(posterior, regex_pars=c("att"))
+    ord <- sort.int(att_mean, decreasing =FALSE,
+                    index.return = TRUE)$ix
 
-    coefplot(rev(att_mean), rev(att_sd), CI=2,
-             varnames=rev(teams), main="Attack/Defense abilities (95% post. intervals)\n",
+    coefplot(rev(att_mean[ord]), rev(att_sd[ord]), CI=2,
+             varnames=rev(teams[ord]), main="Attack/Defense abilities (95% post. intervals)\n",
              cex.var=1, mar=c(1,7,4,2), lwd=2,
              cex.main=0.9,pch=16, col="red")
-    coefplot(rev(def_mean), rev(def_sd), CI=2,
-             varnames=rev(teams), main="Defense abilities (95% post. intervals)\n",
+    coefplot(rev(def_mean[ord]), rev(def_sd[ord]), CI=2,
+             varnames=rev(teams[ord]), main="Defense abilities (95% post. intervals)\n",
              cex.var=1, mar=c(1,7,4,2), lwd=2,
              cex.main=0.9,pch=16, col="blue", add=TRUE)
 
