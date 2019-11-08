@@ -1,6 +1,13 @@
 #' Probabilities
 #'
-#' @param object
+#' @param object An object of class \code{stanfit} as given by \code{stan_foot} function.
+#' @param teams Character vector with the list of teams as extracted from the dataset.
+#' @param data a data frame, or a matrix containing the following mandatory items: home team, away team,
+#'home goals, away goals.
+#' @param home_team The home team
+#' @param away_team
+#' @param true_gol_home
+#' @param true_gol_away
 #'
 #' @examples
 #'
@@ -11,8 +18,8 @@
 #'  filter(Season=="2000")
 #'
 #' fit <- stan_foot(data = italy_2000,
-#'                  model="student_t", predict =18,
-#'                  dynamic_type = "weekly")  # double poisson
+#'                  model="double_pois", predict =18,
+#'                  dynamic_type = "weekly")  # student t
 #'
 #' teams <- unique(italy_2000$home)
 #' foot_prob(fit, teams, italy_2000, "Inter",
@@ -28,6 +35,9 @@ foot_prob <- function(object, teams, data, home_team, away_team,
   find_match <- which(data_prev$home==home_team & data_prev$visitor == away_team )
   sims <- extract(object)
   M <- dim(sims$y_prev)[1]
+  if (is.null(sims$y_prev)){
+    stop("foot_prob function can not be used with the student_t model")
+  }
   previsioni1<-sims$y_prev[, find_match ,1]
   previsioni2<-sims$y_prev[, find_match,2]
   posterior_prop1<-table(subset(previsioni1, previsioni1<15))

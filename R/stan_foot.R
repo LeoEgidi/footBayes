@@ -1,9 +1,14 @@
-#' Fit any football model
+#' Fit many football models  with Stan
 #'
-#'@param data a data frame, or a matrix containing the following mandatory items: home team, away team,
+#' Stan football modelling for the most famous models:
+#' double Poisson, bivariate Poisson, Skellam and student t.
+#'
+#'@param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'home goals, away goals.
-#'@param model
-#'@param predict
+#'@param model The type of Stan model used to fit the data.
+#'             One among the following: \code{"double_pois"},
+#'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.
+#'@param predict The number of out-of-sample matches.
 #'
 #'
 #'@examples
