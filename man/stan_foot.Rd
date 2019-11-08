@@ -21,6 +21,18 @@ One among the following: \code{"double_pois"},
 Stan football modelling for the most famous models:
 double Poisson, bivariate Poisson, Skellam and student t.
 }
+\details{
+Let $(y^{H}_{n}, y^{A}_{n})$ denote the observed number of goals scored by the home and the away team in the $n$-th game, respectively. A general bivariate Poisson model allowing for goals' correlation \citep{karlis2003analysis} is the following:
+
+\deqn{ Y^H_n, Y^A_n| \lambda_{1n}, \lambda_{2n}, \lambda_{3n}  \sim \mathsf{BivPoisson}(\lambda_{1n}, \lambda_{2n}, \lambda_{3n})}
+\deqn{\log(\lambda_{1n})  = \theta+\text{att}_{h_n}+\text{def}_{a_n}}
+\deqn{\log(\lambda_{2n}) & = \theta+\text{att}_{a_n}+\text{def}_{h_n}}
+\deqn{\log(\lambda_{3n}) & =\beta_0,}
+
+where the case \eqn{\lambda_{3n}=0} reduces to the double Poisson model \citep{baio2010bayesian}.  \eqn{\lambda_{1n}, \lambda_{2n}} represent the scoring rates for the home and the away team, respectively, where: \eqn{\theta} is the common baseline parameter; the parameters \eqn{\text{att}_T} and \eqn{\text{def}_T} represent the attack and the defence abilities,
+respectively, for each team \eqn{T}, \eqn{T=1,\ldots,N_T}; the nested indexes \eqn{h_{n}, a_{n}=1,\ldots,N_T} denote the home and the away team playing in the \eqn{n}-th game,
+respectively.
+}
 \examples{
 library(engsoccerdata)
 library(tidyverse)
@@ -70,4 +82,7 @@ fit6 <- stan_foot(data = italy_2000_2002,
                 predict = 306) # double poisson
 print(fit6, pars =c("home", "Sigma_att",
                     "Sigma_def"))
+}
+\author{
+Leonardo Egidi \email{legidi@units.it}
 }

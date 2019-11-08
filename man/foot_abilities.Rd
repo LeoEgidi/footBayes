@@ -42,6 +42,7 @@ foot_abilities(fit1, teams)
 foot_abilities(fit2, teams)
 foot_abilities(fit3, teams)
 foot_abilities(fit4, teams)
+ggsave(file="student_t_ab.pdf", width =12, height =7)
 
 ### seasonal dynamics, predict the last season
 
