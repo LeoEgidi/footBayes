@@ -3,7 +3,6 @@
 #' Depicts probabilities from out-of-sample football matches.
 #'
 #' @param object An object of class \code{stanfit} as given by \code{stan_foot} function.
-#' @param teams Character vector with the list of teams as extracted from the dataset.
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'home goals, away goals.
 #' @param home_team The home team for the predicted match.
@@ -23,17 +22,21 @@
 #'                  model="double_pois", predict =18,
 #'                  dynamic_type = "weekly")  # double pois
 #'
-#' teams <- unique(italy_2000$home)
-#' foot_prob(fit, teams, italy_2000, "Inter",
-#'           "Bologna FC", predict = 18)
+#' foot_prob(fit, italy_2000, "Inter",
+#'           "Bologna FC")
+#'
+#' foot_prob(fit, italy_2000, "Reggina Calcio",
+#'            "AC Milan")
 #'}
 #' @export
 
 
-foot_prob <- function(object, teams, data, home_team, away_team,
-                      predict,
+foot_prob <- function(object, data, home_team, away_team,
                       true_gol_home = 0, true_gol_away = 0){
 
+  teams <- unique(data$home)
+  sims <- rstan::extract(object)
+  predict <- dim(sims$y_prev)[2]
   data_prev <- data[(dim(data)[1]-predict +1):(dim(data)[1]),]
   find_match <- which(data_prev$home==home_team & data_prev$visitor == away_team )
   sims <- rstan::extract(object)
