@@ -56,9 +56,11 @@ foot_prob <- function(object, teams, data, home_team, away_team,
     for (t in 1: min(length(posterior_prop1), length(posterior_prop2))){
       counts_mix[j,t]<-posterior_prop1[j]*posterior_prop2[t]
     }}
+  dim1 <- dim(counts_mix)[1]
+  dim2 <- dim(counts_mix)[2]
 
-  x <- seq(0,5, length.out=dim(counts_mix)[1])
-  y <- seq(0,5, length.out=dim(counts_mix)[2])
+  x <- seq(0,dim1-1, length.out=dim1)
+  y <- seq(0,dim2-1, length.out=dim2)
   data <- expand.grid(Home=x, Away=y)
   data$Prob <- as.double(counts_mix/(M*M))
 
