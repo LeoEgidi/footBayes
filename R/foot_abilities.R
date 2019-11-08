@@ -34,6 +34,7 @@
 #' foot_abilities(fit2, teams)
 #' foot_abilities(fit3, teams)
 #' foot_abilities(fit4, teams)
+#' ggsave(file="student_t_ab.pdf", width =12, height =7)
 #'
 #' ### seasonal dynamics, predict the last season
 #'
@@ -66,7 +67,7 @@
 
 foot_abilities <- function(object, teams){
 
-  sims <- extract(object)
+  sims <- rstan::extract(object)
   att <- sims$att
   def <- sims$def
 
