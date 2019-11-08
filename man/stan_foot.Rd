@@ -46,6 +46,29 @@ respectively, for each team \eqn{T}, \eqn{T=1,\ldots,N_T};
 the nested indexes \eqn{h_{n}, a_{n}=1,\ldots,N_T}
 denote the home and the away team playing in the \eqn{n}-th game,
 respectively.
+
+Instead of using the marginal number of goals,
+another alternative is to modelling directly
+the score difference \eqn{(y^{H}_{n}- y^{A}_{n})}.
+We cause the Poisson-difference distribution
+(or Skellam distribution) to model goal
+difference in the \eqn{n}-th match (Karlis & Ntzoufras, 2009):
+
+\deqn{y^{H}_{n}- y^{A}_{n}| \lambda_{1n}, \lambda_{2n} \sim PD(\lambda_{1n}, \lambda_{2n}),}
+
+and the scoring rates \eqn{\lambda_{1n}, \lambda_{2n}} are
+unchanged with respect the bivariate/double Poisson model.
+If we want to use a continue distribution, we can
+use a student t distribution with 7 degrees of
+freedom (Gelman, 2014):
+
+\deqn{y^{H}_{n}- y^{A}_{n} \sim t(7, \text{ab}_{h_{n}}-\text{ab}_{a(n)}, \sigma_y)}
+\deqn{\text{ab}_t \sim \mathcal{N}(\mu + b \times \text{prior\_score}_t, sigma_{\text{ab}}),}
+
+where \eqn{\text{ab}_t} is the overall ability for
+the \eqn{t}-th team, whereas \eqn{\text{prior\_score}_t}
+is a prior measure of team's strength (for instance a
+ranking).
 }
 \examples{
 library(engsoccerdata)
@@ -96,6 +119,19 @@ fit6 <- stan_foot(data = italy_2000_2002,
                 predict = 306) # double poisson
 print(fit6, pars =c("home", "Sigma_att",
                     "Sigma_def"))
+}
+\references{
+Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
+results. Journal of Applied Statistics 37(2), 253–264.
+
+Gelman, A. (2014). Stan goes to the World Cup. From
+"Statistical Modeling, Causal Inference, and Social Science" blog.
+
+Karlis, D. and Ntzoufras, I. (2003). Analysis of sports data by using bivariate poisson models.
+Journal of the Royal Statistical Society: Series D (The Statistician) 52(3), 381–393.
+
+Karlis, D. and Ntzoufras,I. (2009).  Bayesian modelling of football outcomes: Using
+the Skellam's distribution for the goal difference. IMA Journal of Management Mathematics 20(2), 133-145.
 }
 \author{
 Leonardo Egidi \email{legidi@units.it}
