@@ -8,7 +8,16 @@ foot_prob(object, teams, data, home_team, away_team, predict,
   true_gol_home = 0, true_gol_away = 0)
 }
 \arguments{
-\item{object}{}
+\item{object}{An object of class \code{stanfit} as given by \code{stan_foot} function.}
+
+\item{teams}{Character vector with the list of teams as extracted from the dataset.}
+
+\item{data}{a data frame, or a matrix containing the following mandatory items: home team, away team,
+home goals, away goals.}
+
+\item{home_team}{The home team}
+
+\item{true_gol_away}{}
 }
 \description{
 Probabilities
@@ -21,8 +30,8 @@ italy_2000<- italy \%>\%
  filter(Season=="2000")
 
 fit <- stan_foot(data = italy_2000,
-                 model="student_t", predict =18,
-                 dynamic_type = "weekly")  # double poisson
+                 model="double_pois", predict =18,
+                 dynamic_type = "weekly")  # student t
 
 teams <- unique(italy_2000$home)
 foot_prob(fit, teams, italy_2000, "Inter",

@@ -2,19 +2,24 @@
 % Please edit documentation in R/stan_foot.R
 \name{stan_foot}
 \alias{stan_foot}
-\title{Fit any football model}
+\title{Fit many football models  with Stan}
 \usage{
 stan_foot(data, model, predict, n.iter = 200, chains = 4,
   dynamic_type = FALSE)
 }
 \arguments{
-\item{data}{a data frame, or a matrix containing the following mandatory items: home team, away team,
+\item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
 home goals, away goals.}
 
-\item{predict}{}
+\item{model}{The type of Stan model used to fit the data.
+One among the following: \code{"double_pois"},
+\code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.}
+
+\item{predict}{The number of out-of-sample matches.}
 }
 \description{
-Fit any football model
+Stan football modelling for the most famous models:
+double Poisson, bivariate Poisson, Skellam and student t.
 }
 \examples{
 library(engsoccerdata)
