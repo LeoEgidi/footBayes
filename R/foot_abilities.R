@@ -1,4 +1,6 @@
-#' Plots
+#' Plot football abilities
+#'
+#' Depicts teams' abilities from the Stan models fitted via the \code{stan_foot} function.
 #'
 #'
 #' @param object An object of class \code{stanfit} as given by \code{stan_foot} function.

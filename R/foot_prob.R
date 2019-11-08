@@ -1,16 +1,18 @@
-#' Probabilities
+#' Plot football match probabilities
+#'
+#' Depicts probabilities from out-of-sample football matches.
 #'
 #' @param object An object of class \code{stanfit} as given by \code{stan_foot} function.
 #' @param teams Character vector with the list of teams as extracted from the dataset.
-#' @param data a data frame, or a matrix containing the following mandatory items: home team, away team,
+#' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'home goals, away goals.
-#' @param home_team The home team
-#' @param away_team
-#' @param true_gol_home
-#' @param true_gol_away
+#' @param home_team The home team for the predicted match.
+#' @param away_team The away team for the predicted match.
+#' @param true_gol_home The true home gol (if known)
+#' @param true_gol_away The true away gol (if known)
 #'
 #' @examples
-#'
+#' \dontrun{
 #' ### weekly dynamics, predict the last four weeks
 
 #' italy_2000<- italy %>%
@@ -19,11 +21,12 @@
 #'
 #' fit <- stan_foot(data = italy_2000,
 #'                  model="double_pois", predict =18,
-#'                  dynamic_type = "weekly")  # student t
+#'                  dynamic_type = "weekly")  # double pois
 #'
 #' teams <- unique(italy_2000$home)
 #' foot_prob(fit, teams, italy_2000, "Inter",
 #'           "Bologna FC", predict = 18)
+#'}
 #' @export
 
 
