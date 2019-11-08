@@ -2,7 +2,7 @@
 % Please edit documentation in R/foot_abilities.R
 \name{foot_abilities}
 \alias{foot_abilities}
-\title{Plots}
+\title{Plot football abilities from Stan models}
 \usage{
 foot_abilities(object, teams)
 }
@@ -12,7 +12,7 @@ foot_abilities(object, teams)
 \item{teams}{Character vector with the list of teams as extracted from the dataset.}
 }
 \description{
-Plots
+Depicts teams' abilities from the Stan models fitted via the \code{stan_foot} function.
 }
 \examples{
 library(engsoccerdata)

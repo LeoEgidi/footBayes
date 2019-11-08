@@ -2,7 +2,7 @@
 % Please edit documentation in R/stan_foot.R
 \name{stan_foot}
 \alias{stan_foot}
-\title{Fit many football models  with Stan}
+\title{Fit football models  with Stan}
 \usage{
 stan_foot(data, model, predict, n.iter = 200, chains = 4,
   dynamic_type = FALSE)

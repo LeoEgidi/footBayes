@@ -2,7 +2,7 @@
 % Please edit documentation in R/foot_prob.R
 \name{foot_prob}
 \alias{foot_prob}
-\title{Probabilities}
+\title{Plot football matches probabilities from Stan model}
 \usage{
 foot_prob(object, teams, data, home_team, away_team, predict,
   true_gol_home = 0, true_gol_away = 0)
@@ -12,18 +12,22 @@ foot_prob(object, teams, data, home_team, away_team, predict,
 
 \item{teams}{Character vector with the list of teams as extracted from the dataset.}
 
-\item{data}{a data frame, or a matrix containing the following mandatory items: home team, away team,
+\item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
 home goals, away goals.}
 
-\item{home_team}{The home team}
+\item{home_team}{The home team for the predicted match.}
 
-\item{true_gol_away}{}
+\item{away_team}{The away team for the predicted match.}
+
+\item{true_gol_home}{The true home gol (if known)}
+
+\item{true_gol_away}{The true away gol (if known)}
 }
 \description{
-Probabilities
+Depicts probabilities from out-of-sample football matches.
 }
 \examples{
-
+\dontrun{
 ### weekly dynamics, predict the last four weeks
 italy_2000<- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
@@ -31,9 +35,10 @@ italy_2000<- italy \%>\%
 
 fit <- stan_foot(data = italy_2000,
                  model="double_pois", predict =18,
-                 dynamic_type = "weekly")  # student t
+                 dynamic_type = "weekly")  # double pois
 
 teams <- unique(italy_2000$home)
 foot_prob(fit, teams, italy_2000, "Inter",
           "Bologna FC", predict = 18)
+}
 }
