@@ -1,4 +1,4 @@
-#' Fit many football models  with Stan
+#' Fit football models  with Stan
 #'
 #' Stan football modelling for the most famous models:
 #' double Poisson, bivariate Poisson, Skellam and student t.

@@ -1,4 +1,4 @@
-#' Plot football abilities
+#' Plot football abilities from Stan models
 #'
 #' Depicts teams' abilities from the Stan models fitted via the \code{stan_foot} function.
 #'

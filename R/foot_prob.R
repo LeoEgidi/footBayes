@@ -1,4 +1,4 @@
-#' Plot football match probabilities
+#' Plot football matches probabilities from Stan model
 #'
 #' Depicts probabilities from out-of-sample football matches.
 #'
@@ -36,7 +36,7 @@ foot_prob <- function(object, teams, data, home_team, away_team,
 
   data_prev <- data[(dim(data)[1]-predict +1):(dim(data)[1]),]
   find_match <- which(data_prev$home==home_team & data_prev$visitor == away_team )
-  sims <- extract(object)
+  sims <- rstan::extract(object)
   M <- dim(sims$y_prev)[1]
   if (is.null(sims$y_prev)){
     stop("foot_prob function can not be used with the student_t model")
