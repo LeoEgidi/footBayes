@@ -17,6 +17,9 @@ One among the following: \code{"double_pois"},
 \item{predict}{The number of out-of-sample matches. If missing, the function returns
 the fit for the training set only.}
 
+\item{...}{Optional parameters passed to the function
+in the \code{rstan} package.}
+
 \item{dynamic_type}{One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 dynamic parameters.}
 }

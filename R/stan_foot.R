@@ -3,7 +3,7 @@
 #' Stan football modelling for the most famous models:
 #' double Poisson, bivariate Poisson, Skellam and student t.
 #'
-#'@param data A data frame, or a matrix containing the following mandatory items: home team, away team,
+#'@param data A data frame, or a matrix containing the following mandatory items: season, home team, away team,
 #'home goals, away goals.
 #'@param model The type of Stan model used to fit the data.
 #'             One among the following: \code{"double_pois"},
@@ -71,7 +71,7 @@
 #'
 #'@references
 #' Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
-#' results. Journal of Applied Statistics 37(2), 253–264.
+#' results. Journal of Applied Statistics 37(2), 253-264.
 #'
 #' Gelman, A. (2014). Stan goes to the World Cup. From
 #' "Statistical Modeling, Causal Inference, and Social Science" blog.
