@@ -161,7 +161,7 @@ print(fit6, pars =c("home", "Sigma_att",
 Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
 results. Journal of Applied Statistics 37(2), 253-264.
 
-Egidi, L., Pauli, F., & Torelli, N. (2018). Combining historical data
+Egidi, L., Pauli, F., and Torelli, N. (2018). Combining historical data
 and bookmakers’ odds in modelling football scores. Statistical Modelling, 18(5-6), 436-459.
 
 Gelman, A. (2014). Stan goes to the World Cup. From
