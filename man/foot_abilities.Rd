@@ -4,12 +4,13 @@
 \alias{foot_abilities}
 \title{Plot football abilities from Stan models}
 \usage{
-foot_abilities(object, teams)
+foot_abilities(object, data)
 }
 \arguments{
 \item{object}{An object of class \code{stanfit} as given by \code{stan_foot} function.}
 
-\item{teams}{Character vector with the list of teams as extracted from the dataset.}
+\item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
+home goals, away goals.}
 }
 \description{
 Depicts teams' abilities from the Stan models fitted via the \code{stan_foot} function.
@@ -37,11 +38,10 @@ fit3 <- stan_foot(data = italy_2000_2002,
 fit4 <- stan_foot(data = italy_2000_2002,
                 model="student_t")   # student_t
 
-teams <- unique(italy_2000_2002$home)
-foot_abilities(fit1, teams)
-foot_abilities(fit2, teams)
-foot_abilities(fit3, teams)
-foot_abilities(fit4, teams)
+foot_abilities(fit1, italy_2000_2002)
+foot_abilities(fit2, italy_2000_2002)
+foot_abilities(fit3, italy_2000_2002)
+foot_abilities(fit4, italy_2000_2002)
 ggsave(file="student_t_ab.pdf", width =12, height =7)
 
 ### seasonal dynamics, predict the last season
@@ -49,8 +49,7 @@ ggsave(file="student_t_ab.pdf", width =12, height =7)
 fit5 <-stan_foot(data = italy_2000_2002,
                        model="biv_pois", predict =306,
                        dynamic_type = "seasonal")   # bivariate poisson
-teams <- unique(italy_2000_2002$home)
-foot_abilities(fit5, teams)
+foot_abilities(fit5, italy_2000_2002)
 
 ### weekly dynamics, predict the last four weeks
 
@@ -66,8 +65,8 @@ fit7 <- stan_foot(data = italy_2000,
                 model="student_t", predict =36,
                 dynamic_type = "weekly")  # student_t
 
-teams <- unique(italy_2000$home)
-foot_abilities(fit6, teams)
-foot_abilities(fit7, teams)
+
+foot_abilities(fit6, italy_2000)
+foot_abilities(fit7, italy_2000)
 
 }

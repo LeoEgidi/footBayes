@@ -17,6 +17,9 @@ One among the following: \code{"double_pois"},
 
 \item{predict}{The number of out-of-sample matches.}
 }
+\value{
+An object of S4 class \code{stanfit}.
+}
 \description{
 Stan football modelling for the most famous models:
 double Poisson, bivariate Poisson, Skellam and student t.
@@ -50,14 +53,14 @@ respectively.
 Instead of using the marginal number of goals,
 another alternative is to modelling directly
 the score difference \eqn{(y^{H}_{n}- y^{A}_{n})}.
-We cause the Poisson-difference distribution
+We can use the Poisson-difference distribution
 (or Skellam distribution) to model goal
 difference in the \eqn{n}-th match (Karlis & Ntzoufras, 2009):
 
 \deqn{y^{H}_{n}- y^{A}_{n}| \lambda_{1n}, \lambda_{2n} \sim PD(\lambda_{1n}, \lambda_{2n}),}
 
 and the scoring rates \eqn{\lambda_{1n}, \lambda_{2n}} are
-unchanged with respect the bivariate/double Poisson model.
+unchanged with respect to the bivariate/double Poisson model.
 If we want to use a continue distribution, we can
 use a student t distribution with 7 degrees of
 freedom (Gelman, 2014):
@@ -128,7 +131,7 @@ Gelman, A. (2014). Stan goes to the World Cup. From
 "Statistical Modeling, Causal Inference, and Social Science" blog.
 
 Karlis, D. and Ntzoufras, I. (2003). Analysis of sports data by using bivariate poisson models.
-Journal of the Royal Statistical Society: Series D (The Statistician) 52(3), 381–393.
+Journal of the Royal Statistical Society: Series D (The Statistician) 52(3), 381-393.
 
 Karlis, D. and Ntzoufras,I. (2009).  Bayesian modelling of football outcomes: Using
 the Skellam's distribution for the goal difference. IMA Journal of Management Mathematics 20(2), 133-145.

@@ -4,13 +4,11 @@
 \alias{foot_prob}
 \title{Plot football matches probabilities from Stan model}
 \usage{
-foot_prob(object, teams, data, home_team, away_team, predict,
-  true_gol_home = 0, true_gol_away = 0)
+foot_prob(object, data, home_team, away_team, true_gol_home = 0,
+  true_gol_away = 0)
 }
 \arguments{
 \item{object}{An object of class \code{stanfit} as given by \code{stan_foot} function.}
-
-\item{teams}{Character vector with the list of teams as extracted from the dataset.}
 
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
 home goals, away goals.}
@@ -37,8 +35,10 @@ fit <- stan_foot(data = italy_2000,
                  model="double_pois", predict =18,
                  dynamic_type = "weekly")  # double pois
 
-teams <- unique(italy_2000$home)
-foot_prob(fit, teams, italy_2000, "Inter",
-          "Bologna FC", predict = 18)
+foot_prob(fit, italy_2000, "Inter",
+          "Bologna FC")
+
+foot_prob(fit, italy_2000, "Reggina Calcio",
+           "AC Milan")
 }
 }

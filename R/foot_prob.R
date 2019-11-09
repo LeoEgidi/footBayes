@@ -39,6 +39,12 @@ foot_prob <- function(object, data, home_team, away_team,
   predict <- dim(sims$y_prev)[2]
   data_prev <- data[(dim(data)[1]-predict +1):(dim(data)[1]),]
   find_match <- which(data_prev$home==home_team & data_prev$visitor == away_team )
+
+  if (length(find_match)==0){
+    stop(paste("There is not any out-of-sample match:",
+               home_team,"-", away_team, sep=""))
+  }
+
   sims <- rstan::extract(object)
   M <- dim(sims$y_prev)[1]
   if (is.null(sims$y_prev)){
