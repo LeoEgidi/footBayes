@@ -12,7 +12,8 @@
 #'the fit for the training set only.
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
-#'@param ...
+#'@param ... Optional parameters passed to the function
+#'in the \code{rstan} package.
 #'@return
 #'
 #'An object of S4 class, \code{\link[rstan]{stanfit-class}}.

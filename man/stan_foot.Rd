@@ -4,8 +4,7 @@
 \alias{stan_foot}
 \title{Fit football models  with Stan}
 \usage{
-stan_foot(data, model, predict, n.iter = 200, chains = 4,
-  dynamic_type = FALSE)
+stan_foot(data, model, predict, ..., dynamic_type = FALSE)
 }
 \arguments{
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
@@ -15,10 +14,14 @@ home goals, away goals.}
 One among the following: \code{"double_pois"},
 \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.}
 
-\item{predict}{The number of out-of-sample matches.}
+\item{predict}{The number of out-of-sample matches. If missing, the function returns
+the fit for the training set only.}
+
+\item{dynamic_type}{One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
+dynamic parameters.}
 }
 \value{
-An object of S4 class \code{stanfit}.
+An object of S4 class, \code{\link[rstan]{stanfit-class}}.
 }
 \description{
 Stan football modelling for the most famous models:
