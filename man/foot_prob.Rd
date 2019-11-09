@@ -4,8 +4,7 @@
 \alias{foot_prob}
 \title{Plot football matches probabilities from Stan model}
 \usage{
-foot_prob(object, data, home_team, away_team, true_gol_home = 0,
-  true_gol_away = 0)
+foot_prob(object, data, home_team, away_team)
 }
 \arguments{
 \item{object}{An object of class \code{stanfit} as given by \code{stan_foot} function.}
@@ -16,10 +15,6 @@ home goals, away goals.}
 \item{home_team}{The home team for the predicted match.}
 
 \item{away_team}{The away team for the predicted match.}
-
-\item{true_gol_home}{The true home gol (if known)}
-
-\item{true_gol_away}{The true away gol (if known)}
 }
 \description{
 Depicts probabilities from out-of-sample football matches.

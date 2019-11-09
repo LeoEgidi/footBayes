@@ -80,6 +80,7 @@ is a prior measure of team's strength (for instance a
 ranking).
 }
 \examples{
+\dontrun{
 library(engsoccerdata)
 library(tidyverse)
 
@@ -128,6 +129,7 @@ fit6 <- stan_foot(data = italy_2000_2002,
                 predict = 306) # double poisson
 print(fit6, pars =c("home", "Sigma_att",
                     "Sigma_def"))
+}
 }
 \references{
 Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
