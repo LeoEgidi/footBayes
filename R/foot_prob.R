@@ -7,8 +7,6 @@
 #'home goals, away goals.
 #' @param home_team The home team for the predicted match.
 #' @param away_team The away team for the predicted match.
-#' @param true_gol_home The true home gol (if known)
-#' @param true_gol_away The true away gol (if known)
 #'
 #' @examples
 #' \dontrun{
@@ -31,14 +29,17 @@
 #' @export
 
 
-foot_prob <- function(object, data, home_team, away_team,
-                      true_gol_home = 0, true_gol_away = 0){
+foot_prob <- function(object, data, home_team, away_team){
 
+  colnames(data) <- c("season", "home", "away",
+                      "homegoals", "awaygoals")
   teams <- unique(data$home)
   sims <- rstan::extract(object)
   predict <- dim(sims$y_prev)[2]
   data_prev <- data[(dim(data)[1]-predict +1):(dim(data)[1]),]
-  find_match <- which(data_prev$home==home_team & data_prev$visitor == away_team )
+  find_match <- which(data_prev$home==home_team & data_prev$away == away_team )
+  true_gol_home <- data$homegoals[dim(sims$y_rep)[2]+predict]
+  true_gol_away <- data$awaygoals[dim(sims$y_rep)[2]+predict]
 
   if (length(find_match)==0){
     stop(paste("There is not any out-of-sample match:",

@@ -84,6 +84,7 @@
 #'
 #'
 #'@examples
+#'\dontrun{
 #'library(engsoccerdata)
 #'library(tidyverse)
 #'
@@ -132,6 +133,7 @@
 #'                 predict = 306) # double poisson
 #' print(fit6, pars =c("home", "Sigma_att",
 #'                     "Sigma_def"))
+#'}
 #'@export
 
 

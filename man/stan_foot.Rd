@@ -4,10 +4,10 @@
 \alias{stan_foot}
 \title{Fit football models  with Stan}
 \usage{
-stan_foot(data, model, predict, ..., dynamic_type = FALSE)
+stan_foot(data, model, predict, dynamic_type = FALSE, ...)
 }
 \arguments{
-\item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
+\item{data}{A data frame, or a matrix containing the following mandatory items: season, home team, away team,
 home goals, away goals.}
 
 \item{model}{The type of Stan model used to fit the data.
@@ -17,11 +17,11 @@ One among the following: \code{"double_pois"},
 \item{predict}{The number of out-of-sample matches. If missing, the function returns
 the fit for the training set only.}
 
-\item{...}{Optional parameters passed to the function
-in the \code{rstan} package.}
-
 \item{dynamic_type}{One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 dynamic parameters.}
+
+\item{...}{Optional parameters passed to the function
+in the \code{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
 }
 \value{
 An object of S4 class, \code{\link[rstan]{stanfit-class}}.
@@ -131,7 +131,7 @@ print(fit6, pars =c("home", "Sigma_att",
 }
 \references{
 Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
-results. Journal of Applied Statistics 37(2), 253–264.
+results. Journal of Applied Statistics 37(2), 253-264.
 
 Gelman, A. (2014). Stan goes to the World Cup. From
 "Statistical Modeling, Causal Inference, and Social Science" blog.
