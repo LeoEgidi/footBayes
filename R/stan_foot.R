@@ -76,7 +76,7 @@
 #'
 #' These model rely on the assumption of static parameters.
 #' However, we could assume dynamics in the attach/defence
-#' abilities in terms of weeks or seasons through the argument
+#' abilities (Owen, 2011; Egidi et al., 2018) in terms of weeks or seasons through the argument
 #' \code{dynamic_type}. In such a framework, for a given
 #' number of times \eqn{1, \ldots, \mathcal{T}}, the models
 #' above would be unchanged, but the priors for the abilities
@@ -88,7 +88,7 @@
 #' whereas for \eqn{\tau=1} we have:
 #'
 #' \deqn{\text{att}_{T, 1} \sim \mathcal{N}(\mu_{\text{att}}, \sigma_{\text{att}})}
-#' \deqn{\text{def}_{T, 1} \sim \mathcal{N}(\mu_{\text{def}}, \sigma_{\text{def}})}.
+#' \deqn{\text{def}_{T, 1} \sim \mathcal{N}(\mu_{\text{def}}, \sigma_{\text{def}}).}
 #'
 #' Of course, the identifiability constraint must be impoed for
 #' each time \eqn{\tau}.
@@ -99,6 +99,9 @@
 #' Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
 #' results. Journal of Applied Statistics 37(2), 253-264.
 #'
+#' Egidi, L., Pauli, F., & Torelli, N. (2018). Combining historical data
+#' and bookmakers’ odds in modelling football scores. Statistical Modelling, 18(5-6), 436-459.
+#'
 #' Gelman, A. (2014). Stan goes to the World Cup. From
 #' "Statistical Modeling, Causal Inference, and Social Science" blog.
 #'
@@ -107,6 +110,10 @@
 #'
 #' Karlis, D. and Ntzoufras,I. (2009).  Bayesian modelling of football outcomes: Using
 #' the Skellam's distribution for the goal difference. IMA Journal of Management Mathematics 20(2), 133-145.
+#'
+#' Owen, A. (2011). Dynamic Bayesian forecasting models
+#' of football match outcomes with estimation of the
+#' evolution variance parameter. IMA Journal of Management Mathematics, 22(2), 99-113.
 #'
 #'
 #'@examples

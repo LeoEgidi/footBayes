@@ -54,7 +54,14 @@ the double Poisson model (Baio & Blangiardo, 2010).
 respectively, for each team \eqn{T}, \eqn{T=1,\ldots,N_T};
 the nested indexes \eqn{h_{n}, a_{n}=1,\ldots,N_T}
 denote the home and the away team playing in the \eqn{n}-th game,
-respectively.
+respectively. Attack/defence parameters are imposed a
+sum-to-zero constraint to achieve identifiability and
+assigned some weakly-informative prior distributions:
+
+\deqn{\text{att}_T \sim \mathcal{N}(\mu_{\text{att}}, \sigma_{\text{att}})}
+\deqn{\text{def}_T \sim \mathcal{N}(\mu_{\text{def}}, \sigma_{\text{def}}),}
+
+with hyperparameters \eqn{\mu_{\text{att}}, \sigma_{\text{att}}, \mu_{\text{def}}, \sigma_{\text{def}}}.
 
 Instead of using the marginal number of goals,
 another alternative is to modelling directly
@@ -78,6 +85,25 @@ where \eqn{\text{ab}_t} is the overall ability for
 the \eqn{t}-th team, whereas \eqn{\text{prior\_score}_t}
 is a prior measure of team's strength (for instance a
 ranking).
+
+These model rely on the assumption of static parameters.
+However, we could assume dynamics in the attach/defence
+abilities in terms of weeks or seasons through the argument
+\code{dynamic_type}. In such a framework, for a given
+number of times \eqn{1, \ldots, \mathcal{T}}, the models
+above would be unchanged, but the priors for the abilities
+parameters at each time \eqn{\tau, \tau=2,\ldots, \mathcal{T},} would be:
+
+\deqn{\text{att}_{T, \tau} \sim \mathcal{N}({\text{att}}_{T, \tau-1}, \sigma_{\text{att}})}
+\deqn{\text{def}_{T, \tau} \sim \mathcal{N}({\text{def}}_{T, \tau-1}, \sigma_{\text{def}}),}
+
+whereas for \eqn{\tau=1} we have:
+
+\deqn{\text{att}_{T, 1} \sim \mathcal{N}(\mu_{\text{att}}, \sigma_{\text{att}})}
+\deqn{\text{def}_{T, 1} \sim \mathcal{N}(\mu_{\text{def}}, \sigma_{\text{def}})}.
+
+Of course, the identifiability constraint must be impoed for
+each time \eqn{\tau}.
 }
 \examples{
 \dontrun{
