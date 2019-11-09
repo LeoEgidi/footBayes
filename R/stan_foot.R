@@ -13,7 +13,7 @@
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
 #'@param ... Optional parameters passed to the function
-#'in the \code{rstan} package.
+#'in the \code{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
 #'@return
 #'
 #'An object of S4 class, \code{\link[rstan]{stanfit-class}}.
@@ -138,13 +138,34 @@
 stan_foot <- function(data,
                       model,
                       predict,
-                      ...,
-                      dynamic_type = FALSE){
+                      dynamic_type = FALSE,
+                      ...){
 
 
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
   nteams<- length(unique(data$home))
+  user_dots <- list(chains = 4, iter = 2000,
+                    #warmup = floor(iter/2),
+                    thin = 1,
+                    init = "random", seed = sample.int(.Machine$integer.max, 1),
+                    algorithm = c("NUTS", "HMC", "Fixed_param"),
+                    control = NULL, sample_file = NULL, diagnostic_file = NULL,
+                    save_dso = TRUE, verbose = FALSE, include = TRUE,
+                    cores = getOption("mc.cores", 1L),
+                    open_progress = interactive() && !isatty(stdout()) &&
+                      !identical(Sys.getenv("RSTUDIO"), "1"),
+                    boost_lib = NULL, eigen_lib = NULL)
+  if (missing(...)){
+    user_dots <- user_dots
+  }else{
+    user_dots_prel <- list(...)
+    names_prel <- names(user_dots_prel)
+    names_dots<- names(user_dots)
+    for (u in 1:length(names_prel)){
+      user_dots[names_prel[u] == names_dots]<- user_dots_prel[u]
+    }
+  }
 
   if (missing(predict)){ # check on predict
     predict <- 0
@@ -243,8 +264,11 @@ stan_foot <- function(data,
   }
   fit <- stan(file=paste(model,"_", dyn, type, ".stan", sep=""),
                        data= data_stan,
-                       iter=n.iter,
-                       chains=4)
+                       iter = user_dots$iter,
+                       chains = user_dots$chains,
+                       thin = user_dots$thin,
+                       cores = user_dots$cores
+                       )
   return(fit)
 
 }
