@@ -8,11 +8,14 @@
 #'@param model The type of Stan model used to fit the data.
 #'             One among the following: \code{"double_pois"},
 #'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.
-#'@param predict The number of out-of-sample matches.
-#'
+#'@param predict The number of out-of-sample matches. If missing, the function returns
+#'the fit for the training set only.
+#'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
+#'dynamic parameters.
+#'@template ...
 #'@return
 #'
-#'An object of S4 class \code{stanfit}.
+#'An object of S4 class, \code{\link[rstan]{stanfit-class}}.
 #'
 #'@details
 #'Let \eqn{(y^{H}_{n}, y^{A}_{n})} denote the
@@ -134,8 +137,7 @@
 stan_foot <- function(data,
                       model,
                       predict,
-                      n.iter = 200,
-                      chains =4,
+                      ...,
                       dynamic_type = FALSE){
 
 
