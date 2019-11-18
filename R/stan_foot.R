@@ -297,7 +297,7 @@ stan_foot <- function(data,
     data_stan$time <- time
     data_stan$instants_prev <- instants_prev
   }
-  fit <- stan(file=paste(model,"_", dyn, type, ".stan", sep=""),
+  fit <- stan(file=paste("R/", model,"_", dyn, type, ".stan", sep=""),
                        data= data_stan,
                        iter = user_dots$iter,
                        chains = user_dots$chains,
