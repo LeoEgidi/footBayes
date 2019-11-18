@@ -2,9 +2,50 @@ exportPattern("^[[:alpha:]]+")
 export(stan_foot)
 export(foot_abilities)
 export(foot_prob)
-import(rstan)
+
+#import(rstan)
 import(engsoccerdata)
 import(tidyverse)
 import(arm)
 import(reshape2)
 import(ggplot2)
+importFrom(rstan,
+           #rstan-package,
+           #as.array,
+           As.mcmc.list,
+           check_hmc_diagnostics ,
+           #Diagnostic plots ,
+           expose_stan_functions ,
+           extract ,
+           extract_sparse_parts ,
+           #log_prob-methods ,
+           #loo.stanfit ,
+           lookup ,
+           makeconf_path ,
+           monitor ,
+           optimizing ,
+           #pairs.stanfit,
+           #print ,
+           read_rdump,
+           read_stan_csv,
+           #rstan-plotting-functions,
+           rstan.package.skeleton ,
+           rstan_gg_options ,
+           rstan_options ,
+           sampling ,
+           set_cppo ,
+           sflist2stanfit ,
+           stan,
+           stanc ,
+           #stanfit-class ,
+           #stanmodel-class ,
+           #stan_demo ,
+           stan_model,
+           stan_rdump ,
+           stan_version ,
+           #summary-methods ,
+           traceplot ,
+           vb
+           )
+importFrom(arm, coefplot)
+
