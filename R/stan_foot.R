@@ -297,6 +297,7 @@ stan_foot <- function(data,
     data_stan$time <- time
     data_stan$instants_prev <- instants_prev
   }
+  setwd("../footBayes/R")
   fit <- stan(file=paste(model,"_", dyn, type, ".stan", sep=""),
                        data= data_stan,
                        iter = user_dots$iter,
