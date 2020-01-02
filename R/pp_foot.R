@@ -57,7 +57,7 @@ pp_foot <- function(data, object,
                               xend=2+0.5, yend=freq_rel_obs[6]) , size=2, color = "blue")+
     geom_segment(mapping=aes( x=3-0.5, y=freq_rel_obs[7],
                               xend=3+0.5, yend=freq_rel_obs[7]) , size=2, color = "blue")+
-    labs(x="Goal difference", y="Posterior probabilities")+
+    labs(x="Goal difference", y="Posterior pred. distrib.")+
     yaxis_text(size=rel(1.2))+
     xaxis_text( size = rel(1.2))+
     scale_x_discrete(limits=esiti_short, labels=c("-3", "-2", "-1", "0","1", "2", "3"))+
@@ -65,7 +65,18 @@ pp_foot <- function(data, object,
           axis.text.x = element_text(size=15),
           axis.text.y = element_text(size=15))
     }else{
-      ppc_dens_overlay(diff_gol, diff_gol_rep)
+      #ppc_dens_overlay(diff_gol, diff_gol_rep)
+      plot(density(diff_gol, bw =0.5),
+           xlab = "Goal difference",
+           ylab = "Posterior pred. distrib.",
+           main = "",
+           lwd =3, col = "blue", cex.lab=1.3)
+      for (i in 1:M){
+        lines(density(diff_gol_rep[i,], bw =0.5),
+              col = "lightgray")
+      }
+      lines(density(diff_gol, bw =0.5), col = "blue",
+            lwd=3)
     }
 
 
