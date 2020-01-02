@@ -4,6 +4,7 @@ export(foot_abilities)
 export(foot_prob)
 
 import(rstan)
+import(bayesplot)
 #import(engsoccerdata)
 #import(tidyverse)
 import(arm)

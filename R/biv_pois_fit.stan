@@ -76,11 +76,13 @@ model{
 generated quantities{
   int y_rep[N,2];
   vector[N] log_lik;
+  int diff_y_rep[N];
 
   //in-sample replications
   for (n in 1:N){
     y_rep[n,1] = poisson_rng(theta[n,1]+theta[n,3]);
     y_rep[n,2] = poisson_rng(theta[n,2]+theta[n,3]);
+    diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
     log_lik[n] =bipois_lpmf(y[n,]| theta[n,1],
                             theta[n,2], theta[n,3]);
   }

@@ -48,6 +48,7 @@ model{
 generated quantities{
   int y_rep[N,2];
   int y_prev[N_prev,2];
+  int diff_y_rep[N];
   vector[2] theta_prev[N_prev];
   vector[N] log_lik;
 
@@ -55,6 +56,7 @@ generated quantities{
   for (n in 1:N){
     y_rep[n,1] = poisson_rng(theta[n,1]);
     y_rep[n,2] = poisson_rng(theta[n,2]);
+    diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
     log_lik[n] =poisson_lpmf(y[n,1]| theta[n,1])+
                 poisson_lpmf(y[n,2]| theta[n,2]);
   }
