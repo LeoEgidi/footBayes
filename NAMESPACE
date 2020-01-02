@@ -5,6 +5,7 @@ export(foot_prob)
 
 import(rstan)
 import(bayesplot)
+import(matrixStats)
 #import(engsoccerdata)
 #import(tidyverse)
 import(arm)
