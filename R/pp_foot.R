@@ -6,7 +6,7 @@ pp_foot <- function(data, object,
   diff_gol <- as.vector(y[,1] - y[,2])
   diff_gol_rep <- sims$diff_y_rep
   esiti_short <- seq(-3,3,1)
-  M <-dim(sims$y_rep)[1]
+  M <-dim(sims$diff_y_rep)[1]
   freq_rel_matrix <- matrix(NA, M, length(esiti_short))
   ngames_train <- dim(sims$y_rep)[2]
 
@@ -14,6 +14,12 @@ pp_foot <- function(data, object,
     type <- "aggregated"
   }
   if (type =="aggregated"){
+
+    check.integer <- function(x) {
+      x == round(x)
+    }
+
+    if (check.integer(median(diff_gol_rep))==TRUE){
 
   for (j in 1:M){
     for (u in 1:length(esiti_short)){
@@ -58,6 +64,11 @@ pp_foot <- function(data, object,
     theme(axis.title=element_text(size=19),
           axis.text.x = element_text(size=15),
           axis.text.y = element_text(size=15))
+    }else{
+      ppc_dens_overlay(diff_gol, diff_gol_rep)
+    }
+
+
   }else if (type=="matches"){
     scd <- as.numeric(as.vector(diff_gol))
     scd_sims <- diff_gol_rep
