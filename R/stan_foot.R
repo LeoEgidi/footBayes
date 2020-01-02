@@ -432,11 +432,13 @@ stan_foot <- function(data,
     generated quantities{
       int y_rep[N,2];
       vector[N] log_lik;
+      int diff_y_rep[N];
 
       //in-sample replications
       for (n in 1:N){
         y_rep[n,1] = poisson_rng(theta_home[n]+theta_corr[n]);
         y_rep[n,2] = poisson_rng(theta_away[n]+theta_corr[n]);
+        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] =bipois_lpmf(y[n,]| theta_home[n],
                                 theta_away[n], theta_corr[n]);
       }
@@ -558,6 +560,7 @@ stan_foot <- function(data,
     generated quantities{
       int y_rep[N,2];
       vector[N] log_lik;
+      int diff_y_rep[N];
       int y_prev[N_prev,2];
       vector[N_prev] theta_home_prev;                    // exponentiated linear pred.
       vector[N_prev] theta_away_prev;
@@ -568,6 +571,7 @@ stan_foot <- function(data,
       for (n in 1:N){
         y_rep[n,1] = poisson_rng(theta_home[n]+theta_corr[n]);
         y_rep[n,2] = poisson_rng(theta_away[n]+theta_corr[n]);
+        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] =bipois_lpmf(y[n,]| theta_home[n],
                                 theta_away[n], theta_corr[n]);
       }
@@ -662,11 +666,13 @@ stan_foot <- function(data,
     generated quantities{
       int y_rep[N,2];
       vector[N] log_lik;
+      int diff_y_rep[N];
 
       //in-sample replications
       for (n in 1:N){
         y_rep[n,1] = poisson_rng(theta[n,1]+theta[n,3]);
         y_rep[n,2] = poisson_rng(theta[n,2]+theta[n,3]);
+        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] =bipois_lpmf(y[n,]| theta[n,1],
                                 theta[n,2], theta[n,3]);
       }
@@ -755,11 +761,13 @@ stan_foot <- function(data,
       int y_prev[N_prev,2];
       vector[3] theta_prev[N_prev];
       vector[N] log_lik;
+      int diff_y_rep[N];
 
       //in-sample replications
       for (n in 1:N){
         y_rep[n,1] = poisson_rng(theta[n,1]);
         y_rep[n,2] = poisson_rng(theta[n,2]);
+        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] =bipois_lpmf(y[n,]| theta[n,1],
                                 theta[n,2], theta[n,3]);
       }
@@ -856,11 +864,13 @@ stan_foot <- function(data,
     generated quantities{
       int y_rep[N,2];
       vector[N] log_lik;
+      int diff_y_rep[N];
 
       //in-sample replications
       for (n in 1:N){
         y_rep[n,1] = poisson_rng(theta_home[n]);
         y_rep[n,2] = poisson_rng(theta_away[n]);
+        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] =poisson_lpmf(y[n,1]| theta_home[n])+
           poisson_lpmf(y[n,2]| theta_away[n]);
       }
@@ -951,6 +961,7 @@ stan_foot <- function(data,
     generated quantities{
       int y_rep[N,2];
       vector[N] log_lik;
+      int diff_y_rep[N];
       int y_prev[N_prev,2];
       vector[N_prev] theta_home_prev;                    // exponentiated linear pred.
       vector[N_prev] theta_away_prev;
@@ -960,6 +971,7 @@ stan_foot <- function(data,
       for (n in 1:N){
         y_rep[n,1] = poisson_rng(theta_home[n]);
         y_rep[n,2] = poisson_rng(theta_away[n]);
+        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] =poisson_lpmf(y[n,1]| theta_home[n])+
           poisson_lpmf(y[n,2]| theta_away[n]);
       }
@@ -1023,11 +1035,13 @@ stan_foot <- function(data,
     generated quantities{
       int y_rep[N,2];
       vector[N] log_lik;
+      int diff_y_rep[N];
 
       //in-sample replications
       for (n in 1:N){
         y_rep[n,1] = poisson_rng(theta[n,1]);
         y_rep[n,2] = poisson_rng(theta[n,2]);
+        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] =poisson_lpmf(y[n,1]| theta[n,1])+
           poisson_lpmf(y[n,2]| theta[n,2]);
       }
@@ -1087,11 +1101,13 @@ stan_foot <- function(data,
       int y_prev[N_prev,2];
       vector[2] theta_prev[N_prev];
       vector[N] log_lik;
+      int diff_y_rep[N];
 
       //in-sample replications
       for (n in 1:N){
         y_rep[n,1] = poisson_rng(theta[n,1]);
         y_rep[n,2] = poisson_rng(theta[n,2]);
+        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] =poisson_lpmf(y[n,1]| theta[n,1])+
           poisson_lpmf(y[n,2]| theta[n,2]);
       }
