@@ -168,6 +168,7 @@
 #'                     "Sigma_def"))
 #'}
 #'@import rstan
+#'@import engsoccerdata
 #'@import bayesplot
 #'@import matrixStats
 #'@import arm
