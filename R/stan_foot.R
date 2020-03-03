@@ -173,7 +173,7 @@
 #'@import arm
 #'@import reshape2
 #'@import ggplot2
-#'@importFrom arm, coefplot
+#'@importFrom arm coefplot
 #'@export
 
 
