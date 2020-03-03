@@ -168,6 +168,12 @@
 #'                     "Sigma_def"))
 #'}
 #'@import rstan
+#'@import bayesplot
+#'@import matrixStats
+#'@import arm
+#'@import reshape2
+#'@import ggplot2
+#'@importFrom arm, coefplot
 #'@export
 
 
