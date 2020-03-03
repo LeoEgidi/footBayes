@@ -167,15 +167,7 @@
 #' print(fit6, pars =c("home", "Sigma_att",
 #'                     "Sigma_def"))
 #'}
-#'@import(rstan)
-#'@import(bayesplot)
-#'@import(matrixStats)
-#' #import(engsoccerdata)
-#' #import(tidyverse)
-#'@import(arm)
-#'@import(reshape2)
-#'@import(ggplot2)
-#'@importFrom(arm, coefplot)
+#'@import rstan
 #'@export
 
 
