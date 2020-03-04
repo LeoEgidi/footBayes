@@ -1,3 +1,12 @@
+#' Posterior predictive checks for football  models
+#'
+#' @importFrom yaxis_text bayesplot
+#' @importFrom xaxis_text bayesplot
+#' @importFrom colMedians matrixStats
+#' @importFrom colVars matrixStats
+#' @importFrom colQuantiles matrixStats
+
+
 pp_foot <- function(data, object,
                     type = c("aggregated", "matches")){
 
