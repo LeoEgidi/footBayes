@@ -11,8 +11,11 @@
 
   (iv)   foot_rank: 
             grafico 1) rank con bande di confidenza 
-                       (farlo sempre? solo se considero dati di una stagione sola? come inserisco i valori osservati?)
-            grafico 2) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata
+                       (farlo sempre? Probabilmente farlo sempre non ha senso, solo se interno a stagione
+                        solo se considero dati di una stagione sola? 
+                        come inserisco i valori osservati? creo funzione conta_punti_veri)
+            grafico 2) cumulato per ogni squadra? Con punto di partenza in base al momento da cui si prevede?
+            grafico 3) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata?
   
   (v)    foot_round_robin
             grafico 1) grafico a scacchiera con probabilità di vittoria
