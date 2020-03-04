@@ -1,0 +1,29 @@
+- Visualization
+
+  (i)    foot_abilities
+
+  (ii)   foot_prob
+            pensare se mettere tanti grafici assieme, per più partite.
+
+  (iii)  pp_foot: 
+            grafico 1) "aggregated", mostra la goal difference
+            grafico 2) "matches", mostra le bande di confidenza per i match ordinati
+
+  (iv)   foot_rank: 
+            grafico 1) rank con bande di confidenza 
+                       (farlo sempre? solo se considero dati di una stagione sola? come inserisco i valori osservati?)
+            grafico 2) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata
+  
+  (v)    foot_round_robin
+            grafico 1) grafico a scacchiera con probabilità di vittoria
+            grafico 2) tabellone del torneo (eliminazione diretta)
+
+- Estimation
+
+  predictors in stan_foot
+
+- Prediction
+
+  * Chiarire per cosa si vuol fare previsione: mezze stagioni? Stagioni intere?
+  * Gestione di argomento predict: si può farlo "ereditare" da altre funzioni?
+  * foot_prob: fornire anche tabella con probabilità
