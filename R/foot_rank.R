@@ -341,13 +341,13 @@ df_team_sel <- data.frame(obs = mt_obs,
 #           team_sel = c("AS Roma", "Inter"),
 #           type="out-of-sample",visualize = 2)
 
-foot_rank(data = italy_2000_2002,
-          object= fit6,
-          team_sel = c("AS Roma", "Inter"),
-          type="out-of-sample",visualize = 2)
-  # qui non vengono contati bene i punti!
-
-foot_rank(data = italy_2000_2002,
-          object= fit6,
-          team_sel = c("AS Roma", "Inter"),
-          type="out-of-sample",visualize = 1)
+# foot_rank(data = italy_2000_2002,
+#           object= fit6,
+#           team_sel = c("AS Roma", "Inter"),
+#           type="out-of-sample",visualize = 2)
+#   # qui non vengono contati bene i punti!
+#
+# foot_rank(data = italy_2000_2002,
+#           object= fit6,
+#           team_sel = c("AS Roma", "Inter"),
+#           type="out-of-sample",visualize = 1)
