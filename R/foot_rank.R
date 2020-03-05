@@ -30,13 +30,37 @@ foot_rank <- function(data, object,
     team2_prev <- team_away[(N+1):(N+N_prev)]
   }
 
-
   M <-dim(sims$diff_y_rep)[1]
   ngames_train <- dim(sims$y_rep)[2]
-  conta_punti=matrix(0, length(y_rep1[,1]), length(teams))
+  conta_punti <- matrix(0, length(y_rep1[,1]), length(teams))
+  conta_punti_veri <- rep(0, length(teams))
+
+  for (n in 1:N_prev){
+
+      if (y[(N+n),1]>y[(N+n),2]){
+        conta_punti_veri[team1_prev[n]]=conta_punti_veri[team1_prev[n]]+3
+        conta_punti_veri[team2_prev[n]]=conta_punti_veri[team2_prev[n]]
+      }else if(y[(N+n),1]==y[(N+n),2]){
+
+        conta_punti_veri[team1_prev[n]]=conta_punti_veri[team1_prev[n]]+1
+        conta_punti_veri[team2_prev[n]]=conta_punti_veri[team2_prev[n]]+1
+
+      }else if(y[(N+n),1]<y[(N+n),2]){
+
+        conta_punti_veri[team1_prev[n]]=conta_punti_veri[team1_prev[n]]
+        conta_punti_veri[team2_prev[n]]=conta_punti_veri[team2_prev[n]]+3
+
+      }
+  }
+  obs <- sort.int(conta_punti_veri, index.return = TRUE, decreasing = TRUE)$x
+  obs_names <- sort.int(conta_punti_veri, index.return = TRUE, decreasing = TRUE)$ix
+  teams_rank_names <- teams[obs_names]
+  teams_rank_names <- teams_rank_names[1:length(unique(team1_prev))]
+
+
 
   for (t in 1:M){
-
+    #conta_punti[t,] <- conta_punti_veri
     for (n in 1:N_prev){
       if (y_rep1[t,n]>y_rep2[t,n]){
         conta_punti[t,team1_prev[n]]=conta_punti[t,team1_prev[n]]+3
@@ -74,8 +98,8 @@ foot_rank <- function(data, object,
     squadre=rank_bar[,1],
     mid=as.numeric(as.vector(rank_bar[,2])),
     lo=as.numeric(as.vector(rank_bar[,3])),
-    hi=as.numeric(as.vector(rank_bar[,4]))
-   # ,obs=obs[  match(  rank_bar[,1], class_names) ]
+    hi=as.numeric(as.vector(rank_bar[,4])),
+    obs=obs[  match(  rank_bar[,1], teams_rank_names) ]
   )
 
   rank_frame$squadre=factor(rank_frame$squadre, levels=rank_bar[,1])
@@ -91,8 +115,8 @@ foot_rank <- function(data, object,
               data=rank_frame,
               fill = color_scheme_get("blue")[[2]]
     )+
-    # geom_point(aes(x=squadre, y=obs),
-    #            data=rank_frame)+
+    geom_point(aes(x=squadre, y=obs),
+              data=rank_frame)+
     scale_color_manual(values = c(color_scheme_get("blue")[[2]],
                                   color_scheme_get("red")[[2]]))+
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
