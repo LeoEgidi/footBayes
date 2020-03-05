@@ -1,6 +1,7 @@
 #' Predicted rank positions
 #'
-#'
+#' @importFrom reshape2 melt
+#' @importFrom bayesplot color_scheme_get
 
 foot_rank <- function(data, object,
                       type = c("in-sample", "out-of-sample"),
@@ -21,7 +22,7 @@ foot_rank <- function(data, object,
     visualize <- 1
   }
   if (missing(team_sel)){
-    team_sel <- teams
+    team_sel <- teams[unique(team1_prev)]
   }
   if (missing(type)){
     type = "out-of-sample"
@@ -207,13 +208,14 @@ foot_rank <- function(data, object,
     }
 
   }
+  cumsum_punti_pre <- t(apply(conta_punti_veri_pre_dyn,1,cumsum))
   }else{
     day_index <- 0
     day_index_rep <- rep(seq(1, day_index) ,
                          each = length(unique(team1_prev))/2)
     day_index_prev <- rep(seq( (day_index+1), (N_prev)/(length(unique(team1_prev))/2) ),
                           each = length(unique(team1_prev))/2)
-    conta_punti_veri_pre_dyn <- matrix(0, length(unique(team_home)), day_index )
+
   }
 
   # compute the true point for the training sample, dynamically
@@ -272,7 +274,7 @@ foot_rank <- function(data, object,
 
 
 
-cumsum_punti_pre <- t(apply(conta_punti_veri_pre_dyn,1,cumsum))
+
 cumsum_punti_post <- t(apply(conta_punti_veri_post_dyn,1,cumsum))
 cumsum_punti_post <- cumsum_punti_post[, unique(day_index_prev)]
 
@@ -283,13 +285,20 @@ punti_dyn_25 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.25))
 punti_dyn_75 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.75)))
 punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975)))
 
-mt_obs <- melt(cbind(cumsum_punti_pre[team_index,], cumsum_punti_pre[team_index,day_index]+cumsum_punti_post[team_index,]))$value
-mt_50 <- melt(cbind(matrix(NA,
+if (  all(sort(unique(team_home))== sort(unique(team_home))) &
+      N <= length(unique(team_home))*(length(unique(team_home))-1 )  ){
+  mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
+                     cumsum_punti_pre[team_index,day_index]+
+                       cumsum_punti_post[team_index,]))$value
+  mt_50 <- melt(cbind(matrix(NA,
                            length(team_names),
                            #length(unique(team_home)),
                            day_index),
                     punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
-
+}else{
+  mt_obs <- melt(cumsum_punti_post[team_index,])$value
+  mt_50 <- melt(punti_dyn_med[team_index, (day_index+1):max(day_index_prev)])$value
+    }
 mt_025 <- melt((punti_dyn_025)[team_index, ])$value
 mt_25 <- melt((punti_dyn_25)[team_index, ])$value
 mt_75 <- melt((punti_dyn_75)[team_index, ])$value
@@ -335,19 +344,53 @@ df_team_sel <- data.frame(obs = mt_obs,
   }
 }
 
+# use one season to predict part of the same season
+italy_2007<- italy %>%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+  filter( Season=="2007")
+fit1 <- stan_foot(data = italy_2007,
+                  model="double_pois", predict = 100)
+foot_rank(data = italy_2007, object= fit1,
+          team_sel = c("AS Roma", "Inter", "Atalanta"),
+          type="out-of-sample",visualize = 2)
+# ok!
+
+# use two seasons to entirely predict the third season
+italy <- as_tibble(italy)
+italy_2000_2002<- italy %>%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+  filter(Season=="2000" |  Season=="2001"| Season=="2002")
+fit6 <- stan_foot(data = italy_2000_2002,
+                  model="double_pois",
+                  dynamic_type ="seasonal",
+                  predict = 306) # double poisson
+
+foot_rank(data = italy_2000_2002,
+          object= fit6,
+          team_sel = c("AS Roma", "Inter"),
+          type="out-of-sample",visualize = 2)
+
+foot_rank(data = italy_2000_2002,
+          object= fit6,
+          team_sel = c("AS Roma", "Inter"),
+          type="out-of-sample",visualize = 1)
+
+# ok!!
 
 
-# foot_rank(data = italy_2002, object= fit1,
-#           team_sel = c("AS Roma", "Inter"),
-#           type="out-of-sample",visualize = 2)
+# use two seasons and a portion of the current season
+# to predict the currents season
+fit7 <- stan_foot(data = italy_2000_2002,
+                  model="double_pois",
+                  dynamic_type ="seasonal",
+                  predict = 250) # double poisson
 
-# foot_rank(data = italy_2000_2002,
-#           object= fit6,
-#           team_sel = c("AS Roma", "Inter"),
-#           type="out-of-sample",visualize = 2)
-#   # qui non vengono contati bene i punti!
-#
-# foot_rank(data = italy_2000_2002,
-#           object= fit6,
-#           team_sel = c("AS Roma", "Inter"),
-#           type="out-of-sample",visualize = 1)
+foot_rank(data = italy_2000_2002,
+          object= fit6,
+          team_sel = c("AS Roma", "Inter"),
+          type="out-of-sample",visualize = 2)
+
+foot_rank(data = italy_2000_2002,
+          object= fit6,
+          team_sel = c("AS Roma", "Inter"),
+          type="out-of-sample",visualize = 1)
