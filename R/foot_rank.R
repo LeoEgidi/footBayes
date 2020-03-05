@@ -3,7 +3,9 @@
 #'
 
 foot_rank <- function(data, object,
-                      type = c("in-sample", "out-of-sample"))
+                      type = c("in-sample", "out-of-sample"),
+                      team_sel,
+                      visualize = c(1,2))
   {
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
@@ -32,9 +34,11 @@ foot_rank <- function(data, object,
 
   M <-dim(sims$diff_y_rep)[1]
   ngames_train <- dim(sims$y_rep)[2]
-  conta_punti <- matrix(0, length(y_rep1[,1]), length(teams))
+  conta_punti <- matrix(0, M, length(teams))
   conta_punti_veri <- rep(0, length(teams))
 
+
+  # compute the final true point on the test set
   for (n in 1:N_prev){
 
       if (y[(N+n),1]>y[(N+n),2]){
@@ -58,9 +62,34 @@ foot_rank <- function(data, object,
   teams_rank_names <- teams_rank_names[1:length(unique(team1_prev))]
 
 
+  # compute the true point on the training set
+  conta_punti_veri_pre <- rep(0, length(unique(team_home)))
+  for (n in 1:N){
+    if (y[(n),1]>y[(n),2]){
+      conta_punti_veri_pre[team_home[n]]=conta_punti_veri_pre[team_home[n]]+3
+      conta_punti_veri_pre[team_away[n]]=conta_punti_veri_pre[team_away[n]]
+    }else if(y[(n),1]==y[(n),2]){
 
+      conta_punti_veri_pre[team_home[n]]=conta_punti_veri_pre[team_home[n]]+1
+      conta_punti_veri_pre[team_away[n]]=conta_punti_veri_pre[team_away[n]]+1
+
+    }else if(y[(n),1]<y[(n),2]){
+
+      conta_punti_veri_pre[team_home[n]]=conta_punti_veri_pre[team_home[n]]
+      conta_punti_veri_pre[team_away[n]]=conta_punti_veri_pre[team_away[n]]+3
+
+    }
+
+  }
+
+  # compute the points on the MCMC
   for (t in 1:M){
-    #conta_punti[t,] <- conta_punti_veri
+    if (  all(sort(unique(team_home))== sort(unique(team_home))) &
+          N <= length(unique(team_home))*(length(unique(team_home))-1 )  ){
+
+      conta_punti[t,] <- conta_punti_veri_pre
+    }
+
     for (n in 1:N_prev){
       if (y_rep1[t,n]>y_rep2[t,n]){
         conta_punti[t,team1_prev[n]]=conta_punti[t,team1_prev[n]]+3
@@ -79,6 +108,18 @@ foot_rank <- function(data, object,
 
     }
 
+  }
+
+
+  # assumption for games coming from the same seasons
+  # (training set and test set belong to the same season)
+  if (  all(sort(unique(team_home))== sort(unique(team_home))) &
+        N <= length(unique(team_home))*(length(unique(team_home))-1 )  ){
+
+    obs <- sort.int(conta_punti_veri + conta_punti_veri_pre, index.return = TRUE, decreasing = TRUE)$x
+    obs_names <- sort.int(conta_punti_veri+ conta_punti_veri_pre, index.return = TRUE, decreasing = TRUE)$ix
+    teams_rank_names <- teams[obs_names]
+    teams_rank_names <- teams_rank_names[1:length(unique(team1_prev))]
   }
 
   expected_point=apply(conta_punti,2,median)
@@ -122,5 +163,138 @@ foot_rank <- function(data, object,
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
     labs(x="Teams", y="Points")
 
+
+
+
+  team_index <- (1:length(teams))[teams==team_sel]
+  day_index <- floor(N/ (length(unique(team1_prev))/2))
+  day_index_rep <- rep(seq(1, day_index) ,
+                       each = length(unique(team1_prev))/2)
+  day_index_prev <- rep(seq( (day_index+1), (N+N_prev)/(length(unique(team1_prev))/2) ),
+                        each = length(unique(team1_prev))/2)
+
+  # compute the true point for the training sample, dynamically
+  conta_punti_veri_pre_dyn <- matrix(0, length(unique(team_home)), day_index )
+  for (n in 1:N){
+    if (y[(n),1]>y[(n),2]){
+      conta_punti_veri_pre_dyn[team_home[n], day_index_rep[n]]=conta_punti_veri_pre_dyn[team_home[n],day_index_rep[n]]+3
+      conta_punti_veri_pre_dyn[team_away[n], day_index_rep[n]]=conta_punti_veri_pre_dyn[team_away[n],day_index_rep[n]]
+    }else if(y[(n),1]==y[(n),2]){
+
+      conta_punti_veri_pre_dyn[team_home[n],day_index_rep[n]]=conta_punti_veri_pre_dyn[team_home[n],day_index_rep[n]]+1
+      conta_punti_veri_pre_dyn[team_away[n],day_index_rep[n]]=conta_punti_veri_pre_dyn[team_away[n],day_index_rep[n]]+1
+
+    }else if(y[(n),1]<y[(n),2]){
+
+      conta_punti_veri_pre_dyn[team_home[n],day_index_rep[n]]=conta_punti_veri_pre_dyn[team_home[n],day_index_rep[n]]
+      conta_punti_veri_pre_dyn[team_away[n],day_index_rep[n]]=conta_punti_veri_pre_dyn[team_away[n],day_index_rep[n]]+3
+
+    }
+
+  }
+
+  # compute the true points for the test set sample, dynamically
+  conta_punti_veri_post_dyn <- matrix(0, length(unique(team1_prev)), max(unique(day_index_prev)) )
+  for (n in 1:N_prev){
+    if (y[(N+n),1]>y[(N+n),2]){
+      conta_punti_veri_post_dyn[team1_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+3
+      conta_punti_veri_post_dyn[team2_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]
+    }else if(y[(N+n),1]==y[(N+n),2]){
+
+      conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+1
+      conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+1
+
+    }else if(y[(N+n),1]<y[(N+n),2]){
+
+      conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]
+      conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+3
+
+    }
+  }
+
+  # compute the points on the MCMC, dynamically
+  conta_punti_dyn <- array(0, c( M, length(unique(team_home)), max(day_index_prev)))
+  cumsum_punti_dyn <- array(0, c( M, length(unique(team_home)), max(day_index_prev)))
+  for (t in 1:M){
+    if (  all(sort(unique(team_home))== sort(unique(team_home))) &
+          N <= length(unique(team_home))*(length(unique(team_home))-1 )  ){
+
+      conta_punti_dyn[t,,1:day_index] <- conta_punti_veri_pre_dyn
+    }
+
+    for (n in 1:N_prev){
+      if (y_rep1[t,n]>y_rep2[t,n]){
+        conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]+3
+        conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]
+      }else if(y_rep1[t,n]==y_rep2[t,n]){
+
+        conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]+1
+        conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]+1
+
+      }else if(y_rep1[t,n]<y_rep2[t,n]){
+
+        conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]
+        conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]+3
+
+      }
+
+    }
+
+    cumsum_punti_dyn[t,,] <- t(apply(conta_punti_dyn[t,,],1, cumsum))
+
+  }
+
+
+
+cumsum_punti_pre <- t(apply(conta_punti_veri_pre_dyn,1,cumsum))
+cumsum_punti_post <- t(apply(conta_punti_veri_post_dyn,1,cumsum))
+cumsum_punti_post <- cumsum_punti_post[, unique(day_index_prev)]
+
+# compute quantiles for MCMC point
+punti_dyn_med <- apply(cumsum_punti_dyn, c(2,3), median)
+punti_dyn_025 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.025)))
+punti_dyn_25 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.25)))
+punti_dyn_75 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.75)))
+punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975)))
+
+mt_obs <- melt(cbind(cumsum_punti_pre, cumsum_punti_pre[,day_index]+cumsum_punti_post))$value
+mt_50 <- melt(cbind(matrix(NA, length(unique(team1_prev)), day_index), punti_dyn_med[, (day_index+1):max(day_index_prev)]))$value
+
+df_team_sel <- data.frame(obs = mt_obs,
+                              day = rep(1:max(day_index_prev), length(unique(team1_prev))),
+                              q_50 = mt_50,
+                              q_025 = melt(punti_dyn_025)$value,
+                              q_25 = melt(punti_dyn_25)$value,
+                              q_75 = melt(punti_dyn_75)$value,
+                              q_975 = melt(punti_dyn_975)$value,
+                              teams = rep(teams_rank_names, max(day_index_prev)))
+    #myarrow=arrow(angle = 15, ends = "both", type = "closed")
+
+    ggplot(df_team_sel,aes(day, obs))+
+
+      geom_ribbon(aes(x=day, ymin=q_25, ymax=q_75, group=1),
+                  data=df_team_sel,
+                  fill = color_scheme_get("blue")[[2]]
+      )+
+      geom_line(aes(x= day, y= q_50),
+                data=df_team_sel,
+                color = color_scheme_get("blue")[[4]],
+                #fill = color_scheme_get("red")[[2]],
+                size =1.1
+      )+
+      geom_line(#aes(x=day, y = obs),
+                size=1.2, linetype="dashed")+
+      geom_vline(
+                  xintercept =day_index,
+                  linetype="dashed",
+                  color="red", size=1)+
+
+      xlab("Match day")+
+      ylab("Cumulated Points")+
+      facet_wrap("teams", scales ="free")+
+      ggtitle(teams[team_index])+
+      theme(plot.title = element_text(size=22))+
+      annotate("rect",xmin=-Inf,xmax=day_index,ymin=-Inf,ymax=Inf, alpha=0.1, fill="black")+
+      annotate("rect",xmin=day_index ,xmax= max(day_index_prev),ymin=-Inf,ymax=Inf, alpha=0.1, fill="red")
 
 }
