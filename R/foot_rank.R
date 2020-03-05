@@ -386,11 +386,13 @@ fit7 <- stan_foot(data = italy_2000_2002,
                   predict = 250) # double poisson
 
 foot_rank(data = italy_2000_2002,
-          object= fit6,
+          object= fit7,
           team_sel = c("AS Roma", "Inter"),
           type="out-of-sample",visualize = 2)
 
+# parte da 0, ma non dovrebbe!
+
 foot_rank(data = italy_2000_2002,
-          object= fit6,
+          object= fit7,
           team_sel = c("AS Roma", "Inter"),
           type="out-of-sample",visualize = 1)
