@@ -9,6 +9,9 @@ italy <- as_tibble(italy)
   italy_2008<- italy %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
     filter( Season=="2008")
+  italy_1997<- italy %>%
+    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+    filter( Season=="1997")
 
   fit1 <- stan_foot(data = italy_2008,
                   model="double_pois", predict = 100)
@@ -31,6 +34,23 @@ italy <- as_tibble(italy)
             type="in-sample",visualize = 2)
 
   # decidere che fare con in-sample...
+
+  fit2 <- stan_foot(data = italy_1997,
+                    model="biv_pois", predict = 20)
+
+  foot_rank(data = italy_1997, object= fit2,
+            #type ="out-of-sample",
+            visualize = 1)
+
+  # problemi con predict =10, non prende tutte le squadre...
+
+  foot_rank(data = italy_1997, object= fit2,
+            #type ="out-of-sample",
+            team_sel = c("AS Roma", "Inter"),
+            visualize = 2)
+
+  # errori con predict = 10...
+
 
 ###
 # use two seasons to entirely predict the third season
