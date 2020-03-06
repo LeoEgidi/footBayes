@@ -90,4 +90,4 @@ foot_rank(data = italy_2000_2002,
           team_sel = c("AS Roma", "Inter"),
           type="out-of-sample",visualize = 1)
 
- # c'è ancora un problema coi punti finali...
+ # ok
