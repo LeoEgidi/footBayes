@@ -29,5 +29,7 @@
 - Prediction
 
   * Chiarire per cosa si vuol fare previsione: mezze stagioni? Stagioni intere?
+    	Si può prevedere al massimo una stagione intera, quindi argomento predict è di massimo 380 (torneo  a 20 squadre).
+        Un warning dovrebbe partire se l'utente specifica un numero più alto.
   * Gestione di argomento predict: si può farlo "ereditare" da altre funzioni?
   * foot_prob: fornire anche tabella con probabilità
