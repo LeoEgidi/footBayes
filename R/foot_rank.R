@@ -101,11 +101,10 @@ foot_rank <- function(data, object,
 
   # compute the points on the MCMC
   for (t in 1:M){
-    if (  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))==0
-
-          #all(sort(unique(team_home))== sort(unique(team1_prev))) &
+    if (  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0
+          &
+          all(sort(unique(team_home))== sort(unique(team1_prev)))
           #N <= length(unique(team_home))*(length(unique(team_home))-1 )
-
           ){
 
       conta_punti[t,] <- conta_punti_veri_pre
@@ -135,7 +134,7 @@ foot_rank <- function(data, object,
   # assumption for games coming from the same seasons
   # (training set and test set belong to the same season)
   if (  all(sort(unique(team_home))== sort(unique(team1_prev))) &
-        N <= length(unique(team_home))*(length(unique(team_home))-1 )  ){
+        N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0  ){
 
     obs <- sort.int(conta_punti_veri + conta_punti_veri_pre, index.return = TRUE, decreasing = TRUE)$x
     obs_names <- sort.int(conta_punti_veri+ conta_punti_veri_pre, index.return = TRUE, decreasing = TRUE)$ix
