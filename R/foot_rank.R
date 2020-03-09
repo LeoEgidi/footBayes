@@ -5,7 +5,7 @@
 #' @export
 
 foot_rank <- function(data, object,
-                      type = c("in-sample", "out-of-sample"),
+                      #type = c("in-sample", "out-of-sample"),
                       team_sel,
                       visualize = c(1,2))
   {
@@ -16,34 +16,69 @@ foot_rank <- function(data, object,
   sims <- rstan::extract(object)
   y <- as.matrix(data[,4:5])
   teams <- unique(data$home)
-  team_home <- match( data$home, teams)
-  team_away <- match( data$away, teams)
+  team_home <- match(data$home, teams)
+  team_away <- match(data$away, teams)
+  # if (missing(type)){
+  #   type = "out-of-sample"
+  # }
 
-
-  if(missing(visualize)){
-    visualize <- 1
-  }
-  if (missing(team_sel)){
-    team_sel <- teams[unique(team1_prev)]
-  }
-  if (missing(type)){
-    type = "out-of-sample"
-  }
-
-  if (type =="in-sample"){
+  # caso in-sample
+  if (is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
     N <- dim(data)[1]
     N_prev <- N
     y_rep1 <- sims$y_rep[,,1]
     y_rep2 <- sims$y_rep[,,2]
     team1_prev <- team_home[1:N]
     team2_prev <- team_away[1:N]
-  }else if (type=="out-of-sample"){
+  }
+
+
+  # caso out-of-sample
+  if (!is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
+    # caso t-student
+    N_prev <- dim(sims$diff_y_prev)[2]
+    N <- dim(sims$y_rep)[2]
+    y_rep1 <- sims$diff_y_prev*(sims$diff_y_prev>0)+0*(sims$diff_y_prev<=0)
+    y_rep2 <- sims$diff_y_prev*(sims$diff_y_prev<0)+0*(sims$diff_y_prev>=0)
+    team1_prev <- team_home[(N+1):(N+N_prev)]
+    team2_prev <- team_away[(N+1):(N+N_prev)]
+  }
+
+  if (is.null(sims$diff_y_prev) & !is.null(sims$y_prev)){
+    # caso double Poisson
     N_prev <- dim(sims$y_prev)[2]
     N <- dim(sims$y_rep)[2]
     y_rep1 <- sims$y_prev[,,1]
     y_rep2 <- sims$y_prev[,,2]
     team1_prev <- team_home[(N+1):(N+N_prev)]
     team2_prev <- team_away[(N+1):(N+N_prev)]
+  }
+
+  # if (is.null(sims$y_prev)){
+  #   N <- dim(data)[1]
+  #   N_prev <- N
+  #   y_rep1 <- sims$y_rep[,,1]
+  #   y_rep2 <- sims$y_rep[,,2]
+  #   team1_prev <- team_home[1:N]
+  #   team2_prev <- team_away[1:N]
+  # }else{
+
+  #}
+
+  if(missing(visualize)){
+      visualize <- 1
+    }
+  if (missing(team_sel)){
+    team_sel <- teams[unique(team1_prev)]
+  }
+
+  # condizione per fare si che quando si prevede
+  # solo l'ultima giornata, non venga considerata
+  # solo la metà delle squadre
+  if (length(unique(team1_prev)) !=
+      length(unique(c(team1_prev, team2_prev)))  ){
+    team1_prev <- c(team1_prev, team2_prev)
+    team2_prev <- c(team2_prev, team1_prev)
   }
 
   M <-dim(sims$diff_y_rep)[1]

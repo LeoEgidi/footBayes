@@ -210,7 +210,7 @@ stan_foot <- function(data,
     }
   }
 
-  if (missing(predict)){ # check on predict
+  if (missing(predict) | predict ==0){ # check on predict
     predict <- 0
     N <- dim(data)[1]
     N_prev <- 0

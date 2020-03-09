@@ -2,6 +2,8 @@
 library(engsoccerdata)
 library(tidyverse)
 
+
+
 ####
 # use one season to predict part of the same season
 ###
@@ -36,20 +38,59 @@ italy <- as_tibble(italy)
   # decidere che fare con in-sample...
 
   fit2 <- stan_foot(data = italy_1997,
-                    model="biv_pois", predict = 20)
+                    model="biv_pois", predict = 10)
 
   foot_rank(data = italy_1997, object= fit2,
-            #type ="out-of-sample",
+            #type ="in-sample",
             visualize = 1)
 
-  # problemi con predict =10, non prende tutte le squadre...
+  # ok
 
   foot_rank(data = italy_1997, object= fit2,
             #type ="out-of-sample",
-            team_sel = c("AS Roma", "Inter"),
+            team_sel = c("AS Roma", "Inter",
+                         "Atalanta", "Udinese Calcio"),
             visualize = 2)
 
-  # errori con predict = 10...
+  # ok
+
+###
+# no prediction
+###
+
+  fit3 <- stan_foot(data = italy_1997,
+                    model="biv_pois", predict = 0)
+
+  foot_rank(data = italy_1997, object= fit3,
+            #type ="in-sample",
+            visualize = 1)
+
+  # errore
+
+  foot_rank(data = italy_1997, object= fit3,
+            #type ="out-of-sample",
+            team_sel = c("AS Roma", "Inter",
+                         "Atalanta", "Udinese Calcio"),
+            visualize = 2)
+
+  # errore
+
+  fit3 <- stan_foot(data = italy_1997,
+                    model="student_t", predict = 0)
+
+  foot_rank(data = italy_1997, object= fit3,
+            #type ="in-sample",
+            visualize = 1)
+
+  # errore
+
+  foot_rank(data = italy_1997, object= fit3,
+            #type ="out-of-sample",
+            team_sel = c("AS Roma", "Inter",
+                         "Atalanta", "Udinese Calcio"),
+            visualize = 2)
+
+  # errore
 
 
 ###
