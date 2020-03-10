@@ -109,16 +109,18 @@ italy <- as_tibble(italy)
 
   foot_rank(data = italy_2008, object= fit5,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
-            type="out-of-sample",visualize = 1)
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit5,
+            visualize = 1)
   foot_rank(data = italy_2008, object= fit6,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
-            type="in-sample",visualize = 1)
+            visualize = 1)
   foot_rank(data = italy_2008, object= fit7,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
-            type="in-sample",visualize = 1)
+            visualize = 1)
   foot_rank(data = italy_2008, object= fit8,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
-            type="in-sample",visualize = 1)
+            visualize = 1)
 
 
 
@@ -128,35 +130,77 @@ italy <- as_tibble(italy)
 ######################################################
 
 
-  italy_2000_2002<- italy %>%
+italy_2000_2002<- italy %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
     filter(Season=="2000" |  Season=="2001"| Season=="2002")
 
-  fit6 <- stan_foot(data = italy_2000_2002,
+  fit9 <- stan_foot(data = italy_2000_2002,
                   model="double_pois",
-                  dynamic_type ="seasonal",
-                  predict = 306) # double poisson
+                  predict = 306)
+  fit10 <- stan_foot(data = italy_2000_2002,
+                    model="biv_pois",
+                    predict = 306)
+  fit11 <- stan_foot(data = italy_2000_2002,
+                    model="skellam",
+                    predict = 306)
+  fit12 <- stan_foot(data = italy_2000_2002,
+                    model="student_t",
+                    predict = 306)
+
 
   foot_rank(data = italy_2000_2002,
-          object= fit6,
+          object= fit9,
           team_sel = c("AS Roma", "AC Milan"),
-          type="out-of-sample",visualize = 2)
-
-  # ok
+          visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit9,
+            visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit10,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit11,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit12,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
 
   foot_rank(data = italy_2000_2002,
-          object= fit6,
-          team_sel = c("AS Roma", "Inter"),
-          type="out-of-sample",visualize = 1)
+            object= fit9,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit9,
+            visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit10,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit11,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit12,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
 
-  # ok
 
 
 
-###
+
+
+####################################################
+## SCENARIO 4
 # use two seasons and a portion of the current season
 # to predict the currents season
-###
+###################################################
+
+
+
   fit7 <- stan_foot(data = italy_2000_2002,
                   model="double_pois",
                   dynamic_type ="seasonal",

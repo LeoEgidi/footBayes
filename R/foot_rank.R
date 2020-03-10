@@ -23,12 +23,22 @@ foot_rank <- function(data, object,
 
   # caso in-sample
   if (is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
+    if (!is.null(sims$y_rep)){
     N <- dim(data)[1]
     N_prev <- N
     y_rep1 <- sims$y_rep[,,1]
     y_rep2 <- sims$y_rep[,,2]
     team1_prev <- team_home[1:N]
     team2_prev <- team_away[1:N]
+    }else{
+      # caso t di student
+      N <- dim(data)[1]
+      N_prev <- N
+      y_rep1 <- round(sims$diff_y_rep*(sims$diff_y_rep>0)+0*(sims$diff_y_rep<=0))
+      y_rep2 <- round(sims$diff_y_rep*(sims$diff_y_rep<0)+0*(sims$diff_y_rep>=0))
+      team1_prev <- team_home[1:N]
+      team2_prev <- team_away[1:N]
+    }
   }
 
 
@@ -83,6 +93,29 @@ foot_rank <- function(data, object,
 
   if (visualize ==1){
 
+    # in-sample
+    if (is.null(sims$diff_y_prev) & is.null(sims$y_prev))
+      {
+      conta_punti_veri <- rep(0, length(unique(team_home)))
+      for (n in 1:N){
+        if (y[(n),1]>y[(n),2]){
+          conta_punti_veri[team_home[n]]=conta_punti_veri[team_home[n]]+3
+          conta_punti_veri[team_away[n]]=conta_punti_veri[team_away[n]]
+        }else if(y[(n),1]==y[(n),2]){
+
+          conta_punti_veri[team_home[n]]=conta_punti_veri[team_home[n]]+1
+          conta_punti_veri[team_away[n]]=conta_punti_veri[team_away[n]]+1
+
+        }else if(y[(n),1]<y[(n),2]){
+
+          conta_punti_veri[team_home[n]]=conta_punti_veri[team_home[n]]
+          conta_punti_veri[team_away[n]]=conta_punti_veri[team_away[n]]+3
+
+        }
+
+      }
+
+    }else{
   # compute the true points on the test set
   for (n in 1:N_prev){
 
@@ -101,6 +134,7 @@ foot_rank <- function(data, object,
 
       }
   }
+    }
   obs <- sort.int(conta_punti_veri, index.return = TRUE, decreasing = TRUE)$x
   obs_names <- sort.int(conta_punti_veri, index.return = TRUE, decreasing = TRUE)$ix
   teams_rank_names <- teams[obs_names]
@@ -305,6 +339,25 @@ foot_rank <- function(data, object,
 
   # compute the true points for the test set sample, dynamically
   conta_punti_veri_post_dyn <- matrix(0, length(unique(team_home)), max(unique(day_index_prev)) )
+  if (is.null(sims$diff_y_prev) & is.null(sims$y_prev))
+  {
+    for (n in 1:N){
+      if (y[(n),1]>y[(n),2]){
+        conta_punti_veri_post_dyn[team1_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+3
+        conta_punti_veri_post_dyn[team2_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]
+      }else if(y[(n),1]==y[(n),2]){
+
+        conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+1
+        conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+1
+
+      }else if(y[(n),1]<y[(n),2]){
+
+        conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]
+        conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+3
+
+      }
+    }
+  }else{
   for (n in 1:N_prev){
     if (y[(N+n),1]>y[(N+n),2]){
       conta_punti_veri_post_dyn[team1_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+3
@@ -319,6 +372,7 @@ foot_rank <- function(data, object,
       conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]
       conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+3
 
+      }
     }
   }
 
@@ -412,8 +466,8 @@ df_team_sel <- data.frame(obs = mt_obs,
                               q_75 = mt_75,
                               q_975 = mt_975,
                               teams = rep(teams[team_index], max(day_index_prev)))
-
-
+    in_sample_cond <- is.null(sims$diff_y_prev) & is.null(sims$y_prev)
+    fill_test <- c("red", "black")[c(!in_sample_cond, in_sample_cond)]
     ggplot(df_team_sel,aes(day, obs))+
       geom_ribbon(aes(x=day, ymin=q_25, ymax=q_75, group=1),
                   data=df_team_sel,
@@ -430,7 +484,7 @@ df_team_sel <- data.frame(obs = mt_obs,
       geom_vline(
                   xintercept =day_index,
                   linetype="dashed",
-                  color="red", size=1)+
+                  color=fill_test, size=1)+
 
       xlab("Match day")+
       ylab("Cumulated Points")+
@@ -438,7 +492,7 @@ df_team_sel <- data.frame(obs = mt_obs,
       ggtitle("Ranks")+
       theme(plot.title = element_text(size=22))+
       annotate("rect",xmin=-Inf,xmax=day_index,ymin=-Inf,ymax=Inf, alpha=0.1, fill="black")+
-      annotate("rect",xmin=day_index ,xmax= max(day_index_prev),ymin=-Inf,ymax=Inf, alpha=0.1, fill="red")
+      annotate("rect",xmin=day_index ,xmax= max(day_index_prev),ymin=-Inf,ymax=Inf, alpha=0.1, fill=fill_test)
 
   }
 }
