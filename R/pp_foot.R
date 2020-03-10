@@ -1,10 +1,10 @@
 #' Posterior predictive checks for football  models
 #'
-#' @importFrom yaxis_text bayesplot
-#' @importFrom xaxis_text bayesplot
-#' @importFrom colMedians matrixStats
-#' @importFrom colVars matrixStats
-#' @importFrom colQuantiles matrixStats
+#' @importFrom bayesplot yaxis_text
+#' @importFrom bayesplot xaxis_text
+#' @importFrom matrixStats colMedians
+#' @importFrom matrixStats colVars
+#' @importFrom matrixStats colQuantiles
 #' @export
 
 
