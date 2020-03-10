@@ -113,13 +113,10 @@ italy <- as_tibble(italy)
   foot_rank(data = italy_2008, object= fit5,
             visualize = 1)
   foot_rank(data = italy_2008, object= fit6,
-            team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
   foot_rank(data = italy_2008, object= fit7,
-            team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
   foot_rank(data = italy_2008, object= fit8,
-            team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
 
 
@@ -247,15 +244,15 @@ italy_2000_2002<- italy %>%
             visualize = 1)
   foot_rank(data = italy_2000_2002,
             object= fit14,
-            team_sel = c("AS Roma", "AC Milan"),
+            #team_sel = c("AS Roma", "AC Milan"),
             visualize = 1)
   foot_rank(data = italy_2000_2002,
             object= fit15,
-            team_sel = c("AS Roma", "AC Milan"),
+            #team_sel = c("AS Roma", "AC Milan"),
             visualize = 1)
   foot_rank(data = italy_2000_2002,
             object= fit16,
-            team_sel = c("AS Roma", "AC Milan"),
+            #team_sel = c("AS Roma", "AC Milan"),
             visualize = 1)
 
 

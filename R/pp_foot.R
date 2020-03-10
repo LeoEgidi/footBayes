@@ -5,6 +5,7 @@
 #' @importFrom colMedians matrixStats
 #' @importFrom colVars matrixStats
 #' @importFrom colQuantiles matrixStats
+#' @export
 
 
 pp_foot <- function(data, object,

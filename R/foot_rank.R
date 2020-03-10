@@ -35,7 +35,7 @@ foot_rank <- function(data, object,
       N <- dim(data)[1]
       N_prev <- N
       y_rep1 <- round(sims$diff_y_rep*(sims$diff_y_rep>0)+0*(sims$diff_y_rep<=0))
-      y_rep2 <- round(sims$diff_y_rep*(sims$diff_y_rep<0)+0*(sims$diff_y_rep>=0))
+      y_rep2 <- round(abs(sims$diff_y_rep)*(sims$diff_y_rep<0)+0*(sims$diff_y_rep>=0))
       team1_prev <- team_home[1:N]
       team2_prev <- team_away[1:N]
     }
@@ -48,7 +48,7 @@ foot_rank <- function(data, object,
     N_prev <- dim(sims$diff_y_prev)[2]
     N <- dim(sims$diff_y_rep)[2]
     y_rep1 <- round(sims$diff_y_prev*(sims$diff_y_prev>0)+0*(sims$diff_y_prev<=0))
-    y_rep2 <- round(sims$diff_y_prev*(sims$diff_y_prev<0)+0*(sims$diff_y_prev>=0))
+    y_rep2 <- round(abs(sims$diff_y_prev)*(sims$diff_y_prev<0)+0*(sims$diff_y_prev>=0))
     team1_prev <- team_home[(N+1):(N+N_prev)]
     team2_prev <- team_away[(N+1):(N+N_prev)]
   }
