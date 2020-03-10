@@ -210,6 +210,7 @@ stan_foot <- function(data,
     }
   }
 
+
   if (missing(predict) | predict ==0){ # check on predict
     predict <- 0
     N <- dim(data)[1]
@@ -219,9 +220,14 @@ stan_foot <- function(data,
     N <- dim(data)[1]-predict
     N_prev <- predict
     type <- "prev"
-  }else{
+  }else if (is.numeric(predict)){
     stop("The number of out-of-sample matches is ill posed!
          Pick up an integer number.")
+  }else if (predict >= dim(data)[1]){
+    warning("The training set size is zero!
+            Please, select a lower value for the
+            out-of-sample matches, through the
+            argument predict.")
   }
 
   if (missing(dynamic_type)){

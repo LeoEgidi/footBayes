@@ -5,7 +5,6 @@
 #' @export
 
 foot_rank <- function(data, object,
-                      #type = c("in-sample", "out-of-sample"),
                       team_sel,
                       visualize = c(1,2))
   {
@@ -37,9 +36,9 @@ foot_rank <- function(data, object,
   if (!is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
     # caso t-student
     N_prev <- dim(sims$diff_y_prev)[2]
-    N <- dim(sims$y_rep)[2]
-    y_rep1 <- sims$diff_y_prev*(sims$diff_y_prev>0)+0*(sims$diff_y_prev<=0)
-    y_rep2 <- sims$diff_y_prev*(sims$diff_y_prev<0)+0*(sims$diff_y_prev>=0)
+    N <- dim(sims$diff_y_rep)[2]
+    y_rep1 <- round(sims$diff_y_prev*(sims$diff_y_prev>0)+0*(sims$diff_y_prev<=0))
+    y_rep2 <- round(sims$diff_y_prev*(sims$diff_y_prev<0)+0*(sims$diff_y_prev>=0))
     team1_prev <- team_home[(N+1):(N+N_prev)]
     team2_prev <- team_away[(N+1):(N+N_prev)]
   }
@@ -54,23 +53,9 @@ foot_rank <- function(data, object,
     team2_prev <- team_away[(N+1):(N+N_prev)]
   }
 
-  # if (is.null(sims$y_prev)){
-  #   N <- dim(data)[1]
-  #   N_prev <- N
-  #   y_rep1 <- sims$y_rep[,,1]
-  #   y_rep2 <- sims$y_rep[,,2]
-  #   team1_prev <- team_home[1:N]
-  #   team2_prev <- team_away[1:N]
-  # }else{
-
-  #}
-
   if(missing(visualize)){
       visualize <- 1
     }
-  if (missing(team_sel)){
-    team_sel <- teams[unique(team1_prev)]
-  }
 
   # condizione per fare si che quando si prevede
   # solo l'ultima giornata, non venga considerata
@@ -81,6 +66,14 @@ foot_rank <- function(data, object,
     team2_prev <- c(team2_prev, team1_prev)
   }
 
+  if (missing(team_sel)){
+    team_sel <- teams[unique(team1_prev)]
+  }else if (team_sel =="all"){
+    team_sel <- teams[unique(team1_prev)]
+  }
+  team_index <- match(team_sel, teams)
+  team_names <- teams[team_index]
+
   M <-dim(sims$diff_y_rep)[1]
   ngames_train <- dim(sims$y_rep)[2]
   conta_punti <- matrix(0, M, length(teams))
@@ -90,7 +83,7 @@ foot_rank <- function(data, object,
 
   if (visualize ==1){
 
-  # compute the final true point on the test set
+  # compute the true points on the test set
   for (n in 1:N_prev){
 
       if (y[(N+n),1]>y[(N+n),2]){
@@ -114,7 +107,7 @@ foot_rank <- function(data, object,
   teams_rank_names <- teams_rank_names[1:length(unique(team1_prev))]
 
 
-  # compute the true point on the training set
+  # compute the true points on the training set
   conta_punti_veri_pre <- rep(0, length(unique(team_home)))
   for (n in 1:N){
     if (y[(n),1]>y[(n),2]){
@@ -177,18 +170,18 @@ foot_rank <- function(data, object,
     teams_rank_names <- teams_rank_names[1:length(unique(team1_prev))]
   }
 
-  expected_point=apply(conta_punti,2,median)
-  points_25=apply(conta_punti,2,function(x) quantile(x, 0.25))
-  points_75=apply(conta_punti,2,function(x) quantile(x, 0.75))
-  sd_expected=apply(conta_punti,2,sd)
-  cbind(teams[unique(team1_prev)], expected_point[unique(team1_prev)],
-        points_25[unique(team1_prev)], points_75[unique(team1_prev)] )
-  class=sort.int(expected_point[unique(team1_prev)], index.return=TRUE,
+  expected_point=apply(conta_punti[,team_index],2,median)
+  points_25=apply(conta_punti[,team_index],2,function(x) quantile(x, 0.25))
+  points_75=apply(conta_punti[,team_index],2,function(x) quantile(x, 0.75))
+  points_025=apply(conta_punti[,team_index],2,function(x) quantile(x, 0.025))
+  points_975=apply(conta_punti[,team_index],2,function(x) quantile(x, 0.975))
+  sd_expected=apply(conta_punti[,team_index],2,sd)
+  class=sort.int(expected_point, index.return=TRUE,
                  decreasing=TRUE)
 
-  rank_bar=cbind(teams[unique(team1_prev)][class$ix], class$x,
-                 points_25[unique(team1_prev)][class$ix],
-                 points_75[unique(team1_prev)][class$ix]  )
+  rank_bar=cbind(teams[team_index][class$ix], class$x,
+                 points_25[class$ix],
+                 points_75[class$ix]  )
 
   rank_frame=data.frame(
     squadre=rank_bar[,1],
@@ -198,10 +191,8 @@ foot_rank <- function(data, object,
     obs=obs[  match(  rank_bar[,1], teams_rank_names) ]
   )
 
-  rank_frame$squadre=factor(rank_frame$squadre, levels=rank_bar[,1])
-
-
-
+  rank_frame$squadre=factor(rank_frame$squadre,
+                            levels=rank_bar[,1])
   ggplot()+
     geom_ribbon(aes(x=squadre, ymin=lo, ymax=hi, group=1),
                 data=rank_frame,
@@ -219,10 +210,6 @@ foot_rank <- function(data, object,
     labs(x="Teams", y="Points")
 
   }else if(visualize == 2){
-
-
-  team_index <- match(team_sel, teams)
-  team_names <- teams[team_index]
 
   if (#N %% (length(unique(team1_prev))/2)!=0 &
         # questa condizione significa che siamo "dentro" alla stagione
@@ -259,7 +246,7 @@ foot_rank <- function(data, object,
 
     }
     cumsum_punti_pre <- t(apply(conta_punti_veri_pre_dyn,1,cumsum))
-  }else if ( #N %% (length(unique(team1_prev))/2)!=0 &
+  }else if (
              N > length(unique(team1_prev))*( length(unique(team1_prev))-1) &
              # questa condizione significa che siamo "dentro" alla stagione
              all(sort(unique(team_home))== sort(unique(team1_prev)))==FALSE &
@@ -383,11 +370,9 @@ punti_dyn_25 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.25))
 punti_dyn_75 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.75)))
 punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975)))
 
-  if (   all(sort(unique(team_home))== sort(unique(team1_prev))) &
-         N < length(unique(team1_prev))*( length(unique(team1_prev))-1  )
-
-      #&N <= length(unique(team_home))*(length(unique(team_home))-1 )
-      ){
+  if (all(sort(unique(team_home))== sort(unique(team1_prev))) &
+         N < length(unique(team1_prev))*( length(unique(team1_prev))-1  ))
+    {
     mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
                      cumsum_punti_pre[team_index,day_index]+
                        cumsum_punti_post[team_index,]))$value

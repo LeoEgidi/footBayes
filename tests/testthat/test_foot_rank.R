@@ -4,9 +4,11 @@ library(tidyverse)
 
 
 
-####
+###################################################
+## SCENARIO 1
 # use one season to predict part of the same season
-###
+###################################################
+
 italy <- as_tibble(italy)
   italy_2008<- italy %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
@@ -16,86 +18,115 @@ italy <- as_tibble(italy)
     filter( Season=="1997")
 
   fit1 <- stan_foot(data = italy_2008,
-                  model="double_pois", predict = 100)
+                  model="double_pois",
+                  predict = 100)
+  fit2 <- stan_foot(data = italy_2008,
+                    model="biv_pois",
+                    predict = 100)
+  fit3 <- stan_foot(data = italy_2008,
+                    model="skellam",
+                    predict = 100)
+  fit4 <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 100)
+
   foot_rank(data = italy_2008, object= fit1,
-          team_sel = c("AS Roma", "Inter", "Atalanta"),
-          type="out-of-sample",visualize = 2)
-    # ok
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit1,
+            team_sel ="all",
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit1,
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit2,
+            team_sel = c("AS Roma", "Inter","Atalanta"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit3,
+            team_sel = c("AS Roma", "Inter"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit4,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+
 
   foot_rank(data = italy_2008, object= fit1,
           team_sel = c("AS Roma", "Inter", "Atalanta"),
-          type="out-of-sample",visualize = 1)
-   # ok
-
+          visualize = 1)
   foot_rank(data = italy_2008, object= fit1,
+            team_sel = "all",
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit1,
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit2,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit3,
+            team_sel = c("AS Roma", "Inter", "Atalanta", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit4,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 1)
+
+
+
+#################################
+## SCENARIO 2
+# no prediction
+################################
+
+
+  fit5 <- stan_foot(data = italy_2008,
+                    model="double_pois",
+                    predict = 0)
+  fit6 <- stan_foot(data = italy_2008,
+                    model="biv_pois",
+                    predict = 0)
+  fit7 <- stan_foot(data = italy_2008,
+                    model="skellam",
+                    predict = 0)
+  fit8 <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 0)
+
+  foot_rank(data = italy_2008, object= fit5,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit5,
+            team_sel = "all",
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit5,
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit6,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit7,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit8,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+
+
+  foot_rank(data = italy_2008, object= fit5,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            type="out-of-sample",visualize = 1)
+  foot_rank(data = italy_2008, object= fit6,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            type="in-sample",visualize = 1)
+  foot_rank(data = italy_2008, object= fit7,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            type="in-sample",visualize = 1)
+  foot_rank(data = italy_2008, object= fit8,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             type="in-sample",visualize = 1)
 
-  foot_rank(data = italy_2008, object= fit1,
-            team_sel = c("AS Roma", "Inter", "Atalanta"),
-            type="in-sample",visualize = 2)
-
-  # decidere che fare con in-sample...
-
-  fit2 <- stan_foot(data = italy_1997,
-                    model="biv_pois", predict = 10)
-
-  foot_rank(data = italy_1997, object= fit2,
-            #type ="in-sample",
-            visualize = 1)
-
-  # ok
-
-  foot_rank(data = italy_1997, object= fit2,
-            #type ="out-of-sample",
-            team_sel = c("AS Roma", "Inter",
-                         "Atalanta", "Udinese Calcio"),
-            visualize = 2)
-
-  # ok
-
-###
-# no prediction
-###
-
-  fit3 <- stan_foot(data = italy_1997,
-                    model="biv_pois", predict = 0)
-
-  foot_rank(data = italy_1997, object= fit3,
-            #type ="in-sample",
-            visualize = 1)
-
-  # errore
-
-  foot_rank(data = italy_1997, object= fit3,
-            #type ="out-of-sample",
-            team_sel = c("AS Roma", "Inter",
-                         "Atalanta", "Udinese Calcio"),
-            visualize = 2)
-
-  # errore
-
-  fit3 <- stan_foot(data = italy_1997,
-                    model="student_t", predict = 0)
-
-  foot_rank(data = italy_1997, object= fit3,
-            #type ="in-sample",
-            visualize = 1)
-
-  # errore
-
-  foot_rank(data = italy_1997, object= fit3,
-            #type ="out-of-sample",
-            team_sel = c("AS Roma", "Inter",
-                         "Atalanta", "Udinese Calcio"),
-            visualize = 2)
-
-  # errore
 
 
-###
+######################################################
+## SCEANARIO 3
 # use two seasons to entirely predict the third season
-###
+######################################################
+
 
   italy_2000_2002<- italy %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
