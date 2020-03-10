@@ -201,29 +201,62 @@ italy_2000_2002<- italy %>%
 
 
 
-  fit7 <- stan_foot(data = italy_2000_2002,
+  fit13 <- stan_foot(data = italy_2000_2002,
                   model="double_pois",
                   dynamic_type ="seasonal",
-                  predict = 250) # double poisson
+                  predict = 250)
+  fit14 <- stan_foot(data = italy_2000_2002,
+                     model="biv_pois",
+                     dynamic_type ="seasonal",
+                     predict = 250)
+  fit15 <- stan_foot(data = italy_2000_2002,
+                     model="skellam",
+                     dynamic_type ="seasonal",
+                     predict = 250)
+  fit16 <- stan_foot(data = italy_2000_2002,
+                     model="student_t",
+                     dynamic_type ="seasonal",
+                     predict = 250)
 
   foot_rank(data = italy_2000_2002,
-          object= fit7,
-          team_sel = c("AS Roma", "Parma AC"),
-          type="out-of-sample",visualize = 2)
-
-  # ok
+            object= fit13,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit13,
+            visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit14,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit15,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit16,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
 
   foot_rank(data = italy_2000_2002,
-          object= fit7,
-          team_sel = c("AS Roma", "Inter", "AC Perugia",
-                       "AC Milan", "Udinese Calcio"),
-          type="out-of-sample",visualize = 2)
+            object= fit13,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit13,
+            visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit14,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit15,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit16,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
 
-  # ok
 
-foot_rank(data = italy_2000_2002,
-          object= fit7,
-          team_sel = c("AS Roma", "Inter"),
-          type="out-of-sample",visualize = 1)
 
- # ok

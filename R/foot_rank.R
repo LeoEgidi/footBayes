@@ -54,7 +54,17 @@ foot_rank <- function(data, object,
   }
 
   if (is.null(sims$diff_y_prev) & !is.null(sims$y_prev)){
-    # caso double Poisson
+    # caso double Poisson e biv Poisson
+    N_prev <- dim(sims$y_prev)[2]
+    N <- dim(sims$y_rep)[2]
+    y_rep1 <- sims$y_prev[,,1]
+    y_rep2 <- sims$y_prev[,,2]
+    team1_prev <- team_home[(N+1):(N+N_prev)]
+    team2_prev <- team_away[(N+1):(N+N_prev)]
+  }
+
+  if (!is.null(sims$diff_y_prev) & !is.null(sims$y_prev)){
+    # caso skellam
     N_prev <- dim(sims$y_prev)[2]
     N <- dim(sims$y_rep)[2]
     y_rep1 <- sims$y_prev[,,1]
@@ -89,7 +99,8 @@ foot_rank <- function(data, object,
   conta_punti <- matrix(0, M, length(teams))
   conta_punti_veri <- rep(0, length(teams))
   number_match_days <- length(unique(team1_prev))*2-2
-
+  in_sample_cond <- is.null(sims$diff_y_prev) & is.null(sims$y_prev)
+  fill_test <- c("red", "gray")[c(!in_sample_cond, in_sample_cond)]
 
   if (visualize ==1){
 
@@ -215,26 +226,34 @@ foot_rank <- function(data, object,
 
   rank_bar=cbind(teams[team_index][class$ix], class$x,
                  points_25[class$ix],
-                 points_75[class$ix]  )
+                 points_75[class$ix],
+                 points_025[class$ix],
+                 points_975[class$ix])
 
   rank_frame=data.frame(
     squadre=rank_bar[,1],
     mid=as.numeric(as.vector(rank_bar[,2])),
     lo=as.numeric(as.vector(rank_bar[,3])),
     hi=as.numeric(as.vector(rank_bar[,4])),
-    obs=obs[  match(  rank_bar[,1], teams_rank_names) ]
+    obs=obs[  match(  rank_bar[,1], teams_rank_names)],
+    lo2=as.numeric(as.vector(rank_bar[,5])),
+    hi2=as.numeric(as.vector(rank_bar[,6]))
   )
 
   rank_frame$squadre=factor(rank_frame$squadre,
                             levels=rank_bar[,1])
   ggplot()+
+    geom_ribbon(aes(x=squadre, ymin=lo2, ymax=hi2, group=1),
+                data=rank_frame,
+                fill = color_scheme_get(fill_test)[[1]]
+    )+
     geom_ribbon(aes(x=squadre, ymin=lo, ymax=hi, group=1),
                 data=rank_frame,
-                fill = color_scheme_get("gray")[[2]]
+                fill = color_scheme_get(fill_test)[[2]]
     )+
     geom_line(aes(x=squadre, y= mid, group=1),
               data=rank_frame,
-              fill = color_scheme_get("blue")[[2]]
+              color = color_scheme_get(fill_test)[[4]]
     )+
     geom_point(aes(x=squadre, y=obs),
               data=rank_frame)+
@@ -466,9 +485,12 @@ df_team_sel <- data.frame(obs = mt_obs,
                               q_75 = mt_75,
                               q_975 = mt_975,
                               teams = rep(teams[team_index], max(day_index_prev)))
-    in_sample_cond <- is.null(sims$diff_y_prev) & is.null(sims$y_prev)
-    fill_test <- c("red", "black")[c(!in_sample_cond, in_sample_cond)]
+
     ggplot(df_team_sel,aes(day, obs))+
+      geom_ribbon(aes(x=day, ymin=q_025, ymax=q_975, group=1),
+                  data=df_team_sel,
+                  fill = color_scheme_get("blue")[[1]]
+      )+
       geom_ribbon(aes(x=day, ymin=q_25, ymax=q_75, group=1),
                   data=df_team_sel,
                   fill = color_scheme_get("blue")[[2]]
