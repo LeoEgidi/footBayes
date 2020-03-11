@@ -92,6 +92,11 @@ foot_rank <- function(data, object,
     team_sel <- teams[unique(team1_prev)]
   }
   team_index <- match(team_sel, teams)
+  if (is.na(sum(team_index))){
+    warning(paste(team_sel[is.na(team_index)],
+                  "is not in the test set. Pleasy provide a valid team name. "))
+    team_index <- team_index[!is.na(team_index)]
+  }
   team_names <- teams[team_index]
 
   M <-dim(sims$diff_y_rep)[1]

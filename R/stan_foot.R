@@ -184,7 +184,17 @@ stan_foot <- function(data,
                       dynamic_type = FALSE,
                       ...){
 
-
+  if (dim(data)[2]<5){
+    stop("Data dimensions are wrong! Please,
+         supply a matrix/data frame containing
+         the following mandatory column items:
+         season, home team, away team,
+         home goals, away goals.")
+  }
+  if (!is.matrix(data)| !is.data.frame(data)){
+    stop("Data are not stored in matrix/data frame
+         structure. Pleasy, provide data correctly.")
+  }
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
   nteams<- length(unique(data$home))

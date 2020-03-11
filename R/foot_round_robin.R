@@ -3,10 +3,6 @@
 #'
 #' @export
 
-# checks su stagioni differenti, come in foot_rank
-# checks su student t,skellam, etc.
-# team_sel con selezione teams
-# check su in-sample e out-of-sample
 
 foot_round_robin <- function(data, object, team_sel){
   # # plot for the torunament "box"
@@ -18,6 +14,12 @@ foot_round_robin <- function(data, object, team_sel){
   teams <- unique(data$home)
   team_home <- match(data$home, teams)
   team_away <- match(data$away, teams)
+
+  if (is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
+    stop("There is not any test set!
+         Please, use this function only for
+         out-of-samples predictions.")
+  }
 
   if (!is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
     # caso t-student
@@ -64,18 +66,45 @@ foot_round_robin <- function(data, object, team_sel){
     team_sel <- teams[unique(team1_prev)]
   }
   team_index <- match(team_sel, teams)
-  team_names <- teams[team_index]
 
-  nteams<- length(unique(team1_prev))
+
+  if (is.na(sum(team_index))){
+    warning(paste(team_sel[is.na(team_index)],
+    "is not in the test set. Pleasy provide a valid team name. "))
+    team_index <- team_index[!is.na(team_index)]
+  }
+
+  team_names <- teams[team_index]
+  nteams<- length(unique(team_home))
   nteams_new <- length(team_index)
   M <-dim(sims$diff_y_rep)[1]
   counts_mix <- matrix(0, nteams, nteams)
+  number_match_days <- length(unique(team1_prev))*2-2
 
   punt <- matrix("-", nteams, nteams)
-  for (n in 1:N){
-    punt[team_home[n], team_away[n]] <-
-      paste(y[n,1], "-", y[n,2], sep="")
-  }
+  if (# questa condizione significa che siamo "dentro" alla stagione
+    all(sort(unique(team_home))== sort(unique(team1_prev))) &
+    N < length(unique(team1_prev))*( length(unique(team1_prev))-1   )
+    # quest'altra significa che il training ha le stesse squadre del test
+  ){
+    for (n in 1:N){
+      punt[team_home[n], team_away[n]] <-
+          paste(y[n,1], "-", y[n,2], sep="")
+    }
+  }else if(N > length(unique(team1_prev))*( length(unique(team1_prev))-1) &
+           # questa condizione significa che siamo "dentro" alla stagione
+           all(sort(unique(team_home))== sort(unique(team1_prev)))==FALSE &
+           N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0){
+
+    mod <- floor((N/ (length(unique(team1_prev))/2))/number_match_days)
+    old_matches <- number_match_days*mod*length(unique(team1_prev))/2
+    new_N <- seq(1+old_matches, N)
+
+    for (n in 1:new_N){
+      punt[team_home[n], team_away[n]] <-
+        paste(y[n,1], "-", y[n,2], sep="")
+      }
+    }
 
   for (n in 1: N_prev){
     prob<- sum(y_rep1[,n]> y_rep2[,n])/M
@@ -110,18 +139,10 @@ foot_round_robin <- function(data, object, team_sel){
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
     geom_text(aes(label=as.vector(punt[team_index, team_index])), size =2.1)+
     geom_rect(aes(xmin =as.vector(x1_x2),
-      xmax = as.vector(x2_x1),
-      ymin =as.vector(x1_x2),
-      ymax =as.vector(x2_x1)),
-      fill = "black", color = "black", size = 1)
-
-
-
-    #+
-    # geom_rect(aes(xmin =2.5,
-    #   xmax = 3.5,
-    #   ymin =2.5,
-    #   ymax =3.5),
-    #   fill = "gray", color = "black", size = 1)+
+                  xmax = as.vector(x2_x1),
+                  ymin =as.vector(x1_x2),
+                  ymax =as.vector(x2_x1)),
+                  fill = "black", color = "black",
+                  size = 1)
 
 }
