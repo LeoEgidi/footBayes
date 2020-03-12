@@ -191,7 +191,7 @@ stan_foot <- function(data,
          season, home team, away team,
          home goals, away goals.")
   }
-  if (!is.matrix(data)| !is.data.frame(data)){
+  if (!is.matrix(data) & !is.data.frame(data)){
     stop("Data are not stored in matrix/data frame
          structure. Pleasy, provide data correctly.")
   }
