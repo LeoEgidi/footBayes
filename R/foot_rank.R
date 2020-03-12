@@ -265,6 +265,7 @@ foot_rank <- function(data, object,
     scale_color_manual(values = c(color_scheme_get("blue")[[2]],
                                   color_scheme_get("red")[[2]]))+
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+    ggtitle("Posterior predicted points and ranks")+
     labs(x="Teams", y="Points")
 
   }else if(visualize == 2){
@@ -516,7 +517,7 @@ df_team_sel <- data.frame(obs = mt_obs,
       xlab("Match day")+
       ylab("Cumulated Points")+
       facet_wrap("teams", scales ="free")+
-      ggtitle("Ranks")+
+      ggtitle("Posterior predicted points")+
       theme(plot.title = element_text(size=22))+
       annotate("rect",xmin=-Inf,xmax=day_index,ymin=-Inf,ymax=Inf, alpha=0.1, fill="black")+
       annotate("rect",xmin=day_index ,xmax= max(day_index_prev),ymin=-Inf,ymax=Inf, alpha=0.1, fill=fill_test)

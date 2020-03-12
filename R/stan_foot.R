@@ -184,6 +184,16 @@ stan_foot <- function(data,
                       dynamic_type = FALSE,
                       ...){
 
+
+
+   if (dim(data)[2]>5){
+    stop("Wrong number of columns! Please,
+         supply a matrix/data frame containing
+         the following mandatory column items:
+         season, home team, away team,
+         home goals, away goals.")
+   }
+
   if (dim(data)[2]<5){
     stop("Data dimensions are wrong! Please,
          supply a matrix/data frame containing
@@ -197,6 +207,12 @@ stan_foot <- function(data,
   }
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
+
+  # checks sui formati
+  if ( !is.numeric(data$homegoals) |!is.numeric(data$awaygoals)){
+    stop("Goals are not numeric! Please, provide
+         numeric values for the goals")
+  }
   nteams<- length(unique(data$home))
   user_dots <- list(chains = 4, iter = 2000,
                     #warmup = floor(iter/2),
@@ -221,7 +237,12 @@ stan_foot <- function(data,
   }
 
 
-  if (missing(predict) | predict ==0){ # check on predict
+  if (missing(predict)){ # check on predict
+    predict <- 0
+    N <- dim(data)[1]
+    N_prev <- 0
+    type <- "fit"
+  }else if(predict ==0){
     predict <- 0
     N <- dim(data)[1]
     N_prev <- 0

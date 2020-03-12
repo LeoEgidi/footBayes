@@ -143,6 +143,7 @@ foot_round_robin <- function(data, object, team_sel){
                   ymin =as.vector(x1_x2),
                   ymax =as.vector(x2_x1)),
                   fill = "black", color = "black",
-                  size = 1)
+                  size = 1)+
+    ggtitle("Home win posterior probabilities")
 
 }
