@@ -1,6 +1,8 @@
 ##########################
 ## DATA
 #########################
+library(tidyverse)
+library(engsoccerdata)
 
   ## I take six arguments
 england <- as_tibble(england)
@@ -32,4 +34,5 @@ england_2001 <- england %>%
 stan_foot(data = england_2001,
           model ="biv_pois")
 
+ ##
 

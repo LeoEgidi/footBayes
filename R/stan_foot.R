@@ -186,13 +186,13 @@ stan_foot <- function(data,
 
 
 
-   if (dim(data)[2]>5){
-    stop("Wrong number of columns! Please,
-         supply a matrix/data frame containing
-         the following mandatory column items:
-         season, home team, away team,
-         home goals, away goals.")
-   }
+   # if (dim(data)[2]>5){
+   #  stop("Wrong number of columns! Please,
+   #       supply a matrix/data frame containing
+   #       the following mandatory column items:
+   #       season, home team, away team,
+   #       home goals, away goals.")
+   # }
 
   if (dim(data)[2]<5){
     stop("Data dimensions are wrong! Please,
