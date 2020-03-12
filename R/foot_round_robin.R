@@ -100,7 +100,7 @@ foot_round_robin <- function(data, object, team_sel){
     old_matches <- number_match_days*mod*length(unique(team1_prev))/2
     new_N <- seq(1+old_matches, N)
 
-    for (n in 1:new_N){
+    for (n in new_N){
       punt[team_home[n], team_away[n]] <-
         paste(y[n,1], "-", y[n,2], sep="")
       }
