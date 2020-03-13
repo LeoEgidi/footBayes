@@ -21,7 +21,7 @@ the fit for the training set only.}
 dynamic parameters.}
 
 \item{...}{Optional parameters passed to the function
-in the **rstan** package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
+in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
 }
 \value{
 An object of S4 class, \code{\link[rstan]{stanfit-class}}.

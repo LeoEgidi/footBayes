@@ -154,10 +154,33 @@ stan_foot(germany_1999_2001,
           dynamic_type = TRUE,
           predict = 310)
 
+  ## dynamic as FALSE
+stan_foot(germany_1999_2001,
+          model ="student_t",
+          dynamic_type = FALSE,
+          predict = 310)
+
+  ## dynamic as NULL
+stan_foot(germany_1999_2001,
+          model ="student_t",
+          dynamic_type = NULL,
+          predict = 310)
+    # da risolvere...
+
+  ## seasonal dynamics for one season only
+stan_foot(germany_2001,
+          model ="student_t",
+          dynamic_type = "seasonal",
+          predict = 10)
+
 
 ###########################
 ## OPTIONAL ARGUMENTS
 ###########################
 
-
+  ## iter, chains, cores in a list...
+stan_foot(germany_1999_2001,
+          model ="student_t",
+          predict = 310,
+          ...= list(iter =200, chains=3, cores = 4))
 

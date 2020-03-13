@@ -13,7 +13,7 @@
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
 #'@param ... Optional parameters passed to the function
-#' in the **rstan** package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
+#' in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
 #'@return
 #'
 #'An object of S4 class, \code{\link[rstan]{stanfit-class}}.
@@ -182,7 +182,7 @@
 stan_foot <- function(data,
                       model,
                       predict,
-                      dynamic_type = FALSE,
+                      dynamic_type,
                       ...){
 
     ## DATA CHECKS
@@ -300,6 +300,11 @@ stan_foot <- function(data,
 
   ## DYNAMICS CHECKS
 
+  # else if (dynamic_type =="FALSE"){
+  #   dyn <-""
+  # }
+
+
   if (missing(dynamic_type)){
     dyn <-""
   }else if (dynamic_type == "weekly" ){
@@ -332,7 +337,8 @@ stan_foot <- function(data,
       if (length(unique(data$season))==1){
         dyn <-""
         warning("When using seasonal dynamics,
-              please consider more than one season.")
+              please consider more than one season.
+              No dynamics is used to fit the model")
       }
       season_count <- length(unique(data$season))
       season <- match(data$season, unique(data$season))
@@ -343,8 +349,6 @@ stan_foot <- function(data,
       #ntimes_prev <- length(unique(season[1:(N+N_prev)]))-length(unique(season[1:N]))
       #time_prev <- setdiff(time_tot, time)
       instants_prev <- season[(N+1):(N+N_prev)]
-    }else if (dynamic_type =="FALSE"){
-      dyn <-""
     }else{
       stop("The type of dynamics is not correct.
            Choose one among 'weekly' or 'seasonal'.")
