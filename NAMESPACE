@@ -3,6 +3,7 @@
 export(foot_abilities)
 export(foot_prob)
 export(foot_rank)
+export(foot_round_robin)
 export(pp_foot)
 export(stan_foot)
 import(arm)

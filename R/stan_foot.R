@@ -128,6 +128,10 @@
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #'  filter(Season=="2000" |  Season=="2001"| Season=="2002")
 #'
+#' # rename columns
+#'colnames(data) <- c("season", "home", "away",
+#' "homegoals", "awaygoals")
+#'
 #' ### Fit Stan models
 #' ## no dynamics, no predictions
 #'
@@ -186,13 +190,18 @@ stan_foot <- function(data,
 
 
 
-   # if (dim(data)[2]>5){
+    if (dim(data)[2]>5){
+      warning("Your dataset seems too large!
+             The function will evaluate the first
+             five columns as follows:
+             season, home team, away team, home goals,
+             away goals")
    #  stop("Wrong number of columns! Please,
    #       supply a matrix/data frame containing
    #       the following mandatory column items:
    #       season, home team, away team,
    #       home goals, away goals.")
-   # }
+    }
 
   if (dim(data)[2]<5){
     stop("Data dimensions are wrong! Please,
@@ -205,8 +214,11 @@ stan_foot <- function(data,
     stop("Data are not stored in matrix/data frame
          structure. Pleasy, provide data correctly.")
   }
+
+  #if (dim(data)[2]==5){
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
+  #}
 
   # checks sui formati
   if ( !is.numeric(data$homegoals) |!is.numeric(data$awaygoals)){
