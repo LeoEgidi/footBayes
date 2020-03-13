@@ -127,3 +127,9 @@ stan_foot(germany_2001,
 stan_foot(germany_2001,
           model ="student_t",
           predict = 30.5)
+
+  ## predict with more seasons
+germany_1999_2001 <- germany %>%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+  filter(  Season=="2001" | Season == "2000" | Season ="1999")
+

@@ -268,6 +268,10 @@ stan_foot <- function(data,
   }
 
 
+  ## PREDICT CHECKS
+
+  predict <- round(predict)
+
   if (missing(predict)){ # check on predict
     predict <- 0
     N <- dim(data)[1]
