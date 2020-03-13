@@ -108,7 +108,7 @@ stan_foot(england_2001,
 ## PREDICT
 ##################
 
-germany <- as.tibble(germany)
+germany <- as_tibble(germany)
 germany_2001 <- germany %>%
   dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
   filter(  Season=="2001")
@@ -131,5 +131,33 @@ stan_foot(germany_2001,
   ## predict with more seasons
 germany_1999_2001 <- germany %>%
   dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-  filter(  Season=="2001" | Season == "2000" | Season ="1999")
+  filter(  Season=="2001" | Season == "2000" | Season =="1999")
+
+stan_foot(germany_1999_2001,
+          model ="student_t",
+          predict = 310)
+
+
+####################
+## DYNAMICS
+####################
+
+  ## dynamics different than seasonal and weekly
+stan_foot(germany_1999_2001,
+          model ="student_t",
+          dynamic_type = "monthly",
+          predict = 310)
+
+  ## dynamic as TRUE
+stan_foot(germany_1999_2001,
+          model ="student_t",
+          dynamic_type = TRUE,
+          predict = 310)
+
+
+###########################
+## OPTIONAL ARGUMENTS
+###########################
+
+
 

@@ -256,4 +256,25 @@ italy_2000_2002<- italy %>%
             visualize = 1)
 
 
+############################################
+## SCENARIO 5
+# use more seasons and a piece of a season
+# to predict the remaining matches, also for
+# other/another season/seasons
+############################################
+
+germany <- as_tibble(germany)
+germany_1999_2001 <- germany %>%
+    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+    filter(  Season=="2001" | Season == "2000" | Season =="1999")
+
+  fit17 <- stan_foot(data = germany_1999_2001,
+                   model="double_pois",
+                   dynamic_type ="seasonal",
+                   predict = 310)
+
+  foot_rank(data = germany_1999_2001,
+            object = fit17,
+            visualize = 2)
+
 

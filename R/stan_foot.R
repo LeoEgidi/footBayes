@@ -13,7 +13,7 @@
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
 #'@param ... Optional parameters passed to the function
-#'in the \code{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
+#' in the **rstan** package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
 #'@return
 #'
 #'An object of S4 class, \code{\link[rstan]{stanfit-class}}.
@@ -128,9 +128,6 @@
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #'  filter(Season=="2000" |  Season=="2001"| Season=="2002")
 #'
-#' # rename columns
-#'colnames(data) <- c("season", "home", "away",
-#' "homegoals", "awaygoals")
 #'
 #' ### Fit Stan models
 #' ## no dynamics, no predictions
@@ -242,8 +239,6 @@ stan_foot <- function(data,
          double_pois, biv_pois, skellam, student_t")
   }
 
-
-
   nteams<- length(unique(data$home))
   user_dots <- list(chains = 4, iter = 2000,
                     #warmup = floor(iter/2),
@@ -256,6 +251,10 @@ stan_foot <- function(data,
                     open_progress = interactive() && !isatty(stdout()) &&
                       !identical(Sys.getenv("RSTUDIO"), "1"),
                     boost_lib = NULL, eigen_lib = NULL)
+
+
+  ## OPTIONAL ARGUMENTS CHECKS
+
   if (missing(...)){
     user_dots <- user_dots
   }else{
@@ -297,6 +296,9 @@ stan_foot <- function(data,
             out-of-sample matches, through the
             argument predict.")
      }
+
+
+  ## DYNAMICS CHECKS
 
   if (missing(dynamic_type)){
     dyn <-""
