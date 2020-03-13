@@ -188,7 +188,7 @@ stan_foot <- function(data,
                       dynamic_type = FALSE,
                       ...){
 
-
+    ## DATA CHECKS
 
     if (dim(data)[2]>5){
       warning("Your dataset seems too large!
@@ -225,6 +225,25 @@ stan_foot <- function(data,
     stop("Goals are not numeric! Please, provide
          numeric values for the goals")
   }
+
+  ## MODEL'S NAME CHECKS
+
+  good_names <- c("double_pois",
+                  "biv_pois",
+                  "skellam",
+                  "student_t")
+  if (length(model)>1){
+    stop("Give one single model at a time!")
+  }
+  if (is.na(match(model, good_names))){
+    stop("Invalid model name!
+         Please, provide one among the following
+         model names:
+         double_pois, biv_pois, skellam, student_t")
+  }
+
+
+
   nteams<- length(unique(data$home))
   user_dots <- list(chains = 4, iter = 2000,
                     #warmup = floor(iter/2),
@@ -263,15 +282,17 @@ stan_foot <- function(data,
     N <- dim(data)[1]-predict
     N_prev <- predict
     type <- "prev"
-  }else if (is.numeric(predict)){
+  }else if (!is.numeric(predict)){
     stop("The number of out-of-sample matches is ill posed!
          Pick up an integer number.")
-  }else if (predict >= dim(data)[1]){
-    warning("The training set size is zero!
+  }
+
+   if (predict >= dim(data)[1]){
+    stop("The training set size is zero!
             Please, select a lower value for the
             out-of-sample matches, through the
             argument predict.")
-  }
+     }
 
   if (missing(dynamic_type)){
     dyn <-""

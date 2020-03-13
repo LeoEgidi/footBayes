@@ -98,3 +98,32 @@ england_2001 <- england %>%
   ## wrong name
 stan_foot(england_2001,
           model ="normal")
+
+  ## two or more names
+stan_foot(england_2001,
+          model = c("double_pois", "biv_pois"))
+
+
+###################
+## PREDICT
+##################
+
+germany <- as.tibble(germany)
+germany_2001 <- germany %>%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+  filter(  Season=="2001")
+
+  ## predict > N
+stan_foot(germany_2001,
+          model ="student_t",
+          predict = 307)
+
+  ## predict not a number
+stan_foot(germany_2001,
+          model ="student_t",
+          predict = "a")
+
+  ## predict decimal number
+stan_foot(germany_2001,
+          model ="student_t",
+          predict = 30.5)
