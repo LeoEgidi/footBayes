@@ -271,10 +271,13 @@ germany_1999_2001 <- germany %>%
   fit17 <- stan_foot(data = germany_1999_2001,
                    model="double_pois",
                    dynamic_type ="seasonal",
-                   predict = 310)
+                   predict = 310,
+                   iter =300)
 
   foot_rank(data = germany_1999_2001,
             object = fit17,
             visualize = 2)
+
+  # da risolvere...
 
 
