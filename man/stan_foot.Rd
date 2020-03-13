@@ -21,7 +21,7 @@ the fit for the training set only.}
 dynamic parameters.}
 
 \item{...}{Optional parameters passed to the function
-in the \code{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
+in the **rstan** package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
 }
 \value{
 An object of S4 class, \code{\link[rstan]{stanfit-class}}.
@@ -117,9 +117,6 @@ italy_2000_2002<- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
  filter(Season=="2000" |  Season=="2001"| Season=="2002")
 
-# rename columns
-colnames(data) <- c("season", "home", "away",
-"homegoals", "awaygoals")
 
 ### Fit Stan models
 ## no dynamics, no predictions
