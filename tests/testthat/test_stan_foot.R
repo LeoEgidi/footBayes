@@ -184,3 +184,9 @@ stan_foot(germany_1999_2001,
           predict = 310,
           ...= list(iter =200, chains=3, cores = 4))
 
+  ## iter, chains, cores not in a list...
+stan_foot(germany_1999_2001,
+          model ="student_t",
+          predict = 310,
+          iter =200, chains=3, cores = 4)
+
