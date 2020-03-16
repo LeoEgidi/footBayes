@@ -86,3 +86,27 @@ italy_2000_2002<- italy %>%
                    object = fit15)
   foot_round_robin(data = italy_2000_2002,
                    object = fit16)
+
+############################################
+  ## SCENARIO 5
+# use more seasons and a piece of a season
+# to predict the remaining matches, also for
+# other/another season/seasons
+############################################
+
+germany <- as_tibble(germany)
+germany_1999_2001 <- germany %>%
+    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+    filter(  Season=="2001" | Season == "2000" | Season =="1999")
+
+foot_round_robin(data = germany_1999_2001,
+                  object = fit17)
+
+foot_round_robin(data = germany_1999_2001,
+                  object = fit18)
+
+foot_round_robin(data = germany_1999_2001,
+                  object = fit19)
+
+foot_round_robin(data = germany_1999_2001,
+                  object = fit20)

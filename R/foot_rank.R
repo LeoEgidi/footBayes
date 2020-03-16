@@ -17,9 +17,11 @@ foot_rank <- function(data, object,
   teams <- unique(data$home)
   team_home <- match(data$home, teams)
   team_away <- match(data$away, teams)
-  # if (missing(type)){
-  #   type = "out-of-sample"
-  # }
+  seasons_levels <-unique(data$season)
+  team_seasons <- list()
+  for (j in 1:length(seasons_levels))
+    team_seasons[[j]] <-
+    unique(team_home[data$season == seasons_levels[j]])
 
   # caso in-sample
   if (is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
@@ -73,13 +75,80 @@ foot_rank <- function(data, object,
     team2_prev <- team_away[(N+1):(N+N_prev)]
   }
 
+  # identifica la stagione all'interno del quale prevedere
+  season_prev <- unique(data$season[(N+1):(N+N_prev)])
+
+  # condizione per far si che non si possano prevedere
+  # dati di stagioni diverse
+  if (length(unique(data$season[(N+1):(N+N_prev)])) !=1){
+    stop("Please, to use this function,
+          do not provide out-of-sample
+         matches belonging to different seasons, provide
+         only out-of samples matches from one season.
+         Consider to refit the model.")
+
+  # warning("Please, do not provide out-of-sample
+  #     matches belonging to different seasons, provide
+  #     only matches from one season.")
+  #
+  #   prev_indexes <- (N+1):(N+N_prev)
+  #   prev_values <- unique(data$season[prev_indexes])
+  #   useful_indexes <- prev_indexes[
+  #           data$season[prev_indexes]== prev_values[1]]
+  #   N_prev <- length(useful_indexes)
+  #   season_prev <- prev_values[1]
+  #
+  #
+  #   if (!is.null(sims$diff_y_prev) &
+  #         is.null(sims$y_prev)){
+  #     # t di student
+  #     y_rep1 <- round(sims$diff_y_prev[,1:N_prev]*
+  #         (sims$diff_y_prev[,1:N_prev]>0)+
+  #           0*(sims$diff_y_prev[, 1:N_prev]<=0))
+  #     y_rep2 <- round(abs(sims$diff_y_prev[, 1:N_prev])*
+  #         (sims$diff_y_prev[, 1:N_prev]<0)+
+  #           0*(sims$diff_y_prev[,1:N_prev]>=0))
+  #   }
+  #
+  #   if (is.null(sims$diff_y_prev) &
+  #         !is.null(sims$y_prev)){
+  #     # caso double Poisson e biv Poisson
+  #     y_rep1 <- sims$y_prev[,1:N_prev,1]
+  #     y_rep2 <- sims$y_prev[,1:N_prev,2]
+  #   }
+  #
+  #   if (!is.null(sims$diff_y_prev) &
+  #         !is.null(sims$y_prev)){
+  #     # skellam
+  #     y_rep1 <- sims$y_prev[,,1]
+  #     y_rep2 <- sims$y_prev[,,2]
+  #   }
+  #
+  #   team1_prev <- team_home[useful_indexes]
+  #   team2_prev <- team_away[useful_indexes]
+  }
+
   if(missing(visualize)){
       visualize <- 1
     }
 
   # condizione per fare si che quando si prevede
-  # solo l'ultima giornata, non venga considerata
-  # solo la metà delle squadre
+  # solo l'ultima giornata, vengano considrate tutte le
+  # squadre
+
+  ind_season_prev <-
+    (1:length(seasons_levels))[season_prev ==
+        seasons_levels]
+
+  if (N_prev < length(team_seasons[[ind_season_prev]])/2){
+      stop(paste("The number of out-of-samples matches
+      is too small. Please, to use this function, refit
+      the model with the argument predict greater
+      or equal than",
+        length(team_seasons[[ind_season_prev]])/2 ))
+    }
+
+  # questa condizione è sbagliata?
   if (length(unique(team1_prev)) !=
       length(unique(c(team1_prev, team2_prev)))  ){
     team1_prev <- c(team1_prev, team2_prev)

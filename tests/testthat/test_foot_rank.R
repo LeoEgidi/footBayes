@@ -29,6 +29,15 @@ italy <- as_tibble(italy)
   fit4 <- stan_foot(data = italy_2008,
                     model="student_t",
                     predict = 100)
+  fit4.bis <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 4,
+                    iter = 300)
+  fit4.tris <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 10,
+                    iter = 300)
+
 
   foot_rank(data = italy_2008, object= fit1,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
@@ -47,6 +56,13 @@ italy <- as_tibble(italy)
   foot_rank(data = italy_2008, object= fit4,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 2)
+  foot_rank(data = italy_2008, object= fit4.bis,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit4.tris,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  # errore...perché?
 
 
   foot_rank(data = italy_2008, object= fit1,
@@ -66,6 +82,13 @@ italy <- as_tibble(italy)
   foot_rank(data = italy_2008, object= fit4,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
+  foot_rank(data = italy_2008, object= fit4.bis,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit4.tris,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 1)
+
 
 
 
@@ -193,7 +216,7 @@ italy_2000_2002<- italy %>%
 ####################################################
 ## SCENARIO 4
 # use two seasons and a portion of the current season
-# to predict the currents season
+# to predict the current season
 ###################################################
 
 
@@ -201,7 +224,8 @@ italy_2000_2002<- italy %>%
   fit13 <- stan_foot(data = italy_2000_2002,
                   model="double_pois",
                   dynamic_type ="seasonal",
-                  predict = 250)
+                  predict = 250,
+                  iter = 300)
   fit14 <- stan_foot(data = italy_2000_2002,
                      model="biv_pois",
                      dynamic_type ="seasonal",
@@ -214,6 +238,14 @@ italy_2000_2002<- italy %>%
                      model="student_t",
                      dynamic_type ="seasonal",
                      predict = 250)
+  fit16.bis <- stan_foot(data = italy_2000_2002,
+                    model="student_t",
+                    dynamic_type ="seasonal",
+                    predict = 4)
+  fit16.tris <- stan_foot(data = italy_2000_2002,
+                    model="student_t",
+                    dynamic_type ="seasonal",
+                    predict = 10)
 
   foot_rank(data = italy_2000_2002,
             object= fit13,
@@ -263,6 +295,8 @@ italy_2000_2002<- italy %>%
 # other/another season/seasons
 ############################################
 
+  # 2 problemi: quando
+
 germany <- as_tibble(germany)
 germany_1999_2001 <- germany %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
@@ -271,13 +305,57 @@ germany_1999_2001 <- germany %>%
   fit17 <- stan_foot(data = germany_1999_2001,
                    model="double_pois",
                    dynamic_type ="seasonal",
-                   predict = 310,
+                   predict = 320,
                    iter =300)
+
+  fit18 <- stan_foot(data = germany_1999_2001,
+                  model="biv_pois",
+                  dynamic_type ="seasonal",
+                  predict = 310,
+                  iter =300)
+  fit19 <- stan_foot(data = germany_1999_2001,
+                  model="skellam",
+                  dynamic_type ="seasonal",
+                  predict = 310,
+                  iter =300)
+  fit20 <- stan_foot(data = germany_1999_2001,
+                  model="student_t",
+                  dynamic_type ="seasonal",
+                  predict = 310,
+                  iter =300)
 
   foot_rank(data = germany_1999_2001,
             object = fit17,
-            visualize = 2)
+            visualize = 1)
 
-  # da risolvere...
+  foot_rank(data = germany_1999_2001,
+            object = fit18,
+            visualize = 1)
+
+  foot_rank(data = germany_1999_2001,
+            object = fit19,
+            visualize = 1)
+
+  foot_rank(data = germany_1999_2001,
+            object = fit20,
+            visualize = 1)
+
+  foot_rank(data = germany_1999_2001,
+    object = fit17,
+    visualize = 2)
+
+  foot_rank(data = germany_1999_2001,
+    object = fit18,
+    visualize = 2)
+
+  foot_rank(data = germany_1999_2001,
+    object = fit19,
+    visualize = 2)
+
+  foot_rank(data = germany_1999_2001,
+    object = fit20,
+    visualize = 2)
+
+
 
 
