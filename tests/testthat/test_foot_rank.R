@@ -37,6 +37,14 @@ italy <- as_tibble(italy)
                     model="student_t",
                     predict = 10,
                     iter = 300)
+  fit4.four <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 12,
+                    iter = 300)
+  fit4.five <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 21,
+                    iter = 300)
 
 
   foot_rank(data = italy_2008, object= fit1,
@@ -62,7 +70,13 @@ italy <- as_tibble(italy)
   foot_rank(data = italy_2008, object= fit4.tris,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 2)
-  # errore...perché?
+  # ora va, da ricontrollare però
+  foot_rank(data = italy_2008, object= fit4.four,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit4.five,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
 
 
   foot_rank(data = italy_2008, object= fit1,
@@ -86,7 +100,7 @@ italy <- as_tibble(italy)
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
   foot_rank(data = italy_2008, object= fit4.tris,
-            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            team_sel = c("AS Roma", "Inter", "AC Milan"),
             visualize = 1)
 
 
@@ -241,11 +255,11 @@ italy_2000_2002<- italy %>%
   fit16.bis <- stan_foot(data = italy_2000_2002,
                     model="student_t",
                     dynamic_type ="seasonal",
-                    predict = 4)
+                    predict = 4, iter = 300)
   fit16.tris <- stan_foot(data = italy_2000_2002,
                     model="student_t",
                     dynamic_type ="seasonal",
-                    predict = 10)
+                    predict = 10, iter = 300)
 
   foot_rank(data = italy_2000_2002,
             object= fit13,
@@ -266,6 +280,17 @@ italy_2000_2002<- italy %>%
             object= fit16,
             team_sel = c("AS Roma", "AC Milan"),
             visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit16.bis,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit16.tris,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
+
+
+  # errore...
 
   foot_rank(data = italy_2000_2002,
             object= fit13,
@@ -286,6 +311,16 @@ italy_2000_2002<- italy %>%
             object= fit16,
             #team_sel = c("AS Roma", "AC Milan"),
             visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit16.bis,
+            #team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit16.tris,
+            #team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+
+  # sbagliato il grafico...
 
 
 ############################################

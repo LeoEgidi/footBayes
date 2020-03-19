@@ -157,7 +157,7 @@ foot_rank <- function(data, object,
 
   if (missing(team_sel)){
     team_sel <- teams[unique(team1_prev)]
-  }else if (team_sel =="all"){
+  }else if (all(team_sel =="all")){
     team_sel <- teams[unique(team1_prev)]
   }
   team_index <- match(team_sel, teams)
@@ -510,6 +510,12 @@ foot_rank <- function(data, object,
 
 cumsum_punti_post <- t(apply(conta_punti_veri_post_dyn,1,cumsum))
 cumsum_punti_post <- cumsum_punti_post[, unique(day_index_prev)]
+  # se cumsum_punti_post è un vettore, significa che stiamo   prevedendo solo l'ultima giornata. Per il codice che
+  # segue, bisogna conertirlo in matrice
+   if(is.vector(cumsum_punti_post)){
+     cumsum_punti_post <- as.matrix(cumsum_punti_post)
+   }
+
 
 # compute quantiles for MCMC point
 punti_dyn_med <- apply(cumsum_punti_dyn, c(2,3), median)
