@@ -415,6 +415,10 @@ refit the model with the argument predict greater
                                (N+N_prev)/(length(unique(team1_prev))/2)
                                ),
                         each = length(unique(team1_prev))/2)
+    if (in_sample_cond==TRUE){
+      day_index_prev <- day_index_rep
+    }
+
     conta_punti_veri_pre_dyn <- matrix(0, length(unique(team_home)), day_index )
 
     # compute the true point for the training sample, dynamically
@@ -446,6 +450,11 @@ refit the model with the argument predict greater
                                day_index + (N+N_prev)/(length(unique(team1_prev))/2)-floor( (N/ (length(unique(team1_prev))/2))  )
                                 ),
                           each = length(unique(team1_prev))/2)
+
+    if (in_sample_cond==TRUE){
+      day_index_prev <- day_index_rep
+    }
+
     conta_punti_veri_pre_dyn <- matrix(0, length(unique(team_home)), day_index )
 
     # qui è un casino: non sempre le stagioni hanno lo stesso numero di squadre...
@@ -484,6 +493,10 @@ refit the model with the argument predict greater
                          each = length(unique(team1_prev))/2)
       day_index_prev <- rep(seq( (day_index+1), (N_prev)/(length(unique(team1_prev))/2) ),
                           each = length(unique(team1_prev))/2)
+
+      if (in_sample_cond==TRUE){
+        day_index_prev <- day_index_rep
+      }
   }
 
 
@@ -581,14 +594,22 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
 
   if (cond_1 == TRUE)
     {
+    if (in_sample_cond==FALSE){
     mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
                      cumsum_punti_pre[team_index,day_index]+
                        cumsum_punti_post[team_index,]))$value
+
     mt_50 <- melt(cbind(matrix(NA,
-                           length(team_names),
-                           #length(unique(team_home)),
-                           day_index),
-                    punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
+      length(team_names),
+      #length(unique(team_home)),
+      day_index),
+      punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
+
+    }else{
+      mt_obs <- melt(cumsum_punti_pre[team_index, ])$value
+      mt_50 <- melt(punti_dyn_med[team_index, ])$value
+    }
+
   }else if ( cond_2 == TRUE ){
     mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
                          cumsum_punti_pre[team_index,day_index]+

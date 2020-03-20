@@ -71,7 +71,6 @@ italy <- as_tibble(italy)
   foot_rank(data = italy_2008, object= fit4.bis,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 2)
-  #da correggere
   foot_rank(data = italy_2008, object= fit4.tris,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 2)
@@ -332,6 +331,7 @@ italy_2000_2002<- italy %>%
             object= fit16.bis,
             #team_sel = c("AS Roma", "AC Milan"),
             visualize = 1)
+  # da correggere i punti...
   foot_rank(data = italy_2000_2002,
             object= fit16.tris,
             #team_sel = c("AS Roma", "AC Milan"),
