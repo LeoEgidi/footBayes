@@ -19,16 +19,20 @@ italy <- as_tibble(italy)
 
   fit1 <- stan_foot(data = italy_2008,
                   model="double_pois",
-                  predict = 100)
+                  predict = 100,
+                  iter = 300)
   fit2 <- stan_foot(data = italy_2008,
                     model="biv_pois",
-                    predict = 100)
+                    predict = 100,
+                    iter = 300)
   fit3 <- stan_foot(data = italy_2008,
                     model="skellam",
-                    predict = 100)
+                    predict = 100,
+                    iter = 300)
   fit4 <- stan_foot(data = italy_2008,
                     model="student_t",
-                    predict = 100)
+                    predict = 100,
+                    iter = 300)
   fit4.bis <- stan_foot(data = italy_2008,
                     model="student_t",
                     predict = 4,
@@ -91,7 +95,7 @@ italy <- as_tibble(italy)
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
   foot_rank(data = italy_2008, object= fit3,
-            team_sel = c("AS Roma", "Inter", "Atalanta", "AC Milan"),
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
   foot_rank(data = italy_2008, object= fit4,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
@@ -100,6 +104,12 @@ italy <- as_tibble(italy)
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
   foot_rank(data = italy_2008, object= fit4.tris,
+            team_sel = c("AS Roma", "Inter", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit4.four,
+            team_sel = c("AS Roma", "Inter", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit4.five,
             team_sel = c("AS Roma", "Inter", "AC Milan"),
             visualize = 1)
 
@@ -290,7 +300,7 @@ italy_2000_2002<- italy %>%
             visualize = 2)
 
 
-  # errore...
+
 
   foot_rank(data = italy_2000_2002,
             object= fit13,
@@ -320,7 +330,6 @@ italy_2000_2002<- italy %>%
             #team_sel = c("AS Roma", "AC Milan"),
             visualize = 1)
 
-  # sbagliato il grafico...
 
 
 ############################################

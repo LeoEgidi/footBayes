@@ -176,6 +176,23 @@ foot_rank <- function(data, object,
   in_sample_cond <- is.null(sims$diff_y_prev) & is.null(sims$y_prev)
   fill_test <- c("red", "gray")[c(!in_sample_cond, in_sample_cond)]
 
+
+  # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
+  cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev))) & N < length(unique(team1_prev))*( length(unique(team1_prev))-1)
+
+  # questa condizione significa che il training NON ha
+  # le stesse squadre del test, e che stiamo considerando
+  # dati di training di più stagioni
+  cond_2 <- N > length(unique(team1_prev))*( length(unique(team1_prev))-1) &
+    all(sort(unique(team_home))== sort(unique(team1_prev)))==FALSE &
+    N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0
+
+
+  # questa condizione significa che siamo alla fine di una   # stagione
+  cond_3 <-  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))==0
+
+
+
   if (visualize ==1){
 
     # in-sample
@@ -225,6 +242,35 @@ foot_rank <- function(data, object,
   teams_rank_names <- teams[obs_names]
   teams_rank_names <- teams_rank_names[1:length(unique(team1_prev))]
 
+  if (cond_2 == TRUE){
+
+    number_match_days <- length(unique(team1_prev))*2-2
+    mod <- floor((N/ (length(unique(team1_prev))/2))/number_match_days)
+    old_matches <- number_match_days*mod*length(unique(team1_prev))/2
+    new_N <- seq(1+old_matches, N)
+
+    # compute the true points on the training set
+    conta_punti_veri_pre <- rep(0, length(unique(team_home)))
+    for (n in new_N){
+      if (y[(n),1]>y[(n),2]){
+        conta_punti_veri_pre[team_home[n]]=conta_punti_veri_pre[team_home[n]]+3
+        conta_punti_veri_pre[team_away[n]]=conta_punti_veri_pre[team_away[n]]
+      }else if(y[(n),1]==y[(n),2]){
+
+        conta_punti_veri_pre[team_home[n]]=conta_punti_veri_pre[team_home[n]]+1
+        conta_punti_veri_pre[team_away[n]]=conta_punti_veri_pre[team_away[n]]+1
+
+      }else if(y[(n),1]<y[(n),2]){
+
+        conta_punti_veri_pre[team_home[n]]=conta_punti_veri_pre[team_home[n]]
+        conta_punti_veri_pre[team_away[n]]=conta_punti_veri_pre[team_away[n]]+3
+
+      }
+
+    }
+
+
+  }else{
 
   # compute the true points on the training set
   conta_punti_veri_pre <- rep(0, length(unique(team_home)))
@@ -245,16 +291,12 @@ foot_rank <- function(data, object,
     }
 
   }
+}
 
   # compute the points on the MCMC
   for (t in 1:M){
-    if (  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0
-          &
-          all(sort(unique(team_home))== sort(unique(team1_prev)))
-          #N <= length(unique(team_home))*(length(unique(team_home))-1 )
-          ){
-
-      conta_punti[t,] <- conta_punti_veri_pre
+    if (  cond_1 == TRUE | cond_2 == TRUE ){
+        conta_punti[t,] <- conta_punti_veri_pre
     }
 
     for (n in 1:N_prev){
@@ -278,10 +320,11 @@ foot_rank <- function(data, object,
   }
 
 
-  # assumption for games coming from the same seasons
-  # (training set and test set belong to the same season)
-  if (  all(sort(unique(team_home))== sort(unique(team1_prev))) &
-        N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0  ){
+  # assumption for games "within" the season
+  if (  cond_1 == TRUE | cond_2 == TRUE
+    # all(sort(unique(team_home))== sort(unique(team1_prev))) &
+    #     N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0
+    ){
 
     obs <- sort.int(conta_punti_veri + conta_punti_veri_pre, index.return = TRUE, decreasing = TRUE)$x
     obs_names <- sort.int(conta_punti_veri+ conta_punti_veri_pre, index.return = TRUE, decreasing = TRUE)$ix
@@ -339,12 +382,7 @@ foot_rank <- function(data, object,
 
   }else if(visualize == 2){
 
-  if (#N %% (length(unique(team1_prev))/2)!=0 &
-        # questa condizione significa che siamo "dentro" alla stagione
-        all(sort(unique(team_home))== sort(unique(team1_prev))) &
-      N < length(unique(team1_prev))*( length(unique(team1_prev))-1   )
-        # quest'altra significa che il training ha le stesse squadre del test
-        ){
+    if ( cond_1 == TRUE ){
 
     day_index <- floor( (N/ (length(unique(team1_prev))/2))  )
     day_index_rep <- rep(seq(1, day_index) ,
@@ -374,18 +412,14 @@ foot_rank <- function(data, object,
 
     }
     cumsum_punti_pre <- t(apply(conta_punti_veri_pre_dyn,1,cumsum))
-  }else if (
-             N > length(unique(team1_prev))*( length(unique(team1_prev))-1) &
-             # questa condizione significa che siamo "dentro" alla stagione
-             all(sort(unique(team_home))== sort(unique(team1_prev)))==FALSE &
-             N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0 ){
-             # quest'altra significa che il training NON ha le stesse squadre del test){
+  }else if (cond_2 == TRUE ){
+
     mod <- floor((N/ (length(unique(team1_prev))/2))/number_match_days)
     day_index <- floor( (N/ (length(unique(team1_prev))/2))  )-mod*number_match_days
     day_index_rep <- rep(seq(1, day_index) ,
                          each = length(unique(team1_prev))/2)
     day_index_prev <- rep(seq( (day_index+1),
-                               (N+N_prev)/(length(unique(team1_prev))/2)-floor( (N/ (length(unique(team1_prev))/2))  )
+                               day_index + (N+N_prev)/(length(unique(team1_prev))/2)-floor( (N/ (length(unique(team1_prev))/2))  )
                                 ),
                           each = length(unique(team1_prev))/2)
     conta_punti_veri_pre_dyn <- matrix(0, length(unique(team_home)), day_index )
@@ -419,7 +453,7 @@ foot_rank <- function(data, object,
     }
     cumsum_punti_pre <- t(apply(conta_punti_veri_pre_dyn,1,cumsum))
 
-  }else if ( N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))==0)# questa condizione significa che siamo alla fine di una stagione
+  }else if (cond_3 == TRUE)
     {
       day_index <- 0
       day_index_rep <- rep(seq(1, day_index) ,
@@ -524,8 +558,7 @@ punti_dyn_25 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.25))
 punti_dyn_75 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.75)))
 punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975)))
 
-  if (all(sort(unique(team_home))== sort(unique(team1_prev))) &
-         N < length(unique(team1_prev))*( length(unique(team1_prev))-1  ))
+  if (cond_1 == TRUE)
     {
     mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
                      cumsum_punti_pre[team_index,day_index]+
@@ -535,10 +568,7 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
                            #length(unique(team_home)),
                            day_index),
                     punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
-  }else if (N > length(unique(team1_prev))*( length(unique(team1_prev))-1) &
-            # questa condizione significa che siamo "dentro" alla stagione
-            all(sort(unique(team_home))== sort(unique(team1_prev)))==FALSE &
-            N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0   ){
+  }else if ( cond_2 == TRUE ){
     mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
                          cumsum_punti_pre[team_index,day_index]+
                            cumsum_punti_post[team_index,]))$value
@@ -548,7 +578,7 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
                                day_index),
                         punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
 
-  }else if (N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))==0){
+  }else if (cond_3 == TRUE){
     mt_obs <- melt(cumsum_punti_post[team_index,])$value
     mt_50 <- melt(punti_dyn_med[team_index, (day_index+1):max(day_index_prev)])$value
     }
