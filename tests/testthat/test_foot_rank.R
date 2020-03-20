@@ -71,6 +71,7 @@ italy <- as_tibble(italy)
   foot_rank(data = italy_2008, object= fit4.bis,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 2)
+  #da correggere
   foot_rank(data = italy_2008, object= fit4.tris,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 2)
@@ -103,6 +104,7 @@ italy <- as_tibble(italy)
   foot_rank(data = italy_2008, object= fit4.bis,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
+  # da correggere
   foot_rank(data = italy_2008, object= fit4.tris,
             team_sel = c("AS Roma", "Inter", "AC Milan"),
             visualize = 1)
@@ -124,16 +126,20 @@ italy <- as_tibble(italy)
 
   fit5 <- stan_foot(data = italy_2008,
                     model="double_pois",
-                    predict = 0)
+                    predict = 0,
+                    iter = 300)
   fit6 <- stan_foot(data = italy_2008,
                     model="biv_pois",
-                    predict = 0)
+                    predict = 0,
+                    iter = 300)
   fit7 <- stan_foot(data = italy_2008,
                     model="skellam",
-                    predict = 0)
+                    predict = 0,
+                    iter = 300)
   fit8 <- stan_foot(data = italy_2008,
                     model="student_t",
-                    predict = 0)
+                    predict = 0,
+                    iter = 300)
 
   foot_rank(data = italy_2008, object= fit5,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
@@ -180,16 +186,16 @@ italy_2000_2002<- italy %>%
 
   fit9 <- stan_foot(data = italy_2000_2002,
                   model="double_pois",
-                  predict = 306)
+                  predict = 306, iter = 300)
   fit10 <- stan_foot(data = italy_2000_2002,
                     model="biv_pois",
-                    predict = 306)
+                    predict = 306, iter = 300)
   fit11 <- stan_foot(data = italy_2000_2002,
                     model="skellam",
-                    predict = 306)
+                    predict = 306, iter = 300)
   fit12 <- stan_foot(data = italy_2000_2002,
                     model="student_t",
-                    predict = 306)
+                    predict = 306, iter = 300)
 
 
   foot_rank(data = italy_2000_2002,
@@ -253,15 +259,15 @@ italy_2000_2002<- italy %>%
   fit14 <- stan_foot(data = italy_2000_2002,
                      model="biv_pois",
                      dynamic_type ="seasonal",
-                     predict = 250)
+                     predict = 250, iter = 300)
   fit15 <- stan_foot(data = italy_2000_2002,
                      model="skellam",
                      dynamic_type ="seasonal",
-                     predict = 250)
+                     predict = 250, iter = 300)
   fit16 <- stan_foot(data = italy_2000_2002,
                      model="student_t",
                      dynamic_type ="seasonal",
-                     predict = 250)
+                     predict = 250, iter = 300)
   fit16.bis <- stan_foot(data = italy_2000_2002,
                     model="student_t",
                     dynamic_type ="seasonal",
@@ -294,6 +300,7 @@ italy_2000_2002<- italy %>%
             object= fit16.bis,
             team_sel = c("AS Roma", "AC Milan"),
             visualize = 2)
+  # da correggere
   foot_rank(data = italy_2000_2002,
             object= fit16.tris,
             team_sel = c("AS Roma", "AC Milan"),
@@ -339,7 +346,6 @@ italy_2000_2002<- italy %>%
 # other/another season/seasons
 ############################################
 
-  # 2 problemi: quando
 
 germany <- as_tibble(germany)
 germany_1999_2001 <- germany %>%

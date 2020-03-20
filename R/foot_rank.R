@@ -141,12 +141,35 @@ foot_rank <- function(data, object,
         seasons_levels]
 
   if (N_prev < length(team_seasons[[ind_season_prev]])/2){
-      stop(paste("The number of out-of-samples matches
-      is too small. Please, to use this function, refit
-      the model with the argument predict greater
+      warning(paste("The number of out-of-samples matches
+      is too small,  then is forced to be zero.
+Please, to allow for out-of-samples matches, consider to
+refit the model with the argument predict greater
       or equal than",
         length(team_seasons[[ind_season_prev]])/2 ))
+
+    sims$diff_y_prev <- as.null(sims$diff_y_prev)
+    sims$y_prev <- as.null(sims$y_prev)
+
+    # consider in-sample case
+    if (!is.null(sims$y_rep)){
+      N <- dim(data)[1] - N_prev
+      N_prev <- N
+      y_rep1 <- sims$y_rep[,,1]
+      y_rep2 <- sims$y_rep[,,2]
+      team1_prev <- team_home[1:N]
+      team2_prev <- team_away[1:N]
+    }else{
+      # caso t di student
+      N <- dim(data)[1]-N_prev
+      N_prev <- N
+      y_rep1 <- round(sims$diff_y_rep*(sims$diff_y_rep>0)+0*(sims$diff_y_rep<=0))
+      y_rep2 <- round(abs(sims$diff_y_rep)*(sims$diff_y_rep<0)+0*(sims$diff_y_rep>=0))
+      team1_prev <- team_home[1:N]
+      team2_prev <- team_away[1:N]
     }
+
+  }
 
   # questa condizione è sbagliata?
   if (length(unique(team1_prev)) !=
@@ -196,8 +219,9 @@ foot_rank <- function(data, object,
   if (visualize ==1){
 
     # in-sample
-    if (is.null(sims$diff_y_prev) & is.null(sims$y_prev))
+    if (in_sample_cond == TRUE)
       {
+      cond_1 <- FALSE
       conta_punti_veri <- rep(0, length(unique(team_home)))
       for (n in 1:N){
         if (y[(n),1]>y[(n),2]){
@@ -467,7 +491,7 @@ foot_rank <- function(data, object,
 
   # compute the true points for the test set sample, dynamically
   conta_punti_veri_post_dyn <- matrix(0, length(unique(team_home)), max(unique(day_index_prev)) )
-  if (is.null(sims$diff_y_prev) & is.null(sims$y_prev))
+  if (in_sample_cond == TRUE)
   {
     for (n in 1:N){
       if (y[(n),1]>y[(n),2]){
@@ -508,13 +532,10 @@ foot_rank <- function(data, object,
   conta_punti_dyn <- array(0, c( M, length(unique(team_home)), max(day_index_prev)))
   cumsum_punti_dyn <- array(0, c( M, length(unique(team_home)), max(day_index_prev)))
   for (t in 1:M){
-    if (  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0
-      #all(sort(unique(team_home))== sort(unique(team1_prev)))
-          # & N <= length(unique(team_home))*(length(unique(team_home))-1 )
-
-      ){
-
+    if (cond_3 == FALSE){
+      if (in_sample_cond==FALSE){
       conta_punti_dyn[t,,1:day_index] <- conta_punti_veri_pre_dyn
+      }
     }
 
     for (n in 1:N_prev){
@@ -545,7 +566,7 @@ foot_rank <- function(data, object,
 cumsum_punti_post <- t(apply(conta_punti_veri_post_dyn,1,cumsum))
 cumsum_punti_post <- cumsum_punti_post[, unique(day_index_prev)]
   # se cumsum_punti_post è un vettore, significa che stiamo   prevedendo solo l'ultima giornata. Per il codice che
-  # segue, bisogna conertirlo in matrice
+  # segue, bisogna convertirlo in matrice
    if(is.vector(cumsum_punti_post)){
      cumsum_punti_post <- as.matrix(cumsum_punti_post)
    }

@@ -80,21 +80,31 @@ foot_round_robin <- function(data, object, team_sel){
   M <-dim(sims$diff_y_rep)[1]
   counts_mix <- matrix(0, nteams, nteams)
   number_match_days <- length(unique(team1_prev))*2-2
-
   punt <- matrix("-", nteams, nteams)
-  if (# questa condizione significa che siamo "dentro" alla stagione
-    all(sort(unique(team_home))== sort(unique(team1_prev))) &
-    N < length(unique(team1_prev))*( length(unique(team1_prev))-1   )
-    # quest'altra significa che il training ha le stesse squadre del test
-  ){
+
+  # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
+  cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev))) & N < length(unique(team1_prev))*( length(unique(team1_prev))-1)
+
+  # questa condizione significa che il training NON ha
+  # le stesse squadre del test, e che stiamo considerando
+  # dati di training di più stagioni
+  cond_2 <- N > length(unique(team1_prev))*( length(unique(team1_prev))-1) &
+    all(sort(unique(team_home))== sort(unique(team1_prev)))==FALSE &
+    N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0
+
+
+  # questa condizione significa che siamo alla fine di una   # stagione
+  cond_3 <-  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))==0
+
+
+
+
+  if (cond_1 == TRUE){
     for (n in 1:N){
       punt[team_home[n], team_away[n]] <-
           paste(y[n,1], "-", y[n,2], sep="")
     }
-  }else if(N > length(unique(team1_prev))*( length(unique(team1_prev))-1) &
-           # questa condizione significa che siamo "dentro" alla stagione
-           all(sort(unique(team_home))== sort(unique(team1_prev)))==FALSE &
-           N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0){
+  }else if(cond_2 == TRUE){
 
     mod <- floor((N/ (length(unique(team1_prev))/2))/number_match_days)
     old_matches <- number_match_days*mod*length(unique(team1_prev))/2
