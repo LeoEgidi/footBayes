@@ -262,7 +262,7 @@ stan_foot <- function(data,
 
   ## PREDICT CHECKS
 
-  predict <- round(predict)
+  #predict <- round(predict)
 
   if (missing(predict)){ # check on predict
     predict <- 0
@@ -293,8 +293,8 @@ stan_foot <- function(data,
 
   ## DYNAMICS CHECKS
 
-  dynamic_names <- c("weekly", "seasonal")
-  dynamic_type <- match.arg(dynamic_type, dynamic_names)
+    #dynamic_names <- c("weekly", "seasonal")
+    #dynamic_type <- match.arg(dynamic_type, dynamic_names)
 
   if (missing(dynamic_type)){
     dyn <-""

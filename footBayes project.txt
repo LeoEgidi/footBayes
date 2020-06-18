@@ -26,7 +26,9 @@
 
 - Estimation
 
-  predictors in stan_foot
+   + predictors in stan_foot
+   + mle estimation
+
 
 - Prediction
 
