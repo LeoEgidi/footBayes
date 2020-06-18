@@ -19,16 +19,37 @@ italy <- as_tibble(italy)
 
   fit1 <- stan_foot(data = italy_2008,
                   model="double_pois",
-                  predict = 100)
+                  predict = 100,
+                  iter = 300)
   fit2 <- stan_foot(data = italy_2008,
                     model="biv_pois",
-                    predict = 100)
+                    predict = 100,
+                    iter = 300)
   fit3 <- stan_foot(data = italy_2008,
                     model="skellam",
-                    predict = 100)
+                    predict = 100,
+                    iter = 300)
   fit4 <- stan_foot(data = italy_2008,
                     model="student_t",
-                    predict = 100)
+                    predict = 100,
+                    iter = 300)
+  fit4.bis <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 4,
+                    iter = 300)
+  fit4.tris <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 10,
+                    iter = 300)
+  fit4.four <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 12,
+                    iter = 300)
+  fit4.five <- stan_foot(data = italy_2008,
+                    model="student_t",
+                    predict = 21,
+                    iter = 300)
+
 
   foot_rank(data = italy_2008, object= fit1,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
@@ -47,6 +68,19 @@ italy <- as_tibble(italy)
   foot_rank(data = italy_2008, object= fit4,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 2)
+  foot_rank(data = italy_2008, object= fit4.bis,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit4.tris,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  # ora va, da ricontrollare però
+  foot_rank(data = italy_2008, object= fit4.four,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
+  foot_rank(data = italy_2008, object= fit4.five,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 2)
 
 
   foot_rank(data = italy_2008, object= fit1,
@@ -61,11 +95,25 @@ italy <- as_tibble(italy)
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
   foot_rank(data = italy_2008, object= fit3,
-            team_sel = c("AS Roma", "Inter", "Atalanta", "AC Milan"),
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
   foot_rank(data = italy_2008, object= fit4,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
             visualize = 1)
+  foot_rank(data = italy_2008, object= fit4.bis,
+            team_sel = c("AS Roma", "Inter", "Atalanta"),
+            visualize = 1)
+  # da correggere
+  foot_rank(data = italy_2008, object= fit4.tris,
+            team_sel = c("AS Roma", "Inter", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit4.four,
+            team_sel = c("AS Roma", "Inter", "AC Milan"),
+            visualize = 1)
+  foot_rank(data = italy_2008, object= fit4.five,
+            team_sel = c("AS Roma", "Inter", "AC Milan"),
+            visualize = 1)
+
 
 
 
@@ -77,16 +125,20 @@ italy <- as_tibble(italy)
 
   fit5 <- stan_foot(data = italy_2008,
                     model="double_pois",
-                    predict = 0)
+                    predict = 0,
+                    iter = 300)
   fit6 <- stan_foot(data = italy_2008,
                     model="biv_pois",
-                    predict = 0)
+                    predict = 0,
+                    iter = 300)
   fit7 <- stan_foot(data = italy_2008,
                     model="skellam",
-                    predict = 0)
+                    predict = 0,
+                    iter = 300)
   fit8 <- stan_foot(data = italy_2008,
                     model="student_t",
-                    predict = 0)
+                    predict = 0,
+                    iter = 300)
 
   foot_rank(data = italy_2008, object= fit5,
             team_sel = c("AS Roma", "Inter", "Atalanta"),
@@ -133,16 +185,16 @@ italy_2000_2002<- italy %>%
 
   fit9 <- stan_foot(data = italy_2000_2002,
                   model="double_pois",
-                  predict = 306)
+                  predict = 306, iter = 300)
   fit10 <- stan_foot(data = italy_2000_2002,
                     model="biv_pois",
-                    predict = 306)
+                    predict = 306, iter = 300)
   fit11 <- stan_foot(data = italy_2000_2002,
                     model="skellam",
-                    predict = 306)
+                    predict = 306, iter = 300)
   fit12 <- stan_foot(data = italy_2000_2002,
                     model="student_t",
-                    predict = 306)
+                    predict = 306, iter = 300)
 
 
   foot_rank(data = italy_2000_2002,
@@ -193,7 +245,7 @@ italy_2000_2002<- italy %>%
 ####################################################
 ## SCENARIO 4
 # use two seasons and a portion of the current season
-# to predict the currents season
+# to predict the current season
 ###################################################
 
 
@@ -201,19 +253,28 @@ italy_2000_2002<- italy %>%
   fit13 <- stan_foot(data = italy_2000_2002,
                   model="double_pois",
                   dynamic_type ="seasonal",
-                  predict = 250)
+                  predict = 250,
+                  iter = 300)
   fit14 <- stan_foot(data = italy_2000_2002,
                      model="biv_pois",
                      dynamic_type ="seasonal",
-                     predict = 250)
+                     predict = 250, iter = 300)
   fit15 <- stan_foot(data = italy_2000_2002,
                      model="skellam",
                      dynamic_type ="seasonal",
-                     predict = 250)
+                     predict = 250, iter = 300)
   fit16 <- stan_foot(data = italy_2000_2002,
                      model="student_t",
                      dynamic_type ="seasonal",
-                     predict = 250)
+                     predict = 250, iter = 300)
+  fit16.bis <- stan_foot(data = italy_2000_2002,
+                    model="student_t",
+                    dynamic_type ="seasonal",
+                    predict = 4, iter = 300)
+  fit16.tris <- stan_foot(data = italy_2000_2002,
+                    model="student_t",
+                    dynamic_type ="seasonal",
+                    predict = 10, iter = 300)
 
   foot_rank(data = italy_2000_2002,
             object= fit13,
@@ -234,6 +295,18 @@ italy_2000_2002<- italy %>%
             object= fit16,
             team_sel = c("AS Roma", "AC Milan"),
             visualize = 2)
+  foot_rank(data = italy_2000_2002,
+            object= fit16.bis,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
+  # da correggere
+  foot_rank(data = italy_2000_2002,
+            object= fit16.tris,
+            team_sel = c("AS Roma", "AC Milan"),
+            visualize = 2)
+
+
+
 
   foot_rank(data = italy_2000_2002,
             object= fit13,
@@ -254,6 +327,16 @@ italy_2000_2002<- italy %>%
             object= fit16,
             #team_sel = c("AS Roma", "AC Milan"),
             visualize = 1)
+  foot_rank(data = italy_2000_2002,
+            object= fit16.bis,
+            #team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+  # da correggere i punti...
+  foot_rank(data = italy_2000_2002,
+            object= fit16.tris,
+            #team_sel = c("AS Roma", "AC Milan"),
+            visualize = 1)
+
 
 
 ############################################
@@ -263,6 +346,7 @@ italy_2000_2002<- italy %>%
 # other/another season/seasons
 ############################################
 
+
 germany <- as_tibble(germany)
 germany_1999_2001 <- germany %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
@@ -271,13 +355,57 @@ germany_1999_2001 <- germany %>%
   fit17 <- stan_foot(data = germany_1999_2001,
                    model="double_pois",
                    dynamic_type ="seasonal",
-                   predict = 310,
+                   predict = 320,
                    iter =300)
+
+  fit18 <- stan_foot(data = germany_1999_2001,
+                  model="biv_pois",
+                  dynamic_type ="seasonal",
+                  predict = 310,
+                  iter =300)
+  fit19 <- stan_foot(data = germany_1999_2001,
+                  model="skellam",
+                  dynamic_type ="seasonal",
+                  predict = 310,
+                  iter =300)
+  fit20 <- stan_foot(data = germany_1999_2001,
+                  model="student_t",
+                  dynamic_type ="seasonal",
+                  predict = 310,
+                  iter =300)
 
   foot_rank(data = germany_1999_2001,
             object = fit17,
-            visualize = 2)
+            visualize = 1)
 
-  # da risolvere...
+  foot_rank(data = germany_1999_2001,
+            object = fit18,
+            visualize = 1)
+
+  foot_rank(data = germany_1999_2001,
+            object = fit19,
+            visualize = 1)
+
+  foot_rank(data = germany_1999_2001,
+            object = fit20,
+            visualize = 1)
+
+  foot_rank(data = germany_1999_2001,
+    object = fit17,
+    visualize = 2)
+
+  foot_rank(data = germany_1999_2001,
+    object = fit18,
+    visualize = 2)
+
+  foot_rank(data = germany_1999_2001,
+    object = fit19,
+    visualize = 2)
+
+  foot_rank(data = germany_1999_2001,
+    object = fit20,
+    visualize = 2)
+
+
 
 
