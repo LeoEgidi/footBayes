@@ -229,15 +229,8 @@ stan_foot <- function(data,
                   "biv_pois",
                   "skellam",
                   "student_t")
-  if (length(model)>1){
-    stop("Give one single model at a time!")
-  }
-  if (is.na(match(model, good_names))){
-    stop("Invalid model name!
-         Please, provide one among the following
-         model names:
-         double_pois, biv_pois, skellam, student_t")
-  }
+  model <- match.arg(model, good_names)
+
 
   nteams<- length(unique(data$home))
   user_dots <- list(chains = 4, iter = 2000,
@@ -300,10 +293,8 @@ stan_foot <- function(data,
 
   ## DYNAMICS CHECKS
 
-  # else if (dynamic_type =="FALSE"){
-  #   dyn <-""
-  # }
-
+  dynamic_names <- c("weekly", "seasonal")
+  dynamic_type <- match.arg(dynamic_type, dynamic_names)
 
   if (missing(dynamic_type)){
     dyn <-""
@@ -349,9 +340,6 @@ stan_foot <- function(data,
       #ntimes_prev <- length(unique(season[1:(N+N_prev)]))-length(unique(season[1:N]))
       #time_prev <- setdiff(time_tot, time)
       instants_prev <- season[(N+1):(N+N_prev)]
-    }else{
-      stop("The type of dynamics is not correct.
-           Choose one among 'weekly' or 'seasonal'.")
     }
 
 
