@@ -310,14 +310,15 @@ mle_foot <- function(data, model){
   colnames(home_est) <- c("2.5%", "mle", "97.5%")
 
   if (model=="student_t"){
+    return(list(abilities = abilities_est,
+                home = home_est))
+
+  }else{
     return(list(att = att_est,
                 def = def_est,
                 home = home_est,
                 corr = corr_est))
 
-  }else{
-    return(list(abilities = abilities_est,
-                home = home_est))
   }
 }
 
