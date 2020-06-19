@@ -1,4 +1,62 @@
+#' Fit football models with Maximum Likelihood
 #'
+#' ML football modelling for the most famous models:
+#' double Poisson, bivariate Poisson, Skellam and student t.
+#'
+#'@param data A data frame, or a matrix containing the following mandatory items: season, home team, away team,
+#'home goals, away goals.
+#'@param model The type of model used to fit the data.
+#'             One among the following: \code{"double_pois"},
+#'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.
+#'
+#'@return
+#'
+#' MLE and 95% profile likelihood deviance confidence intervals for the
+#' model's parameters: attack, defence, home effect and goals' correlation.
+#'
+#'@details
+#'
+#'See documentation for \code{stan_foot} function for model details.
+#'MLE can be obtained only for static models, with no time-dependence.
+#'Likelihood optimization is performed via the \code{BFGS} method
+#'of the \code{\link[optim]{optim}} function.
+#'
+#'@author Leonardo Egidi \email{legidi@units.it}
+#'
+#'@references
+#' Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
+#' results. Journal of Applied Statistics 37(2), 253-264.
+#'
+#' Egidi, L., Pauli, F., and Torelli, N. (2018). Combining historical data
+#' and bookmakers' odds in modelling football scores. Statistical Modelling, 18(5-6), 436-459.
+#'
+#' Gelman, A. (2014). Stan goes to the World Cup. From
+#' "Statistical Modeling, Causal Inference, and Social Science" blog.
+#'
+#' Karlis, D. and Ntzoufras, I. (2003). Analysis of sports data by using bivariate poisson models.
+#' Journal of the Royal Statistical Society: Series D (The Statistician) 52(3), 381-393.
+#'
+#' Karlis, D. and Ntzoufras,I. (2009).  Bayesian modelling of football outcomes: Using
+#' the Skellam's distribution for the goal difference. IMA Journal of Management Mathematics 20(2), 133-145.
+#'
+#' Owen, A. (2011). Dynamic Bayesian forecasting models
+#' of football match outcomes with estimation of the
+#' evolution variance parameter. IMA Journal of Management Mathematics, 22(2), 99-113.
+#'
+#'
+#'@examples
+#'\dontrun{
+#'library(engsoccerdata)
+#'library(tidyverse)
+#'
+#'italy <- as_tibble(italy)
+#'italy_2008<- italy %>%
+#'    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+#'    filter( Season=="2008")
+#'
+#'mle_fit <- mle_foot(data  = "italy_2008",
+#'                    model = "double_pois")
+#'}
 #'
 #'
 #' @importFrom extraDistr dbvpois
@@ -141,8 +199,6 @@ mle_foot <- function(data, model){
     return(-sum(log_lik))
   }
 
-
-
   ## parameters initialization
   ## (remove the first team from the attack and defence ratings)
   equal_parameters <- list(
@@ -172,15 +228,17 @@ mle_foot <- function(data, model){
 
 
     fn <- eval(parse(text=paste(model, "_lik", sep="")))
-    mle_value <- -fn(mle_fit$par, team1 = team1, team2=team2,
-       y1=y1, y2=y2)
+    mle_value <- -fn(mle_fit$par, team1 = team1,
+                     team2=team2,
+                     y1=y1, y2=y2)
 
-      ci <- matrix(NA,(2*nteams-1),2 )
-      for (j in 1:  (2*nteams-1)){
+      ci <- matrix(NA,(2*nteams),2)
+      for (j in 1:  (2*nteams)){
       profile <- function(x){
         parameters <- mle_fit$par
         parameters[j] <- x
-        return(-fn(parameters, team1 = team1, team2=team2,
+        return(-fn(parameters, team1 = team1,
+                   team2=team2,
                    y1=y1, y2=y2))
       }
 
@@ -195,27 +253,71 @@ mle_foot <- function(data, model){
   # extract parameters and reparametrization for
   #    the first team
   att <- c(- sum(as.vector(mle_fit$par%>%
-                             .[grepl("att", names(.))])),
+                          .[grepl("att", names(.))])),
              as.vector(mle_fit$par%>%
-                  .[grepl("att", names(.))]))
+              .[grepl("att", names(.))]))
   def <- c(-sum(as.vector(mle_fit$par%>%
-                            .[grepl("def", names(.))])),
+                          .[grepl("def", names(.))])),
             as.vector(mle_fit$par%>%
-                   .[grepl("def", names(.))]))
+                     .[grepl("def", names(.))]))
   home <- as.numeric(mle_fit$par%>%
-    .[grepl("home", names(.))])
+                     .[grepl("home", names(.))])
   corr_par <- exp(as.numeric(mle_fit$par%>%
-                        .[grepl("const", names(.))]))
+                            .[grepl("const", names(.))]))
   abilities <- c(- sum(as.vector(mle_fit$par%>%
-                                   .[grepl("att", names(.))])+
+                                 .[grepl("att", names(.))])+
                          as.vector(mle_fit$par%>%
-                                     .[grepl("def", names(.))])),
+                                   .[grepl("def", names(.))])),
                  as.vector(mle_fit$par%>%
                              .[grepl("att", names(.))])+
                    as.vector(mle_fit$par%>%
                                .[grepl("def", names(.))]))
+  ## Final tables
+  att_est = def_est = abilities_est =  matrix(NA, nteams, 3)
+  home_est = corr_est = matrix(NA,1,3)
 
+  att_est[1,1] <- -sum(ci[1:(nteams-1),1])
+  att_est[1,2] <- round(att[1],2)
+  att_est[1,3] <- -sum(ci[1:(nteams-1),2])
+  def_est[1,1] <- -sum(ci[(nteams):(2*nteams-2),1])
+  def_est[1,2] <- round(def[1],2)
+  def_est[1,3] <- -sum(ci[(nteams):(2*nteams-2),2])
+  abilities_est[1,1] <- -sum(ci[1:(nteams-1),1] + ci[(nteams):(2*nteams-2),1])
+  abilities_est[1,2] <- round(abilities[1],2)
+  abilities_est[1,3] <- -sum(ci[1:(nteams-1),2] + ci[(nteams):(2*nteams-2),2])
+  att_est[2:nteams,1] <- ci[1:(nteams-1),1]
+  att_est[2:nteams,2] <- round(att[2:nteams],2)
+  att_est[2:nteams,3] <- ci[1:(nteams-1),2]
+  def_est[2:nteams,1] <- ci[(nteams):(2*nteams-2),1]
+  def_est[2:nteams,2] <- round(def[2:nteams],2)
+  def_est[2:nteams,3] <- ci[(nteams):(2*nteams-2),2]
+  abilities_est[2:nteams,1] <- ci[1:(nteams-1),1] + ci[(nteams):(2*nteams-2),1]
+  abilities_est[2:nteams,2] <- round(abilities[2:nteams],2)
+  abilities_est[2:nteams,3] <- ci[1:(nteams-1),2] + ci[(nteams):(2*nteams-2),2]
+  home_est[1,2] <- round(home,2)
+  home_est[1,1] <- ci[2*nteams-1,1]
+  home_est[1,3] <- ci[2*nteams-1,2]
+  corr_est[1,2] <- round(corr_par,2)
+  corr_est[1,1] <- round(exp(ci[2*nteams,1]),2)
+  corr_est[1,3] <- round(exp(ci[2*nteams,2]),2)
+  rownames(att_est) <- teams
+  colnames(att_est) <- c("2.5%", "mle", "97.5%")
+  rownames(def_est) <- teams
+  colnames(def_est) <- c("2.5%", "mle", "97.5%")
+  rownames(abilities_est) <- teams
+  colnames(abilities_est) <- c("2.5%", "mle", "97.5%")
+  colnames(corr_est) <- c("2.5%", "mle", "97.5%")
+  colnames(home_est) <- c("2.5%", "mle", "97.5%")
 
+  if (model=="student_t"){
+    return(list(att = att_est,
+                def = def_est,
+                home = home_est,
+                corr = corr_est))
 
+  }else{
+    return(list(abilities = abilities_est,
+                home = home_est))
+  }
 }
 

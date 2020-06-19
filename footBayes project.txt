@@ -29,7 +29,7 @@
 - Estimation
 
    + predictors in stan_foot
-   + mle estimation
+   + mle estimation (solo modelli statici)
    
 
 - Prediction
