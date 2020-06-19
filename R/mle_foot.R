@@ -276,15 +276,15 @@ mle_foot <- function(data, model){
   att_est = def_est = abilities_est =  matrix(NA, nteams, 3)
   home_est = corr_est = matrix(NA,1,3)
 
-  att_est[1,1] <- -sum(ci[1:(nteams-1),1])
+  att_est[1,1] <- round(att[1],2) # da aggiustare...
   att_est[1,2] <- round(att[1],2)
-  att_est[1,3] <- -sum(ci[1:(nteams-1),2])
-  def_est[1,1] <- -sum(ci[(nteams):(2*nteams-2),1])
+  att_est[1,3] <- round(att[1],2) # da aggiustare...
+  def_est[1,1] <- round(def[1],2) # da aggiustare...
   def_est[1,2] <- round(def[1],2)
-  def_est[1,3] <- -sum(ci[(nteams):(2*nteams-2),2])
-  abilities_est[1,1] <- -sum(ci[1:(nteams-1),1] + ci[(nteams):(2*nteams-2),1])
+  def_est[1,3] <- round(def[1],2) # da aggiustare...
+  abilities_est[1,1] <- round(abilities[1],2) # da aggiustare...
   abilities_est[1,2] <- round(abilities[1],2)
-  abilities_est[1,3] <- -sum(ci[1:(nteams-1),2] + ci[(nteams):(2*nteams-2),2])
+  abilities_est[1,3] <- round(abilities[1],2) # da aggiustare...
   att_est[2:nteams,1] <- ci[1:(nteams-1),1]
   att_est[2:nteams,2] <- round(att[2:nteams],2)
   att_est[2:nteams,3] <- ci[1:(nteams-1),2]
