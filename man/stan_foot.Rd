@@ -4,7 +4,7 @@
 \alias{stan_foot}
 \title{Fit football models  with Stan}
 \usage{
-stan_foot(data, model, predict, dynamic_type = FALSE, ...)
+stan_foot(data, model, predict, dynamic_type, ...)
 }
 \arguments{
 \item{data}{A data frame, or a matrix containing the following mandatory items: season, home team, away team,
