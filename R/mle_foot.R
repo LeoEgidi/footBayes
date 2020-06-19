@@ -11,12 +11,12 @@
 #'
 #'@return
 #'
-#' MLE and 95% profile likelihood deviance confidence intervals for the
+#' MLE and 95\% profile likelihood deviance confidence intervals for the
 #' model's parameters: attack, defence, home effect and goals' correlation.
 #'
 #'@details
 #'
-#'See documentation for \code{stan_foot} function for model details.
+#'See documentation of \code{stan_foot} function for model details.
 #'MLE can be obtained only for static models, with no time-dependence.
 #'Likelihood optimization is performed via the \code{BFGS} method
 #'of the \code{\link[optim]{optim}} function.
