@@ -15,7 +15,7 @@ One among the following: \code{"double_pois"},
 \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.}
 }
 \value{
-MLE and 95% profile likelihood deviance confidence intervals for the
+MLE and 95\% profile likelihood deviance confidence intervals for the
 model's parameters: attack, defence, home effect and goals' correlation.
 }
 \description{
@@ -23,7 +23,7 @@ ML football modelling for the most famous models:
 double Poisson, bivariate Poisson, Skellam and student t.
 }
 \details{
-See documentation for \code{stan_foot} function for model details.
+See documentation of \code{stan_foot} function for model details.
 MLE can be obtained only for static models, with no time-dependence.
 Likelihood optimization is performed via the \code{BFGS} method
 of the \code{\link[optim]{optim}} function.
