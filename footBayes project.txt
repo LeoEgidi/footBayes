@@ -3,6 +3,7 @@
 - Visualization
 
   (i)    foot_abilities
+            + grafici mle?
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite.
@@ -24,11 +25,12 @@
             grafico 1) grafico a scacchiera con probabilità di vittoria
             grafico 2) tabellone del torneo (eliminazione diretta)
 
+
 - Estimation
 
    + predictors in stan_foot
    + mle estimation
-
+   
 
 - Prediction
 
