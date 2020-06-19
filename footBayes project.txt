@@ -3,7 +3,7 @@
 - Visualization
 
   (i)    foot_abilities
-            + grafici mle?
+            + grafici mle (solo coefplot)
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite.
