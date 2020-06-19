@@ -284,6 +284,7 @@ foot_abilities <- function(object, data){
 
 
     }
+  }
   }else{
     att <- object$att
     def <- object$def
@@ -293,7 +294,8 @@ foot_abilities <- function(object, data){
     ord <- sort.int(att[,2], decreasing =TRUE,
                     index.return = TRUE)$ix
 
-    coefplot(coefs = as.vector(rev(att[ord,2])),
+    arm::coefplot(as.vector(rev(att[ord,2])),
+                  as.vector(rev(att[ord,2])),
              #sds = rev(att[ord,2]),
              CI=2,
              lower.conf.bounds = as.vector(rev(att[ord,1])),
@@ -301,23 +303,21 @@ foot_abilities <- function(object, data){
              varnames=rev(teams[ord]), main="Attack/Defense abilities (95% conf. intervals)\n",
              cex.var=1, mar=c(1,7,4,2), lwd=2,
              cex.main=0.9,pch=16, col="red")
-    coefplot(coefs = as.vector(rev(def[ord,2])),
-             #rev(def_sd[ord]),
-             CI=2,
-             lower.conf.bounds = as.vector(rev(def[ord,1])),
-             upper.conf.bounds = as.vector(rev(def[ord,3])),
-             varnames=rev(teams[ord]), main="Defense abilities (95% post. intervals)\n",
-             cex.var=1, mar=c(1,7,4,2), lwd=2,
-             cex.main=0.9,pch=16, col="blue", add=TRUE)
+    arm::coefplot(as.vector(rev(def[ord,2])),
+                  as.vector(rev(def[ord,2])),
+                  CI=2,
+                  lower.conf.bounds = as.vector(rev(def[ord,1])),
+                  upper.conf.bounds = as.vector(rev(def[ord,3])),
+                  varnames=rev(teams[ord]), main="Defense abilities (95% post. intervals)\n",
+                  cex.var=1, mar=c(1,7,4,2), lwd=2,
+                  cex.main=0.9,pch=16, col="blue", add=TRUE)
 
   }
 
 
-  }
+
 
 }
 
 
 
-#
-# foot_prob <- function()
