@@ -313,13 +313,13 @@ foot_abilities <- function(object, data){
                   cex.var=1, mar=c(1,7,4,2), lwd=2,
                   cex.main=0.9,pch=16, col="blue", add=TRUE)
 
-    }else{
+    }else{  # student_t case
       ability <- object$abilities
       par(mfrow=c(1,1), oma =c(1,1,1,1))
       par(mfrow=c(1,1), oma =c(1,1,1,1))
 
       #mcmc_intervals(posterior, regex_pars=c("ability"))
-      ord <- sort.int(ability, decreasing =TRUE,
+      ord <- sort.int(ability[,2], decreasing =TRUE,
                       index.return = TRUE)$ix
 
       coefplot(as.vector(rev(ability[ord,2])),
