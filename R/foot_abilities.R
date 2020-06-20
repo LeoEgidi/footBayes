@@ -286,6 +286,7 @@ foot_abilities <- function(object, data){
     }
   }
   }else{
+    if (!is.null(dim(object$att))){
     att <- object$att
     def <- object$def
     par(mfrow=c(1,1), oma =c(1,1,1,1))
@@ -312,6 +313,24 @@ foot_abilities <- function(object, data){
                   cex.var=1, mar=c(1,7,4,2), lwd=2,
                   cex.main=0.9,pch=16, col="blue", add=TRUE)
 
+    }else{
+      ability <- object$abilities
+      par(mfrow=c(1,1), oma =c(1,1,1,1))
+      par(mfrow=c(1,1), oma =c(1,1,1,1))
+
+      #mcmc_intervals(posterior, regex_pars=c("ability"))
+      ord <- sort.int(ability, decreasing =TRUE,
+                      index.return = TRUE)$ix
+
+      coefplot(as.vector(rev(ability[ord,2])),
+               as.vector(rev(ability[ord,2])), CI=2,
+               lower.conf.bounds = as.vector(rev(ability[ord,1])),
+               upper.conf.bounds = as.vector(rev(ability[ord,3])),
+               varnames=rev(teams[ord]), main="Global abilities (95% conf. intervals)\n",
+               cex.var=1, mar=c(1,7,4,2), lwd=2,
+               cex.main=0.9,pch=16, col="orange")
+
+    }
   }
 
 
