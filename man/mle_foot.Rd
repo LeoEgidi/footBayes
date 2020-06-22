@@ -4,7 +4,7 @@
 \alias{mle_foot}
 \title{Fit football models with Maximum Likelihood}
 \usage{
-mle_foot(data, model)
+mle_foot(data, model, ...)
 }
 \arguments{
 \item{data}{A data frame, or a matrix containing the following mandatory items: season, home team, away team,
