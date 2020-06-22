@@ -286,7 +286,7 @@ mle_foot <- function(data, model, ...){
     ci <- matrix(NA,(2*nteams),2)
     # profile likelihood intervals (default)
     if (user_dots$interval == "profile"){
-      #for (j in 1:  (2*nteams)){
+
       index <- function(j){
         profile <- function(x){
         parameters <- mle_fit$par
@@ -295,8 +295,7 @@ mle_foot <- function(data, model, ...){
                    team2=team2,
                    y1=y1, y2=y2))
       }
-      # defininig likelihood inverse for the profile likelihood ci's
-
+    # defining likelihood inverse for the profile likelihood ci's
     profile <- Vectorize(profile, "x")
     h <- mle_value - pchisq(0.95, 1)/2
     #curve(profile(x), -1,1)
@@ -309,7 +308,9 @@ mle_foot <- function(data, model, ...){
       clusterExport(cl, c("mle_fit", "mle_value",
                           "fn", "relist_params", "%>%",
                           "teams", "N", "y1", "y2",
-                          "team1", "team2"))
+                          "team1", "team2",
+                          "dbvpois",
+                          "dskellam"))
       ci_out <- parLapply(cl, 1:(2*nteams), index)
         for (j in 1:2*(nteams)){
          ci[j, ] <- ci_out[[j]]

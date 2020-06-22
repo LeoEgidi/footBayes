@@ -31,6 +31,8 @@
    + predictors in stan_foot
    + mle estimation (solo modelli statici)
 	- tempi computazionali (forse snellire ci con sapply)
+              parLapply funziona ma da capire come farlo funzionare dentro la funzione
+               mle_foot
         - testare
         - ci per primo team
    
