@@ -312,7 +312,7 @@ mle_foot <- function(data, model, ...){
                           "dbvpois",
                           "dskellam"))
       ci_out <- parLapply(cl, 1:(2*nteams), index)
-        for (j in 1:2*(nteams)){
+        for (j in 1:(2*(nteams))){
          ci[j, ] <- ci_out[[j]]
         }
     # Wald-type intervals (only if hessian = TRUE)
