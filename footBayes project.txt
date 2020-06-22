@@ -30,6 +30,8 @@
 
    + predictors in stan_foot
    + mle estimation (solo modelli statici)
+	- tempi computazionali (forse snellire ci)
+        - testare
    
 
 - Prediction

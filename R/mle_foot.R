@@ -67,6 +67,28 @@
 
 mle_foot <- function(data, model){
 
+  ## DATA CHECKS
+
+  if (dim(data)[2]>5){
+    warning("Your dataset seems too large!
+             The function will evaluate the first
+             five columns as follows:
+             season, home team, away team, home goals,
+             away goals")
+  }
+
+  if (dim(data)[2]<5){
+    stop("Data dimensions are wrong! Please,
+         supply a matrix/data frame containing
+         the following mandatory column items:
+         season, home team, away team,
+         home goals, away goals.")
+  }
+  if (!is.matrix(data) & !is.data.frame(data)){
+    stop("Data are not stored in matrix/data frame
+         structure. Pleasy, provide data correctly.")
+  }
+
   good_names <- c("double_pois",
                 "biv_pois",
                 "skellam",
@@ -75,6 +97,12 @@ mle_foot <- function(data, model){
 
   colnames(data) <- c("season", "home", "away",
                     "homegoals", "awaygoals")
+
+  # checks sui formati
+  if ( !is.numeric(data$homegoals) |!is.numeric(data$awaygoals)){
+    stop("Goals are not numeric! Please, provide
+         numeric values for the goals")
+  }
   y1 <- data$homegoals
   y2 <- data$awaygoals
   N <- length(y1)
