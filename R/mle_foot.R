@@ -62,10 +62,12 @@
 #' @importFrom extraDistr dbvpois
 #' @importFrom extraDistr dskellam
 #' @importFrom metRology dt.scaled
+#' @importFrom parallel clusterExport
+#' @importFrom parallel makeCluster
 #' @export
 #'
 
-mle_foot <- function(data, model){
+mle_foot <- function(data, model, ...){
 
   ## DATA CHECKS
 
@@ -88,6 +90,26 @@ mle_foot <- function(data, model){
     stop("Data are not stored in matrix/data frame
          structure. Pleasy, provide data correctly.")
   }
+
+  ## OPTIONAL ARGUMENTS CHECKS
+
+  user_dots <- list(maxit = 1000,
+                    method = "BFGS",
+                    intervals = "profile",
+                    hessian = FALSE)
+
+  if (missing(...)){
+    user_dots <- user_dots
+  }else{
+    user_dots_prel <- list(...)
+    names_prel <- names(user_dots_prel)
+    names_dots<- names(user_dots)
+    for (u in 1:length(names_prel)){
+      user_dots[names_prel[u] == names_dots]<- user_dots_prel[u]
+    }
+  }
+
+
 
   good_names <- c("double_pois",
                 "biv_pois",
@@ -243,8 +265,9 @@ mle_foot <- function(data, model){
                      fn = eval(parse(text=paste(model, "_lik", sep=""))),
                      team1 = team1, team2=team2,
                      y1=y1, y2=y2,
-                     method = "BFGS",
-                     control = list(maxit = 10000))
+                     method = user_dots$method,
+                     hessian = user_dots$hessian,
+                     control = list(maxit = user_dots$maxit))
 
   # compute likelihood confidence intervals
 
@@ -260,23 +283,47 @@ mle_foot <- function(data, model){
                      team2=team2,
                      y1=y1, y2=y2)
 
-      ci <- matrix(NA,(2*nteams),2)
-      for (j in 1:  (2*nteams)){
-      profile <- function(x){
+    ci <- matrix(NA,(2*nteams),2)
+    # profile likelihood intervals (default)
+    if (user_dots$interval == "profile"){
+      #for (j in 1:  (2*nteams)){
+      index <- function(j){
+        profile <- function(x){
         parameters <- mle_fit$par
         parameters[j] <- x
         return(-fn(parameters, team1 = team1,
                    team2=team2,
                    y1=y1, y2=y2))
       }
+      # defininig likelihood inverse for the profile likelihood ci's
 
     profile <- Vectorize(profile, "x")
     h <- mle_value - pchisq(0.95, 1)/2
     #curve(profile(x), -1,1)
     #abline(h = h , col="red")
     x <- seq(-5,5, 0.01)
-    ci[j,] <- c(min(x[profile(x)>=h]), max(x[profile(x)>=h]))
-    }
+    f_v <- profile(x)
+    return(c(min(x[f_v>=h]), max(x[f_v>=h])))
+      }
+      cl <- makeCluster(getOption("cl.cores", 2))
+      clusterExport(cl, c("mle_fit", "mle_value",
+                          "fn", "relist_params", "%>%",
+                          "teams", "N", "y1", "y2",
+                          "team1", "team2"))
+      ci_out <- parLapply(cl, 1:(2*nteams), index)
+        for (j in 1:2*(nteams)){
+         ci[j, ] <- ci_out[[j]]
+        }
+    # Wald-type intervals (only if hessian = TRUE)
+    }else if(user_dots$interval == "Wald"){
+
+      ci[1:(2*nteams-2),1] <- mle_fit$par[1:(2*nteams-2)] -1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) )
+      ci[1:(2*nteams-2),2] <- mle_fit$par[1:(nteams-1)] +1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) )
+      ci[2*nteams-1, 1] <- mle_fit$par[2*nteams-1]-1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ]))
+      ci[2*nteams-1, 1] <- mle_fit$par[2*nteams-1]+1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ]))
+      #ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
+      #ci[2*nteams, 1] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
+      }
 
   # extract parameters and reparametrization for
   #    the first team

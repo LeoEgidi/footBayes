@@ -30,8 +30,9 @@
 
    + predictors in stan_foot
    + mle estimation (solo modelli statici)
-	- tempi computazionali (forse snellire ci)
+	- tempi computazionali (forse snellire ci con sapply)
         - testare
+        - ci per primo team
    
 
 - Prediction
