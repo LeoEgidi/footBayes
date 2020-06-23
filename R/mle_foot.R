@@ -304,14 +304,8 @@ mle_foot <- function(data, model, ...){
     f_v <- profile(x)
     return(c(min(x[f_v>=h]), max(x[f_v>=h])))
       }
-      cl <- makeCluster(getOption("cl.cores", 2))
-      clusterExport(cl, c(#"mle_fit", "mle_value",
-                          "fn", "relist_params", "%>%",
-                          "teams", "N", "y1", "y2",
-                          "team1", "team2",
-                          "dbvpois",
-                          "dskellam"))
-      ci_out <- parLapply(cl, 1:(2*nteams), index)
+
+      ci_out <- lapply(c(1:(2*nteams)), index)
         for (j in 1:(2*(nteams))){
          ci[j, ] <- ci_out[[j]]
         }
