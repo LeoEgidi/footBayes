@@ -318,8 +318,10 @@ mle_foot <- function(data, model, ...){
       ci[1:(2*nteams-2),2] <- round(mle_fit$par[1:(nteams-1)] +1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
       ci[2*nteams-1, 1] <- round(mle_fit$par[2*nteams-1]-1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
       ci[2*nteams-1, 2] <- round(mle_fit$par[2*nteams-1]+1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
-      #ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
-      #ci[2*nteams, 1] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
+      if (model == "biv_pois"){
+      ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
+      ci[2*nteams, 1] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
+        }
       }
 
   # extract parameters and reparametrization for
@@ -372,6 +374,9 @@ mle_foot <- function(data, model, ...){
   corr_est[1,2] <- round(corr_par,2)
   corr_est[1,1] <- round(exp(ci[2*nteams,1]),2)
   corr_est[1,3] <- round(exp(ci[2*nteams,2]),2)
+  if (corr_est[1,2] ==0){
+    corr_est[1,1] = corr_est[1,3] = 0
+  }
   rownames(att_est) <- teams
   colnames(att_est) <- c("2.5%", "mle", "97.5%")
   rownames(def_est) <- teams
