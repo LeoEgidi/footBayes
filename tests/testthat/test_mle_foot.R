@@ -34,6 +34,12 @@ mle_foot(data = italy_2008,
          model ="biv_pois", maxit = 100,
          interval = "Wald", hessian = TRUE)
 
+mle_foot(data = italy_2008,
+         model ="biv_pois",
+         interval = "Wald", hessian = TRUE)
+
+
+
 
 
 

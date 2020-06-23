@@ -302,7 +302,7 @@ foot_abilities <- function(object, data){
              lower.conf.bounds = as.vector(rev(att[ord,1])),
              upper.conf.bounds = as.vector(rev(att[ord,3])),
              varnames=rev(teams[ord]), main="Attack/Defense abilities (95% conf. intervals)\n",
-             cex.var=1, mar=c(1,7,4,2), lwd=2,
+             cex.var=1, mar=c(5,4,2,1), lwd=2,
              cex.main=0.9,pch=16, col="red")
     arm::coefplot(as.vector(rev(def[ord,2])),
                   as.vector(rev(def[ord,2])),
@@ -310,7 +310,7 @@ foot_abilities <- function(object, data){
                   lower.conf.bounds = as.vector(rev(def[ord,1])),
                   upper.conf.bounds = as.vector(rev(def[ord,3])),
                   varnames=rev(teams[ord]), main="Defense abilities (95% post. intervals)\n",
-                  cex.var=1, mar=c(1,7,4,2), lwd=2,
+                  cex.var=1, mar=c(5,4,2,1), lwd=2,
                   cex.main=0.9,pch=16, col="blue", add=TRUE)
 
     }else{  # student_t case

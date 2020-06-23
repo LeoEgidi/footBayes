@@ -314,10 +314,10 @@ mle_foot <- function(data, model, ...){
     # Wald-type intervals (only if hessian = TRUE)
     }else if(user_dots$interval == "Wald"){
 
-      ci[1:(2*nteams-2),1] <- mle_fit$par[1:(2*nteams-2)] -1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) )
-      ci[1:(2*nteams-2),2] <- mle_fit$par[1:(nteams-1)] +1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) )
-      ci[2*nteams-1, 1] <- mle_fit$par[2*nteams-1]-1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ]))
-      ci[2*nteams-1, 1] <- mle_fit$par[2*nteams-1]+1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ]))
+      ci[1:(2*nteams-2),1] <- round(mle_fit$par[1:(2*nteams-2)] -1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
+      ci[1:(2*nteams-2),2] <- round(mle_fit$par[1:(nteams-1)] +1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
+      ci[2*nteams-1, 1] <- round(mle_fit$par[2*nteams-1]-1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
+      ci[2*nteams-1, 2] <- round(mle_fit$par[2*nteams-1]+1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
       #ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
       #ci[2*nteams, 1] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
       }
@@ -334,8 +334,8 @@ mle_foot <- function(data, model, ...){
                      .[grepl("def", names(.))]))
   home <- as.numeric(mle_fit$par%>%
                      .[grepl("home", names(.))])
-  corr_par <- exp(as.numeric(mle_fit$par%>%
-                            .[grepl("const", names(.))]))
+  corr_par <- round(exp(as.numeric(mle_fit$par%>%
+                            .[grepl("const", names(.))])),2)
   abilities <- c(- sum(as.vector(mle_fit$par%>%
                                  .[grepl("att", names(.))])+
                          as.vector(mle_fit$par%>%
@@ -385,11 +385,16 @@ mle_foot <- function(data, model, ...){
     return(list(abilities = abilities_est,
                 home = home_est))
 
-  }else{
+  }else if (model=="biv_pois"){
     return(list(att = att_est,
                 def = def_est,
                 home = home_est,
                 corr = corr_est))
+
+  }else{
+    return(list(att = att_est,
+                def = def_est,
+                home = home_est))
 
   }
 }
