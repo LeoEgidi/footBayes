@@ -95,7 +95,7 @@ mle_foot <- function(data, model, ...){
 
   user_dots <- list(maxit = 1000,
                     method = "BFGS",
-                    intervals = "profile",
+                    interval = "profile",
                     hessian = FALSE)
 
   if (missing(...)){
@@ -107,6 +107,9 @@ mle_foot <- function(data, model, ...){
     for (u in 1:length(names_prel)){
       user_dots[names_prel[u] == names_dots]<- user_dots_prel[u]
     }
+  }
+  if (user_dots$interval == "Wald" & user_dots$hessian == FALSE){
+    stop("Select 'hessian=TRUE' to compute Wald intervals")
   }
 
 
@@ -305,10 +308,9 @@ mle_foot <- function(data, model, ...){
     return(c(min(x[f_v>=h]), max(x[f_v>=h])))
       }
 
-      ci_out <- lapply(c(1:(2*nteams)), index)
-        for (j in 1:(2*(nteams))){
-         ci[j, ] <- ci_out[[j]]
-        }
+      ci_out <- sapply(c(1:(2*nteams)), index)
+      ci <- t(ci_out)
+
     # Wald-type intervals (only if hessian = TRUE)
     }else if(user_dots$interval == "Wald"){
 

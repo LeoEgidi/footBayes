@@ -25,3 +25,15 @@ mle_foot(data = italy_2008,
 mle_foot(data = italy_2008,
          model ="student_t")
 
+  # with further arguments
+mle_foot(data = italy_2008,
+         model ="biv_pois", maxit = 100,
+         interval = "Wald")
+
+mle_foot(data = italy_2008,
+         model ="biv_pois", maxit = 100,
+         interval = "Wald", hessian = TRUE)
+
+
+
+
