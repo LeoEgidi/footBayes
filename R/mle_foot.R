@@ -305,7 +305,7 @@ mle_foot <- function(data, model, ...){
     return(c(min(x[f_v>=h]), max(x[f_v>=h])))
       }
       cl <- makeCluster(getOption("cl.cores", 2))
-      clusterExport(cl, c("mle_fit", "mle_value",
+      clusterExport(cl, c(#"mle_fit", "mle_value",
                           "fn", "relist_params", "%>%",
                           "teams", "N", "y1", "y2",
                           "team1", "team2",
