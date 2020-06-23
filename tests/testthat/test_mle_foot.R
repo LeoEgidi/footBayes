@@ -24,8 +24,9 @@ mle_foot(data = italy_2008,
 
 mle_foot(data = italy_2008,
          model ="student_t")
+  # warnings: log(sd)
 
-  # with further arguments
+## with further arguments
 mle_foot(data = italy_2008,
          model ="biv_pois", maxit = 100,
          interval = "Wald")
@@ -38,6 +39,7 @@ mle_foot(data = italy_2008,
          model ="biv_pois",
          interval = "Wald", hessian = TRUE)
 
+  # problemini con il parametro di correlazione (nans)
 
 
 

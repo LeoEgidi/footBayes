@@ -259,7 +259,7 @@ mle_foot <- function(data, model, ...){
     def = rep(0, length(teams)-1) %>% `names<-`(teams[2:length(teams)]),
     home = 2,
     const = 1, # for bivariate poisson
-    sigma_y =1 # for student_t
+    sigma_y =3 # for student_t
     )
 
 
