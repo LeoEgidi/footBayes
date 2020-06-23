@@ -21,6 +21,7 @@ mle_foot(data = italy_2008,
 
 mle_foot(data = italy_2008,
          model ="skellam")
+  # warnings: "precision lost in result"
 
 mle_foot(data = italy_2008,
          model ="student_t")
