@@ -64,6 +64,7 @@
 #' @importFrom metRology dt.scaled
 #' @importFrom parallel clusterExport
 #' @importFrom parallel makeCluster
+#' @importFrom numDeriv hessian
 #' @export
 #'
 
@@ -108,8 +109,9 @@ mle_foot <- function(data, model, ...){
       user_dots[names_prel[u] == names_dots]<- user_dots_prel[u]
     }
   }
-  if (user_dots$interval == "Wald" & user_dots$hessian == FALSE){
-    stop("Select 'hessian=TRUE' to compute Wald intervals")
+  if (user_dots$interval == "Wald" ){
+    user_dots$hessian <- TRUE
+    #stop("Select 'hessian=TRUE' to compute Wald intervals")
   }
 
 
@@ -319,9 +321,13 @@ mle_foot <- function(data, model, ...){
       ci[2*nteams-1, 1] <- round(mle_fit$par[2*nteams-1]-1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
       ci[2*nteams-1, 2] <- round(mle_fit$par[2*nteams-1]+1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
       if (model == "biv_pois"){
-      ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
-      ci[2*nteams, 1] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
-        }
+        hessian <-  hessian(func = fn, x  = unlist(equal_parameters), team1 = team1, team2=team2,
+                            y1=y1, y2=y2)
+      #ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
+      #ci[2*nteams, 2] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
+      ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(hessian[2*nteams, 2*nteams]))
+      ci[2*nteams, 2] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(hessian[2*nteams, 2*nteams]))
+      }
       }
 
   # extract parameters and reparametrization for

@@ -12,6 +12,11 @@ italy_2008<- italy %>%
   dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
   filter( Season=="2008")
 
+spain <- as_tibble(spain)
+spain_2008<- spain %>%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+  filter( Season=="2008")
+
 
 mle_foot(data = italy_2008,
           model ="biv_pois")
@@ -40,7 +45,6 @@ mle_foot(data = italy_2008,
          model ="biv_pois",
          interval = "Wald", hessian = TRUE)
 
-  # problemini con il parametro di correlazione (nans)
 
 
 
