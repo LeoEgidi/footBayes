@@ -35,6 +35,7 @@
                mle_foot   ---> risolto con sapply
         - testare
         - ci per primo team
+        
    
 
 - Prediction
@@ -44,3 +45,8 @@
         Un warning dovrebbe partire se l'utente specifica un numero più alto.
   * Gestione di argomento predict: si può farlo "ereditare" da altre funzioni?
   * foot_prob: fornire anche tabella con probabilità
+  * Decidere se usare mle per previsioni (con coefficienti statici, ovviamente)
+
+- Extensions:
+
+  * World, Euro cup?
