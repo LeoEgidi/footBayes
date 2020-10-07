@@ -71,6 +71,10 @@
 mle_foot <- function(data, model, ...){
 
   ## DATA CHECKS
+  if (!is.matrix(data) & !is.data.frame(data)){
+    stop("Data are not stored in matrix/data frame
+         structure. Pleasy, provide data correctly.")
+  }
 
   if (dim(data)[2]>5){
     warning("Your dataset seems too large!
@@ -87,10 +91,7 @@ mle_foot <- function(data, model, ...){
          season, home team, away team,
          home goals, away goals.")
   }
-  if (!is.matrix(data) & !is.data.frame(data)){
-    stop("Data are not stored in matrix/data frame
-         structure. Pleasy, provide data correctly.")
-  }
+
 
   ## OPTIONAL ARGUMENTS CHECKS
 

@@ -33,6 +33,25 @@ test_that("some mle models get errors/warnings", {
   # warnings: log(sd)
   # ---> corrected if using "Nelder-Mead" as method
 
+  # datasets with less than 4 columns
+  expect_error(mle_foot(data = italy_2008[,1:3],
+                        model = "biv_pois"))
+
+  # datasets different than matrix and dataframe
+  expect_error(mle_foot(data = rnorm(20),
+                        model = "biv_pois"))
+
+  # wrong model names
+  expect_error(mle_foot(data = italy_2008,
+                        model = "neg_binomial"))
+
+  # further arguments
+  !expect_error(mle_foot(data = italy_2008,
+           model ="biv_pois", maxit = 100,
+           interval = "Wald", hessian = TRUE))
+
+
+
   # mle_foot(data = italy_2008,
   #          model ="biv_pois")
   #
@@ -50,9 +69,8 @@ test_that("some mle models get errors/warnings", {
   #          model ="double_pois",
   #          interval = "Wald")
   #
-  # mle_foot(data = italy_2008,
-  #          model ="biv_pois", maxit = 100,
-  #          interval = "Wald", hessian = TRUE)
+  #
+
   #
   # mle_foot(data = italy_2008,
   #          model ="biv_pois",
