@@ -28,6 +28,13 @@ italy_2008<- italy %>%
                    col ="orange")
 
   ## Bayesian
+  obj3 <- stan_foot(data = italy_2008,
+                    model ="double_pois")
+  foot_abilities(obj3, italy_2008)
+
+  # + further arguments
+  foot_abilities(obj3, italy_2008,
+                 mar =c(3,7,3,1), pch = 6, cex.main = 1, cex.var = 0.8)
 
 
 ### DYNAMIC
