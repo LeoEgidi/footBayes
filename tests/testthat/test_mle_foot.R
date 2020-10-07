@@ -43,7 +43,13 @@ mle_foot(data = italy_2008,
 
 ## with further arguments
 mle_foot(data = italy_2008,
-         model ="biv_pois", maxit = 100,
+         model ="biv_pois",
+         interval = "Wald")
+  # problemi in ci di alcune squadre
+  # ---> corrected, error at line 320 in mle_foot
+
+mle_foot(data = italy_2008,
+         model ="double_pois",
          interval = "Wald")
 
 mle_foot(data = italy_2008,

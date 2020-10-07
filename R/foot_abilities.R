@@ -64,7 +64,29 @@
 #'@export
 
 
-foot_abilities <- function(object, data){
+foot_abilities <- function(object, data,...){
+
+
+  ## Further arguments for coefplot
+
+  user_dots <- list(CI=2,
+                    vertical=TRUE,
+                    v.axis=TRUE, h.axis=TRUE,
+                    cex.var=1, cex.pts=0.9,
+                    var.las=2, main=NULL, xlab=NULL, ylab=NULL, mar=c(1,3,5.1,2),
+                    plot=TRUE,  offset=0.1,
+                    cex.main =0.9, pch = 16, lwd = 2,
+                    col = 1)
+  if (missing(...)){
+    user_dots <- user_dots
+  }else{
+    user_dots_prel <- list(...)
+    names_prel <- names(user_dots_prel)
+    names_dots<- names(user_dots)
+    for (u in 1:length(names_prel)){
+      user_dots[names_prel[u] == names_dots]<- user_dots_prel[u]
+    }
+  }
 
   teams <- unique(data$home)
   if (class(object)=="stanfit"){
@@ -185,14 +207,30 @@ foot_abilities <- function(object, data){
     ord <- sort.int(att_mean, decreasing =TRUE,
                     index.return = TRUE)$ix
 
-    coefplot(rev(att_mean[ord]), rev(att_sd[ord]), CI=2,
-             varnames=rev(teams[ord]), main="Attack/Defense abilities (95% post. intervals)\n",
-             cex.var=1, mar=c(1,7,4,2), lwd=2,
-             cex.main=0.9,pch=16, col="red")
-    coefplot(rev(def_mean[ord]), rev(def_sd[ord]), CI=2,
-             varnames=rev(teams[ord]), main="Defense abilities (95% post. intervals)\n",
-             cex.var=1, mar=c(1,7,4,2), lwd=2,
-             cex.main=0.9,pch=16, col="blue", add=TRUE)
+    arm::coefplot(rev(att_mean[ord]), rev(att_sd[ord]), CI=user_dots$CI,
+             varnames=rev(teams[ord]),
+             main="Attack/Defense abilities (95% post. intervals)\n",
+             cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+             cex.main=user_dots$cex.main, pch=user_dots$pch,
+             h.axis=user_dots$h.axis,
+             cex.pts=user_dots$cex.pts,
+             vertical= user_dots$vertical,
+             v.axis=user_dots$v.axis,
+             xlab=user_dots$xlab, ylab=user_dots$ylab,
+             plot = user_dots$plot, offset = user_dots$offset,
+             col="red")
+    arm::coefplot(rev(def_mean[ord]), rev(def_sd[ord]), CI=user_dots$CI,
+             varnames=rev(teams[ord]),
+             main="Defense abilities (95% post. intervals)\n",
+             cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+             cex.main=user_dots$cex.main, pch=user_dots$pch,
+             h.axis=user_dots$h.axis,
+             cex.pts=user_dots$cex.pts,
+             vertical= user_dots$vertical,
+             v.axis=user_dots$v.axis,
+             xlab=user_dots$xlab, ylab=user_dots$ylab,
+             plot = user_dots$plot, offset = user_dots$offset,
+             col="blue", add=TRUE)
 
   }else if (length(dim(att))==0){ # student_t case
 
@@ -242,7 +280,7 @@ foot_abilities <- function(object, data){
           aes(x = times, y = mid),
           data = ability_data,
           size = 1,
-          color = color_scheme_get("orange")[[4]]
+          color = color_scheme_get("")[[4]]
         )+
         scale_color_manual(values = c(color_scheme_get("blue")[[4]],
                                       color_scheme_get("red")[[4]]))+
@@ -277,10 +315,17 @@ foot_abilities <- function(object, data){
       ord <- sort.int(ability_mean, decreasing =TRUE,
                       index.return = TRUE)$ix
 
-      coefplot(rev(ability_mean[ord]), rev(ability_sd[ord]), CI=2,
+      arm::coefplot(rev(ability_mean[ord]), rev(ability_sd[ord]), CI=user_dots$CI,
                varnames=rev(teams[ord]), main="Global abilities (95% post. intervals)\n",
-               cex.var=1, mar=c(1,7,4,2), lwd=2,
-               cex.main=0.9,pch=16, col="orange")
+               cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+               cex.main=user_dots$cex.main, pch=user_dots$pch,
+               h.axis=user_dots$h.axis,
+               cex.pts=user_dots$cex.pts,
+               vertical= user_dots$vertical,
+               v.axis=user_dots$v.axis,
+               xlab=user_dots$xlab, ylab=user_dots$ylab,
+               plot = user_dots$plot, offset = user_dots$offset,
+               col= user_dots$col)
 
 
     }
@@ -290,28 +335,40 @@ foot_abilities <- function(object, data){
     att <- object$att
     def <- object$def
     par(mfrow=c(1,1), oma =c(1,1,1,1))
-    par(mfrow=c(1,1), oma =c(1,1,1,1))
+    par(mfrow=c(1,1), oma =c(1,1,1,1), mar = c(5,4,2,1))
 
     ord <- sort.int(att[,2], decreasing =TRUE,
                     index.return = TRUE)$ix
 
     arm::coefplot(as.vector(rev(att[ord,2])),
                   as.vector(rev(att[ord,2])),
-             #sds = rev(att[ord,2]),
-             CI=2,
+             CI=user_dots$CI,
              lower.conf.bounds = as.vector(rev(att[ord,1])),
              upper.conf.bounds = as.vector(rev(att[ord,3])),
              varnames=rev(teams[ord]), main="Attack/Defense abilities (95% conf. intervals)\n",
-             cex.var=1, mar=c(5,4,2,1), lwd=2,
-             cex.main=0.9,pch=16, col="red")
+             cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+             cex.main=user_dots$cex.main, pch=user_dots$pch,
+             h.axis=user_dots$h.axis,
+             cex.pts=user_dots$cex.pts,
+             vertical= user_dots$vertical,
+             v.axis=user_dots$v.axis,
+             xlab=user_dots$xlab, ylab=user_dots$ylab,
+             plot = user_dots$plot, offset = user_dots$offset, col="red")
     arm::coefplot(as.vector(rev(def[ord,2])),
                   as.vector(rev(def[ord,2])),
-                  CI=2,
+                  CI=user_dots$CI,
                   lower.conf.bounds = as.vector(rev(def[ord,1])),
                   upper.conf.bounds = as.vector(rev(def[ord,3])),
                   varnames=rev(teams[ord]), main="Defense abilities (95% post. intervals)\n",
-                  cex.var=1, mar=c(5,4,2,1), lwd=2,
-                  cex.main=0.9,pch=16, col="blue", add=TRUE)
+                  cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+                  cex.main=user_dots$cex.main, pch=user_dots$pch,
+                  h.axis=user_dots$h.axis,
+                  cex.pts=user_dots$cex.pts,
+                  vertical= user_dots$vertical,
+                  v.axis=user_dots$v.axis,
+                  xlab=user_dots$xlab, ylab=user_dots$ylab,
+                  plot = user_dots$plot, offset = user_dots$offset,
+                  col="blue", add=TRUE)
 
     }else{  # student_t case
       ability <- object$abilities
@@ -322,13 +379,20 @@ foot_abilities <- function(object, data){
       ord <- sort.int(ability[,2], decreasing =TRUE,
                       index.return = TRUE)$ix
 
-      coefplot(as.vector(rev(ability[ord,2])),
-               as.vector(rev(ability[ord,2])), CI=2,
+      arm::coefplot(as.vector(rev(ability[ord,2])),
+               as.vector(rev(ability[ord,2])), CI=user_dots$CI,
                lower.conf.bounds = as.vector(rev(ability[ord,1])),
                upper.conf.bounds = as.vector(rev(ability[ord,3])),
                varnames=rev(teams[ord]), main="Global abilities (95% conf. intervals)\n",
-               cex.var=1, mar=c(1,7,4,2), lwd=2,
-               cex.main=0.9,pch=16, col="orange")
+               cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+               cex.main=user_dots$cex.main, pch=user_dots$pch,
+               h.axis=user_dots$h.axis,
+               cex.pts=user_dots$cex.pts,
+               vertical= user_dots$vertical,
+               v.axis=user_dots$v.axis,
+               xlab=user_dots$xlab, ylab=user_dots$ylab,
+               plot = user_dots$plot, offset = user_dots$offset,
+               col=user_dots$col)
 
     }
   }

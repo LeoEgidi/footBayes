@@ -3,7 +3,7 @@
 - Visualization
 
   (i)    foot_abilities
-            + grafici mle (solo coefplot. Da aggiustare le dimensioni)
+            + grafici mle (solo coefplot. Da aggiustare le dimensioni. Forse consentire parametri opizionali grafici nella funzione) ---> OK
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite.
@@ -50,3 +50,8 @@
 - Extensions:
 
   * World, Euro cup?
+
+- Testing 
+  * Imparare uso di test_that (vedi altri pacchetti)
+
+- Documentation

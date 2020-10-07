@@ -317,7 +317,7 @@ mle_foot <- function(data, model, ...){
     }else if(user_dots$interval == "Wald"){
 
       ci[1:(2*nteams-2),1] <- round(mle_fit$par[1:(2*nteams-2)] -1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
-      ci[1:(2*nteams-2),2] <- round(mle_fit$par[1:(nteams-1)] +1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
+      ci[1:(2*nteams-2),2] <- round(mle_fit$par[1:(2*nteams-2)] +1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
       ci[2*nteams-1, 1] <- round(mle_fit$par[2*nteams-1]-1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
       ci[2*nteams-1, 2] <- round(mle_fit$par[2*nteams-1]+1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
       if (model == "biv_pois"){

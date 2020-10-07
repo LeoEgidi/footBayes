@@ -4,7 +4,7 @@
 \alias{foot_abilities}
 \title{Plot football abilities from Stan models}
 \usage{
-foot_abilities(object, data)
+foot_abilities(object, data, ...)
 }
 \arguments{
 \item{object}{An object of class \code{stanfit} as given by \code{stan_foot} function.}
