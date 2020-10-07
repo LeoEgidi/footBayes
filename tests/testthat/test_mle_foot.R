@@ -1,26 +1,26 @@
+# packages
+library(tidyverse)
+library(engsoccerdata)
+
+# data
+italy <- as_tibble(italy)
+italy_2008<- italy %>%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+  filter( Season=="2008")
+
+spain <- as_tibble(spain)
+spain_2008<- spain %>%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+  filter( Season=="2008")
+
+germany <- as_tibble(germany)
+germany_2008<- germany %>%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+  filter( Season=="2008")
 
 
+test_that("some mle models get errors/warnings", {
 
-
-test_that("some mle models get errors/warnings",  {
-
-  library(tidyverse)
-  library(engsoccerdata)
-  # data
-  italy <- as_tibble(italy)
-  italy_2008<- italy %>%
-    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter( Season=="2008")
-
-  spain <- as_tibble(spain)
-  spain_2008<- spain %>%
-    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter( Season=="2008")
-
-  germany <- as_tibble(germany)
-  germany_2008<- germany %>%
-    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter( Season=="2008")
 
 
   expect_warning(mle_foot(data = italy_2008,
