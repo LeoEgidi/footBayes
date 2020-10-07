@@ -33,11 +33,13 @@ mle_foot(data = italy_2008,
          model ="skellam",
          method = "L-BFGS-B")
   # warnings: "precision lost in result"
-  # ---> corrected if using L-BFGS-B as method
+  # ---> corrected if using "L-BFGS-B" as method
 
 mle_foot(data = italy_2008,
-         model ="student_t")
+         model ="student_t",
+         method = "Nelder-Mead")
   # warnings: log(sd)
+  # ---> corrected if using "Nelder-Mead" as method
 
 ## with further arguments
 mle_foot(data = italy_2008,
