@@ -19,8 +19,11 @@ germany_2008<- germany %>%
   filter( Season=="2008")
 
 
-test_that("some mle models get errors/warnings", {
+context("mle plain models")
+# These tests regard the performance of the mle_foot functions,
+# for methods double_pois, biv_pois, skellam and student_t.
 
+test_that("some mle models get errors/warnings", {
 
 
   expect_warning(mle_foot(data = italy_2008,
@@ -45,41 +48,33 @@ test_that("some mle models get errors/warnings", {
   expect_error(mle_foot(data = italy_2008,
                         model = "neg_binomial"))
 
-  # further arguments
-  !expect_error(mle_foot(data = italy_2008,
-           model ="biv_pois", maxit = 100,
-           interval = "Wald", hessian = TRUE))
-
-
-
-  # mle_foot(data = italy_2008,
-  #          model ="biv_pois")
-  #
-  # mle_foot(data = italy_2008,
-  #          model ="double_pois")
-
-  ## with further arguments
-  # mle_foot(data = italy_2008,
-  #          model ="biv_pois",
-  #          interval = "Wald")
-  # # problemi in ci di alcune squadre
-  # # ---> corrected, error at line 320 in mle_foot
-  #
-  # mle_foot(data = italy_2008,
-  #          model ="double_pois",
-  #          interval = "Wald")
-  #
-  #
-
-  #
-  # mle_foot(data = italy_2008,
-  #          model ="biv_pois",
-  #          interval = "Wald", hessian = TRUE)
 })
 
 
 
+# mle_foot(data = italy_2008,
+#          model ="biv_pois")
+#
+# mle_foot(data = italy_2008,
+#          model ="double_pois")
 
+## with further arguments
+# mle_foot(data = italy_2008,
+#          model ="biv_pois",
+#          interval = "Wald")
+# # problemi in ci di alcune squadre
+# # ---> corrected, error at line 320 in mle_foot
+#
+# mle_foot(data = italy_2008,
+#          model ="double_pois",
+#          interval = "Wald")
+#
+#
+
+#
+# mle_foot(data = italy_2008,
+#          model ="biv_pois",
+#          interval = "Wald", hessian = TRUE)
 
 
 
