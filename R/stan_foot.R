@@ -278,6 +278,10 @@ stan_foot <- function(data,
     N <- dim(data)[1]-predict
     N_prev <- predict
     type <- "prev"
+    if (predict%%1 !=0){
+      warning("Please, use integer numbers for the argument 'predict'!
+              The input has been rounded to the closes integer number.")
+    }
   }else if (!is.numeric(predict)){
     stop("The number of out-of-sample matches is ill posed!
          Pick up an integer number.")

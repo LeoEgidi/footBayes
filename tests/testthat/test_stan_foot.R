@@ -44,7 +44,7 @@ test_that("prediction does not cause errors", {
   ## predict > N
   expect_error(stan_foot(england_2004,
             model ="student_t",
-            predict = 500))
+            predict = dim(england_2004)[1]+1))
 
   ## predict not a number
   expect_error(stan_foot(england_2004,
@@ -52,7 +52,7 @@ test_that("prediction does not cause errors", {
             predict = "a"))
 
   ## predict decimal number
-  expect_error(stan_foot(england_2004,
+  expect_warning(stan_foot(england_2004,
             model ="student_t",
             predict = 30.5))
 
