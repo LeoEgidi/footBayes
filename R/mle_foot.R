@@ -69,7 +69,7 @@
 #' @export
 #'
 
-mle_foot <- function(data, model, ...){
+mle_foot <- function(data, model, predict, ...){
 
   ## DATA CHECKS
   if (!is.matrix(data) & !is.data.frame(data)){
@@ -99,7 +99,8 @@ mle_foot <- function(data, model, ...){
   user_dots <- list(maxit = 1000,
                     method = "BFGS",
                     interval = "profile",
-                    hessian = FALSE)
+                    hessian = FALSE,
+                    n.iter = 200)
 
   if (missing(...)){
     user_dots <- user_dots
@@ -497,6 +498,36 @@ mle_foot <- function(data, model, ...){
 
   }
 
+  # lancia prediction_routine se e solo se predict è non missing
+
+  if (!missing(predict)){
+    prob_matrix <- prediction_routine(team1_prev, team2_prev, att_est,
+                                      def_est, home_est,
+                                      corr_est, model, predict,
+                                      user_dots$n.iter)
+    if (model=="student_t"){
+      return(list(abilities = abilities_est,
+                  home = home_est,
+                  pred_matrix = prob_matrix))
+
+    }else if (model=="biv_pois"){
+      return(list(att = att_est,
+                  def = def_est,
+                  home = home_est,
+                  corr = corr_est,
+                  pred_matrix = prob_matrix))
+
+    }else{
+      return(list(att = att_est,
+                  def = def_est,
+                  home = home_est,
+                  pred_matrix = prob_matrix))
+
+    }
+
+  }else{
+
+
   if (model=="student_t"){
     return(list(abilities = abilities_est,
                 home = home_est))
@@ -512,6 +543,7 @@ mle_foot <- function(data, model, ...){
                 def = def_est,
                 home = home_est))
 
+    }
   }
 }
 

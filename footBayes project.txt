@@ -29,7 +29,7 @@
 
 - Estimation
 
-  (1) mle_foot: modelli dinamici
+  (1) mle_foot: modelli statici
 
   (2) stan_foot: modelli statici e dinamici
 
@@ -50,7 +50,8 @@
         Un warning dovrebbe partire se l'utente specifica un numero più alto.
   * Gestione di argomento predict: si può farlo "ereditare" da altre funzioni?
   * foot_prob: fornire anche tabella con probabilità
-  * Decidere se usare mle per previsioni (con coefficienti statici, ovviamente)
+  * Decidere se usare mle per previsioni (con coefficienti statici, ovviamente): 
+		si, mancano skellam e student_t. Da continuare a testare argomento "predict"
 
 - Extensions:
 
