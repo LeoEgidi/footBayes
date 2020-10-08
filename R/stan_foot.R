@@ -187,6 +187,11 @@ stan_foot <- function(data,
 
     ## DATA CHECKS
 
+    if (!is.matrix(data) & !is.data.frame(data)){
+    stop("Data are not stored in matrix/data frame
+         structure. Pleasy, provide data correctly.")
+     }
+
     if (dim(data)[2]>5){
       warning("Your dataset seems too large!
              The function will evaluate the first
