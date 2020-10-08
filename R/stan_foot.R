@@ -212,10 +212,7 @@ stan_foot <- function(data,
          season, home team, away team,
          home goals, away goals.")
   }
-  if (!is.matrix(data) & !is.data.frame(data)){
-    stop("Data are not stored in matrix/data frame
-         structure. Pleasy, provide data correctly.")
-  }
+
 
   #if (dim(data)[2]==5){
   colnames(data) <- c("season", "home", "away",
@@ -302,8 +299,11 @@ stan_foot <- function(data,
 
   ## DYNAMICS CHECKS
 
-    #dynamic_names <- c("weekly", "seasonal")
-    #dynamic_type <- match.arg(dynamic_type, dynamic_names)
+    # names conditions
+    if (!missing(dynamic_type)){
+    dynamic_names <- c("weekly", "seasonal")
+    dynamic_type <- match.arg(dynamic_type, dynamic_names)
+    }
 
   if (missing(dynamic_type)){
     dyn <-""
