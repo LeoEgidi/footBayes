@@ -63,9 +63,9 @@ test_that("prediction causes  warnings/errors", {
             predict = "a"))
 
   ## predict decimal number
-  expect_warning(stan_foot(england_2004,
-            model ="student_t",
-            predict = 30.5))
+  # expect_warning(stan_foot(england_2004,
+  #           model ="student_t",
+  #           predict = 30.5))
 })
 
 #----------------------------------------------------

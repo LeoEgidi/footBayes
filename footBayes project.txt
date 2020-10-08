@@ -29,6 +29,10 @@
 
 - Estimation
 
+  (1) mle_foot: modelli dinamici
+
+  (2) stan_foot: modelli statici e dinamici
+
    + predictors in stan_foot
    + mle estimation (solo modelli statici)
 	- tempi computazionali (forse snellire ci con sapply)
@@ -54,5 +58,7 @@
 
 - Testing 
   * Imparare uso di test_that (vedi altri pacchetti)
+  	* mle_foot
+  	* stan_foot
 
 - Documentation

@@ -60,6 +60,7 @@
 #'
 #'
 #' @importFrom extraDistr dbvpois
+#' @importFrom extraDistr rbvpois
 #' @importFrom extraDistr dskellam
 #' @importFrom metRology dt.scaled
 #' @importFrom parallel clusterExport
@@ -131,8 +132,44 @@ mle_foot <- function(data, model, ...){
     stop("Goals are not numeric! Please, provide
          numeric values for the goals")
   }
-  y1 <- data$homegoals
-  y2 <- data$awaygoals
+
+  ## PREDICT CHECKS
+
+  if (missing(predict)){ # check on predict
+    predict <- 0
+    N <- dim(data)[1]
+    N_prev <- 0
+    type <- "fit"
+  }else if(predict ==0){
+    predict <- 0
+    N <- dim(data)[1]
+    N_prev <- 0
+    type <- "fit"
+  }else if (is.numeric(predict)){
+    if (predict%%1 !=0){
+      warning("Please, use integer numbers for the argument 'predict'!
+              The input has been rounded to the closes integer number.")
+      predict <- round(predict)
+    }
+    N <- dim(data)[1]-predict
+    N_prev <- predict
+    type <- "prev"
+
+  }else if (!is.numeric(predict)){
+    stop("The number of out-of-sample matches is ill posed!
+         Pick up an integer number.")
+  }
+
+  if (predict >= dim(data)[1]){
+    stop("The training set size is zero!
+         Please, select a lower value for the
+         out-of-sample matches, through the
+         argument predict.")
+  }
+
+
+  y1 <- data$homegoals[1:N]
+  y2 <- data$awaygoals[1:N]
   N <- length(y1)
   teams <- unique(data$home)
   nteams <- length(teams)
@@ -140,6 +177,8 @@ mle_foot <- function(data, model, ...){
   team_away <- match( data$away, teams)
   team1 <- team_home[1:N]
   team2 <- team_away[1:N]
+  team1_prev <- team_home[(N+1):(N+N_prev)]
+  team2_prev <- team_away[(N+1):(N+N_prev)]
 
   # optim requires parameters to be supplied as a vector
   # we'll unlist the parameters then relist in the function
@@ -277,12 +316,6 @@ mle_foot <- function(data, model, ...){
 
   # compute likelihood confidence intervals
 
-      # string <- c("att", "def", "home")
-      # mle_fit$par %>%
-      #    .[grepl(paste(string, collapse = "|"), names(.))]
-      # home_est <- mle_fit$par %>%
-      #   .[grepl("home", names(.))]
-
 
     fn <- eval(parse(text=paste(model, "_lik", sep="")))
     mle_value <- -fn(mle_fit$par, team1 = team1,
@@ -392,6 +425,77 @@ mle_foot <- function(data, model, ...){
   colnames(abilities_est) <- c("2.5%", "mle", "97.5%")
   colnames(corr_est) <- c("2.5%", "mle", "97.5%")
   colnames(home_est) <- c("2.5%", "mle", "97.5%")
+
+
+  # routine prediction if predict is not missing
+  prediction_routine <- function(team1_prev, team2_prev, att, def, home,
+                                 corr, model, predict, n.iter){
+
+    mean_home <- exp(home[1,2] + att[team1_prev,2] + def[team2_prev,2])
+    mean_away <- exp(att[team2_prev,2] + def[team1_prev,2])
+    mean_home_q1 <- exp(home[1,1] + att[team1_prev,1] + def[team2_prev,1])
+    mean_away_q1 <- exp(att[team2_prev,1] + def[team1_prev,1])
+    mean_home_q2 <- exp(home[1,3] + att[team1_prev,3] + def[team2_prev,3])
+    mean_away_q2 <- exp(att[team2_prev,3] + def[team1_prev,3])
+
+    if (model=="double_pois"){
+
+      x = y = x_q1 = y_q1 = x_q2 = y_q2 = matrix(NA, n.iter, predict)
+      for (n in 1: N_prev){
+        x[,n] <- rpois(n.iter, mean_home[n])
+        y[,n] <- rpois(n.iter, mean_away[n])
+        x_q1[,n] <- rpois(n.iter, mean_home_q1[n])
+        y_q1[,n] <- rpois(n.iter, mean_away_q1[n])
+        x_q2[,n] <- rpois(n.iter, mean_home_q2[n])
+        y_q2[,n] <- rpois(n.iter, mean_away_q2[n])
+
+      }
+
+
+    }else if (model == "biv_pois"){
+      couple <- array(NA, c(n.iter, predict, 2))
+      x = y = x_q1 = y_q1 = x_q2 = y_q2 = matrix(NA, n.iter, predict)
+      for (n in 1: N_prev){
+        couple[,n,] <- rbvpois(n.iter,  a = mean_home[n],
+                             b= mean_away[n],
+                             c = corr[1,2])
+
+      }
+      x <- couple[,,1]
+      y <- couple[,,2]
+
+
+    }else if (model == "skellam"){
+      # da fare
+
+    }else if (model == "student_t"){
+      # da fare
+
+    }
+
+  prob_func <- function(mat_x, mat_y){
+    res <- mat_x-mat_y
+    prob_h <- apply(res, 2, function(x) sum(x > 0) )/n.iter
+    prob_d <- apply(res, 2, function(x) sum(x == 0) )/n.iter
+    prob_a <- apply(res, 2, function(x) sum(x < 0) )/n.iter
+    return(list(prob_h = prob_h,
+                prob_d = prob_d,
+                prob_a = prob_a))
+  }
+
+    conf <- prob_func(x, y)
+    conf_q1 <- prob_func(x_q1, y_q1)
+    conf_q2 <- prob_func(x_q2, y_q2)
+
+    tbl <- data.frame(home_team = teams[team1_prev],
+               away_team = teams[team2_prev],
+               prob_h = conf$prob_h,
+               prob_d = conf$prob_d,
+               prob_a = conf$prob_a
+               )
+    return(tbl)
+
+  }
 
   if (model=="student_t"){
     return(list(abilities = abilities_est,
