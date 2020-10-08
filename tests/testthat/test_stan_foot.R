@@ -7,7 +7,7 @@ library(engsoccerdata)
 
 england <- as_tibble(england)
 england_2004 <- england %>%
-  dplyr::select(Season, home, FT, visitor, hgoal,vgoal) %>%
+  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
   filter(  Season=="2004")
 
 
@@ -39,6 +39,8 @@ test_that("stan models recognize errors/warnings" , {
 context("stan static models")
 
 test_that("prediction does not cause errors", {
+
+
   ## predict > N
   expect_error(stan_foot(england_2004,
             model ="student_t",
