@@ -51,7 +51,7 @@
   * Gestione di argomento predict: si può farlo "ereditare" da altre funzioni?
   * foot_prob: fornire anche tabella con probabilità
   * Decidere se usare mle per previsioni (con coefficienti statici, ovviamente): 
-		si, mancano skellam e student_t. Da continuare a testare argomento "predict"
+		si, mancano skellam e student_t. 
 
 - Extensions:
 
@@ -59,7 +59,7 @@
 
 - Testing 
   * Imparare uso di test_that (vedi altri pacchetti)
-  	* mle_foot
+  	* mle_foot: da continuare a testare argomento "predict"
   	* stan_foot
 
 - Documentation
