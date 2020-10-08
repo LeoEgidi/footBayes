@@ -50,7 +50,7 @@ test_that("stan models recognize errors/warnings" , {
 
 #-----------------------------------------------------
 context("stan static models")
-test_that("prediction does not cause errors", {
+test_that("prediction causes  warnings/errors", {
 
   ## predict > N
   expect_error(stan_foot(england_2004,
@@ -70,7 +70,7 @@ test_that("prediction does not cause errors", {
 
 #----------------------------------------------------
 context("stan dynamic models")
-test_that("dymanics does not cause warnings/errors",{
+test_that("dymanics cause warnings/errors",{
 
   ### one season type
   ##  wrong dynamic
