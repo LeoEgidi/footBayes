@@ -277,13 +277,15 @@ stan_foot <- function(data,
     N_prev <- 0
     type <- "fit"
   }else if (is.numeric(predict)){
-    N <- dim(data)[1]-predict
-    N_prev <- predict
-    type <- "prev"
     if (predict%%1 !=0){
       warning("Please, use integer numbers for the argument 'predict'!
               The input has been rounded to the closes integer number.")
+      predict <- round(predict)
     }
+    N <- dim(data)[1]-predict
+    N_prev <- predict
+    type <- "prev"
+
   }else if (!is.numeric(predict)){
     stop("The number of out-of-sample matches is ill posed!
          Pick up an integer number.")

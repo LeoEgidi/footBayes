@@ -43,8 +43,8 @@ test_that("stan models recognize errors/warnings" , {
                         model = "neg_binomial"))
 
   ## two or more names
-  stan_foot(england_2004,
-            model = c("double_pois", "biv_pois"))
+  expect_error(stan_foot(england_2004,
+            model = c("double_pois", "biv_pois")))
 
 })
 
