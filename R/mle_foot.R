@@ -432,7 +432,7 @@ mle_foot <- function(data, model, predict, ...){
   colnames(home_est) <- c("2.5%", "mle", "97.5%")
 
 
-  # routine prediction if predict is not missing
+  # routine prediction if predict is not 0
   prediction_routine <- function(team1_prev, team2_prev, att, def, home,
                                  corr, ability, model, predict, n.iter){
 
@@ -519,7 +519,7 @@ mle_foot <- function(data, model, predict, ...){
 
   # lancia prediction_routine se e solo se predict è non missing
 
-  if (!missing(predict)){
+  if (predict!=0){
     prob_matrix <- prediction_routine(team1_prev, team2_prev, att_est,
                                       def_est, home_est,
                                       corr_est, abilities_est, model, predict,
