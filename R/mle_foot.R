@@ -79,13 +79,6 @@ mle_foot <- function(data, model, predict, ...){
          structure. Pleasy, provide data correctly.")
   }
 
-  if (dim(data)[2]>5){
-    warning("Your dataset seems too large!
-             The function will evaluate the first
-             five columns as follows:
-             season, home team, away team, home goals,
-             away goals")
-  }
 
   if (dim(data)[2]<5){
     stop("Data dimensions are wrong! Please,
@@ -136,6 +129,15 @@ mle_foot <- function(data, model, predict, ...){
   if ( !is.numeric(data$homegoals) |!is.numeric(data$awaygoals)){
     stop("Goals are not numeric! Please, provide
          numeric values for the goals")
+  }
+
+  # conditions about dimensions
+  if (dim(data)[2]>5){
+    warning("Your dataset seems too large!
+            The function will evaluate the first
+            five columns as follows:
+            season, home team, away team, home goals,
+            away goals")
   }
 
   ## PREDICT CHECKS
