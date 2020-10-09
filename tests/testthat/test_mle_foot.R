@@ -48,33 +48,10 @@ test_that("some mle models get errors/warnings", {
   expect_error(mle_foot(data = italy_2008,
                         model = "neg_binomial"))
 
+
 })
 
 
-
-# mle_foot(data = italy_2008,
-#          model ="biv_pois")
-#
-# mle_foot(data = italy_2008,
-#          model ="double_pois")
-
-## with further arguments
-# mle_foot(data = italy_2008,
-#          model ="biv_pois",
-#          interval = "Wald")
-# # problemi in ci di alcune squadre
-# # ---> corrected, error at line 320 in mle_foot
-#
-# mle_foot(data = italy_2008,
-#          model ="double_pois",
-#          interval = "Wald")
-#
-#
-
-#
-# mle_foot(data = italy_2008,
-#          model ="biv_pois",
-#          interval = "Wald", hessian = TRUE)
 
 
 

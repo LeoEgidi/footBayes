@@ -5,6 +5,8 @@
   (i)    foot_abilities
             + grafici mle (solo coefplot. Da aggiustare le dimensioni. Forse consentire parametri opizionali grafici nella funzione) ---> OK
 	    + distinguere in attacco, difesa ed entrambi
+            + grafici stan: aggiustare dimensioni
+	    **
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
@@ -49,7 +51,7 @@
     	Si può prevedere al massimo una stagione intera, quindi argomento predict è di massimo 380 (torneo  a 20 squadre).
         Un warning dovrebbe partire se l'utente specifica un numero più alto.
   * Gestione di argomento predict: si può farlo "ereditare" da altre funzioni?
-  * foot_prob: fornire anche tabella con probabilità
+  * foot_prob: fornire anche tabella con probabilità, ora già dentro ad ouptut di mle_foot 
   * Decidere se usare mle per previsioni (con coefficienti statici, ovviamente): 
 		si, mancano skellam e student_t. ----> fatto
 
@@ -61,5 +63,6 @@
   * Imparare uso di test_that (vedi altri pacchetti)
   	* mle_foot: da continuare a testare argomento "predict"
   	* stan_foot
+	* foot_abilities: forse mettere condizioni stop e warning
 
 - Documentation
