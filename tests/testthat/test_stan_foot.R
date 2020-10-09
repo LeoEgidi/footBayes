@@ -47,7 +47,7 @@ test_that("stan models recognize errors/warnings" , {
             model = c("double_pois", "biv_pois")))
 
   ### from a .csv (contained in data)
-  bundes_2008 <- read.csv2(file="data/BundesLiga07-08.csv",
+  bundes_2008 <- read.csv2(file="BundesLiga07-08.csv",
                             sep =",",dec=".")
   ## with no adjustment
   expect_error(stan_foot(data = bundes_2008,
