@@ -46,6 +46,20 @@ test_that("stan models recognize errors/warnings" , {
   expect_error(stan_foot(england_2004,
             model = c("double_pois", "biv_pois")))
 
+  ### from a .csv (contained in data)
+  bundes_2008 <- read.csv2(file="data/BundesLiga07-08.csv",
+                            sep =",",dec=".")
+  ## with no adjustment
+  expect_error(stan_foot(data = bundes_2008,
+                         model = "biv_pois"))
+
+  ## with adjustment, but six columns, the last three as numeric
+  bundes_2008_ristr <- bundes_2008[, c('Date', 'HomeTeam',
+                                       'AwayTeam',
+                                       'FTHG', 'FTAG',
+                                       'HTHG')]
+  expect_warning(stan_foot(data = bundes_2008_ristr,
+                         model = "double_pois"))
 })
 
 #-----------------------------------------------------
