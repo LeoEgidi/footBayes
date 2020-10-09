@@ -430,14 +430,14 @@ mle_foot <- function(data, model, predict, ...){
 
   # routine prediction if predict is not missing
   prediction_routine <- function(team1_prev, team2_prev, att, def, home,
-                                 corr, model, predict, n.iter){
+                                 corr, ability, model, predict, n.iter){
 
     mean_home <- exp(home[1,2] + att[team1_prev,2] + def[team2_prev,2])
     mean_away <- exp(att[team2_prev,2] + def[team1_prev,2])
-    mean_home_q1 <- exp(home[1,1] + att[team1_prev,1] + def[team2_prev,1])
-    mean_away_q1 <- exp(att[team2_prev,1] + def[team1_prev,1])
-    mean_home_q2 <- exp(home[1,3] + att[team1_prev,3] + def[team2_prev,3])
-    mean_away_q2 <- exp(att[team2_prev,3] + def[team1_prev,3])
+      # mean_home_q1 <- exp(home[1,1] + att[team1_prev,1] + def[team2_prev,1])
+      # mean_away_q1 <- exp(att[team2_prev,1] + def[team1_prev,1])
+      # mean_home_q2 <- exp(home[1,3] + att[team1_prev,3] + def[team2_prev,3])
+      # mean_away_q2 <- exp(att[team2_prev,3] + def[team1_prev,3])
 
     if (model=="double_pois"){
 
@@ -445,10 +445,10 @@ mle_foot <- function(data, model, predict, ...){
       for (n in 1: N_prev){
         x[,n] <- rpois(n.iter, mean_home[n])
         y[,n] <- rpois(n.iter, mean_away[n])
-        x_q1[,n] <- rpois(n.iter, mean_home_q1[n])
-        y_q1[,n] <- rpois(n.iter, mean_away_q1[n])
-        x_q2[,n] <- rpois(n.iter, mean_home_q2[n])
-        y_q2[,n] <- rpois(n.iter, mean_away_q2[n])
+          # x_q1[,n] <- rpois(n.iter, mean_home_q1[n])
+          # y_q1[,n] <- rpois(n.iter, mean_away_q1[n])
+          # x_q2[,n] <- rpois(n.iter, mean_home_q2[n])
+          # y_q2[,n] <- rpois(n.iter, mean_away_q2[n])
 
       }
 
@@ -467,10 +467,25 @@ mle_foot <- function(data, model, predict, ...){
 
 
     }else if (model == "skellam"){
-      # da fare
+      diff_y <- matrix(NA, n.iter, predict)
+      for (n in 1:N_prev){
+      diff_y[,n] <- rskellam(n.iter,
+               mu1 = mean_home[n],
+               mu2 = mean_away[n])
+      }
+      x <- diff_y
+      y <- matrix(0, n.iter, predict)
 
     }else if (model == "student_t"){
-      # da fare
+      diff_y <- matrix(NA, n.iter, predict)
+      for (n in 1:N_prev){
+        diff_y[,n] <- rt.scaled(n.iter, df = 7,
+                                mean = home + ability[team1_prev[n],2] - ability[team2_prev[n],2],
+                                sd = as.numeric(param_list$sigma_y))
+      }
+      x <- diff_y
+      y <- matrix(0, n.iter, predict)
+
 
     }
 
@@ -485,8 +500,8 @@ mle_foot <- function(data, model, predict, ...){
   }
 
     conf <- prob_func(x, y)
-    conf_q1 <- prob_func(x_q1, y_q1)
-    conf_q2 <- prob_func(x_q2, y_q2)
+      # conf_q1 <- prob_func(x_q1, y_q1)
+      # conf_q2 <- prob_func(x_q2, y_q2)
 
     tbl <- data.frame(home_team = teams[team1_prev],
                away_team = teams[team2_prev],
@@ -503,7 +518,7 @@ mle_foot <- function(data, model, predict, ...){
   if (!missing(predict)){
     prob_matrix <- prediction_routine(team1_prev, team2_prev, att_est,
                                       def_est, home_est,
-                                      corr_est, model, predict,
+                                      corr_est, abilities_est, model, predict,
                                       user_dots$n.iter)
     if (model=="student_t"){
       return(list(abilities = abilities_est,
