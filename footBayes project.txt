@@ -7,7 +7,7 @@
 	    + distinguere in attacco, difesa ed entrambi
 
   (ii)   foot_prob
-            pensare se mettere tanti grafici assieme, per più partite.
+            pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
 
   (iii)  pp_foot: 
             grafico 1) "aggregated", mostra la goal difference
@@ -51,7 +51,7 @@
   * Gestione di argomento predict: si può farlo "ereditare" da altre funzioni?
   * foot_prob: fornire anche tabella con probabilità
   * Decidere se usare mle per previsioni (con coefficienti statici, ovviamente): 
-		si, mancano skellam e student_t. 
+		si, mancano skellam e student_t. ----> fatto
 
 - Extensions:
 
