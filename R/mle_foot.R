@@ -100,7 +100,9 @@ mle_foot <- function(data, model, predict, ...){
                     method = "BFGS",
                     interval = "profile",
                     hessian = FALSE,
-                    n.iter = 200)
+                    n.iter = 200,
+                    sigma_y = 1 # for student-t
+                    )
 
   if (missing(...)){
     user_dots <- user_dots
@@ -302,7 +304,7 @@ mle_foot <- function(data, model, predict, ...){
     def = rep(0, length(teams)-1) %>% `names<-`(teams[2:length(teams)]),
     home = 2,
     const = 1, # for bivariate poisson
-    sigma_y =3 # for student_t
+    sigma_y = user_dots$sigma_y # for student_t
     )
 
 
@@ -480,10 +482,10 @@ mle_foot <- function(data, model, predict, ...){
       diff_y <- matrix(NA, n.iter, predict)
       for (n in 1:N_prev){
         diff_y[,n] <- rt.scaled(n.iter, df = 7,
-                                mean = home + ability[team1_prev[n],2] - ability[team2_prev[n],2],
-                                sd = as.numeric(param_list$sigma_y))
+                                mean = home[1,2] + ability[team1_prev[n],2] - ability[team2_prev[n],2],
+                                sd = user_dots$sigma_y)
       }
-      x <- diff_y
+      x <- round(diff_y)   # rounded to the closest integer, as Gelman does
       y <- matrix(0, n.iter, predict)
 
 
