@@ -57,7 +57,7 @@ test_that("prediction causes  warnings/errors", {
   ## predict > N
   expect_error(mle_foot(italy_2008,
                          model ="student_t",
-                         predict = dim(england_2004)[1]+1))
+                         predict = dim(italy_2008)[1]+1))
 
   ## predict not a number
   expect_error(mle_foot(italy_2008,
