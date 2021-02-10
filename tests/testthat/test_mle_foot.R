@@ -52,7 +52,23 @@ test_that("some mle models get errors/warnings", {
 })
 
 
+test_that("prediction causes  warnings/errors", {
 
+  ## predict > N
+  expect_error(mle_foot(italy_2008,
+                         model ="student_t",
+                         predict = dim(england_2004)[1]+1))
+
+  ## predict not a number
+  expect_error(mle_foot(italy_2008,
+                         model ="student_t",
+                         predict = "a"))
+
+  ## predict decimal number
+  # expect_warning(stan_foot(england_2004,
+  #           model ="student_t",
+  #           predict = 30.5))
+})
 
 
 
