@@ -1,4 +1,3 @@
-- Usare march.arg()
 
 - Visualization
 
@@ -29,6 +28,10 @@
             grafico 2) tabellone del torneo (eliminazione diretta)
 
 
+- Models
+
+  4 modelli per ora: doble Poisson, bivariate Poisson, Skellam, student-t.
+
 - Estimation
 
   (1) mle_foot: modelli statici
@@ -42,8 +45,14 @@
                mle_foot   ---> risolto con sapply
         - testare
         - ci per primo team
+
+  (3) priors: decidere se mettere un argomento "priors" in stan_foot, analogo a quello di
+      rstanarm. In parziale alternativa, si potrebbero stimare tre diverse possibilità:
+      mle, weakly informative Bayesian, objective Bayes.
+
+  (4) covariates: decidere se poter includere covariate nel predittore lineare
+
         
-   
 
 - Prediction
 
@@ -66,3 +75,8 @@
 	* foot_abilities: forse mettere condizioni stop e warning
 
 - Documentation
+
+- Technical stuff
+
+ Compilare i modelli prima?
+ Usare march.arg()
