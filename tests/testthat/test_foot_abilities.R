@@ -22,7 +22,7 @@ test_that("object argument gives errors/warnings", {
 
   # the class of the model is not stanfit and not
   # from optimization methods (mle)
-  y <- england_2004[,2]
+  y <- england_2004$hgoal
   fit <- lm(y~ rnorm(length(y)))
   expect_error(foot_abilities(fit, england_2004))
 
