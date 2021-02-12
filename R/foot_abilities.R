@@ -4,6 +4,7 @@
 #'
 #'
 #' @param object An object of class \code{stanfit} as given by \code{stan_foot} function.
+#'               Alternatively, a list containing the Maximum Likelihood Estimates (MLE) for the model parameters.
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'            home goals, away goals.
 #'
@@ -330,7 +331,7 @@ foot_abilities <- function(object, data,...){
 
     }
   }
-  }else{
+  }else if (class(object)=="list"){
     if (!is.null(dim(object$att))){
     att <- object$att
     def <- object$def
@@ -395,6 +396,10 @@ foot_abilities <- function(object, data,...){
                col=user_dots$col)
 
     }
+  }else{
+    stop("Please, provide one of the following
+         classes for the 'object' argument: 'stanfit',
+         'list'.")
   }
 
 
