@@ -7,7 +7,8 @@
 foot_abilities(object, data, ...)
 }
 \arguments{
-\item{object}{An object of class \code{stanfit} as given by \code{stan_foot} function.}
+\item{object}{An object of class \code{stanfit} as given by \code{stan_foot} function.
+Alternatively, a list containing the Maximum Likelihood Estimates (MLE) for the model parameters.}
 
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
 home goals, away goals.}
