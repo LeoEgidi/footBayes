@@ -73,8 +73,8 @@ foot_abilities <- function(object, data,...){
   user_dots <- list(CI=2,
                     vertical=TRUE,
                     v.axis=TRUE, h.axis=TRUE,
-                    cex.var=1, cex.pts=0.9,
-                    var.las=2, main=NULL, xlab=NULL, ylab=NULL, mar=c(1,3,5.1,2),
+                    cex.var=0.7, cex.pts=0.9,
+                    var.las=2, main=NULL, xlab=NULL, ylab=NULL, mar=c(1,5,4.1,1.8),
                     plot=TRUE,  offset=0.1,
                     cex.main =0.9, pch = 16, lwd = 2,
                     col = 1)

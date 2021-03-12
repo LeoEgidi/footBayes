@@ -5,7 +5,8 @@
             + grafici mle (solo coefplot. Da aggiustare le dimensioni. Forse consentire parametri opizionali grafici nella funzione) ---> OK
 	    + distinguere in attacco, difesa ed entrambi
             + grafici stan: aggiustare dimensioni
-	    **
+              --> mettere guida sulle dimensioni per le figure salvate?
+	    + levare argomento 'data', da far "sputare" da "stan_foot" e "mle_foot"?
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
@@ -75,6 +76,9 @@
 	* foot_abilities: forse mettere condizioni stop e warning
 
 - Documentation
+
+  * Vignette
+  * Help funzioni
 
 - Technical stuff
 
