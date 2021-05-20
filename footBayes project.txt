@@ -32,10 +32,14 @@
 - Models
 
   4 modelli per ora: doble Poisson, bivariate Poisson, Skellam, student-t.
+  + Nel BP e negli altri bisognerebbe inserire la componente \mu nel predittore lineare.
+  + Nel BP inserire predittori.
+  + estendere "weekly" a più stagioni
 
 - Estimation
 
   (1) mle_foot: modelli statici
+   + mettere funzione "print" come per i modelli STAN?
 
   (2) stan_foot: modelli statici e dinamici
 

@@ -315,7 +315,7 @@ stan_foot <- function(data,
   }else if (dynamic_type == "weekly" ){
       dyn <- "dynamic_"
       if (length(unique(data$season))!=1){
-        stop("When using weekly dynamics,
+        warning("When using weekly dynamics,
               please consider one season only.")
       }else{
       weak_count <- ((N+predict)*2)/(nteams)
