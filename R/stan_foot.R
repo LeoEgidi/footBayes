@@ -315,9 +315,9 @@ stan_foot <- function(data,
   }else if (dynamic_type == "weekly" ){
       dyn <- "dynamic_"
       if (length(unique(data$season))!=1){
-        warning("When using weekly dynamics,
+        stop("When using weekly dynamics,
               please consider one season only.")
-      #}else{
+      }else{
       weak_count <- ((N+predict)*2)/(nteams)
       if ((N*2)%%(nteams)!=0){
         stop("The number of total matches is not
