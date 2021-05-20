@@ -88,3 +88,4 @@
 
  Compilare i modelli prima?
  Usare march.arg()
+ cores per calcolo parallelo (vedi rstanarm)
