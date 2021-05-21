@@ -51,9 +51,11 @@
         - testare
         - ci per primo team
 
-  (3) priors: decidere se mettere un argomento "priors" in stan_foot, analogo a quello di
+  (3) priors: decidere se mettere un argomento "prior" in stan_foot, analogo a quello di
       rstanarm. In parziale alternativa, si potrebbero stimare tre diverse possibilità:
       mle, weakly informative Bayesian, objective Bayes.
+      Specificare le priors solo per coefficienti di attacco e difesa? O anche agli altri
+      coefficienti del predittore lineare?
 
   (4) covariates: decidere se poter includere covariate nel predittore lineare
 

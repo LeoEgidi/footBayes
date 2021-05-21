@@ -12,6 +12,8 @@
 #'the fit for the training set only.
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
+#'@param prior
+#'@param prior_sd
 #'@param ... Optional parameters passed to the function
 #' in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
 #'@return
@@ -176,6 +178,14 @@
 #'@import reshape2
 #'@import ggplot2
 #'@importFrom arm coefplot
+#'@importFrom normal rstanarm
+#'@importFrom student_t rstanarm
+#'@importFrom cauchy rstanarm
+#'@importFrom hs rstanarm
+#'@importFrom hs_plus rstanarm
+#'@importFrom laplace rstanarm
+#'@importFrom lasso rstanarm
+#'@importFrom product_normal rstanarm
 #'@export
 
 
@@ -183,6 +193,7 @@ stan_foot <- function(data,
                       model,
                       predict,
                       dynamic_type,
+                      prior_sd,
                       ...){
 
     ## DATA CHECKS
@@ -356,6 +367,69 @@ stan_foot <- function(data,
       instants_prev <- season[(N+1):(N+N_prev)]
     }
 
+    ## PRIOR CHECKS
+
+      if (missing(prior)){
+        prior_dist <- "n"
+        prior_dist_num <- 1
+        hyper_mean <- 0
+        hyper_sd <- par
+      }else{
+        prior_dist <- prior
+         if (prior_dist == "n"){
+           prior_dist_num <- 1
+           hyper_mean <- as.numeric(substr(prior,3,3))
+           hyper_sd <- as.numeric(substr(prior,5,5))
+         }else if (prior_dist=="t"){
+           prior_dist_num <- 2
+           hyper_df <- as.numeric(substr(prior,3,3))
+           hyper_location <- as.numeric(substr(prior,5,5))
+           hyper_scale <- as.numeric(substr(prior,7,7))
+         }else if (prior_dist=="c"){
+           prior_dist_num <- 3
+           hyper_df <- 1
+           hyper_location <- as.numeric(substr(prior,3,3))
+           hyper_scale <- as.numeric(substr(prior,5,5))
+         }else if (prior_dist == "u"){
+           prior_dist_num <- 4
+           hyper_min <- as.numeric(substr(prior,3,3))
+           hyper_max <- as.numeric(substr(prior,5,5))
+         }
+      }
+
+
+         hyper_sd_df <- 1  # initialization
+      if (missing(prior_sd)){
+         prior_dist_sd_num <- 3
+         hyper_sd_df <- 1
+         hyper_sd_location<- 0
+         hyper_sd_scale <- 5
+      }else{
+        prior_dist_sd <- prior_sd$dist
+       if (prior_dist_sd == "normal"){
+         prior_dist_sd_num <- 1
+         hyper_sd_df <- 1
+         hyper_sd_location <- prior_sd$location
+         hyper_sd_scale <- prior_sd$scale
+      }else if (prior_dist_sd=="t" && prior_sd$df!=1){
+         prior_dist_sd_num <- 2
+         hyper_sd_df <- prior_sd$df
+         hyper_sd_location <- prior_sd$location
+         hyper_sd_scale <- prior_sd$scale
+      }else if (prior_dist_sd=="t"&& prior_sd$df==1){
+         prior_dist_sd_num <- 3
+         hyper_sd_df <- 1
+         hyper_sd_location <- prior_sd$location
+         hyper_sd_scale <- prior_sd$scale
+      } else if (prior_dist =="laplace"){
+        prior_dist_sd_num <- 4
+        hyper_sd_df <- 1
+        hyper_sd_location <- prior_sd$location
+        hyper_sd_scale <- prior_sd$scale
+      }
+    }
+
+
 
   teams <- unique(data$home)
   team_home <- match( data$home, teams)
@@ -379,7 +453,10 @@ stan_foot <- function(data,
                 team1 = team1,
                 team2=team2,
                 team1_prev= team1_prev,
-                team2_prev=team2_prev)
+                team2_prev=team2_prev.
+                hyper_sd_df=hyper_sd_df,
+                hyper_sd_location=hyper_sd_location,
+                hyper_sd_scale=hyper_sd_scale)
 
   if (!missing(dynamic_type)){
     data_stan$ntimes <- ntimes
@@ -711,6 +788,13 @@ stan_foot <- function(data,
       int nteams;
       int team1[N];
       int team2[N];
+
+      // priors part
+      int<lower=1,upper=8> prior_dist_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=8> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       vector[nteams] att_raw;
@@ -738,13 +822,43 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (t in 1:(nteams)){
-        target+=normal_lpdf(att_raw[t]|0, sigma_att);
-        target+=normal_lpdf(def_raw[t]|0, sigma_def);
+        if (prior_dist_num == 1){
+          target+= normal_lpdf(att_raw[t]|hyper_mean, sigma_att);
+          target+= normal_lpdf(def_raw[t]|hyper_mean, sigma_def);
+        }
+        else if (prior_dist_num == 2){
+          target+= student_t_lpdf(att_raw[t]|hyper_df, hyper_location, sigma_att);
+          target+= student_t_lpdf(def_raw[t]|hyper_df, hyper_location, sigma_def);
+        }
+         else if (prior_dist_num == 3){
+          target+= cauchy_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= cauchy_lpdf(def_raw[t]|hyper_location, sigma_def);
+         }
+         else if (prior_dist_num == 4){
+          target+= uniform_lpdf(att_raw[t]|hyper_min, hyper_max);
+          target+= uniform_lpdf(def_raw[t]|hyper_min, hyper_max);
+         }
       }
-      target+=cauchy_lpdf(sigma_att|0, 5);
-      target+=cauchy_lpdf(sigma_def|0, 5);
+
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 )
+          target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+          target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+       } else if (prior_dist_sd_num == 2){
+          target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+          target+=student_t_lpdf(sigma_def|hyper_sd_def, hyper_sd_location, hyper_sd_scale);
+      } else if (prior_dist_sd_num == 3){
+          target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+          target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      } else if (prior_dist_sd_num == 4){
+          target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+          target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(rho|0,5);
       target+=normal_lpdf(home|0,5);
       // likelihood
