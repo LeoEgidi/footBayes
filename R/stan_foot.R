@@ -177,10 +177,10 @@
 #'@import arm
 #'@import reshape2
 #'@import ggplot2
-#'@importFrom arm coefplot
-#'@importFrom normal rstanarm
-#'@importFrom student_t rstanarm
-#'@importFrom laplace rstanarm
+#'@importFrom coefplot arm
+#'@importFrom rstanarm normal
+#'@importFrom rstanarm student_t
+#'@importFrom rstanarm laplace
 #'@export
 
 
