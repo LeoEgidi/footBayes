@@ -22,6 +22,7 @@
                         come inserisco i valori osservati? creo funzione conta_punti_veri)
             grafico 2) cumulato per ogni squadra? Con punto di partenza in base al momento da cui si prevede?
                        Si, fatto con bando di confidenza
+                       + da correggere visualizzazione.
             grafico 3) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata?
   
   (v)    foot_round_robin
@@ -35,6 +36,7 @@
   + Nel BP e negli altri bisognerebbe inserire la componente \mu nel predittore lineare.
   + Nel BP inserire predittori.
   + estendere "weekly" a più stagioni
+  + 24-05: vettorizzata la verosimiglianza del double pois
 
 - Estimation
 
@@ -56,6 +58,10 @@
       mle, weakly informative Bayesian, objective Bayes.
       Specificare le priors solo per coefficienti di attacco e difesa? O anche agli altri
       coefficienti del predittore lineare?
+         
+        + 24-05: aggiunte priors per tutti i modelli (dinamici e statici) tranne student-t.
+          Scelta tra gaussian, t, cauchy e laplace (quest'ultima no per i dinamici) sia per team-specific abilities
+          che per 
 
   (4) covariates: decidere se poter includere covariate nel predittore lineare
 

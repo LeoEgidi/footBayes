@@ -197,7 +197,7 @@ refit the model with the argument predict greater
   conta_punti_veri <- rep(0, length(teams))
   number_match_days <- length(unique(team1_prev))*2-2
   in_sample_cond <- is.null(sims$diff_y_prev) & is.null(sims$y_prev)
-  fill_test <- c("red", "gray")[c(!in_sample_cond, in_sample_cond)]
+  fill_test <- c("gray", "gray")[c(!in_sample_cond, in_sample_cond)]
 
 
   # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
@@ -503,43 +503,43 @@ refit the model with the argument predict greater
 
 
   # compute the true points for the test set sample, dynamically
-  conta_punti_veri_post_dyn <- matrix(0, length(unique(team_home)), max(unique(day_index_prev)) )
-  if (in_sample_cond == TRUE)
-  {
-    for (n in 1:N){
-      if (y[(n),1]>y[(n),2]){
-        conta_punti_veri_post_dyn[team1_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+3
-        conta_punti_veri_post_dyn[team2_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]
-      }else if(y[(n),1]==y[(n),2]){
-
-        conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+1
-        conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+1
-
-      }else if(y[(n),1]<y[(n),2]){
-
-        conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]
-        conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+3
-
-      }
-    }
-  }else{
-  for (n in 1:N_prev){
-    if (y[(N+n),1]>y[(N+n),2]){
-      conta_punti_veri_post_dyn[team1_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+3
-      conta_punti_veri_post_dyn[team2_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]
-    }else if(y[(N+n),1]==y[(N+n),2]){
-
-      conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+1
-      conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+1
-
-    }else if(y[(N+n),1]<y[(N+n),2]){
-
-      conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]
-      conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+3
-
-      }
-    }
-  }
+  conta_punti_veri_post_dyn <- matrix(NA, length(unique(team_home)), max(unique(day_index_prev)) )
+  # if (in_sample_cond == TRUE)
+  # {
+  #   for (n in 1:N){
+  #     if (y[(n),1]>y[(n),2]){
+  #       conta_punti_veri_post_dyn[team1_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+3
+  #       conta_punti_veri_post_dyn[team2_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]
+  #     }else if(y[(n),1]==y[(n),2]){
+  #
+  #       conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+1
+  #       conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+1
+  #
+  #     }else if(y[(n),1]<y[(n),2]){
+  #
+  #       conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]
+  #       conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+3
+  #
+  #     }
+  #   }
+  # }else{
+  # for (n in 1:N_prev){
+  #   if (y[(N+n),1]>y[(N+n),2]){
+  #     conta_punti_veri_post_dyn[team1_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+3
+  #     conta_punti_veri_post_dyn[team2_prev[n], day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]
+  #   }else if(y[(N+n),1]==y[(N+n),2]){
+  #
+  #     conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]+1
+  #     conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+1
+  #
+  #   }else if(y[(N+n),1]<y[(N+n),2]){
+  #
+  #     conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team1_prev[n],day_index_prev[n]]
+  #     conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]=conta_punti_veri_post_dyn[team2_prev[n],day_index_prev[n]]+3
+  #
+  #     }
+  #   }
+  # }
 
   # compute the points on the MCMC, dynamically
   conta_punti_dyn <- array(0, c( M, length(unique(team_home)), max(day_index_prev)))
@@ -597,7 +597,7 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
     if (in_sample_cond==FALSE){
     mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
                      cumsum_punti_pre[team_index,day_index]+
-                       cumsum_punti_post[team_index,]))$value
+                      cumsum_punti_post[team_index,]))$value
 
     mt_50 <- melt(cbind(matrix(NA,
       length(team_names),
@@ -613,7 +613,7 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
   }else if ( cond_2 == TRUE ){
     mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
                          cumsum_punti_pre[team_index,day_index]+
-                           cumsum_punti_post[team_index,]))$value
+                         cumsum_punti_post[team_index,] ))$value
     mt_50 <- melt(cbind(matrix(NA,
                                length(team_names),
                                #length(unique(team_home)),
@@ -621,7 +621,7 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
                         punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
 
   }else if (cond_3 == TRUE){
-    mt_obs <- melt(cumsum_punti_post[team_index,])$value
+    mt_obs <- melt( cumsum_punti_post[team_index,])$value
     mt_50 <- melt(punti_dyn_med[team_index, (day_index+1):max(day_index_prev)])$value
     }
 mt_025 <- melt((punti_dyn_025)[team_index, ])$value
@@ -642,25 +642,23 @@ df_team_sel <- data.frame(obs = mt_obs,
     ggplot(df_team_sel,aes(day, obs))+
       geom_ribbon(aes(x=day, ymin=q_025, ymax=q_975, group=1),
                   data=df_team_sel,
-                  fill = color_scheme_get("blue")[[1]]
+                  fill = color_scheme_get("red")[[1]]
       )+
       geom_ribbon(aes(x=day, ymin=q_25, ymax=q_75, group=1),
                   data=df_team_sel,
-                  fill = color_scheme_get("blue")[[2]]
+                  fill = color_scheme_get("red")[[2]]
       )+
-      geom_line(aes(x= day, y= q_50),
-                data=df_team_sel,
-                color = color_scheme_get("blue")[[4]],
-                #fill = color_scheme_get("red")[[2]],
-                size =1.1
-      )+
-      geom_line(#aes(x=day, y = obs),
-                size=1.2, linetype="dashed")+
-      geom_vline(
-                  xintercept =day_index,
-                  linetype="dashed",
-                  color=fill_test, size=1)+
-
+      # geom_line(aes(x= day, y= q_50),
+      #           data=df_team_sel,
+      #           color = color_scheme_get("red")[[4]],
+      #           #fill = color_scheme_get("red")[[2]],
+      #           size =1.1
+      # )+
+      geom_line(size=1, linetype="solid")+
+      # geom_vline(
+      #             xintercept =day_index,
+      #             linetype="solid",
+      #             color=fill_test, size=1)+
       xlab("Match day")+
       ylab("Cumulated Points")+
       facet_wrap("teams", scales ="free")+
