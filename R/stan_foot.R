@@ -589,11 +589,11 @@ stan_foot <- function(data,
     transformed parameters{
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
-      // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
-      // cov_matrix[ntimes] Sigma_def;          // Gaussian process defense cov.funct.
+      // cov_matrix[ntimes] Sigma_att;         // Gaussian process attack cov. funct.
+      // cov_matrix[ntimes] Sigma_def;        // Gaussian process defense cov.funct.
       matrix[ntimes, nteams] mu_att;         // attack hyperparameter
       matrix[ntimes, nteams] mu_def;         // defense hyperparameter
-      vector[N] theta_home;                    // exponentiated linear pred.
+      vector[N] theta_home;                 // exponentiated linear pred.
       vector[N] theta_away;
       vector[N] theta_corr;
 
@@ -616,11 +616,11 @@ stan_foot <- function(data,
 
       // Lagged prior mean for attack/defense parameters
       for (t in 2:(ntimes)){
-        mu_att[1]=rep_row_vector(0,nteams);
+        mu_att[1]=rep_row_vector(hyper_location,nteams);
         mu_att[t]= att[t-1];
         //rep_row_vector(0,nteams);
 
-        mu_def[1]=rep_row_vector(0,nteams);
+        mu_def[1]=rep_row_vector(hyper_location, nteams);
         mu_def[t]= def[t-1];
         //rep_row_vector(0,nteams);
 
@@ -634,16 +634,44 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (h in 1:(nteams)){
-        att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
-        def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
-
+        if (prior_dist_num == 1 ){
+          att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 2 ){
+          att_raw[,h]~multi_student_t(hyper_df, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(hyper_df, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 3 ){
+          att_raw[,h]~multi_student_t(1, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(1, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
       }
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
       target+=normal_lpdf(rho|0,5);
-      target+=cauchy_lpdf(sigma_att| 0,2.5);
-      target+=cauchy_lpdf(sigma_def| 0,2.5);
+
       // likelihood
 
       for (n in 1:N){
@@ -756,11 +784,11 @@ stan_foot <- function(data,
 
       // Lagged prior mean for attack/defense parameters
       for (t in 2:(ntimes)){
-        mu_att[1]=rep_row_vector(0,nteams);
+        mu_att[1]=rep_row_vector(hyper_location,nteams);
         mu_att[t]=att[t-1];
         //rep_row_vector(0,nteams);
 
-        mu_def[1]=rep_row_vector(0,nteams);
+        mu_def[1]=rep_row_vector(hyper_location,nteams);
         mu_def[t]=def[t-1];
         //rep_row_vector(0,nteams);
 
@@ -774,15 +802,43 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (h in 1:(nteams)){
-        att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
-        def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        if (prior_dist_num == 1 ){
+          att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 2 ){
+          att_raw[,h]~multi_student_t(hyper_df, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(hyper_df, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 3 ){
+          att_raw[,h]~multi_student_t(1, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(1, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
       }
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
       target+=normal_lpdf(rho|0,5);
-      target+=cauchy_lpdf(sigma_att| 0,2.5);
-      target+=cauchy_lpdf(sigma_def| 0,2.5);
       // likelihood
 
       for (n in 1:N){
@@ -1164,11 +1220,11 @@ stan_foot <- function(data,
 
       // Lagged prior mean for attack/defense parameters
       for (t in 2:(ntimes)){
-        mu_att[1]=rep_row_vector(0,nteams);
+        mu_att[1]=rep_row_vector(hyper_location,nteams);
         mu_att[t]=att[t-1];
         //rep_row_vector(0,nteams);
 
-        mu_def[1]=rep_row_vector(0,nteams);
+        mu_def[1]=rep_row_vector(hyper_location,nteams);
         mu_def[t]=def[t-1];
         //rep_row_vector(0,nteams);
 
@@ -1180,19 +1236,48 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (h in 1:(nteams)){
-        att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
-        def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        if (prior_dist_num == 1 ){
+          att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 2 ){
+          att_raw[,h]~multi_student_t(hyper_df, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(hyper_df, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 3 ){
+          att_raw[,h]~multi_student_t(1, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(1, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
       }
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
-      target+=cauchy_lpdf(sigma_att| 0,2.5);
-      target+=cauchy_lpdf(sigma_def| 0,2.5);
+
       // likelihood
-      for (n in 1:N){
-        target+=poisson_lpmf(y[n,1]| theta_home[n]);
-        target+=poisson_lpmf(y[n,2]| theta_away[n]);
-      }
+
+      target+=poisson_lpmf(y[,1]| theta_home);
+      target+=poisson_lpmf(y[,2]| theta_away);
+
     }
     generated quantities{
       int y_rep[N,2];
@@ -1272,11 +1357,11 @@ stan_foot <- function(data,
 
       // Lagged prior mean for attack/defense parameters
       for (t in 2:(ntimes)){
-        mu_att[1]=rep_row_vector(0,nteams);
+        mu_att[1]=rep_row_vector(hyper_location,nteams);
         mu_att[t]= att[t-1];
         //rep_row_vector(0,nteams);
 
-        mu_def[1]=rep_row_vector(0,nteams);
+        mu_def[1]=rep_row_vector(hyper_location,nteams);
         mu_def[t]=def[t-1];
         //rep_row_vector(0,nteams);
 
@@ -1288,19 +1373,48 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (h in 1:(nteams)){
-        att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
-        def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        if (prior_dist_num == 1 ){
+          att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 2 ){
+          att_raw[,h]~multi_student_t(hyper_df, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(hyper_df, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 3 ){
+          att_raw[,h]~multi_student_t(1, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(1, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
       }
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
-      target+=cauchy_lpdf(sigma_att| 0,2.5);
-      target+=cauchy_lpdf(sigma_def| 0,2.5);
+
+
       // likelihood
-      for (n in 1:N){
-        target+=poisson_lpmf(y[n,1]| theta_home[n]);
-        target+=poisson_lpmf(y[n,2]| theta_away[n]);
-      }
+      target+=poisson_lpmf(y[,1]| theta_home);
+      target+=poisson_lpmf(y[,2]| theta_away);
+
     }
     generated quantities{
       int y_rep[N,2];
@@ -1618,11 +1732,11 @@ stan_foot <- function(data,
 
       // Lagged prior mean for attack/defense parameters
       for (t in 2:(ntimes)){
-        mu_att[1]=rep_row_vector(0,nteams);
+        mu_att[1]=rep_row_vector(hyper_location,nteams);
         mu_att[t]=att[t-1];
         //rep_row_vector(0,nteams);
 
-        mu_def[1]=rep_row_vector(0,nteams);
+        mu_def[1]=rep_row_vector(hyper_location,nteams);
         mu_def[t]=def[t-1];
         //rep_row_vector(0,nteams);
 
@@ -1634,14 +1748,44 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (h in 1:(nteams)){
-        att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
-        def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        if (prior_dist_num == 1 ){
+          att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 2 ){
+          att_raw[,h]~multi_student_t(hyper_df, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(hyper_df, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 3 ){
+          att_raw[,h]~multi_student_t(1, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(1, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
       }
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
-      target+=cauchy_lpdf(sigma_att| 0,2.5);
-      target+=cauchy_lpdf(sigma_def| 0,2.5);
+
+
       // likelihood
       for (n in 1:N){
         target+=skellam_lpmf(diff_y[n]| theta_home[n],
@@ -1731,11 +1875,11 @@ stan_foot <- function(data,
 
       // Lagged prior mean for attack/defense parameters
       for (t in 2:(ntimes)){
-        mu_att[1]=rep_row_vector(0,nteams);
+        mu_att[1]=rep_row_vector(hyper_location,nteams);
         mu_att[t]=att[t-1];
         //rep_row_vector(0,nteams);
 
-        mu_def[1]=rep_row_vector(0,nteams);
+        mu_def[1]=rep_row_vector(hyper_location,nteams);
         mu_def[t]=def[t-1];
         //rep_row_vector(0,nteams);
 
@@ -1747,14 +1891,44 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (h in 1:(nteams)){
-        att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
-        def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        if (prior_dist_num == 1 ){
+          att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 2 ){
+          att_raw[,h]~multi_student_t(hyper_df, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(hyper_df, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
+        else if (prior_dist_num == 3 ){
+          att_raw[,h]~multi_student_t(1, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
+          def_raw[,h]~multi_student_t(1, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+        }
       }
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
-      target+=cauchy_lpdf(sigma_att| 0,2.5);
-      target+=cauchy_lpdf(sigma_def| 0,2.5);
+
+
       // likelihood
       for (n in 1:N){
         target+=skellam_lpmf(diff_y[n]| theta_home[n],
