@@ -27,7 +27,10 @@
                        + perchè non solo una squadra nel secondo tipo di grafici?
                        + errore quando c'è solo una stagione
             grafico 3) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata?
-  
+
+           Check :              più stagioni - una sola stagione
+                  out-of-sample   
+                  in-sample       ok 2, no 1
   (v)    foot_round_robin
             grafico 1) grafico a scacchiera con probabilità di vittoria
             grafico 2) tabellone del torneo (eliminazione diretta)

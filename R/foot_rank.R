@@ -27,7 +27,7 @@ foot_rank <- function(data, object,
   if (is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
     if (!is.null(sims$y_rep)){
     N <- dim(data)[1]
-    N_prev <- N
+    N_prev <- 0
     y_rep1 <- sims$y_rep[,,1]
     y_rep2 <- sims$y_rep[,,2]
     team1_prev <- team_home[1:N]
@@ -35,7 +35,7 @@ foot_rank <- function(data, object,
     }else{
       # caso t di student
       N <- dim(data)[1]
-      N_prev <- N
+      N_prev <- 0
       y_rep1 <- round(sims$diff_y_rep*(sims$diff_y_rep>0)+0*(sims$diff_y_rep<=0))
       y_rep2 <- round(abs(sims$diff_y_rep)*(sims$diff_y_rep<0)+0*(sims$diff_y_rep>=0))
       team1_prev <- team_home[1:N]
@@ -77,10 +77,11 @@ foot_rank <- function(data, object,
 
   # identifica la stagione all'interno del quale prevedere
   season_prev <- unique(data$season[(N+1):(N+N_prev)])
+  season_prev <- season_prev[!is.na(season_prev)]
 
   # condizione per far si che non si possano prevedere
   # dati di stagioni diverse
-  if (length(unique(data$season[(N+1):(N+N_prev)])) !=1){
+  if (length(unique(data$season[(N+1):(N+N_prev)][!is.na(data$season[(N+1):(N+N_prev)])])) !=1){
     stop("Please, to use this function,
           do not provide out-of-sample
          matches belonging to different seasons, provide
@@ -140,7 +141,7 @@ foot_rank <- function(data, object,
     (1:length(seasons_levels))[season_prev ==
         seasons_levels]
 
-  if (N_prev < length(team_seasons[[ind_season_prev]])/2){
+  if (N_prev < length(team_seasons[[ind_season_prev]])/2 & N_prev!=0){
       warning(paste("The number of out-of-samples matches
       is too small,  then is forced to be zero.
 Please, to allow for out-of-samples matches, consider to
@@ -154,7 +155,7 @@ refit the model with the argument predict greater
     # consider in-sample case
     if (!is.null(sims$y_rep)){
       N <- dim(data)[1] - N_prev
-      N_prev <- N
+      #N_prev <- N
       y_rep1 <- sims$y_rep[,,1]
       y_rep2 <- sims$y_rep[,,2]
       team1_prev <- team_home[1:N]
@@ -162,7 +163,7 @@ refit the model with the argument predict greater
     }else{
       # caso t di student
       N <- dim(data)[1]-N_prev
-      N_prev <- N
+      #N_prev <- N
       y_rep1 <- round(sims$diff_y_rep*(sims$diff_y_rep>0)+0*(sims$diff_y_rep<=0))
       y_rep2 <- round(abs(sims$diff_y_rep)*(sims$diff_y_rep<0)+0*(sims$diff_y_rep>=0))
       team1_prev <- team_home[1:N]
@@ -197,11 +198,12 @@ refit the model with the argument predict greater
   conta_punti_veri <- rep(0, length(teams))
   number_match_days <- length(unique(team1_prev))*2-2
   in_sample_cond <- is.null(sims$diff_y_prev) & is.null(sims$y_prev)
-  fill_test <- c("gray", "gray")[c(!in_sample_cond, in_sample_cond)]
+  fill_test <- c("red", "gray")[c(!in_sample_cond, in_sample_cond)]
 
 
   # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
-  cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev))) & N < length(unique(team1_prev))*( length(unique(team1_prev))-1)
+  cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev)))
+  #& N < length(unique(team1_prev))*( length(unique(team1_prev))-1)
 
   # questa condizione significa che il training NON ha
   # le stesse squadre del test, e che stiamo considerando
@@ -221,7 +223,7 @@ refit the model with the argument predict greater
     # in-sample
     if (in_sample_cond == TRUE)
       {
-      cond_1 <- FALSE
+      #cond_1 <- FALSE
       conta_punti_veri <- rep(0, length(unique(team_home)))
       for (n in 1:N){
         if (y[(n),1]>y[(n),2]){
@@ -323,7 +325,7 @@ refit the model with the argument predict greater
         conta_punti[t,] <- conta_punti_veri_pre
     }
 
-    for (n in 1:N_prev){
+    for (n in 1:((N_prev)*(!in_sample_cond) + N*(in_sample_cond))){
       if (y_rep1[t,n]>y_rep2[t,n]){
         conta_punti[t,team1_prev[n]]=conta_punti[t,team1_prev[n]]+3
         conta_punti[t,team2_prev[n]]=conta_punti[t,team2_prev[n]]
@@ -356,12 +358,22 @@ refit the model with the argument predict greater
     teams_rank_names <- teams_rank_names[1:length(unique(team1_prev))]
   }
 
+  if (is.matrix(conta_punti[,team_index])){
   expected_point=apply(conta_punti[,team_index],2,median)
   points_25=apply(conta_punti[,team_index],2,function(x) quantile(x, 0.25))
   points_75=apply(conta_punti[,team_index],2,function(x) quantile(x, 0.75))
   points_025=apply(conta_punti[,team_index],2,function(x) quantile(x, 0.025))
   points_975=apply(conta_punti[,team_index],2,function(x) quantile(x, 0.975))
   sd_expected=apply(conta_punti[,team_index],2,sd)
+  }else{
+    expected_point=median(conta_punti[,team_index])
+    points_25=quantile(conta_punti[,team_index],  0.25)
+    points_75=quantile(conta_punti[,team_index],0.75)
+    points_025=quantile(conta_punti[,team_index],0.025)
+    points_975=quantile(conta_punti[,team_index],0.975)
+    sd_expected=sd(conta_punti[,team_index])
+   }
+
   class=sort.int(expected_point, index.return=TRUE,
                  decreasing=TRUE)
 
@@ -504,6 +516,8 @@ refit the model with the argument predict greater
 
   # compute the true points for the test set sample, dynamically
   conta_punti_veri_post_dyn <- matrix(NA, length(unique(team_home)), max(unique(day_index_prev)) )
+
+  # per levare le linee nere nel test set...
   # if (in_sample_cond == TRUE)
   # {
   #   for (n in 1:N){
@@ -551,7 +565,7 @@ refit the model with the argument predict greater
       }
     }
 
-    for (n in 1:N_prev){
+    for (n in 1:((N_prev)*(!in_sample_cond) + N*(in_sample_cond)) ){
       if (y_rep1[t,n]>y_rep2[t,n]){
         conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]+3
         conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]
