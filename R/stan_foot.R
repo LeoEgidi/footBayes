@@ -180,7 +180,6 @@
 #'@importFrom arm coefplot
 #'@importFrom normal rstanarm
 #'@importFrom student_t rstanarm
-#'@importFrom cauchy rstanarm
 #'@importFrom laplace rstanarm
 #'@export
 
