@@ -7,6 +7,7 @@
             + grafici stan: aggiustare dimensioni
               --> mettere guida sulle dimensioni per le figure salvate?
 	    + levare argomento 'data', da far "sputare" da "stan_foot" e "mle_foot"?
+            + nomi squadre più grandi
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
@@ -24,6 +25,7 @@
                        Si, fatto con bando di confidenza
                        + da correggere visualizzazione.
                        + perchè non solo una squadra nel secondo tipo di grafici?
+                       + errore quando c'è solo una stagione
             grafico 3) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata?
   
   (v)    foot_round_robin
@@ -98,3 +100,4 @@
  Compilare i modelli prima?
  Usare march.arg()
  cores per calcolo parallelo (vedi rstanarm)
+ fare in modo di risolvere l'acquisizione delle 'priors' da rstanarm (possibilmente senza installare tutto il pacchetto, come avviene adesso in "Depends")
