@@ -12,7 +12,7 @@
 #'the fit for the training set only.
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
-#'@param prior
+#'@param prior The prior distribution for the team-specific abilities.
 #'@param prior_sd
 #'@param ... Optional parameters passed to the function
 #' in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.

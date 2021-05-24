@@ -20,6 +20,8 @@ the fit for the training set only.}
 \item{dynamic_type}{One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 dynamic parameters.}
 
+\item{prior}{The prior distribution for the team-specific abilities.}
+
 \item{...}{Optional parameters passed to the function
 in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
 }
