@@ -934,6 +934,7 @@ stan_foot <- function(data,
       // log-priors fixed effects
       target+=normal_lpdf(rho|0,5);
       target+=normal_lpdf(home|0,5);
+
       // likelihood
       for (n in 1:N){
         target+=bipois_lpmf(y[n,]| theta[n,1],
@@ -1415,10 +1416,10 @@ stan_foot <- function(data,
       target+=normal_lpdf(home|0,5);
 
       // likelihood
-      for (n in 1:N){
-        target+=poisson_lpmf(y[n,1]| theta[n,1]);
-        target+=poisson_lpmf(y[n,2]| theta[n,2]);
-      }
+      //for (n in 1:N){
+        target+=poisson_lpmf(y[,1]| theta[,1]);
+        target+=poisson_lpmf(y[,2]| theta[,2]);
+      //}
     }
     generated quantities{
       int y_rep[N,2];
@@ -1524,10 +1525,10 @@ stan_foot <- function(data,
       target+=normal_lpdf(home|0,5);
 
       // likelihood
-      for (n in 1:N){
-        target+=poisson_lpmf(y[n,1]| theta[n,1]);
-        target+=poisson_lpmf(y[n,2]| theta[n,2]);
-      }
+
+      target+=poisson_lpmf(y[,1]| theta[,1]);
+      target+=poisson_lpmf(y[,2]| theta[,2]);
+
     }
     generated quantities{
       int y_rep[N,2];
