@@ -368,49 +368,57 @@ stan_foot <- function(data,
   hyper_df <- 1           # initialization
   if (missing(prior)){    # Normal as default weakly-inf. prior
     prior_dist_num <- 1
-    prior <- normal(0,1)
+    prior <- normal(0,NULL)
     hyper_location<- 0    # location
     #hyper_sd_scale <- 5  # scale
   }else{
     prior_dist <- prior$dist
-    if (prior_dist == "normal"){
-      prior_dist_num <- 1
-      hyper_df <- 1
-      hyper_location <- prior$location
-      # if (is.null(prior_sd$scale)){
-      #   hyper_sd_scale <-1
-      # }else{
-      #   hyper_sd_scale <- prior_sd$scale
-      # }
-    }else if (prior_dist=="t" && prior$df!=1){
-      prior_dist_num <- 2   # student-t
-      hyper_df <- prior$df
-      hyper_location <- prior$location
-      # if (is.null(prior_sd$scale)){
-      #   hyper_sd_scale <-1
-      # }else{
-      #   hyper_sd_scale <- prior_sd$scale
-      # }
-    }else if (prior_dist=="t"&& prior$df==1){
-      prior_dist_num <- 3
-      hyper_df <- 1     # by default of Cauchy distribution
-      hyper_location <- prior$location
-      # if (is.null(prior$scale)){
-      #   hyper_sd_scale <-1
-      # }else{
-      #   hyper_sd_scale <- prior_sd$scale
-      # }
-    } else if (prior_dist =="laplace"){
-      prior_dist_num <- 4
-      hyper_df <- 1
-      hyper_location <- prior$location
-      # if (is.null(prior_sd$scale)){
-      #   hyper_sd_scale <-1
-      # }else{
-      #   hyper_sd_scale <- prior_sd$scale
-      # }
+    if (is.null(prior$scale)==FALSE){
+      warning("Group-level standard deviations cannot be fixed to
+               numerical values, rather they need to be assigned
+               a reasonable prior distribution. Thus, the 'scale'
+               argument in the 'prior' argument will be omitted
+               (by default, prior$scale=NULL).")
     }
-  }
+      if (prior_dist == "normal"){
+        prior_dist_num <- 1
+        hyper_df <- 1
+        hyper_location <- prior$location
+          # if (is.null(prior_sd$scale)){
+          #   hyper_sd_scale <-1
+          # }else{
+          #   hyper_sd_scale <- prior_sd$scale
+          # }
+      }else if (prior_dist=="t" && prior$df!=1){
+        prior_dist_num <- 2   # student-t
+        hyper_df <- prior$df
+        hyper_location <- prior$location
+        # if (is.null(prior_sd$scale)){
+        #   hyper_sd_scale <-1
+        # }else{
+        #   hyper_sd_scale <- prior_sd$scale
+        # }
+      }else if (prior_dist=="t"&& prior$df==1){
+        prior_dist_num <- 3
+        hyper_df <- 1     # by default of Cauchy distribution
+        hyper_location <- prior$location
+        # if (is.null(prior$scale)){
+        #   hyper_sd_scale <-1
+        # }else{
+        #   hyper_sd_scale <- prior_sd$scale
+        # }
+      } else if (prior_dist =="laplace"){
+        prior_dist_num <- 4
+        hyper_df <- 1
+        hyper_location <- prior$location
+        # if (is.null(prior_sd$scale)){
+        #   hyper_sd_scale <-1
+        # }else{
+        #   hyper_sd_scale <- prior_sd$scale
+        # }
+        }
+    }
+
 
 
          hyper_sd_df <- 1        # initialization
