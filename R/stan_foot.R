@@ -373,6 +373,8 @@ stan_foot <- function(data,
     #hyper_sd_scale <- 5  # scale
   }else{
     prior_dist <- prior$dist
+    #good_prior_names <- c("normal", "student_t", "cauchy", "laplace")
+    #prior_dist <- match.arg(prior_dist, good_prior_names)
     if (is.null(prior$scale)==FALSE){
       warning("Group-level standard deviations cannot be fixed to
                numerical values, rather they need to be assigned
@@ -418,7 +420,6 @@ stan_foot <- function(data,
         # }
         }
     }
-
 
 
          hyper_sd_df <- 1        # initialization
@@ -565,6 +566,17 @@ stan_foot <- function(data,
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
@@ -694,6 +706,17 @@ stan_foot <- function(data,
       int time[ntimes];
       int instants[N];
       int instants_prev[N_prev];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
@@ -969,6 +992,17 @@ stan_foot <- function(data,
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       vector[nteams] att_raw;
@@ -995,13 +1029,46 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (t in 1:(nteams)){
-        target+=normal_lpdf(att_raw[t]|0, sigma_att);
-        target+=normal_lpdf(def_raw[t]|0, sigma_def);
+        if (prior_dist_num == 1){
+          target+= normal_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= normal_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 2){
+          target+= student_t_lpdf(att_raw[t]|hyper_df, hyper_location, sigma_att);
+          target+= student_t_lpdf(def_raw[t]|hyper_df, hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 3){
+          target+= cauchy_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= cauchy_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 4){
+          target+= double_exponential_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= double_exponential_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
       }
-      target+=cauchy_lpdf(sigma_att|0, 5);
-      target+=cauchy_lpdf(sigma_def|0, 5);
+
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
       target+=normal_lpdf(rho|0,5);
       // likelihood
@@ -1048,6 +1115,17 @@ stan_foot <- function(data,
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
@@ -1145,6 +1223,17 @@ stan_foot <- function(data,
       int time[ntimes];
       int instants[N];
       int instants_prev[N_prev];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
@@ -1248,6 +1337,17 @@ stan_foot <- function(data,
       int nteams;                 // number of teams
       int team1[N];               // home team index
       int team2[N];               // away team index
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       vector[nteams] att_raw;
@@ -1272,14 +1372,48 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (t in 1:(nteams)){
-        target+=normal_lpdf(att_raw[t]|0, sigma_att);
-        target+=normal_lpdf(def_raw[t]|0, sigma_def);
+        if (prior_dist_num == 1){
+          target+= normal_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= normal_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 2){
+          target+= student_t_lpdf(att_raw[t]|hyper_df, hyper_location, sigma_att);
+          target+= student_t_lpdf(def_raw[t]|hyper_df, hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 3){
+          target+= cauchy_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= cauchy_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 4){
+          target+= double_exponential_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= double_exponential_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
       }
-      target+=cauchy_lpdf(sigma_att|0, 5);
-      target+=cauchy_lpdf(sigma_def|0, 5);
+
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
+
       // likelihood
       for (n in 1:N){
         target+=poisson_lpmf(y[n,1]| theta[n,1]);
@@ -1312,6 +1446,17 @@ stan_foot <- function(data,
       int team2[N];               // away team index
       int team1_prev[N_prev];     // home team for pred.
       int team2_prev[N_prev];     // away team for pred.
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       vector[nteams] att_raw;
@@ -1336,14 +1481,48 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (t in 1:(nteams)){
-        target+=normal_lpdf(att_raw[t]|0, sigma_att);
-        target+=normal_lpdf(def_raw[t]|0, sigma_def);
+        if (prior_dist_num == 1){
+          target+= normal_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= normal_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 2){
+          target+= student_t_lpdf(att_raw[t]|hyper_df, hyper_location, sigma_att);
+          target+= student_t_lpdf(def_raw[t]|hyper_df, hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 3){
+          target+= cauchy_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= cauchy_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 4){
+          target+= double_exponential_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= double_exponential_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
       }
-      target+=cauchy_lpdf(sigma_att|0, 5);
-      target+=cauchy_lpdf(sigma_def|0, 5);
+
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
+
       // likelihood
       for (n in 1:N){
         target+=poisson_lpmf(y[n,1]| theta[n,1]);
@@ -1391,6 +1570,17 @@ stan_foot <- function(data,
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
@@ -1493,6 +1683,17 @@ stan_foot <- function(data,
       int time[ntimes];
       int instants[N];
       int instants_prev[N_prev];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
@@ -1601,6 +1802,17 @@ stan_foot <- function(data,
       int nteams;
       int team1[N];
       int team2[N];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       vector[nteams] att_raw;
@@ -1625,14 +1837,48 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (t in 1:(nteams)){
-        target+=normal_lpdf(att_raw[t]|0, sigma_att);
-        target+=normal_lpdf(def_raw[t]|0, sigma_def);
+        if (prior_dist_num == 1){
+          target+= normal_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= normal_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 2){
+          target+= student_t_lpdf(att_raw[t]|hyper_df, hyper_location, sigma_att);
+          target+= student_t_lpdf(def_raw[t]|hyper_df, hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 3){
+          target+= cauchy_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= cauchy_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 4){
+          target+= double_exponential_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= double_exponential_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
       }
-      target+=cauchy_lpdf(sigma_att|0, 5);
-      target+=cauchy_lpdf(sigma_def|0, 5);
+
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
+
       // likelihood
       for (n in 1:N){
         target+=skellam_lpmf(diff_y[n]| theta[n,1],theta[n,2]);
@@ -1669,13 +1915,23 @@ stan_foot <- function(data,
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     parameters{
       vector[nteams] att_raw;
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
-      real<lower=0> rho;
       real home;
     }
     transformed parameters{
@@ -1694,15 +1950,48 @@ stan_foot <- function(data,
       }
     }
     model{
-      // priors
+      // log-priors for team-specific abilities
       for (t in 1:(nteams)){
-        target+=normal_lpdf(att_raw[t]|0, sigma_att);
-        target+=normal_lpdf(def_raw[t]|0, sigma_def);
+        if (prior_dist_num == 1){
+          target+= normal_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= normal_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 2){
+          target+= student_t_lpdf(att_raw[t]|hyper_df, hyper_location, sigma_att);
+          target+= student_t_lpdf(def_raw[t]|hyper_df, hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 3){
+          target+= cauchy_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= cauchy_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
+        else if (prior_dist_num == 4){
+          target+= double_exponential_lpdf(att_raw[t]|hyper_location, sigma_att);
+          target+= double_exponential_lpdf(def_raw[t]|hyper_location, sigma_def);
+        }
       }
-      target+=cauchy_lpdf(sigma_att|0, 5);
-      target+=cauchy_lpdf(sigma_def|0, 5);
-      target+=normal_lpdf(rho|0,5);
+
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
+      }
+
+      // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
+
       // likelihood
       for (n in 1:N){
         target+=skellam_lpmf(diff_y[n]| theta[n,1],theta[n,2]);
