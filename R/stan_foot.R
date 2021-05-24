@@ -181,11 +181,7 @@
 #'@importFrom normal rstanarm
 #'@importFrom student_t rstanarm
 #'@importFrom cauchy rstanarm
-#'@importFrom hs rstanarm
-#'@importFrom hs_plus rstanarm
 #'@importFrom laplace rstanarm
-#'@importFrom lasso rstanarm
-#'@importFrom product_normal rstanarm
 #'@export
 
 
