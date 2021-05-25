@@ -11,6 +11,7 @@
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
+            + da fare check
 
   (iii)  pp_foot: 
             grafico 1) "aggregated", mostra la goal difference
@@ -34,6 +35,9 @@
   (v)    foot_round_robin
             grafico 1) grafico a scacchiera con probabilità di vittoria
             grafico 2) tabellone del torneo (eliminazione diretta)
+
+  (VI)   brier score e affini (f.ne da fare)
+
 
 
 - Models
