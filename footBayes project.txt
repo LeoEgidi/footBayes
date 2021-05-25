@@ -10,7 +10,7 @@
             + nomi squadre più grandi
 
   (ii)   foot_prob
-            pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
+            + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
 
   (iii)  pp_foot: 
             grafico 1) "aggregated", mostra la goal difference
@@ -28,11 +28,14 @@
                        + errore quando c'è solo una stagione
             grafico 3) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata?
 
-           Check :              più stagioni - una sola stagione
-                  out-of-sample   
-                  in-sample       ok 2, no 1
+           Check 25-5 :              più stagioni -                            una sola stagione
+                  out-of-sample       predict <= 9                               predict <= 9       problema sulle ultime 2 giornate...mancano squadre  (per ora c'è uno STOP riga 178)
+                                      predict > 9 ok                             predict > 9  ok
+                   -------------------------------------------------------
+                    in-sample          ok               ok
+
   (v)    foot_round_robin
-            grafico 1) grafico a scacchiera con probabilità di vittoria
+            grafico 1) grafico a scacchiera con probabilità di vittoria (da testare)
             grafico 2) tabellone del torneo (eliminazione diretta)
 
 

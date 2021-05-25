@@ -6,9 +6,11 @@
 
 foot_rank <- function(data, object,
                       team_sel,
-                      visualize = c(1,2))
+                      visualize = c("aggregated","single teams"))
   {
   #checks
+  good_names <- c("aggregated","single teams")
+  check_vis <- match.arg(visualize, good_names)
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
   nteams<- length(unique(data$home))
@@ -130,7 +132,7 @@ foot_rank <- function(data, object,
   }
 
   if(missing(visualize)){
-      visualize <- 1
+      visualize <- "aggregated"
     }
 
   # condizione per fare si che quando si prevede
@@ -172,17 +174,30 @@ refit the model with the argument predict greater
 
   }
 
-  # questa condizione è sbagliata?
+  # questa condizione è sbagliata? si, per le ultime giornate è sbagliata!
   if (length(unique(team1_prev)) !=
       length(unique(c(team1_prev, team2_prev)))  ){
-    team1_prev <- c(team1_prev, team2_prev)
-    team2_prev <- c(team2_prev, team1_prev)
+    stop("Please, select more out-of-sample matches through
+          the argument 'predict' of the 'stan_foot' function
+          (hint: select at least two complete match-days for
+           out-of-sample predictions)")
+  #   team1_prev <- c(team1_prev, team2_prev)
+  #   team2_prev <- c(team2_prev, team1_prev)
+   }
+
+  ## condizione fondamentale per in-sample o out-of-sample
+  in_sample_cond <- is.null(sims$diff_y_prev) & is.null(sims$y_prev)
+
+  if (in_sample_cond){
+    set <- (1:N)[data$season==season_prev]
+  }else{
+    set <- (1:N_prev)
   }
 
   if (missing(team_sel)){
-    team_sel <- teams[unique(team1_prev)]
+    team_sel <- teams[unique(team1_prev[set])]
   }else if (all(team_sel =="all")){
-    team_sel <- teams[unique(team1_prev)]
+    team_sel <- teams[unique(team1_prev[set])]
   }
   team_index <- match(team_sel, teams)
   if (is.na(sum(team_index))){
@@ -197,13 +212,13 @@ refit the model with the argument predict greater
   conta_punti <- matrix(0, M, length(teams))
   conta_punti_veri <- rep(0, length(teams))
   number_match_days <- length(unique(team1_prev))*2-2
-  in_sample_cond <- is.null(sims$diff_y_prev) & is.null(sims$y_prev)
+
   fill_test <- c("red", "gray")[c(!in_sample_cond, in_sample_cond)]
 
 
   # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
   cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev)))
-  #& N < length(unique(team1_prev))*( length(unique(team1_prev))-1)
+  #& N < length(unique(team1_prev[(1:N)[data$season==season_prev]]))*( length(unique(team1_prev[(1:N)[data$season==season_prev]]))-1)
 
   # questa condizione significa che il training NON ha
   # le stesse squadre del test, e che stiamo considerando
@@ -218,14 +233,14 @@ refit the model with the argument predict greater
 
 
 
-  if (visualize ==1){
+  if (visualize =="aggregated"){
 
     # in-sample
     if (in_sample_cond == TRUE)
       {
       #cond_1 <- FALSE
       conta_punti_veri <- rep(0, length(unique(team_home)))
-      for (n in 1:N){
+      for (n in (1:N)[data$season==season_prev]){
         if (y[(n),1]>y[(n),2]){
           conta_punti_veri[team_home[n]]=conta_punti_veri[team_home[n]]+3
           conta_punti_veri[team_away[n]]=conta_punti_veri[team_away[n]]
@@ -245,6 +260,7 @@ refit the model with the argument predict greater
 
     }else{
   # compute the true points on the test set
+      conta_punti_veri <- rep(0, length(unique(team_home)))
   for (n in 1:N_prev){
 
       if (y[(N+n),1]>y[(N+n),2]){
@@ -300,6 +316,7 @@ refit the model with the argument predict greater
 
   # compute the true points on the training set
   conta_punti_veri_pre <- rep(0, length(unique(team_home)))
+  if (in_sample_cond==FALSE){
   for (n in 1:N){
     if (y[(n),1]>y[(n),2]){
       conta_punti_veri_pre[team_home[n]]=conta_punti_veri_pre[team_home[n]]+3
@@ -317,6 +334,7 @@ refit the model with the argument predict greater
     }
 
   }
+  }
 }
 
   # compute the points on the MCMC
@@ -325,7 +343,13 @@ refit the model with the argument predict greater
         conta_punti[t,] <- conta_punti_veri_pre
     }
 
-    for (n in 1:((N_prev)*(!in_sample_cond) + N*(in_sample_cond))){
+    if (in_sample_cond){
+       set <- (1:N)[data$season==season_prev]
+    }else{
+      set <- (1:N_prev)
+    }
+
+    for (n in set){
       if (y_rep1[t,n]>y_rep2[t,n]){
         conta_punti[t,team1_prev[n]]=conta_punti[t,team1_prev[n]]+3
         conta_punti[t,team2_prev[n]]=conta_punti[t,team2_prev[n]]
@@ -416,25 +440,33 @@ refit the model with the argument predict greater
     ggtitle("Posterior predicted points and ranks")+
     labs(x="Teams", y="Points")
 
-  }else if(visualize == 2){
+  }else if(visualize == "single teams"){
 
     if ( cond_1 == TRUE ){
 
-    day_index <- floor( (N/ (length(unique(team1_prev))/2))  )
-    day_index_rep <- rep(seq(1, day_index) ,
-                       each = length(unique(team1_prev))/2)
-    day_index_prev <- rep(seq( (day_index+1),
-                               (N+N_prev)/(length(unique(team1_prev))/2)
-                               ),
-                        each = length(unique(team1_prev))/2)
-    if (in_sample_cond==TRUE){
+      if (in_sample_cond==TRUE){
+      day_index <- floor( (length(set)/ (length(unique(team1_prev[set]))/2))  )
+      day_index_rep <- rep(rep(seq(1, day_index),
+                               each = length(unique(team1_prev[set]))/2), length(unique(seasons_levels)))
+      day_index_prev <- rep(seq( (day_index+1),
+                                 (length(set)+N_prev)/(length(unique(team1_prev[set]))/2)
+      ), each = length(unique(team1_prev[set]))/2)
       day_index_prev <- day_index_rep
+      set2 <- set
+      }else{
+        day_index <- floor( N/ (length(unique(team1_prev[set]))/2))
+        day_index_rep <- rep(rep(seq(1, day_index),
+                                 each = length(unique(team1_prev[set]))/2), length(unique(seasons_levels)))
+        day_index_prev <- rep(seq( (day_index+1),
+                                   (N+N_prev)/(length(unique(team1_prev[set]))/2)
+        ), each = length(unique(team1_prev[set]))/2)
+      set2<-(1:N)
     }
 
-    conta_punti_veri_pre_dyn <- matrix(0, length(unique(team_home)), day_index )
 
     # compute the true point for the training sample, dynamically
-    for (n in 1:N){
+    conta_punti_veri_pre_dyn <- matrix(0, length(unique(team_home)), day_index )
+    for (n in set2){
       if (y[(n),1]>y[(n),2]){
         conta_punti_veri_pre_dyn[team_home[n], day_index_rep[n]]=conta_punti_veri_pre_dyn[team_home[n],day_index_rep[n]]+3
         conta_punti_veri_pre_dyn[team_away[n], day_index_rep[n]]=conta_punti_veri_pre_dyn[team_away[n],day_index_rep[n]]
@@ -451,11 +483,21 @@ refit the model with the argument predict greater
       }
 
     }
+
+
+
+
     cumsum_punti_pre <- t(apply(conta_punti_veri_pre_dyn,1,cumsum))
   }else if (cond_2 == TRUE ){
 
     mod <- floor((N/ (length(unique(team1_prev))/2))/number_match_days)
-    day_index <- floor( (N/ (length(unique(team1_prev))/2))  )-mod*number_match_days
+
+
+    day_index <- max(1, floor( (N/ (length(unique(team1_prev))/2))  )-mod*number_match_days)
+    if (day_index==1){
+      stop("Please, provide more training set matches in the model fit!")
+    }
+
     day_index_rep <- rep(seq(1, day_index) ,
                          each = length(unique(team1_prev))/2)
     day_index_prev <- rep(seq( (day_index+1),
@@ -565,7 +607,13 @@ refit the model with the argument predict greater
       }
     }
 
-    for (n in 1:((N_prev)*(!in_sample_cond) + N*(in_sample_cond)) ){
+    if (in_sample_cond){
+      set <- (1:N)[data$season==season_prev]
+    }else{
+      set <- (1:N_prev)
+    }
+
+    for (n in set ){
       if (y_rep1[t,n]>y_rep2[t,n]){
         conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team1_prev[n],day_index_prev[n]]+3
         conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]=conta_punti_dyn[t,team2_prev[n],day_index_prev[n]]
@@ -656,11 +704,11 @@ df_team_sel <- data.frame(obs = mt_obs,
     ggplot(df_team_sel,aes(day, obs))+
       geom_ribbon(aes(x=day, ymin=q_025, ymax=q_975, group=1),
                   data=df_team_sel,
-                  fill = color_scheme_get("red")[[1]]
+                  fill = color_scheme_get(fill_test)[[1]]
       )+
       geom_ribbon(aes(x=day, ymin=q_25, ymax=q_75, group=1),
                   data=df_team_sel,
-                  fill = color_scheme_get("red")[[2]]
+                  fill = color_scheme_get(fill_test)[[2]]
       )+
       # geom_line(aes(x= day, y= q_50),
       #           data=df_team_sel,
@@ -668,7 +716,7 @@ df_team_sel <- data.frame(obs = mt_obs,
       #           #fill = color_scheme_get("red")[[2]],
       #           size =1.1
       # )+
-      geom_line(size=1, linetype="solid")+
+      geom_line(size=0.8, linetype="solid")+
       # geom_vline(
       #             xintercept =day_index,
       #             linetype="solid",
