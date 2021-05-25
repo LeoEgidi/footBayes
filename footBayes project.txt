@@ -8,6 +8,7 @@
               --> mettere guida sulle dimensioni per le figure salvate?
 	    + levare argomento 'data', da far "sputare" da "stan_foot" e "mle_foot"?
             + nomi squadre più grandi
+            + aggiustare le "scale"
 
   (ii)   foot_prob
             + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità

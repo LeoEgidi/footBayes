@@ -219,7 +219,7 @@ foot_abilities <- function(object, data,...){
              v.axis=user_dots$v.axis,
              xlab=user_dots$xlab, ylab=user_dots$ylab,
              plot = user_dots$plot, offset = user_dots$offset,
-             col="red")
+             col="red", xlim= c(-1.5, 1.5))
     arm::coefplot(rev(def_mean[ord]), rev(def_sd[ord]), CI=user_dots$CI,
              varnames=rev(teams[ord]),
              main="Defense abilities (95% post. intervals)\n",
@@ -354,7 +354,8 @@ foot_abilities <- function(object, data,...){
              vertical= user_dots$vertical,
              v.axis=user_dots$v.axis,
              xlab=user_dots$xlab, ylab=user_dots$ylab,
-             plot = user_dots$plot, offset = user_dots$offset, col="red")
+             plot = user_dots$plot, offset = user_dots$offset, col="red",
+             xlim= c(-1.5, 1.5))
     arm::coefplot(as.vector(rev(def[ord,2])),
                   as.vector(rev(def[ord,2])),
                   CI=user_dots$CI,
