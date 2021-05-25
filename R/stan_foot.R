@@ -928,7 +928,7 @@ stan_foot <- function(data,
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real beta;
-      real<lower=0> rho;
+      real rho;
       real home;
     }
     transformed parameters{
@@ -944,7 +944,7 @@ stan_foot <- function(data,
       for (n in 1:N){
         theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]);
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]);
-        theta[n,3] = rho;
+        theta[n,3] = exp(rho);
       }
     }
     model{
@@ -988,7 +988,7 @@ stan_foot <- function(data,
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(rho|0,5);
+      target+=normal_lpdf(rho|0,0.5);
       target+=normal_lpdf(home|0,5);
 
       // likelihood

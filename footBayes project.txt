@@ -42,8 +42,9 @@
 - Models
 
   4 modelli per ora: doble Poisson, bivariate Poisson, Skellam, student-t.
-  + Nel BP e negli altri bisognerebbe inserire la componente \mu nel predittore lineare.
+  + Nel BP e negli altri bisognerebbe inserire la componente \mu nel predittore lineare (l'intercetta costante)
   + Nel BP inserire predittori.
+  + Nel BP, inserire prior per "rho" (al momento, nel biv_pois_fit è stata leggermente modificata).
   + estendere "weekly" a più stagioni
   + 24-05: vettorizzata la verosimiglianza del double pois
 
