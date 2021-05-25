@@ -4,7 +4,7 @@
 \alias{foot_rank}
 \title{Predicted rank positions}
 \usage{
-foot_rank(data, object, team_sel, visualize = c(1, 2))
+foot_rank(data, object, team_sel, visualize = c("aggregated", "single teams"))
 }
 \description{
 Predicted rank positions
