@@ -56,6 +56,7 @@
   + Nel BP, inserire prior per "rho" (al momento, nel biv_pois_fit è stata leggermente modificata).
   + estendere "weekly" a più stagioni
   + 24-05: vettorizzata la verosimiglianza del double pois
+  + check BP (neff e riparametrizzazione, prior per rho, e altre cose), e anche DP.
 
 - Estimation
 

@@ -584,7 +584,7 @@ stan_foot <- function(data,
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real<lower=0> rho;
+      real rho;
       real home;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
@@ -633,7 +633,7 @@ stan_foot <- function(data,
       for (n in 1:N){
         theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]);
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]);
-        theta_corr[n] = rho;
+        theta_corr[n] = exp(rho);
       }
     }
     model{
@@ -673,7 +673,7 @@ stan_foot <- function(data,
 
       // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
-      target+=normal_lpdf(rho|0,5);
+      target+=normal_lpdf(rho|0,1);
 
       // likelihood
 
@@ -752,7 +752,7 @@ stan_foot <- function(data,
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real<lower=0> rho;
+      real rho;
       real home;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
@@ -801,7 +801,7 @@ stan_foot <- function(data,
       for (n in 1:N){
         theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]);
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]);
-        theta_corr[n] = rho;
+        theta_corr[n] = exp(rho);
       }
     }
     model{
@@ -841,7 +841,7 @@ stan_foot <- function(data,
 
       // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
-      target+=normal_lpdf(rho|0,5);
+      target+=normal_lpdf(rho|0,1);
       // likelihood
 
       for (n in 1:N){
@@ -873,7 +873,7 @@ stan_foot <- function(data,
                                    def[instants_prev[n], team2_prev[n]]);
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
                                    def[instants_prev[n], team1_prev[n]]);
-        theta_corr_prev[n] = rho;
+        theta_corr_prev[n] = exp(rho);
         y_prev[n,1] = poisson_rng(theta_home_prev[n]+theta_corr_prev[n]);
         y_prev[n,2] = poisson_rng(theta_away_prev[n]+theta_corr_prev[n]);
       }
@@ -991,7 +991,7 @@ stan_foot <- function(data,
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(rho|0,0.5);
+      target+=normal_lpdf(rho|0,1);
       target+=normal_lpdf(home|0,5);
 
       // likelihood
@@ -1070,7 +1070,7 @@ stan_foot <- function(data,
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real home;
-      real<lower=0> rho;
+      real rho;
     }
     transformed parameters{
       vector[nteams] att;
@@ -1085,7 +1085,7 @@ stan_foot <- function(data,
       for (n in 1:N){
         theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]);
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]);
-        theta[n,3] = rho;
+        theta[n,3] = exp(rho);
       }
     }
     model{
@@ -1158,7 +1158,7 @@ stan_foot <- function(data,
                                 def[team2_prev[n]]);
         theta_prev[n,2] = exp(att[team2_prev[n]]+
                                 def[team1_prev[n]]);
-        theta_prev[n,3] = rho;
+        theta_prev[n,3] = exp(rho);
         y_prev[n,1] = poisson_rng(theta_prev[n,1]+theta_prev[n,3]);
         y_prev[n,2] = poisson_rng(theta_prev[n,2]+theta_prev[n,3]);
       }
