@@ -33,8 +33,12 @@ pp_foot <- function(data, object,
 
   for (j in 1:M){
     for (u in 1:length(esiti_short)){
+
+      if (length((as.double(table(diff_gol_rep[j,]))[as.double(names(table(diff_gol_rep[j,])))==esiti_short[u]]))==0){
+        freq_rel_matrix[j,u] <- 0 # correzione quando non ricorre il risultato nel MCMC
+      }else{
        freq_rel_matrix[j,u] <-  (as.double(table(diff_gol_rep[j,]))[as.double(names(table(diff_gol_rep[j,])))==esiti_short[u]])/ngames_train
-      }}
+      }}}
 
   freq_rel_frame_add <- matrix(NA, M*length(esiti_short),2)
 
