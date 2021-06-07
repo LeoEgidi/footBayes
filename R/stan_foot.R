@@ -190,6 +190,7 @@
 stan_foot <- function(data,
                       model,
                       predict,
+                      ranking,
                       dynamic_type,
                       prior,
                       prior_sd,
@@ -486,6 +487,25 @@ stan_foot <- function(data,
   y[,2] <- as.numeric(as.vector(data$awaygoals)[1:N])
   diff_y <- y[,1]-y[,2]
 
+
+
+  ## RANKING CHECKS
+
+  if (missing(ranking)){
+    ranking <- matrix(0, nteams,2)
+  }else if (is.matrix(ranking)==FALSE & is.data.frame(ranking)== FALSE ){
+    stop("Please, ranking must be a matrix or a data frame!")
+  }else{
+    colnames(ranking) <- c("rank_team", "points")
+    team_order <- match(teams, ranking$rank_team)
+    ranking[,1] <- ranking$rank_team[team_order]
+    ranking[,2] <- ranking$points[team_order]
+    ranking[,2] <- (as.numeric(as.vector(ranking[,2]))-mean(as.numeric(as.vector(ranking[,2]))))/(2*sd(as.numeric(as.vector(ranking[,2]))))
+    }
+
+
+
+
   # Stan data
   data_stan <- list( y=y,
                 spi_std = rep(0, nteams),
@@ -503,7 +523,8 @@ stan_foot <- function(data,
                 hyper_location=hyper_location,
                 hyper_sd_df=hyper_sd_df,
                 hyper_sd_location=hyper_sd_location,
-                hyper_sd_scale=hyper_sd_scale)
+                hyper_sd_scale=hyper_sd_scale,
+                ranking = ranking[,2])
 
   if (!missing(dynamic_type)){
     data_stan$ntimes <- ntimes
@@ -1455,6 +1476,7 @@ stan_foot <- function(data,
       int nteams;                 // number of teams
       int team1[N];               // home team index
       int team2[N];               // away team index
+      real ranking[nteams];       // eventual fifa/uefa ranking
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1472,12 +1494,15 @@ stan_foot <- function(data,
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
+      //real mu;
       real home;
+      real gamma;
     }
     transformed parameters{
       vector[nteams] att;        // attack parameters
       vector[nteams] def;        // defence parameters
       vector[2] theta[N];        // exponentiated linear pred.
+
 
       for (t in 1:nteams){
         att[t] = att_raw[t]-mean(att_raw);
@@ -1485,8 +1510,10 @@ stan_foot <- function(data,
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]);
-        theta[n,2] = exp(att[team2[n]]+def[team1[n]]);
+        theta[n,1] = exp( home+att[team1[n]]+def[team2[n]] +
+                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+        theta[n,2] = exp( att[team2[n]]+def[team1[n]] -
+                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
       }
     }
     model{
@@ -1530,7 +1557,10 @@ stan_foot <- function(data,
       }
 
       // log-priors fixed effects
+      //target+=normal_lpdf(mu|0,5);
       target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(gamma|0,1);
+
 
       // likelihood
       //for (n in 1:N){

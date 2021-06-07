@@ -72,6 +72,7 @@
                mle_foot   ---> risolto con sapply
         - testare
         - ci per primo team
+  + aggiunto argomento "ranking": fare varti checks...
 
   (3) priors: decidere se mettere un argomento "prior" in stan_foot, analogo a quello di
       rstanarm. In parziale alternativa, si potrebbero stimare tre diverse possibilità:

@@ -77,6 +77,19 @@ foot_prob <- function(object, data, home_team, away_team){
   data <- expand.grid(Home=x, Away=y)
   data$Prob <- as.double(counts_mix/(M*M))
 
+  # overall "adjusted" probabilities
+  prob_h <- sum(counts_mix[lower.tri(counts_mix)]/(M*M))/sum(data$Prob)
+  prob_d <- sum(diag(counts_mix/(M*M)))/sum(data$Prob)
+  prob_a <- sum(counts_mix[upper.tri(counts_mix)]/(M*M))/sum(data$Prob)
+
+  # MLO (most likely outcome)
+
+ apply(counts_mix, 2, which.max)
+ apply(counts_mix, 1, which.max)  #
+
+
+  round(max(counts_mix/(M*M)),3)
+
 
   # To change the color of the gradation :
 
@@ -100,6 +113,12 @@ foot_prob <- function(object, data, home_team, away_team){
           legend.text=element_text(size=14))
   #ggsave(file=paste(teams[team1_prev[1]],"-", teams[team2_prev[1]], "Heatmap_pois.pdf", sep=""), width=6, height=6)
 
+  tbl <- data.frame(home_team = home_team,
+                    away_team = away_team,
+                    prob_h = round(prob_h,3),
+                    prob_d = round(prob_d,3),
+                    prob_a = round(prob_a,3))
 
+  return(list(prob=tbl))
 
 }
