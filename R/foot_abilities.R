@@ -78,6 +78,7 @@ foot_abilities <- function(object, data,...){
                     plot=TRUE,  offset=0.1,
                     cex.main =0.9, pch = 16, lwd = 2,
                     col = 1)
+
   if (missing(...)){
     user_dots <- user_dots
   }else{
@@ -89,6 +90,8 @@ foot_abilities <- function(object, data,...){
     }
   }
 
+  colnames(data) <- c("season", "home", "away",
+                      "homegoals", "awaygoals")
   teams <- unique(data$home)
   if (class(object)=="stanfit"){
 
