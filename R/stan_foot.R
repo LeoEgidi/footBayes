@@ -1110,7 +1110,7 @@ stan_foot <- function(data,
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real home;
-      real rho;
+      real<upper=0> rho;
       real gamma;
     }
     transformed parameters{
