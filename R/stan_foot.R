@@ -1196,6 +1196,7 @@ stan_foot <- function(data,
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
+      real ranking[nteams];       // eventual fifa/uefa ranking
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1214,6 +1215,7 @@ stan_foot <- function(data,
       real home;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
+      real gamma;
     }
     transformed parameters{
       matrix[ntimes, nteams] att;            // attack abilities
@@ -1255,8 +1257,10 @@ stan_foot <- function(data,
       }
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]);
-        theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]);
+        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+        theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
+                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
       }
     }
     model{
@@ -1296,6 +1300,7 @@ stan_foot <- function(data,
 
       // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(gamma|0,1);
 
       // likelihood
 
@@ -1333,6 +1338,7 @@ stan_foot <- function(data,
       int time[ntimes];
       int instants[N];
       int instants_prev[N_prev];
+      real ranking[nteams];       // eventual fifa/uefa ranking
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1351,6 +1357,7 @@ stan_foot <- function(data,
       real home;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
+      real gamma;
     }
     transformed parameters{
       matrix[ntimes, nteams] att;            // attack abilities
@@ -1392,8 +1399,10 @@ stan_foot <- function(data,
       }
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]);
-        theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]);
+        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+        theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
+                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
       }
     }
     model{
@@ -1433,6 +1442,7 @@ stan_foot <- function(data,
 
       // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(gamma|0,1);
 
 
       // likelihood
@@ -1460,9 +1470,11 @@ stan_foot <- function(data,
       //out-of-sample predictions
       for (n in 1:N_prev){
         theta_home_prev[n] = exp(home+att[instants_prev[n],team1_prev[n]]+
-                                   def[instants_prev[n], team2_prev[n]]);
+                                   def[instants_prev[n], team2_prev[n]]+
+                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n],team2_prev[n]]+
-                                   def[instants_prev[n], team1_prev[n]]);
+                                   def[instants_prev[n], team1_prev[n]]-
+                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
 
         y_prev[n,1] = poisson_rng(theta_home_prev[n]);
         y_prev[n,2] = poisson_rng(theta_away_prev[n]);
@@ -1594,6 +1606,7 @@ stan_foot <- function(data,
       int team2[N];               // away team index
       int team1_prev[N_prev];     // home team for pred.
       int team2_prev[N_prev];     // away team for pred.
+      real ranking[nteams];       // eventual fifa/uefa ranking
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1612,6 +1625,7 @@ stan_foot <- function(data,
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real home;
+      real gamma;
     }
     transformed parameters{
       vector[nteams] att;        // attack parameters
@@ -1624,8 +1638,10 @@ stan_foot <- function(data,
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]);
-        theta[n,2] = exp(att[team2[n]]+def[team1[n]]);
+        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+        theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
+                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
       }
     }
     model{
@@ -1670,6 +1686,7 @@ stan_foot <- function(data,
 
       // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(gamma|0,1);
 
       // likelihood
 
@@ -1694,8 +1711,10 @@ stan_foot <- function(data,
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home+att[team1_prev[n]]+def[team2_prev[n]]);
-        theta_prev[n,2] = exp(att[team2_prev[n]]+def[team1_prev[n]]);
+        theta_prev[n,1] = exp(home+att[team1_prev[n]]+def[team2_prev[n]]+
+                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+        theta_prev[n,2] = exp(att[team2_prev[n]]+def[team1_prev[n]]-
+                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         y_prev[n,1] = poisson_rng(theta_prev[n,1]);
         y_prev[n,2] = poisson_rng(theta_prev[n,2]);
       }
