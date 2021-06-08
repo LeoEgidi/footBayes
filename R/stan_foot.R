@@ -966,7 +966,7 @@ stan_foot <- function(data,
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real beta;
-      real rho;
+      real<upper=0> rho;
       real home;
       real gamma;
     }
