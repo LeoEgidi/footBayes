@@ -966,7 +966,7 @@ stan_foot <- function(data,
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real beta;
-      real<upper=0> rho;
+      real rho;
       real home;
       real gamma;
     }
@@ -1110,7 +1110,7 @@ stan_foot <- function(data,
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real home;
-      real<upper=0> rho;
+      real rho;
       real gamma;
     }
     transformed parameters{
@@ -1178,8 +1178,10 @@ stan_foot <- function(data,
 
       // likelihood
       for (n in 1:N){
-        target+=bipois_lpmf(y[n,]| theta[n,1],
-                            theta[n,2], theta[n,3]);
+        //target+=bipois_lpmf(y[n,]| theta[n,1],
+        //                    theta[n,2], theta[n,3]);
+        target+=poisson_lpmf(y[n,1]| theta[n,1]+theta[n,3]);
+        target+=poisson_lpmf(y[n,2]| theta[n,2]+theta[n,3]);
       }
     }
     generated quantities{
@@ -1194,8 +1196,10 @@ stan_foot <- function(data,
         y_rep[n,1] = poisson_rng(theta[n,1]);
         y_rep[n,2] = poisson_rng(theta[n,2]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-        log_lik[n] =bipois_lpmf(y[n,]| theta[n,1],
-                                theta[n,2], theta[n,3]);
+        log_lik[n] = poisson_lpmf(y[n,1]| theta[n,1]+theta[n,3])+
+                     poisson_lpmf(y[n,1]| theta[n,2]+theta[n,3]);
+        //bipois_lpmf(y[n,]| theta[n,1],
+        //                        theta[n,2], theta[n,3]);
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
