@@ -11,12 +11,10 @@
             + aggiustare le "scale"
 
   (ii)   foot_prob
-<<<<<<< HEAD
             pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
             + da fare check
-=======
             + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
->>>>>>> 5a4b58407a1c32abfe8b49e5dc0a79b881da56a7
+               --> FATTO (8 giugno)
 
   (iii)  pp_foot:
             grafico 1) "aggregated", mostra la goal difference
@@ -72,7 +70,7 @@
                mle_foot   ---> risolto con sapply
         - testare
         - ci per primo team
-  + aggiunto argomento "ranking": fare varti checks...
+  + aggiunto argomento "ranking" in tutti i double poisson: fare varti checks...
 
   (3) priors: decidere se mettere un argomento "prior" in stan_foot, analogo a quello di
       rstanarm. In parziale alternativa, si potrebbero stimare tre diverse possibilità:
