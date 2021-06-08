@@ -1197,7 +1197,7 @@ stan_foot <- function(data,
         y_rep[n,2] = poisson_rng(theta[n,2]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] = poisson_lpmf(y[n,1]| theta[n,1]+theta[n,3])+
-                     poisson_lpmf(y[n,1]| theta[n,2]+theta[n,3]);
+                     poisson_lpmf(y[n,2]| theta[n,2]+theta[n,3]);
         //bipois_lpmf(y[n,]| theta[n,1],
         //                        theta[n,2], theta[n,3]);
       }
