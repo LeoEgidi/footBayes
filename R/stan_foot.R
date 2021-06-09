@@ -704,8 +704,11 @@ stan_foot <- function(data,
       // likelihood
 
       for (n in 1:N){
-        target+=bipois_lpmf(y[n,]| theta_home[n],
-                            theta_away[n], theta_corr[n]);
+        //target+=bipois_lpmf(y[n,]| theta_home[n],
+        //                    theta_away[n], theta_corr[n]);
+          target+=poisson_lpmf(y[n,1]|theta_home[n]+theta_corr[n]);
+          target+=poisson_lpmf(y[n,2]|theta_away[n]+theta_corr[n]);
+
       }
     }
     generated quantities{
@@ -718,8 +721,10 @@ stan_foot <- function(data,
         y_rep[n,1] = poisson_rng(theta_home[n]+theta_corr[n]);
         y_rep[n,2] = poisson_rng(theta_away[n]+theta_corr[n]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-        log_lik[n] =bipois_lpmf(y[n,]| theta_home[n],
-                                theta_away[n], theta_corr[n]);
+        log_lik[n] = poisson_lpmf(y[n,1]|theta_home[n]+theta_corr[n])+
+                     poisson_lpmf(y[n,2]|theta_away[n]+theta_corr[n]);
+       //bipois_lpmf(y[n,]| theta_home[n],
+       //                          theta_away[n], theta_corr[n]);
       }
     }"
 
@@ -877,8 +882,10 @@ stan_foot <- function(data,
       // likelihood
 
       for (n in 1:N){
-        target+=bipois_lpmf(y[n,]| theta_home[n],
-                            theta_away[n], theta_corr[n]);
+        //target+=bipois_lpmf(y[n,]| theta_home[n],
+        //                    theta_away[n], theta_corr[n]);
+        target+=poisson_lpmf(y[n,1]|theta_home[n]+theta_corr[n]);
+        target+=poisson_lpmf(y[n,2]|theta_away[n]+theta_corr[n]);
       }
     }
     generated quantities{
@@ -896,8 +903,10 @@ stan_foot <- function(data,
         y_rep[n,1] = poisson_rng(theta_home[n]+theta_corr[n]);
         y_rep[n,2] = poisson_rng(theta_away[n]+theta_corr[n]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-        log_lik[n] =bipois_lpmf(y[n,]| theta_home[n],
-                                theta_away[n], theta_corr[n]);
+        log_lik[n] = poisson_lpmf(y[n,1]|theta_home[n]+theta_corr[n]) +
+                     poisson_lpmf(y[n,2]|theta_away[n]+theta_corr[n]);
+        //bipois_lpmf(y[n,]| theta_home[n],
+        //                        theta_away[n], theta_corr[n]);
       }
 
       for (n in 1:N_prev){
@@ -1035,8 +1044,10 @@ stan_foot <- function(data,
 
       // likelihood
       for (n in 1:N){
-        target+=bipois_lpmf(y[n,]| theta[n,1],
-                            theta[n,2], theta[n,3]);
+          target+=poisson_lpmf(y[n,1]|theta[n,1]+theta[n,3]);
+          target+=poisson_lpmf(y[n,2]|theta[n,2]+theta[n,3]);
+        //target+=bipois_lpmf(y[n,]| theta[n,1],
+        //                    theta[n,2], theta[n,3]);
       }
     }
     generated quantities{
@@ -1049,8 +1060,10 @@ stan_foot <- function(data,
         y_rep[n,1] = poisson_rng(theta[n,1]+theta[n,3]);
         y_rep[n,2] = poisson_rng(theta[n,2]+theta[n,3]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-        log_lik[n] =bipois_lpmf(y[n,]| theta[n,1],
-                                theta[n,2], theta[n,3]);
+        log_lik[n] = poisson_lpmf(y[n,1]|theta[n,1]+theta[n,3])+
+                     poisson_lpmf(y[n,2]|theta[n,2]+theta[n,3]);
+       //bipois_lpmf(y[n,]| theta[n,1],
+       //                          theta[n,2], theta[n,3]);
       }
     }"
 
@@ -1173,7 +1186,7 @@ stan_foot <- function(data,
 
       // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
-      target+=normal_lpdf(rho|0,5);
+      target+=normal_lpdf(rho|0,1);
       target+=normal_lpdf(gamma|0,1);
 
       // likelihood
@@ -1193,8 +1206,8 @@ stan_foot <- function(data,
 
       //in-sample replications
       for (n in 1:N){
-        y_rep[n,1] = poisson_rng(theta[n,1]);
-        y_rep[n,2] = poisson_rng(theta[n,2]);
+        y_rep[n,1] = poisson_rng(theta[n,1]+theta[n,3]);
+        y_rep[n,2] = poisson_rng(theta[n,2]+theta[n,3]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
         log_lik[n] = poisson_lpmf(y[n,1]| theta[n,1]+theta[n,3])+
                      poisson_lpmf(y[n,2]| theta[n,2]+theta[n,3]);
