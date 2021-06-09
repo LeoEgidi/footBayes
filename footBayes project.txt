@@ -72,7 +72,7 @@
         - ci per primo team
   + aggiunto argomento "ranking" in tutti i double poisson: fare varti checks...
   + cambiati i modelli biv_pois, intanto biv_pois_prev, cambiare anche gli altri (ora looic
-    è più coerente)
+    è più coerente) ---> fatto (9-giugno)
 
   (3) priors: decidere se mettere un argomento "prior" in stan_foot, analogo a quello di
       rstanarm. In parziale alternativa, si potrebbero stimare tre diverse possibilità:
