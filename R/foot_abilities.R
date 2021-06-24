@@ -92,20 +92,22 @@ foot_abilities <- function(object, data,...){
 
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
-  if (is.null(object$y_prev)){
-    teams <- unique(c(data$home, data$away))
-  }else{
-    teams <- unique(c(data$home[(dim(object$y_rep)[1]+1):
-                                (dim(object$y_rep)[1] +
-                                   dim(object$y_prev)[1])],
-                      data$away[(dim(object$y_rep)[1]+1):
-                                  (dim(object$y_rep)[1] +
-                                     dim(object$y_prev)[1])]))
-  }
+  teams <- unique(c(data$home, data$away))
+
 
   if (class(object)=="stanfit"){
+    sims <- rstan::extract(object)
+    if (is.null(object$y_prev)){
+      teams <- unique(c(data$home, data$away))
+    }else{
+      teams <- unique(c(data$home[(dim(sims$y_rep)[1]+1):
+                                    (dim(sims$y_rep)[1] +
+                                       dim(sims$y_prev)[1])],
+                        data$away[(dim(sims$y_rep)[1]+1):
+                                    (dim(sims$y_rep)[1] +
+                                       dim(sims$y_prev)[1])]))
+    }
 
-  sims <- rstan::extract(object)
   att <- sims$att
   def <- sims$def
 
