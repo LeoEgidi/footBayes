@@ -97,7 +97,7 @@ foot_abilities <- function(object, data,...){
 
   if (class(object)=="stanfit"){
     sims <- rstan::extract(object)
-    if (is.null(object$y_prev)){
+    if (is.null(sims$y_prev)){
       teams <- unique(c(data$home, data$away))
     }else{
       teams <- unique(c(data$home[(dim(sims$y_rep)[1]+1):
