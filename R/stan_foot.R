@@ -2163,7 +2163,7 @@ stan_foot <- function(data,
 
       // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
-      target+=norma_lpdf(gamma|0,1);
+      target+=normal_lpdf(gamma|0,1);
 
       // likelihood
       for (n in 1:N){
