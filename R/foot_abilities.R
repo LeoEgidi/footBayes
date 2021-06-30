@@ -92,10 +92,22 @@ foot_abilities <- function(object, data,...){
 
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
-  teams <- unique(data$home)
-  if (class(object)=="stanfit"){
+  teams <- unique(c(data$home, data$away))
 
-  sims <- rstan::extract(object)
+
+  if (class(object)=="stanfit"){
+    sims <- rstan::extract(object)
+    if (is.null(sims$y_prev)){
+      teams <- unique(c(data$home, data$away))
+    }else{
+      teams <- unique(c(data$home[(dim(sims$y_rep)[2]+1):
+                                    (dim(sims$y_rep)[2] +
+                                       dim(sims$y_prev)[2])],
+                        data$away[(dim(sims$y_rep)[2]+1):
+                                    (dim(sims$y_rep)[2] +
+                                       dim(sims$y_prev)[2])]))
+    }
+
   att <- sims$att
   def <- sims$def
 
@@ -113,17 +125,19 @@ foot_abilities <- function(object, data,...){
   def_75=apply(def, c(2,3), function(x)  quantile(x, 0.75))
   def_975=apply(def, c(2,3), function(x)  quantile(x, 0.975))
 
-  mt_att_025 <- melt(att_025)
-  mt_att_25 <- melt(att_25)
-  mt_att_50 <- melt(att_med)
-  mt_att_75 <- melt(att_75)
-  mt_att_975 <- melt(att_975)
+  squadre_valide <- match(teams,unique(c(data$home, data$away)))
 
-  mt_def_025 <- melt(def_025)
-  mt_def_25 <- melt(def_25)
-  mt_def_50 <- melt(def_med)
-  mt_def_75 <- melt(def_75)
-  mt_def_975 <- melt(def_975)
+  mt_att_025 <- melt(att_025[, squadre_valide])
+  mt_att_25 <- melt(att_25[, squadre_valide])
+  mt_att_50 <- melt(att_med[, squadre_valide])
+  mt_att_75 <- melt(att_75[, squadre_valide])
+  mt_att_975 <- melt(att_975[, squadre_valide])
+
+  mt_def_025 <- melt(def_025[, squadre_valide])
+  mt_def_25 <- melt(def_25[, squadre_valide])
+  mt_def_50 <- melt(def_med[, squadre_valide])
+  mt_def_75 <- melt(def_75[, squadre_valide])
+  mt_def_975 <- melt(def_975[, squadre_valide])
 
   teams_fac_rep <- rep(teams, each = T)
   times_rep <- rep(1:T, length(teams))
@@ -177,7 +191,7 @@ foot_abilities <- function(object, data,...){
     scale_color_manual(values = c(color_scheme_get("blue")[[4]],
                                   color_scheme_get("red")[[4]]))+
     facet_wrap("teams", scales = "free")+
-    lims(y = c( min(att_25-0.2), max(att_75+0.2))) +
+    lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
     #scale_x_discrete( limits=c("07/08","","","", "11/12","", "","","", "16/17")  ) +
     labs(x = "Times", y = "Teams' effects",
          title = "Attack and defense effects (50% posterior bars)"
