@@ -158,6 +158,12 @@ foot_abilities <- function(object, data,...){
     hi=mt_def_75$value
   )
 
+  if (length(unique(data$season))==1){
+    timings <- 1:dim(sims$att)[1]
+  }else{
+    timings <- unique(data$season)
+  }
+
   position_lookup <-
     att_data %>%
     group_by(teams) %>%
@@ -192,7 +198,7 @@ foot_abilities <- function(object, data,...){
                                   color_scheme_get("red")[[4]]))+
     facet_wrap("teams", scales = "free")+
     lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
-    #scale_x_discrete( limits=c("07/08","","","", "11/12","", "","","", "16/17")  ) +
+    scale_x_discrete( limits=factor(timings)  ) +
     labs(x = "Times", y = "Teams' effects",
          title = "Attack and defense effects (50% posterior bars)"
          #,
@@ -304,7 +310,7 @@ foot_abilities <- function(object, data,...){
                                       color_scheme_get("red")[[4]]))+
         facet_wrap("teams", scales = "free")+
         lims(y = c( min(ability_25-0.2), max(ability_75+0.2))) +
-        #scale_x_discrete( limits=c("07/08","","","", "11/12","", "","","", "16/17")  ) +
+        scale_x_discrete( limits=unique(data$season)  ) +
         labs(x = "Times", y = "Teams' effects",
              title = "Global abilities effects (50% posterior bars)"
              #,

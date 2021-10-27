@@ -9,7 +9,7 @@
 	    + levare argomento 'data', da far "sputare" da "stan_foot" e "mle_foot"?
             + nomi squadre più grandi
             + aggiustare le "scale"
-            + aggiustare asse x nei modelli dinamici
+            + aggiustare asse x nei modelli dinamici, magari mettendo stagioni
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
