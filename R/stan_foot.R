@@ -10,6 +10,7 @@
 #'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.
 #'@param predict The number of out-of-sample matches. If missing, the function returns
 #'the fit for the training set only.
+#'@param ranking Eventual numeric ranking provided for the teams in the dataset (e.g., the \href{https://www.fifa.com/fifa-world-ranking}{Coca-Cola Fifa ranking})
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
 #'@param prior The prior distribution for the team-specific abilities.
@@ -172,6 +173,18 @@
 #'                 predict = 306) # double poisson
 #' print(fit6, pars =c("home", "Sigma_att",
 #'                     "Sigma_def"))
+#'
+#' ## other priors' options
+#'
+#' fit_p <- stan_foot(data = italy_2000_2002,
+#'                    model="double_pois"
+#'                    priors = student_t (4, 0, NULL),
+#'                    prior_sd = laplace(0,1)) # double poisson with
+#'                                             # student_t priors for teams abilities
+#'                                             # and laplace prior for the hyper sds
+#' print(fit_p,  pars = c("home", "sigma_att",
+#'                     "sigma_def"))
+#'
 #'}
 #'@import rstan
 #'@import engsoccerdata
@@ -259,7 +272,8 @@ stan_foot <- function(data,
                     cores = getOption("mc.cores", 1L),
                     open_progress = interactive() && !isatty(stdout()) &&
                       !identical(Sys.getenv("RSTUDIO"), "1"),
-                    boost_lib = NULL, eigen_lib = NULL)
+                    boost_lib = NULL, eigen_lib = NULL,
+                    nu = 7)
 
 
   ## OPTIONAL ARGUMENTS CHECKS
@@ -524,7 +538,8 @@ stan_foot <- function(data,
                 hyper_sd_df=hyper_sd_df,
                 hyper_sd_location=hyper_sd_location,
                 hyper_sd_scale=hyper_sd_scale,
-                ranking = ranking[,2])
+                ranking = ranking[,2],
+                nu = user_dots$nu)
 
   if (!missing(dynamic_type)){
     data_stan$ntimes <- ntimes
@@ -2322,20 +2337,31 @@ stan_foot <- function(data,
     data {
       int N;   // number of matches
       int nteams;   // number of teams
-      vector[nteams] spi_std;  // per-team ranking
-      // this is a 4-column data table of per-game outcomes
       int team1[N];
       int team2[N];
       matrix[N,2] y;
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
+      vector[nteams] ranking;
+      real nu;
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     transformed data {
       vector[N] diff_y = y[,1] - y[,2];  // modeled data
     }
     parameters {
-      real beta;            // common intercept
+      real beta;            // coefficient for the ranking
       matrix[ntimes, nteams] alpha;    // vector of per-team weights
       real<lower=0> sigma_a;   // common variance
       real<lower=0> sigma_y;   // noise term in our estimate
@@ -2348,7 +2374,7 @@ stan_foot <- function(data,
       matrix[ntimes, nteams] mu_alpha;
 
       for (t in 1: ntimes){
-        ability[t]= to_row_vector(beta*spi_std) + alpha[t]*sigma_a;
+        ability[t]= to_row_vector(beta*ranking) + alpha[t]*sigma_a;
       }
 
       // Gaussian process covariance functions
@@ -2367,16 +2393,42 @@ stan_foot <- function(data,
 
     }
     model {
+
+      // log-priors for team-specific abilities
       for (h in 1:(nteams)){
-        alpha[,h]~multi_normal(mu_alpha[,h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
+        if (prior_dist_num == 1){
+          alpha[,h]~multi_normal(mu_alpha[,h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
+        } else if (prior_dist_num == 2){
+          alpha[,h]~multi_student_t(hyper_df, mu_alpha[,h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
+        } else if (prior_dist_num == 3){
+          alpha[,h]~multi_student_t(1, mu_alpha[,h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
+        }
       }
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_a|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_alpha|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+
       beta ~ normal(0, 2.5);
-      sigma_a ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
-      sigma_alpha ~ normal(0, 2.5);
+
 
       for (n in 1:N)
-        diff_y[n] ~ student_t(7, ability[instants[n], team1[n]] - ability[instants[n], team2[n]], sigma_y);
+        diff_y[n] ~ student_t(nu, ability[instants[n], team1[n]] - ability[instants[n], team2[n]], sigma_y);
     }
     generated quantities {
       // posterior predictive check - carry along uncertainty!!!
@@ -2385,8 +2437,8 @@ stan_foot <- function(data,
   vector[N] diff_y_rep;
   vector[N] log_lik;
   for (n in 1:N) {
-    diff_y_rep[n] = student_t_rng(7, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| 7, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
+    diff_y_rep[n] = student_t_rng(nu, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
+    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
   }
 
 }"
@@ -2397,17 +2449,28 @@ stan_foot <- function(data,
       int N;   // number of matches
       int N_prev;
       int nteams;   // number of teams
-      vector[nteams] spi_std;  // per-team ranking
-      // this is a 4-column data table of per-game outcomes
+      vector[nteams] ranking;  // per-team ranking
       int team1[N];
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       matrix[N,2] y;
+      real nu;
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
       int instants_prev[N_prev];
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     transformed data {
       vector[N] diff_y = y[,1] - y[,2];  // modeled data
@@ -2426,7 +2489,7 @@ stan_foot <- function(data,
       matrix[ntimes, nteams] mu_alpha;
 
       for (t in 1: ntimes){
-        ability[t]= to_row_vector(beta*spi_std) + alpha[t]*sigma_a;
+        ability[t]= to_row_vector(beta*ranking) + alpha[t]*sigma_a;
       }
 
       // Gaussian process covariance functions
@@ -2445,15 +2508,40 @@ stan_foot <- function(data,
 
     }
     model {
+        // log-priors for team-specific abilities
       for (h in 1:(nteams)){
-        alpha[,h]~multi_normal(mu_alpha[,h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
+        if (prior_dist_num == 1){
+          alpha[,h]~multi_normal(mu_alpha[,h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
+        } else if (prior_dist_num == 2){
+          alpha[,h]~multi_student_t(hyper_df, mu_alpha[,h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
+        } else if (prior_dist_num == 3){
+          alpha[,h]~multi_student_t(1, mu_alpha[,h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
+        }
       }
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_a|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_alpha|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+
       beta ~ normal(0, 2.5);
-      sigma_a ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
 
       for (n in 1:N)
-        diff_y[n] ~ student_t(7, ability[instants[n], team1[n]] - ability[instants[n], team2[n]], sigma_y);
+        diff_y[n] ~ student_t(nu, ability[instants[n], team1[n]] - ability[instants[n], team2[n]], sigma_y);
     }
     generated quantities {
       // posterior predictive check - carry along uncertainty!!!
@@ -2465,12 +2553,12 @@ stan_foot <- function(data,
 
 
   for (n in 1:N) {
-    diff_y_rep[n] = student_t_rng(7, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| 7, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
+    diff_y_rep[n] = student_t_rng(nu, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
+    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
   }
 
   for (n in 1:N_prev) {
-    diff_y_prev[n] = student_t_rng(7, ability[instants_prev[n], team1_prev[n]] - ability[instants_prev[n], team2_prev[n]], sigma_y);
+    diff_y_prev[n] = student_t_rng(nu, ability[instants_prev[n], team1_prev[n]] - ability[instants_prev[n], team2_prev[n]], sigma_y);
   }
 
 }"
@@ -2479,11 +2567,23 @@ stan_foot <- function(data,
     data {
       int N;   // number of matches
       int nteams;   // number of teams
-      vector[nteams] spi_std;  // per-team ranking
+      real ranking[nteams];  // per-team ranking
       // this is a 4-column data table of per-game outcomes
       int team1[N];
       int team2[N];
       matrix[N,2] y;
+      real nu;
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     transformed data {
       vector[N] diff_y = y[,1] - y[,2];  // modeled data
@@ -2493,18 +2593,59 @@ stan_foot <- function(data,
       vector[nteams] alpha;    // vector of per-team weights
       real<lower=0> sigma_a;   // common variance
       real<lower=0> sigma_y;   // noise term in our estimate
+      real<lower=0> sigma_alpha;
     }
     transformed parameters {
       // mixed effects model - common intercept + random effects
-      vector[nteams] ability = beta * spi_std + alpha * sigma_a;
+      vector[nteams] ability;
+
+      for (t in 1: nteams){
+        ability[t]= (beta*ranking[t]) + alpha[t]*sigma_a;
+      }
     }
     model {
-      alpha ~ normal(0, 1); // priors on all parameters
+      // log-priors for team-specific abilities
+      for (t in 1:(nteams)){
+        if (prior_dist_num == 1){
+          target+= normal_lpdf(alpha[t]|hyper_location, sigma_alpha);
+        }
+        else if (prior_dist_num == 2){
+          target+= student_t_lpdf(alpha[t]|hyper_df, hyper_location, sigma_alpha);
+
+        }
+        else if (prior_dist_num == 3){
+          target+= cauchy_lpdf(alpha[t]|hyper_location, sigma_alpha);
+
+        }
+        else if (prior_dist_num == 4){
+          target+= double_exponential_lpdf(alpha[t]|hyper_location, sigma_alpha);
+
+        }
+      }
+
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_a|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_alpha|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
       beta ~ normal(0, 2.5);
-      sigma_a ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
 
-      diff_y ~ student_t(7, ability[team1] - ability[team2], sigma_y);
+      // likelihood
+      diff_y ~ student_t(nu, ability[team1] - ability[team2], sigma_y);
     }
     generated quantities {
       // posterior predictive check - carry along uncertainty!!!
@@ -2513,8 +2654,8 @@ stan_foot <- function(data,
   vector[N] diff_y_rep;
   vector[N] log_lik;
   for (n in 1:N) {
-    diff_y_rep[n] = student_t_rng(7, ability[team1[n]] - ability[team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| 7, ability[team1] - ability[team2], sigma_y);
+    diff_y_rep[n] = student_t_rng(nu, ability[team1[n]] - ability[team2[n]], sigma_y);
+    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1] - ability[team2], sigma_y);
   }
     }"
 
@@ -2523,13 +2664,24 @@ stan_foot <- function(data,
       int N;   // number of matches
       int N_prev; // number of predictedmatched
       int nteams;   // number of teams
-      vector[nteams] spi_std;  // per-team ranking
-      // this is a 4-column data table of per-game outcomes
+      real ranking[nteams];  // per-team ranking
       int team1[N];
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       matrix[N,2] y;
+      real nu;
+
+      // priors part
+      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
+
+      real hyper_df;
+      real hyper_location;
+
+      real hyper_sd_df;
+      real hyper_sd_location;
+      real hyper_sd_scale;
     }
     transformed data {
       vector[N] diff_y = y[,1] - y[,2];  // modeled data
@@ -2539,18 +2691,60 @@ stan_foot <- function(data,
       vector[nteams] alpha;    // vector of per-team weights
       real<lower=0> sigma_a;   // common variance
       real<lower=0> sigma_y;   // noise term in our estimate
+      real<lower=0> sigma_alpha;
     }
     transformed parameters {
       // mixed effects model - common intercept + random effects
-      vector[nteams] ability = beta * spi_std + alpha * sigma_a;
+      vector[nteams] ability;
+
+      for (t in 1: nteams){
+        ability[t]= (beta*ranking[t]) + alpha[t]*sigma_a;
+      }
     }
     model {
-      alpha ~ normal(0, 1); // priors on all parameters
+      // log-priors for team-specific abilities
+      for (t in 1:(nteams)){
+        if (prior_dist_num == 1){
+          target+= normal_lpdf(alpha[t]|hyper_location, sigma_alpha);
+        }
+        else if (prior_dist_num == 2){
+          target+= student_t_lpdf(alpha[t]|hyper_df, hyper_location, sigma_alpha);
+
+        }
+        else if (prior_dist_num == 3){
+          target+= cauchy_lpdf(alpha[t]|hyper_location, sigma_alpha);
+
+        }
+        else if (prior_dist_num == 4){
+          target+= double_exponential_lpdf(alpha[t]|hyper_location, sigma_alpha);
+
+        }
+      }
+
+
+      // log-hyperpriors for sd parameters
+      if (prior_dist_sd_num == 1 ){
+        target+=normal_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=normal_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 2){
+        target+=student_t_lpdf(sigma_a|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+        target+=student_t_lpdf(sigma_alpha|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 3){
+        target+=cauchy_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=cauchy_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+      else if (prior_dist_sd_num == 4){
+        target+=double_exponential_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
+        target+=double_exponential_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
+      }
+
       beta ~ normal(0, 2.5);
-      sigma_a ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
 
-      diff_y ~ student_t(7, ability[team1] - ability[team2], sigma_y);
+      // likelihood
+      diff_y ~ student_t(nu, ability[team1] - ability[team2], sigma_y);
     }
     generated quantities {
       // posterior predictive check - carry along uncertainty!!!
@@ -2561,12 +2755,12 @@ stan_foot <- function(data,
   vector[N_prev] diff_y_prev;
 
   for (n in 1:N) {
-    diff_y_rep[n] = student_t_rng(7, ability[team1[n]] - ability[team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| 7, ability[team1] - ability[team2], sigma_y);
+    diff_y_rep[n] = student_t_rng(nu, ability[team1[n]] - ability[team2[n]], sigma_y);
+    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1] - ability[team2], sigma_y);
   }
 
   for (n in 1:N_prev) {
-    diff_y_prev[n] = student_t_rng(7, ability[team1_prev[n]] - ability[team2_prev[n]], sigma_y);
+    diff_y_prev[n] = student_t_rng(nu, ability[team1_prev[n]] - ability[team2_prev[n]], sigma_y);
   }
 
 }"

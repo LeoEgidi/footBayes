@@ -298,7 +298,7 @@ foot_abilities <- function(object, data,...){
           aes(x = times, y = mid),
           data = ability_data,
           size = 1,
-          color = color_scheme_get("")[[4]]
+          color = color_scheme_get("red")[[4]]
         )+
         scale_color_manual(values = c(color_scheme_get("blue")[[4]],
                                       color_scheme_get("red")[[4]]))+

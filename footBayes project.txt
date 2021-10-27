@@ -9,12 +9,14 @@
 	    + levare argomento 'data', da far "sputare" da "stan_foot" e "mle_foot"?
             + nomi squadre più grandi
             + aggiustare le "scale"
+            + aggiustare asse x nei modelli dinamici
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
             + da fare check
             + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
                --> FATTO (8 giugno)
+            + allargare anche per student_t
 
   (iii)  pp_foot:
             grafico 1) "aggregated", mostra la goal difference
@@ -70,7 +72,7 @@
                mle_foot   ---> risolto con sapply
         - testare
         - ci per primo team
-  + aggiunto argomento "ranking" in tutti i double poisson: fare varti checks...
+  + aggiunto argomento "ranking" in tutti i double poisson: fare vari checks...
   + cambiati i modelli biv_pois, intanto biv_pois_prev, cambiare anche gli altri (ora looic
     è più coerente) ---> fatto (9-giugno)
 
@@ -82,9 +84,12 @@
 
         + 24-05: aggiunte priors per tutti i modelli (dinamici e statici) tranne student-t.
           Scelta tra gaussian, t, cauchy e laplace (quest'ultima no per i dinamici) sia per team-specific abilities
-          che per
+          che per le hyper-sd
+      
+        + 27-10: aggiunte le priors anche per modello student_t
 
   (4) covariates: decidere se poter includere covariate nel predittore lineare
+       + per ora si può inserire il ranking in tutti i modelli
 
 
 
