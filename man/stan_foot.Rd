@@ -4,7 +4,7 @@
 \alias{stan_foot}
 \title{Fit football models  with Stan}
 \usage{
-stan_foot(data, model, predict, dynamic_type, prior, prior_sd, ...)
+stan_foot(data, model, predict, ranking, dynamic_type, prior, prior_sd, ...)
 }
 \arguments{
 \item{data}{A data frame, or a matrix containing the following mandatory items: season, home team, away team,
@@ -16,6 +16,8 @@ One among the following: \code{"double_pois"},
 
 \item{predict}{The number of out-of-sample matches. If missing, the function returns
 the fit for the training set only.}
+
+\item{ranking}{Eventual numeric ranking provided for the teams in the dataset (e.g., the \href{https://www.fifa.com/fifa-world-ranking}{Coca-Cola Fifa ranking})}
 
 \item{dynamic_type}{One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 dynamic parameters.}
@@ -163,6 +165,18 @@ fit6 <- stan_foot(data = italy_2000_2002,
                 predict = 306) # double poisson
 print(fit6, pars =c("home", "Sigma_att",
                     "Sigma_def"))
+
+## other priors' options
+
+fit_p <- stan_foot(data = italy_2000_2002,
+                   model="double_pois"
+                   priors = student_t (4, 0, NULL),
+                   prior_sd = laplace(0,1)) # double poisson with
+                                            # student_t priors for teams abilities
+                                            # and laplace prior for the hyper sds
+print(fit_p,  pars = c("home", "sigma_att",
+                    "sigma_def"))
+
 }
 }
 \references{
