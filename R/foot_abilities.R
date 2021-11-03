@@ -159,7 +159,7 @@ foot_abilities <- function(object, data,...){
   )
 
   if (length(unique(data$season))==1){
-    timings <- 1:dim(sims$att)[1]
+    timings <- 1:dim(sims$att)[2]
   }else{
     timings <- unique(data$season)
   }
@@ -208,7 +208,9 @@ foot_abilities <- function(object, data,...){
     xaxis_text( size = rel(1.2))+
     theme(plot.title = element_text(size = 16),
           strip.text = element_text(size = 8),
-          axis.text.x = element_text(size=11),
+          axis.text.x =  element_text(face="bold",
+                                                   color="black",
+                                                   angle=45, size =9),
           axis.text.y = element_text(size=11),
           plot.subtitle=element_text(size=12))
 
