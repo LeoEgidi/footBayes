@@ -44,10 +44,15 @@ foot_prob <- function(object, data, home_team, away_team){
   }
 
   find_match <- which(data_prev$home==home_team & data_prev$away == away_team )
+  if (length(find_match)!=1){
   true_gol_home <- data$homegoals[(dim(sims$y_rep)[2]+1):(dim(sims$y_rep)[2]+predict)]
   true_gol_away <- data$awaygoals[(dim(sims$y_rep)[2]+1):(dim(sims$y_rep)[2]+predict)]
-  true_gol_home <- true_gol_home[match(home_team, data_prev$home)]
-  true_gol_away <- true_gol_away[match(away_team, data_prev$away)]
+  true_gol_home <- true_gol_home[home_team==data_prev$home & away_team==data_prev$away]
+  true_gol_away <- true_gol_away[home_team==data_prev$home & away_team==data_prev$away]
+  }else{
+  true_gol_home <- data_prev$homegoals[find_match]
+  true_gol_away <- data_prev$awaygoals[find_match]
+  }
 
   if (length(find_match)==0){
     stop(paste("There is not any out-of-sample match:",
