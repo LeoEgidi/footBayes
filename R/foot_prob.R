@@ -64,6 +64,90 @@ foot_prob <- function(object, data, home_team, away_team){
 
   prob_h =  prob_d = prob_a = row_pos = col_pos = mlo = c()
   data_exp_tot <- rep(1,4)
+
+  if (length(find_match)==1){
+    posterior_prop1<-table(subset(previsioni1, previsioni1<15))
+    posterior_prop2<-table(subset(previsioni2, previsioni2<15))
+
+    teamaa=home_team
+    teamab=away_team
+
+    x_min=y_min=min(length(posterior_prop1),
+                    length(posterior_prop2))
+
+    counts_mix<-matrix(0, min(length(posterior_prop1), length(posterior_prop2)),
+                       min(length(posterior_prop1), length(posterior_prop2)))
+
+    for (j in 1: min(length(posterior_prop1), length(posterior_prop2))){
+      for (t in 1: min(length(posterior_prop1), length(posterior_prop2))){
+        counts_mix[j,t]<-posterior_prop1[j]*posterior_prop2[t]
+      }}
+    dim1 <- dim(counts_mix)[1]
+    dim2 <- dim(counts_mix)[2]
+
+    x <- seq(0,dim1-1, length.out=dim1)
+    y <- seq(0,dim2-1, length.out=dim2)
+    data_exp <- expand.grid(Home=x, Away=y)
+    data_exp$Prob <- as.double(counts_mix/(M*M))
+    data_exp$matches <- paste(  teamaa,"-", teamab)
+    data_exp$true_gol_home <- true_gol_home
+    data_exp$true_gol_away <- true_gol_away
+
+
+    #rep(i, length(data_exp$Prob))
+
+    # overall "adjusted" probabilities
+    prob_h <- sum(counts_mix[lower.tri(counts_mix)]/(M*M))/sum(data_exp$Prob)
+    prob_d <- sum(diag(counts_mix/(M*M)))/sum(data_exp$Prob)
+    prob_a <- sum(counts_mix[upper.tri(counts_mix)]/(M*M))/sum(data_exp$Prob)
+
+    # MLO (most likely outcome)
+
+    row_pos <- row(counts_mix)[counts_mix==max(counts_mix)]
+    col_pos <- col(counts_mix)[counts_mix==max(counts_mix)]
+
+
+    mlo <- paste(row_pos-1, "-", col_pos-1, " (",
+                    round(max(counts_mix/(M*M)),3), ")" , sep="")
+
+    data_exp_tot <- rbind(data_exp_tot, data_exp)
+    data_exp_tot <- data_exp_tot[-c(1), ]
+
+
+
+    tbl <- data.frame(home_team = home_team,
+                      away_team = away_team,
+                      prob_h = round(prob_h,3),
+                      prob_d = round(prob_d,3),
+                      prob_a = round(prob_a,3),
+                      mlo = mlo)
+
+
+    # To change the color of the gradation :
+
+    p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
+      theme_bw() +
+      scale_fill_gradient(low="white", high="black") +
+
+      geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
+                    xmax = as.numeric(as.vector(true_gol_home))+0.5,
+                    ymin = as.numeric(as.vector(true_gol_away))-0.5,
+                    ymax =as.numeric(as.vector(true_gol_away))+0.5),
+                fill = "transparent", color = "red", size = 1.5)+
+      labs(title= "Posterior match probabilities")+
+      yaxis_text(size=12)+
+      xaxis_text( size = rel(12))+
+      theme(plot.title = element_text(size = 22),
+            strip.text = element_text(size = 12),
+            axis.text.x = element_text(size=22),
+            axis.text.y = element_text(size=22),
+            plot.subtitle=element_text(size=13),
+            axis.title=element_text(size=18,face="bold"),
+            legend.text=element_text(size=14))
+
+  }else{
+
+
   for (i in 1:length(find_match)){
     posterior_prop1<-table(subset(previsioni1[,i], previsioni1[,i]<15))
     posterior_prop2<-table(subset(previsioni2[,i], previsioni2[,i]<15))
@@ -146,6 +230,8 @@ foot_prob <- function(object, data, home_team, away_team){
           legend.text=element_text(size=14))
   #ggsave(file=paste(teams[team1_prev[1]],"-", teams[team2_prev[1]], "Heatmap_pois.pdf", sep=""), width=6, height=6)
 
+
+  }
   return(list(prob_table = tbl, prob_plot = p))
 
 }
