@@ -272,9 +272,9 @@ foot_abilities <- function(object, data,
       )+
       geom_line(
         aes(x = times, y = mid),
-        data = att_data,
+        data = def_data,
         size = 1,
-        color = color_scheme_get("red")[[4]]
+        color = color_scheme_get("blue")[[4]]
       )+
       scale_color_manual(values = c(color_scheme_get("blue")[[4]]
       ))+
