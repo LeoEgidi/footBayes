@@ -65,11 +65,17 @@
 #'@export
 
 
-foot_abilities <- function(object, data,...){
+foot_abilities <- function(object, data,
+                           type = c("attack", "defence", "both"), ...){
 
+
+  ## Check for 'type'
+  if (missing(type)){
+    type <- "both"
+  }
+  match.arg(type, c("attack", "defense", "both") )
 
   ## Further arguments for coefplot
-
   user_dots <- list(CI=2,
                     vertical=TRUE,
                     v.axis=TRUE, h.axis=TRUE,
@@ -163,7 +169,7 @@ foot_abilities <- function(object, data,...){
   }else{
     timings <- unique(data$season)
   }
-
+  if (type =="both"){
   position_lookup <-
     att_data %>%
     group_by(teams) %>%
@@ -213,6 +219,81 @@ foot_abilities <- function(object, data,...){
                                                    angle=45, size =9),
           axis.text.y = element_text(size=11),
           plot.subtitle=element_text(size=12))
+  }else if (type =="attack"){
+    position_lookup <-
+      att_data %>%
+      group_by(teams) %>%
+      summarise(pos=first(teams))
+    label_w_position <- function(team_name) {
+      paste0(team_name, " (", with(position_lookup, pos[teams == player_name]),")")
+    }
+    ggplot() +
+      geom_ribbon(
+        aes(x = times, ymin = lo, ymax = hi),
+        data = att_data,
+        fill = color_scheme_get("gray")[[2]]
+      ) +
+      geom_line(
+        aes(x = times, y = mid),
+        data = att_data,
+        size = 1,
+        color = color_scheme_get("red")[[4]]
+      )+
+      scale_color_manual(values = c(color_scheme_get("red")[[4]]))+
+      facet_wrap("teams", scales = "free")+
+      lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
+      scale_x_discrete( limits=factor(timings)  ) +
+      labs(x = "Times", y = "Teams' effects",
+           title = "Attack effects (50% posterior bars)"
+      ) +
+      yaxis_text(size=rel(1.2))+
+      xaxis_text( size = rel(1.2))+
+      theme(plot.title = element_text(size = 16),
+            strip.text = element_text(size = 8),
+            axis.text.x =  element_text(face="bold",
+                                        color="black",
+                                        angle=45, size =9),
+            axis.text.y = element_text(size=11),
+            plot.subtitle=element_text(size=12))
+
+  }else if (type =="defense"){
+    position_lookup <-
+      att_data %>%
+      group_by(teams) %>%
+      summarise(pos=first(teams))
+    label_w_position <- function(team_name) {
+      paste0(team_name, " (", with(position_lookup, pos[teams == player_name]),")")
+    }
+    ggplot() +
+      geom_ribbon(
+        aes(x = times, ymin = lo, ymax = hi),
+        data = def_data,
+        fill = color_scheme_get("gray")[[2]]
+      )+
+      geom_line(
+        aes(x = times, y = mid),
+        data = att_data,
+        size = 1,
+        color = color_scheme_get("red")[[4]]
+      )+
+      scale_color_manual(values = c(color_scheme_get("blue")[[4]]
+      ))+
+      facet_wrap("teams", scales = "free")+
+      lims(y = c( min(def_25-0.3), max(def_75+0.3))) +
+      scale_x_discrete( limits=factor(timings)  ) +
+      labs(x = "Times", y = "Teams' effects",
+           title = "Defense effects (50% posterior bars)"
+      ) +
+      yaxis_text(size=rel(1.2))+
+      xaxis_text( size = rel(1.2))+
+      theme(plot.title = element_text(size = 16),
+            strip.text = element_text(size = 8),
+            axis.text.x =  element_text(face="bold",
+                                        color="black",
+                                        angle=45, size =9),
+            axis.text.y = element_text(size=11),
+            plot.subtitle=element_text(size=12))
+  }
 
 
   }else if (length(dim(att))==2){
@@ -232,7 +313,10 @@ foot_abilities <- function(object, data,...){
     #mcmc_intervals(posterior, regex_pars=c("att"))
     ord <- sort.int(att_mean, decreasing =TRUE,
                     index.return = TRUE)$ix
+    ord2 <- sort.int(def_mean, decreasing =FALSE,
+                    index.return = TRUE)$ix
 
+    if (type == "both"){
     arm::coefplot(rev(att_mean[ord]), rev(att_sd[ord]), CI=user_dots$CI,
              varnames=rev(teams[ord]),
              main="Attack/Defense abilities (95% post. intervals)\n",
@@ -257,7 +341,34 @@ foot_abilities <- function(object, data,...){
              xlab=user_dots$xlab, ylab=user_dots$ylab,
              plot = user_dots$plot, offset = user_dots$offset,
              col="blue", add=TRUE)
+    }else if (type == "attack"){
+      arm::coefplot(rev(att_mean[ord]), rev(att_sd[ord]), CI=user_dots$CI,
+                    varnames=rev(teams[ord]),
+                    main="Attack abilities (95% post. intervals)\n",
+                    cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+                    cex.main=user_dots$cex.main, pch=user_dots$pch,
+                    h.axis=user_dots$h.axis,
+                    cex.pts=user_dots$cex.pts,
+                    vertical= user_dots$vertical,
+                    v.axis=user_dots$v.axis,
+                    xlab=user_dots$xlab, ylab=user_dots$ylab,
+                    plot = user_dots$plot, offset = user_dots$offset,
+                    col="red", xlim= c(-1.5, 1.5))
 
+    }else if (type =="defense"){
+      arm::coefplot(rev(def_mean[ord2]), rev(def_sd[ord2]), CI=user_dots$CI,
+                    varnames=rev(teams[ord2]),
+                    main="Defense abilities (95% post. intervals)\n",
+                    cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+                    cex.main=user_dots$cex.main, pch=user_dots$pch,
+                    h.axis=user_dots$h.axis,
+                    cex.pts=user_dots$cex.pts,
+                    vertical= user_dots$vertical,
+                    v.axis=user_dots$v.axis,
+                    xlab=user_dots$xlab, ylab=user_dots$ylab,
+                    plot = user_dots$plot, offset = user_dots$offset,
+                    col="blue")
+    }
   }else if (length(dim(att))==0){ # student_t case
 
     ability <- sims$ability
@@ -365,7 +476,9 @@ foot_abilities <- function(object, data,...){
 
     ord <- sort.int(att[,2], decreasing =TRUE,
                     index.return = TRUE)$ix
-
+    ord2 <- sort.int(def[,2], decreasing =FALSE,
+                    index.return = TRUE)$ix
+   if (type =="both"){
     arm::coefplot(as.vector(rev(att[ord,2])),
                   as.vector(rev(att[ord,2])),
              CI=user_dots$CI,
@@ -396,7 +509,39 @@ foot_abilities <- function(object, data,...){
                   xlab=user_dots$xlab, ylab=user_dots$ylab,
                   plot = user_dots$plot, offset = user_dots$offset,
                   col="blue", add=TRUE)
-
+      }else if (type =="attack"){
+        arm::coefplot(as.vector(rev(att[ord,2])),
+                      as.vector(rev(att[ord,2])),
+                      CI=user_dots$CI,
+                      lower.conf.bounds = as.vector(rev(att[ord,1])),
+                      upper.conf.bounds = as.vector(rev(att[ord,3])),
+                      varnames=rev(teams[ord]), main="Attack abilities (95% conf. intervals)\n",
+                      cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+                      cex.main=user_dots$cex.main, pch=user_dots$pch,
+                      h.axis=user_dots$h.axis,
+                      cex.pts=user_dots$cex.pts,
+                      vertical= user_dots$vertical,
+                      v.axis=user_dots$v.axis,
+                      xlab=user_dots$xlab, ylab=user_dots$ylab,
+                      plot = user_dots$plot, offset = user_dots$offset, col="red",
+                      xlim= c(-1.5, 1.5))
+      }else if (type =="defense"){
+        arm::coefplot(as.vector(rev(def[ord2,2])),
+                      as.vector(rev(def[ord2,2])),
+                      CI=user_dots$CI,
+                      lower.conf.bounds = as.vector(rev(def[ord2,1])),
+                      upper.conf.bounds = as.vector(rev(def[ord2,3])),
+                      varnames=rev(teams[ord2]), main="Defense abilities (95% conf. intervals)\n",
+                      cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
+                      cex.main=user_dots$cex.main, pch=user_dots$pch,
+                      h.axis=user_dots$h.axis,
+                      cex.pts=user_dots$cex.pts,
+                      vertical= user_dots$vertical,
+                      v.axis=user_dots$v.axis,
+                      xlab=user_dots$xlab, ylab=user_dots$ylab,
+                      plot = user_dots$plot, offset = user_dots$offset,
+                      col="blue")
+      }
     }else{  # student_t case
       ability <- object$abilities
       par(mfrow=c(1,1), oma =c(1,1,1,1))

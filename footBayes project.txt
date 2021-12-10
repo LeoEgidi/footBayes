@@ -3,7 +3,7 @@
 
   (i)    foot_abilities
             + grafici mle (solo coefplot. Da aggiustare le dimensioni. Forse consentire parametri opizionali grafici nella funzione) ---> OK
-	    + distinguere in attacco, difesa ed entrambi
+	    + distinguere in attacco, difesa ed entrambi ---> OK (controllare con modelli dinamici se va tutto bene)
             + grafici stan: aggiustare dimensioni
               --> mettere guida sulle dimensioni per le figure salvate?
 	    + levare argomento 'data', da far "sputare" da "stan_foot" e "mle_foot"?
