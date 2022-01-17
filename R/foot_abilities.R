@@ -67,7 +67,7 @@
 
 foot_abilities <- function(object, data,
                            type = c("attack", "defence", "both"),
-                           team = "all",...){
+                           team = c("all"),...){
 
 
   ## Check for 'type'
@@ -121,7 +121,7 @@ foot_abilities <- function(object, data,
 
     if (missing(team)){
       sel_teams <- teams
-    }else if(team=="all"){
+    }else if(team==c("all")){
       sel_teams <- teams
     }else{
       sel_teams<-teams[match(team, unique(c(data$home, data$away)))]
@@ -501,7 +501,7 @@ foot_abilities <- function(object, data,
 
     if (missing(team)){
       sel_teams <- teams
-    }else if(team=="all"){
+    }else if(team==c("all")){
       sel_teams <- teams
     }else{
       sel_teams<-teams[match(team, unique(c(data$home, data$away)))]
