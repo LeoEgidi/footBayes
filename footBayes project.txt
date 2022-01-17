@@ -10,7 +10,7 @@
             + nomi squadre più grandi
             + aggiustare le "scale"
             + aggiustare asse x nei modelli dinamici, magari mettendo stagioni
-            + permettere "squadre" singole, come accade in foot_rank? ---> per ora solo statici, con student_t escluso
+            + permettere "squadre" singole, come accade in foot_rank? ---> 
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
