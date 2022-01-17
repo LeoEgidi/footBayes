@@ -2,7 +2,7 @@
 - Visualization
 
   (i)    foot_abilities
-            + grafici mle (solo coefplot. Da aggiustare le dimensioni. Forse consentire parametri opizionali grafici nella funzione) ---> OK
+            + grafici mle (solo coefplot. Da aggiustare le dimensioni. Forse consentire parametri opzionali grafici nella funzione) ---> OK
 	    + distinguere in attacco, difesa ed entrambi ---> OK (10-12)
             + grafici stan: aggiustare dimensioni
               --> mettere guida sulle dimensioni per le figure salvate?
@@ -10,7 +10,7 @@
             + nomi squadre più grandi
             + aggiustare le "scale"
             + aggiustare asse x nei modelli dinamici, magari mettendo stagioni
-            + permettere "squadre" singole, come accade in foot_rank?
+            + permettere "squadre" singole, come accade in foot_rank? ---> per ora solo statici, con student_t escluso
 
   (ii)   foot_prob
             pensare se mettere tanti grafici assieme, per più partite. Mettere tabella probabilità

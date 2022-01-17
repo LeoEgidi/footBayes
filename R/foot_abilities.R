@@ -66,7 +66,8 @@
 
 
 foot_abilities <- function(object, data,
-                           type = c("attack", "defence", "both"), ...){
+                           type = c("attack", "defence", "both"),
+                           team = "all",...){
 
 
   ## Check for 'type'
@@ -98,7 +99,9 @@ foot_abilities <- function(object, data,
 
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
+
   teams <- unique(c(data$home, data$away))
+
 
 
   if (class(object)=="stanfit"){
@@ -112,6 +115,21 @@ foot_abilities <- function(object, data,
                         data$away[(dim(sims$y_rep)[2]+1):
                                     (dim(sims$y_rep)[2] +
                                        dim(sims$y_prev)[2])]))
+    }
+
+    # check on selected team
+
+    if (missing(team)){
+      sel_teams <- teams
+    }else if(team=="all"){
+      sel_teams <- teams
+    }else{
+      sel_teams<-teams[match(team, unique(c(data$home, data$away)))]
+    }
+    sel_teams_index <- match(sel_teams, unique(c(data$home, data$away)))
+
+    if (is.na(sum(sel_teams_index))){
+      stop("Select only valid teams' names!")
     }
 
   att <- sims$att
@@ -131,7 +149,7 @@ foot_abilities <- function(object, data,
   def_75=apply(def, c(2,3), function(x)  quantile(x, 0.75))
   def_975=apply(def, c(2,3), function(x)  quantile(x, 0.975))
 
-  squadre_valide <- match(teams,unique(c(data$home, data$away)))
+  squadre_valide <- match(sel_teams,teams)
 
   mt_att_025 <- melt(att_025[, squadre_valide])
   mt_att_25 <- melt(att_25[, squadre_valide])
@@ -145,8 +163,8 @@ foot_abilities <- function(object, data,
   mt_def_75 <- melt(def_75[, squadre_valide])
   mt_def_975 <- melt(def_975[, squadre_valide])
 
-  teams_fac_rep <- rep(teams, each = T)
-  times_rep <- rep(1:T, length(teams))
+  teams_fac_rep <- rep(sel_teams, each = T)
+  times_rep <- rep(1:T, length(sel_teams))
 
   att_data=data.frame(
     teams=teams_fac_rep,
@@ -297,14 +315,14 @@ foot_abilities <- function(object, data,
 
 
   }else if (length(dim(att))==2){
-    att_mean <- apply(att, 2, mean)
-    att_sd <- apply(att, 2, sd)
-    att_025 <- apply(att, 2, function(x) quantile(x, 0.025))
-    att_975 <- apply(att, 2, function(x) quantile(x, 0.975))
-    def_mean <- apply(def, 2, mean)
-    def_sd <- apply(def, 2, sd)
-    def_025 <- apply(def, 2, function(x) quantile(x, 0.025))
-    def_975 <- apply(def, 2, function(x) quantile(x, 0.975))
+    att_mean <- apply(att, 2, mean)[sel_teams_index]
+    att_sd <- apply(att, 2, sd)[sel_teams_index]
+    att_025 <- apply(att, 2, function(x) quantile(x, 0.025))[sel_teams_index]
+    att_975 <- apply(att, 2, function(x) quantile(x, 0.975))[sel_teams_index]
+    def_mean <- apply(def, 2, mean)[sel_teams_index]
+    def_sd <- apply(def, 2, sd)[sel_teams_index]
+    def_025 <- apply(def, 2, function(x) quantile(x, 0.025))[sel_teams_index]
+    def_975 <- apply(def, 2, function(x) quantile(x, 0.975))[sel_teams_index]
 
     par(mfrow=c(1,1), oma =c(1,1,1,1))
     par(mfrow=c(1,1), oma =c(1,1,1,1))
@@ -318,7 +336,7 @@ foot_abilities <- function(object, data,
 
     if (type == "both"){
     arm::coefplot(rev(att_mean[ord]), rev(att_sd[ord]), CI=user_dots$CI,
-             varnames=rev(teams[ord]),
+             varnames=rev(sel_teams[ord]),
              main="Attack/Defense abilities (95% post. intervals)\n",
              cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
              cex.main=user_dots$cex.main, pch=user_dots$pch,
@@ -330,7 +348,7 @@ foot_abilities <- function(object, data,
              plot = user_dots$plot, offset = user_dots$offset,
              col="red", xlim= c(-1.5, 1.5))
     arm::coefplot(rev(def_mean[ord]), rev(def_sd[ord]), CI=user_dots$CI,
-             varnames=rev(teams[ord]),
+             varnames=rev(sel_teams[ord]),
              main="Defense abilities (95% post. intervals)\n",
              cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
              cex.main=user_dots$cex.main, pch=user_dots$pch,
@@ -343,7 +361,7 @@ foot_abilities <- function(object, data,
              col="blue", add=TRUE)
     }else if (type == "attack"){
       arm::coefplot(rev(att_mean[ord]), rev(att_sd[ord]), CI=user_dots$CI,
-                    varnames=rev(teams[ord]),
+                    varnames=rev(sel_teams[ord]),
                     main="Attack abilities (95% post. intervals)\n",
                     cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
                     cex.main=user_dots$cex.main, pch=user_dots$pch,
@@ -357,7 +375,7 @@ foot_abilities <- function(object, data,
 
     }else if (type =="defense"){
       arm::coefplot(rev(def_mean[ord2]), rev(def_sd[ord2]), CI=user_dots$CI,
-                    varnames=rev(teams[ord2]),
+                    varnames=rev(sel_teams[ord2]),
                     main="Defense abilities (95% post. intervals)\n",
                     cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
                     cex.main=user_dots$cex.main, pch=user_dots$pch,
@@ -383,14 +401,16 @@ foot_abilities <- function(object, data,
       ability_75=apply(ability, c(2,3), function(x) quantile(x, 0.75))
       ability_975=apply(ability, c(2,3), function(x) quantile(x, 0.975))
 
-      mt_ability_025 <- melt(ability_025)
-      mt_ability_25 <- melt(ability_25)
-      mt_ability_50 <- melt(ability_med)
-      mt_ability_75 <- melt(ability_75)
-      mt_ability_975 <- melt(ability_975)
+      squadre_valide <- match(sel_teams,teams)
 
-      teams_fac_rep <- rep(teams, each = T)
-      times_rep <- rep(1:T, length(teams))
+      mt_ability_025 <- melt(ability_025[, squadre_valide])
+      mt_ability_25 <- melt(ability_25[, squadre_valide])
+      mt_ability_50 <- melt(ability_med[, squadre_valide])
+      mt_ability_75 <- melt(ability_75[, squadre_valide])
+      mt_ability_975 <- melt(ability_975[, squadre_valide])
+
+      teams_fac_rep <- rep(sel_teams, each = T)
+      times_rep <- rep(1:T, length(sel_teams))
 
       ability_data=data.frame(
         teams=teams_fac_rep,
@@ -399,6 +419,12 @@ foot_abilities <- function(object, data,
         lo=mt_ability_25$value,
         hi=mt_ability_75$value
       )
+
+      if (length(unique(data$season))==1){
+        timings <- 1:dim(sims$ability)[2]
+      }else{
+        timings <- unique(data$season)
+      }
 
       position_lookup <-
         ability_data %>%
@@ -423,7 +449,7 @@ foot_abilities <- function(object, data,
                                       color_scheme_get("red")[[4]]))+
         facet_wrap("teams", scales = "free")+
         lims(y = c( min(ability_25-0.2), max(ability_75+0.2))) +
-        scale_x_discrete( limits=unique(data$season)  ) +
+        scale_x_discrete( limits=factor(timings)  ) +
         labs(x = "Times", y = "Teams' effects",
              title = "Global abilities effects (50% posterior bars)"
              #,
@@ -433,16 +459,18 @@ foot_abilities <- function(object, data,
         xaxis_text( size = rel(1.2))+
         theme(plot.title = element_text(size = 16),
               strip.text = element_text(size = 8),
-              axis.text.x = element_text(size=11),
+              axis.text.x =  element_text(face="bold",
+                                          color="black",
+                                          angle=45, size =9),
               axis.text.y = element_text(size=11),
               plot.subtitle=element_text(size=12))
 
 
     }else if (length(dim(ability))==2){
-      ability_mean <- apply(ability, 2, mean)
-      ability_sd <- apply(ability, 2, sd)
-      ability_025 <- apply(ability, 2, function(x) quantile(x, 0.025))
-      ability_975 <- apply(ability, 2, function(x) quantile(x, 0.975))
+      ability_mean <- apply(ability, 2, mean)[sel_teams_index]
+      ability_sd <- apply(ability, 2, sd)[sel_teams_index]
+      ability_025 <- apply(ability, 2, function(x) quantile(x, 0.025))[sel_teams_index]
+      ability_975 <- apply(ability, 2, function(x) quantile(x, 0.975))[sel_teams_index]
 
       par(mfrow=c(1,1), oma =c(1,1,1,1))
       par(mfrow=c(1,1), oma =c(1,1,1,1))
@@ -453,7 +481,7 @@ foot_abilities <- function(object, data,
                       index.return = TRUE)$ix
 
       arm::coefplot(rev(ability_mean[ord]), rev(ability_sd[ord]), CI=user_dots$CI,
-               varnames=rev(teams[ord]), main="Global abilities (95% post. intervals)\n",
+               varnames=rev(sel_teams[ord]), main="Global abilities (95% post. intervals)\n",
                cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
                cex.main=user_dots$cex.main, pch=user_dots$pch,
                h.axis=user_dots$h.axis,
@@ -468,23 +496,48 @@ foot_abilities <- function(object, data,
     }
   }
   }else if (class(object)=="list"){
+
+    # check on selected team
+
+    if (missing(team)){
+      sel_teams <- teams
+    }else if(team=="all"){
+      sel_teams <- teams
+    }else{
+      sel_teams<-teams[match(team, unique(c(data$home, data$away)))]
+    }
+    sel_teams_index <- match(sel_teams, unique(c(data$home, data$away)))
+
+    if (is.na(sum(sel_teams_index))){
+      stop("Select only valid teams' names!")
+    }
+
     if (!is.null(dim(object$att))){
-    att <- object$att
-    def <- object$def
+    att <- object$att[sel_teams_index,]
+    def <- object$def[sel_teams_index,]
     par(mfrow=c(1,1), oma =c(1,1,1,1))
     par(mfrow=c(1,1), oma =c(1,1,1,1), mar = c(5,4,2,1))
 
-    ord <- sort.int(att[,2], decreasing =TRUE,
-                    index.return = TRUE)$ix
-    ord2 <- sort.int(def[,2], decreasing =FALSE,
-                    index.return = TRUE)$ix
+
+
+    if (is.vector(att)&is.vector(def)){
+      stop("Please, select at least two teams")
+
+    }else{
+      ord <- sort.int(att[,2], decreasing =TRUE,
+                      index.return = TRUE)$ix
+      ord2 <- sort.int(def[,2], decreasing =FALSE,
+                       index.return = TRUE)$ix
+    }
+
+
    if (type =="both"){
     arm::coefplot(as.vector(rev(att[ord,2])),
                   as.vector(rev(att[ord,2])),
              CI=user_dots$CI,
              lower.conf.bounds = as.vector(rev(att[ord,1])),
              upper.conf.bounds = as.vector(rev(att[ord,3])),
-             varnames=rev(teams[ord]), main="Attack/Defense abilities (95% conf. intervals)\n",
+             varnames=rev(sel_teams[ord]), main="Attack/Defense abilities (95% conf. intervals)\n",
              cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
              cex.main=user_dots$cex.main, pch=user_dots$pch,
              h.axis=user_dots$h.axis,
@@ -499,7 +552,7 @@ foot_abilities <- function(object, data,
                   CI=user_dots$CI,
                   lower.conf.bounds = as.vector(rev(def[ord,1])),
                   upper.conf.bounds = as.vector(rev(def[ord,3])),
-                  varnames=rev(teams[ord]), main="Defense abilities (95% post. intervals)\n",
+                  varnames=rev(sel_teams[ord]), main="Defense abilities (95% post. intervals)\n",
                   cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
                   cex.main=user_dots$cex.main, pch=user_dots$pch,
                   h.axis=user_dots$h.axis,
@@ -515,7 +568,7 @@ foot_abilities <- function(object, data,
                       CI=user_dots$CI,
                       lower.conf.bounds = as.vector(rev(att[ord,1])),
                       upper.conf.bounds = as.vector(rev(att[ord,3])),
-                      varnames=rev(teams[ord]), main="Attack abilities (95% conf. intervals)\n",
+                      varnames=rev(sel_teams[ord]), main="Attack abilities (95% conf. intervals)\n",
                       cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
                       cex.main=user_dots$cex.main, pch=user_dots$pch,
                       h.axis=user_dots$h.axis,
@@ -531,7 +584,7 @@ foot_abilities <- function(object, data,
                       CI=user_dots$CI,
                       lower.conf.bounds = as.vector(rev(def[ord2,1])),
                       upper.conf.bounds = as.vector(rev(def[ord2,3])),
-                      varnames=rev(teams[ord2]), main="Defense abilities (95% conf. intervals)\n",
+                      varnames=rev(sel_teams[ord2]), main="Defense abilities (95% conf. intervals)\n",
                       cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
                       cex.main=user_dots$cex.main, pch=user_dots$pch,
                       h.axis=user_dots$h.axis,
@@ -543,19 +596,24 @@ foot_abilities <- function(object, data,
                       col="blue")
       }
     }else{  # student_t case
-      ability <- object$abilities
+      ability <- object$abilities[sel_teams_index,]
       par(mfrow=c(1,1), oma =c(1,1,1,1))
       par(mfrow=c(1,1), oma =c(1,1,1,1))
 
+      if (is.vector(ability)){
+        stop("Please, select at least two teams")
+
+      }else{
       #mcmc_intervals(posterior, regex_pars=c("ability"))
       ord <- sort.int(ability[,2], decreasing =TRUE,
                       index.return = TRUE)$ix
+      }
 
       arm::coefplot(as.vector(rev(ability[ord,2])),
                as.vector(rev(ability[ord,2])), CI=user_dots$CI,
                lower.conf.bounds = as.vector(rev(ability[ord,1])),
                upper.conf.bounds = as.vector(rev(ability[ord,3])),
-               varnames=rev(teams[ord]), main="Global abilities (95% conf. intervals)\n",
+               varnames=rev(sel_teams[ord]), main="Global abilities (95% conf. intervals)\n",
                cex.var= user_dots$cex.var, mar=user_dots$mar, lwd=user_dots$lwd,
                cex.main=user_dots$cex.main, pch=user_dots$pch,
                h.axis=user_dots$h.axis,

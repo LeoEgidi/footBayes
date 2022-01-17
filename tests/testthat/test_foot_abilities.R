@@ -30,5 +30,10 @@ test_that("object argument gives errors/warnings", {
 })
 
 
+test_that("student_t does not have attack/defence types",{
+
+
+})
+
 
 context("dynamic models")
