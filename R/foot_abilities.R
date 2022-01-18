@@ -1,12 +1,23 @@
-#' Plot football abilities from Stan models
+#' Plot football abilities from Stan and MLE models
 #'
-#' Depicts teams' abilities from the Stan models fitted via the \code{stan_foot} function.
+#' Depicts teams' abilities either from the Stan models fitted via the \code{stan_foot} function
+#' or from MLE models fitted via the \code{mle_foot} function.
 #'
 #'
-#' @param object An object of class \code{stanfit} as given by \code{stan_foot} function.
-#'               Alternatively, a list containing the Maximum Likelihood Estimates (MLE) for the model parameters.
+#' @param object An object either of class \code{stanfit} as given by \code{stan_foot} function or class
+#'               \code{list} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
+#'                with \code{mle_foot}.
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'            home goals, away goals.
+#' @param type Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}.
+#' @param team  Valid team names.
+#'
+#' @return
+#'
+#' Abilities plots for the selected teams: for Poisson models only, red denotes the attack,
+#' blue the defense.
+#'
+#' @author Leonardo Egidi \email{legidi@units.it}
 #'
 #' @examples
 #' library(engsoccerdata)
@@ -66,8 +77,8 @@
 
 
 foot_abilities <- function(object, data,
-                           type = c("attack", "defence", "both"),
-                           team = c("all"),...){
+                           type = c("attack", "defense", "both"),
+                           team,...){
 
 
   ## Check for 'type'
@@ -102,31 +113,35 @@ foot_abilities <- function(object, data,
 
   teams <- unique(c(data$home, data$away))
 
+  if (!is.character(teams)){
+    teams <- as.character(teams)
+  }
+
 
 
   if (class(object)=="stanfit"){
     sims <- rstan::extract(object)
-    if (is.null(sims$y_prev)){
-      teams <- unique(c(data$home, data$away))
-    }else{
-      teams <- unique(c(data$home[(dim(sims$y_rep)[2]+1):
-                                    (dim(sims$y_rep)[2] +
-                                       dim(sims$y_prev)[2])],
-                        data$away[(dim(sims$y_rep)[2]+1):
-                                    (dim(sims$y_rep)[2] +
-                                       dim(sims$y_prev)[2])]))
-    }
+    # if (is.null(sims$y_prev)){
+    #   teams <- unique(c(data$home, data$away))
+    # }else{
+    #   teams <- unique(c(data$home[(dim(sims$y_rep)[2]+1):
+    #                                 (dim(sims$y_rep)[2] +
+    #                                    dim(sims$y_prev)[2])],
+    #                     data$away[(dim(sims$y_rep)[2]+1):
+    #                                 (dim(sims$y_rep)[2] +
+    #                                    dim(sims$y_prev)[2])]))
+    # }
 
     # check on selected team
 
     if (missing(team)){
       sel_teams <- teams
-    }else if(team==c("all")){
-      sel_teams <- teams
+    # }else if(team==c("all")){
+    #   sel_teams <- teams
     }else{
-      sel_teams<-teams[match(team, unique(c(data$home, data$away)))]
+      sel_teams<-teams[match(team, teams)]
     }
-    sel_teams_index <- match(sel_teams, unique(c(data$home, data$away)))
+    sel_teams_index <- match(sel_teams, teams)
 
     if (is.na(sum(sel_teams_index))){
       stop("Select only valid teams' names!")
@@ -149,7 +164,7 @@ foot_abilities <- function(object, data,
   def_75=apply(def, c(2,3), function(x)  quantile(x, 0.75))
   def_975=apply(def, c(2,3), function(x)  quantile(x, 0.975))
 
-  squadre_valide <- match(sel_teams,teams)
+  squadre_valide <- match(sel_teams,unique(c(data$home, data$away)))
 
   mt_att_025 <- melt(att_025[, squadre_valide])
   mt_att_25 <- melt(att_25[, squadre_valide])
@@ -184,6 +199,8 @@ foot_abilities <- function(object, data,
 
   if (length(unique(data$season))==1){
     timings <- 1:dim(sims$att)[2]
+    sp <- length(timings)%/%5
+    timings_breaks <- timings[sp*c(1:5)]
   }else{
     timings <- unique(data$season)
   }
@@ -222,7 +239,7 @@ foot_abilities <- function(object, data,
                                   color_scheme_get("red")[[4]]))+
     facet_wrap("teams", scales = "free")+
     lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
-    scale_x_discrete( limits=factor(timings)  ) +
+    scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
     labs(x = "Times", y = "Teams' effects",
          title = "Attack and defense effects (50% posterior bars)"
          #,
@@ -260,7 +277,7 @@ foot_abilities <- function(object, data,
       scale_color_manual(values = c(color_scheme_get("red")[[4]]))+
       facet_wrap("teams", scales = "free")+
       lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
-      scale_x_discrete( limits=factor(timings)  ) +
+      scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
       labs(x = "Times", y = "Teams' effects",
            title = "Attack effects (50% posterior bars)"
       ) +
@@ -298,7 +315,7 @@ foot_abilities <- function(object, data,
       ))+
       facet_wrap("teams", scales = "free")+
       lims(y = c( min(def_25-0.3), max(def_75+0.3))) +
-      scale_x_discrete( limits=factor(timings)  ) +
+      scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
       labs(x = "Times", y = "Teams' effects",
            title = "Defense effects (50% posterior bars)"
       ) +
@@ -389,6 +406,8 @@ foot_abilities <- function(object, data,
     }
   }else if (length(dim(att))==0){ # student_t case
 
+
+
     ability <- sims$ability
 
     if (length(dim(ability))==3){
@@ -401,7 +420,7 @@ foot_abilities <- function(object, data,
       ability_75=apply(ability, c(2,3), function(x) quantile(x, 0.75))
       ability_975=apply(ability, c(2,3), function(x) quantile(x, 0.975))
 
-      squadre_valide <- match(sel_teams,teams)
+      squadre_valide <- match(sel_teams,unique(c(data$home, data$away)))
 
       mt_ability_025 <- melt(ability_025[, squadre_valide])
       mt_ability_25 <- melt(ability_25[, squadre_valide])
@@ -422,6 +441,9 @@ foot_abilities <- function(object, data,
 
       if (length(unique(data$season))==1){
         timings <- 1:dim(sims$ability)[2]
+        sp <- length(timings)%/%5
+        timings_breaks <- timings[sp*c(1:5)]
+
       }else{
         timings <- unique(data$season)
       }
@@ -449,7 +471,7 @@ foot_abilities <- function(object, data,
                                       color_scheme_get("red")[[4]]))+
         facet_wrap("teams", scales = "free")+
         lims(y = c( min(ability_25-0.2), max(ability_75+0.2))) +
-        scale_x_discrete( limits=factor(timings)  ) +
+        scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
         labs(x = "Times", y = "Teams' effects",
              title = "Global abilities effects (50% posterior bars)"
              #,
@@ -501,8 +523,8 @@ foot_abilities <- function(object, data,
 
     if (missing(team)){
       sel_teams <- teams
-    }else if(team==c("all")){
-      sel_teams <- teams
+    # }else if(team==c("all")){
+    #   sel_teams <- teams
     }else{
       sel_teams<-teams[match(team, unique(c(data$home, data$away)))]
     }
@@ -596,6 +618,9 @@ foot_abilities <- function(object, data,
                       col="blue")
       }
     }else{  # student_t case
+
+
+
       ability <- object$abilities[sel_teams_index,]
       par(mfrow=c(1,1), oma =c(1,1,1,1))
       par(mfrow=c(1,1), oma =c(1,1,1,1))

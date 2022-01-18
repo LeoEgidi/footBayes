@@ -71,6 +71,12 @@ test_that("prediction causes  warnings/errors", {
 })
 
 
+test_that("MLE models do not allow for dynamics", {
+
+  ## dynamic_type
+})
+
+
 
 
 
