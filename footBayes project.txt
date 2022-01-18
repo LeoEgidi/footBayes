@@ -14,7 +14,7 @@
             + DOCUMENTATION
 
   (ii)   foot_prob
-            + da fare check
+            + da fare check ---> iniziati (18 gennaio)
             + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
                --> FATTO (8 giugno)
             + allargare anche per student_t

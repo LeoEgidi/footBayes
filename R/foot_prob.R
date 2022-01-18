@@ -11,7 +11,9 @@
 #' @examples
 #' \dontrun{
 #' ### weekly dynamics, predict the last four weeks
-
+#' library(engsoccerdata)
+#' library(dplyr)
+#'
 #' italy_2000<- italy %>%
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #'  filter(Season=="2000")
@@ -35,7 +37,13 @@ foot_prob <- function(object, data, home_team, away_team){
                       "homegoals", "awaygoals")
   teams <- unique(data$home)
   sims <- rstan::extract(object)
-  predict <- dim(sims$y_prev)[2]
+  predict <- c(dim(sims$y_prev)[2], dim(sims$diff_y_prev)[2])
+
+
+  if (is.null(predict)){
+    stop("foot_prob cannot be used if the 'predict' argument is set to zero.")
+  }
+
   data_prev <- data[(dim(data)[1]-predict +1):(dim(data)[1]),]
 
   if (missing(home_team) & missing(away_team)){
@@ -43,16 +51,21 @@ foot_prob <- function(object, data, home_team, away_team){
     away_team <- data_prev$away
   }
 
-  find_match <- which(data_prev$home==home_team & data_prev$away == away_team )
-  if (length(find_match)!=1){
-  true_gol_home <- data$homegoals[(dim(sims$y_rep)[2]+1):(dim(sims$y_rep)[2]+predict)]
-  true_gol_away <- data$awaygoals[(dim(sims$y_rep)[2]+1):(dim(sims$y_rep)[2]+predict)]
-  true_gol_home <- true_gol_home[home_team==data_prev$home & away_team==data_prev$away]
-  true_gol_away <- true_gol_away[home_team==data_prev$home & away_team==data_prev$away]
-  }else{
+  find_match <- c()
+  for (i in 1:length(home_team))
+    find_match[i] <- which( data_prev$home %in% home_team[i] & data_prev$away %in% away_team[i])
+
+
+  #if (length(find_match)!=1){
+  #true_gol_home <- data$homegoals[(dim(sims$y_rep)[2]+1):(dim(sims$y_rep)[2]+predict)]
+  #true_gol_away <- data$awaygoals[(dim(sims$y_rep)[2]+1):(dim(sims$y_rep)[2]+predict)]
+  #true_gol_home <- true_gol_home[home_team==data_prev$home & away_team==data_prev$away]
+  #true_gol_away <- true_gol_away[home_team==data_prev$home & away_team==data_prev$away]
+  #}else{
+
   true_gol_home <- data_prev$homegoals[find_match]
   true_gol_away <- data_prev$awaygoals[find_match]
-  }
+  #}
 
   if (length(find_match)==0){
     stop(paste("There is not any out-of-sample match:",
