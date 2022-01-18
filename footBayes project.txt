@@ -17,7 +17,7 @@
             + da fare check ---> iniziati (18 gennaio)
             + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
                --> FATTO (8 giugno)
-            + allargare anche per student_t
+            + allargare anche per student_t ---> No, mettere
 
   (iii)  pp_foot:
             grafico 1) "aggregated", mostra la goal difference
