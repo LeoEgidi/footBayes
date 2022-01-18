@@ -2,19 +2,29 @@
 % Please edit documentation in R/foot_abilities.R
 \name{foot_abilities}
 \alias{foot_abilities}
-\title{Plot football abilities from Stan models}
+\title{Plot football abilities from Stan and MLE models}
 \usage{
-foot_abilities(object, data, ...)
+foot_abilities(object, data, type = c("attack", "defense", "both"), team, ...)
 }
 \arguments{
-\item{object}{An object of class \code{stanfit} as given by \code{stan_foot} function.
-Alternatively, a list containing the Maximum Likelihood Estimates (MLE) for the model parameters.}
+\item{object}{An object either of class \code{stanfit} as given by \code{stan_foot} function or class
+\code{list} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
+ with \code{mle_foot}.}
 
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
 home goals, away goals.}
+
+\item{type}{Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}.}
+
+\item{team}{Valid team names.}
+}
+\value{
+Abilities plots for the selected teams: for Poisson models only, red denotes the attack,
+blue the defense.
 }
 \description{
-Depicts teams' abilities from the Stan models fitted via the \code{stan_foot} function.
+Depicts teams' abilities either from the Stan models fitted via the \code{stan_foot} function
+or from MLE models fitted via the \code{mle_foot} function.
 }
 \examples{
 library(engsoccerdata)
@@ -70,4 +80,7 @@ fit7 <- stan_foot(data = italy_2000,
 foot_abilities(fit6, italy_2000)
 foot_abilities(fit7, italy_2000)
 
+}
+\author{
+Leonardo Egidi \email{legidi@units.it}
 }
