@@ -2,10 +2,21 @@
 % Please edit documentation in R/pp_foot.R
 \name{pp_foot}
 \alias{pp_foot}
-\title{Posterior predictive checks for football  models}
+\title{Posterior predictive checks for football models}
 \usage{
-pp_foot(data, object, type = c("aggregated", "matches"))
+pp_foot(data, object, type = c("aggregated", "matches"), alpha = 0.95)
+}
+\arguments{
+\item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
+home goals, away goals.}
+
+\item{object}{An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.}
+
+\item{type}{Type of plots, one among \code{"aggregated"} or \code{"matches"}.}
+
+\item{alpha}{Argument to specify the width of \eqn{1-\alpha} posterior probability intervals.}
 }
 \description{
-Posterior predictive checks for football  models
+The function provides posterior predictive plots to check the adequacy of the Bayesian models as
+returned by the \code{stan_foot} function.
 }

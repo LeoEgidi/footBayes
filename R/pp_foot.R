@@ -1,4 +1,13 @@
-#' Posterior predictive checks for football  models
+#' Posterior predictive checks for football models
+#'
+#' The function provides posterior predictive plots to check the adequacy of the Bayesian models as
+#' returned by the \code{stan_foot} function.
+#'
+#' @param object An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.
+#' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
+#'home goals, away goals.
+#' @param type  Type of plots, one among \code{"aggregated"} or \code{"matches"}.
+#' @param alpha Argument to specify the width of \eqn{1-\alpha} posterior probability intervals.
 #'
 #' @importFrom bayesplot yaxis_text
 #' @importFrom bayesplot xaxis_text
@@ -9,7 +18,12 @@
 
 
 pp_foot <- function(data, object,
-                    type = c("aggregated", "matches")){
+                    type = c("aggregated", "matches"),
+                    alpha = 0.95){
+
+  if (class(object)!="stanfit"){
+    stop("Please consider a 'stanfit' class model.")
+  }
 
   sims <- rstan::extract(object)
   y <- as.matrix(data[,4:5])
@@ -19,6 +33,10 @@ pp_foot <- function(data, object,
   M <-dim(sims$diff_y_rep)[1]
   freq_rel_matrix <- matrix(NA, M, length(esiti_short))
   ngames_train <- dim(sims$y_rep)[2]
+
+  if (missing(alpha)){
+    alpha <- 0.95
+  }
 
   if (missing(type)){
     type <- "aggregated"
@@ -95,40 +113,42 @@ pp_foot <- function(data, object,
 
 
   }else if (type=="matches"){
-    scd <- as.numeric(as.vector(diff_gol))
+    scd <- as.numeric(as.vector(diff_gol))[1:ngames_train]
     scd_sims <- diff_gol_rep
     scd_hat <- colMedians(scd_sims)
     scd_se <- sqrt(colVars(scd_sims))
-    alpha <- 0.95;
+    alpha <- alpha
     scd_ub <- colQuantiles(scd_sims, probs = 1-(1-alpha)/2)
     scd_lb <- colQuantiles(scd_sims, probs = (1-alpha)/2)
-    ci95 <- sum(scd < scd_ub & scd_lb<scd)/ngames_train
+    ci_alpha <- sum(scd < scd_ub & scd_lb<scd)/ngames_train
     ngames_train_draw <- sum(scd ==0)
     scd_draw <- scd[scd==0]
     ci95_draw <- sum(scd_draw < scd_ub[scd==0] & scd_lb[scd==0]<scd_draw)/ngames_train_draw
-    alpha <- 0.5;
-    scd_ub2 <- colQuantiles(scd_sims, probs = 1-(1-alpha)/2)
-    scd_lb2 <- colQuantiles(scd_sims, probs = (1-alpha)/2)
-    ci50 <- sum(scd < scd_ub2 & scd_lb2<scd)/ngames_train
-    ci50_draw <- sum(scd_draw < scd_ub2[scd==0] & scd_lb2[scd==0]<scd_draw)/ngames_train_draw
+
+    # alpha <- 0.5;
+    # scd_ub2 <- colQuantiles(scd_sims, probs = 1-(1-alpha)/2)
+    # scd_lb2 <- colQuantiles(scd_sims, probs = (1-alpha)/2)
+    # ci50 <- sum(scd < scd_ub2 & scd_lb2<scd)/ngames_train
+    # ci50_draw <- sum(scd_draw < scd_ub2[scd==0] & scd_lb2[scd==0]<scd_draw)/ngames_train_draw
 
     sort_scd <- scd[order(scd)]
     sort_scd_hat <- scd_hat[order(scd)]
     sort_scd_se <- scd_se[order(scd)]
     sort_scd_ub <- scd_ub[order(scd)]
     sort_scd_lb <- scd_lb[order(scd)]
-    sort_scd_ub2 <- scd_ub2[order(scd)]
-    sort_scd_lb2 <- scd_lb2[order(scd)]
+    # sort_scd_ub2 <- scd_ub2[order(scd)]
+    # sort_scd_lb2 <- scd_lb2[order(scd)]
 
     df <- data.frame(list(scd = sort_scd, scd_hat = sort_scd_hat, scd_se = sort_scd_se,
-                          scd_ub = sort_scd_ub, scd_lb = sort_scd_lb,
-                          scd_ub2 = sort_scd_ub2, scd_lb2 = sort_scd_lb2))
+                          scd_ub = sort_scd_ub, scd_lb = sort_scd_lb
+                          #scd_ub2 = sort_scd_ub2, scd_lb2 = sort_scd_lb2
+                          ))
 
-ggplot(df, aes(x = c(1:ngames_train))) +
+p <- ggplot(df, aes(x = c(1:ngames_train))) +
       geom_ribbon(aes(ymin = scd_lb, ymax = scd_ub),
                   fill="#F0E442") +
-      geom_ribbon(aes(ymin = scd_lb2, ymax = scd_ub2),
-                  fill="khaki3") +
+      #geom_ribbon(aes(ymin = scd_lb2, ymax = scd_ub2),
+      #            fill="khaki3") +
       #geom_line(aes(y=scd_hat),colour="darkred") +
       #geom_point(aes(y=scd_hat),colour="darkred",shape=4) +
       geom_point(aes(y=scd), size = 0.5, col="blue") +
@@ -142,6 +162,11 @@ ggplot(df, aes(x = c(1:ngames_train))) +
       theme(axis.title=element_text(size=19),
       axis.text.x = element_text(size=15),
       axis.text.y = element_text(size=15))
-  }
+
+      tbl = data.frame(alpha = alpha, coverage = round(ci_alpha,3))
+
+      return(list(pp_plot = p, pp_table = tbl))
+
+      }
 
 }
