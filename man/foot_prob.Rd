@@ -7,14 +7,15 @@
 foot_prob(object, data, home_team, away_team)
 }
 \arguments{
-\item{object}{An object of class \code{stanfit} as given by \code{stan_foot} function.}
+\item{object}{An object either of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function or
+\code{\link[list]{link}} as given by \code{mle_foot}.}
 
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
 home goals, away goals.}
 
-\item{home_team}{The home team for the predicted match.}
+\item{home_team}{The home team(s) for the predicted matches.}
 
-\item{away_team}{The away team for the predicted match.}
+\item{away_team}{The away team(s) for the predicted matches.}
 }
 \value{
 A \link[data.frame]{data.frame} containing the number of out-of-sample matches specified through the
