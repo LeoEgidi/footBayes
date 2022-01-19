@@ -434,137 +434,39 @@ mle_foot <- function(data, model, predict, ...){
   colnames(home_est) <- c("2.5%", "mle", "97.5%")
 
 
-  # routine prediction if predict is not 0
-  prediction_routine <- function(team1_prev, team2_prev, att, def, home,
-                                 corr, ability, model, predict, n.iter){
-
-    mean_home <- exp(home[1,2] + att[team1_prev,2] + def[team2_prev,2])
-    mean_away <- exp(att[team2_prev,2] + def[team1_prev,2])
-      # mean_home_q1 <- exp(home[1,1] + att[team1_prev,1] + def[team2_prev,1])
-      # mean_away_q1 <- exp(att[team2_prev,1] + def[team1_prev,1])
-      # mean_home_q2 <- exp(home[1,3] + att[team1_prev,3] + def[team2_prev,3])
-      # mean_away_q2 <- exp(att[team2_prev,3] + def[team1_prev,3])
-
-    if (model=="double_pois"){
-
-      x = y = x_q1 = y_q1 = x_q2 = y_q2 = matrix(NA, n.iter, predict)
-      for (n in 1: N_prev){
-        x[,n] <- rpois(n.iter, mean_home[n])
-        y[,n] <- rpois(n.iter, mean_away[n])
-          # x_q1[,n] <- rpois(n.iter, mean_home_q1[n])
-          # y_q1[,n] <- rpois(n.iter, mean_away_q1[n])
-          # x_q2[,n] <- rpois(n.iter, mean_home_q2[n])
-          # y_q2[,n] <- rpois(n.iter, mean_away_q2[n])
-
-      }
-
-
-    }else if (model == "biv_pois"){
-      couple <- array(NA, c(n.iter, predict, 2))
-      x = y = x_q1 = y_q1 = x_q2 = y_q2 = matrix(NA, n.iter, predict)
-      for (n in 1: N_prev){
-        couple[,n,] <- rbvpois(n.iter,  a = mean_home[n],
-                             b= mean_away[n],
-                             c = corr[1,2])
-
-      }
-      x <- couple[,,1]
-      y <- couple[,,2]
-
-
-    }else if (model == "skellam"){
-      diff_y <- matrix(NA, n.iter, predict)
-      for (n in 1:N_prev){
-      diff_y[,n] <- rskellam(n.iter,
-               mu1 = mean_home[n],
-               mu2 = mean_away[n])
-      }
-      x <- diff_y
-      y <- matrix(0, n.iter, predict)
-
-    }else if (model == "student_t"){
-      diff_y <- matrix(NA, n.iter, predict)
-      for (n in 1:N_prev){
-        diff_y[,n] <- rt.scaled(n.iter, df = 7,
-                                mean = home[1,2] + ability[team1_prev[n],2] - ability[team2_prev[n],2],
-                                sd = user_dots$sigma_y)
-      }
-      x <- round(diff_y)   # rounded to the closest integer, as Gelman does
-      y <- matrix(0, n.iter, predict)
-
-
-    }
-
-  prob_func <- function(mat_x, mat_y){
-    res <- mat_x-mat_y
-    prob_h <- apply(res, 2, function(x) sum(x > 0) )/n.iter
-    prob_d <- apply(res, 2, function(x) sum(x == 0) )/n.iter
-    prob_a <- apply(res, 2, function(x) sum(x < 0) )/n.iter
-    return(list(prob_h = prob_h,
-                prob_d = prob_d,
-                prob_a = prob_a))
-  }
-
-    conf <- prob_func(x, y)
-      # conf_q1 <- prob_func(x_q1, y_q1)
-      # conf_q2 <- prob_func(x_q2, y_q2)
-
-    tbl <- data.frame(home_team = teams[team1_prev],
-               away_team = teams[team2_prev],
-               prob_h = conf$prob_h,
-               prob_d = conf$prob_d,
-               prob_a = conf$prob_a
-               )
-    return(tbl)
-
-  }
-
-  # lancia prediction_routine se e solo se predict è non missing
-
-  if (predict!=0){
-    prob_matrix <- prediction_routine(team1_prev, team2_prev, att_est,
-                                      def_est, home_est,
-                                      corr_est, abilities_est, model, predict,
-                                      user_dots$n.iter)
-    if (model=="student_t"){
-      return(list(abilities = abilities_est,
-                  home = home_est,
-                  pred_matrix = prob_matrix))
-
-    }else if (model=="biv_pois"){
-      return(list(att = att_est,
-                  def = def_est,
-                  home = home_est,
-                  corr = corr_est,
-                  pred_matrix = prob_matrix))
-
-    }else{
-      return(list(att = att_est,
-                  def = def_est,
-                  home = home_est,
-                  pred_matrix = prob_matrix))
-
-    }
-
-  }else{
-
-
   if (model=="student_t"){
     return(list(abilities = abilities_est,
-                home = home_est))
+                home = home_est,
+                model = model,
+                predict = predict,
+                n.iter = user_dots$n.iter,
+                sigma_y = user_dots$sigma_y,
+                team1_prev = team1_prev,
+                team2_prev = team2_prev))
 
   }else if (model=="biv_pois"){
     return(list(att = att_est,
                 def = def_est,
                 home = home_est,
-                corr = corr_est))
+                corr = corr_est,
+                model = model,
+                predict = predict,
+                n.iter = user_dots$n.iter,
+                team1_prev = team1_prev,
+                team2_prev = team2_prev))
 
   }else{
     return(list(att = att_est,
                 def = def_est,
-                home = home_est))
+                home = home_est,
+                model = model,
+                predict = predict,
+                n.iter = user_dots$n.iter,
+                team1_prev = team1_prev,
+                team2_prev = team2_prev))
 
-    }
   }
+
+
 }
 

@@ -11,15 +11,16 @@
             + aggiustare le "scale" ---> OK
             + aggiustare asse x nei modelli dinamici, magari mettendo stagioni, o settimane ---> OK (18 gennaio, messe anche settimane)
             + permettere "squadre" singole, come accade in foot_rank? ---> OK 
-            + DOCUMENTATION
+            + DOCUMENTATION  ---> BOZZA OK
 
   (ii)   foot_prob
-            + da fare check ---> iniziati (18 gennaio)
-            + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità
-               --> FATTO (8 giugno)
-            + allargare anche per student_t ---> No, mettere
+            + da fare check ---> iniziati (18/19 gennaio)
+            + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità --> OK (8 giugno)
+            + allargare anche per student_t ---> OK (19 gennaio)
+            + allargare per MLE (senza plots, solo tabella) ---> OK (19 gennaio) 
+            + DOCUMENTATION
 
-  (iii)  pp_foot:
+  (iii)  pp_foot
             grafico 1) "aggregated", mostra la goal difference
             grafico 2) "matches", mostra le bande di confidenza per i match ordinati
 
