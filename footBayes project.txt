@@ -18,7 +18,7 @@
             + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità --> OK (8 giugno)
             + allargare anche per student_t ---> OK (19 gennaio)
             + allargare per MLE (senza plots, solo tabella) ---> OK (19 gennaio) 
-            + DOCUMENTATION
+            + DOCUMENTATION  ---> BOZZA OK
 
   (iii)  pp_foot
             grafico 1) "aggregated", mostra la goal difference
