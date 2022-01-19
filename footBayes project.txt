@@ -14,15 +14,17 @@
             + DOCUMENTATION  ---> BOZZA OK
 
   (ii)   foot_prob
-            + da fare check ---> iniziati (18/19 gennaio)
+            + da fare test ---> iniziati (18/19 gennaio)
             + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità --> OK (8 giugno)
             + allargare anche per student_t ---> OK (19 gennaio)
             + allargare per MLE (senza plots, solo tabella) ---> OK (19 gennaio) 
             + DOCUMENTATION  ---> BOZZA OK
 
   (iii)  pp_foot
-            grafico 1) "aggregated", mostra la goal difference
-            grafico 2) "matches", mostra le bande di confidenza per i match ordinati
+            +  test
+            +  grafico 1) "aggregated", mostra la goal difference
+            +  grafico 2) "matches", mostra le bande di confidenza per i match ordinati  --> messa tabellina anche (19 gennaio)
+            + DOCUMENTATION
 
   (iv)   foot_rank:
             grafico 1) rank con bande di confidenza
