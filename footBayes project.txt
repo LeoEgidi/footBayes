@@ -22,8 +22,8 @@
 
   (iii)  pp_foot
             +  test
-            +  grafico 1) "aggregated", mostra la goal difference
-            +  grafico 2) "matches", mostra le bande di confidenza per i match ordinati  --> messa tabellina anche (19 gennaio)
+            +  grafico 1) "aggregated", mostra la goal difference (legenda, aggiustato anche per student_t) ---> OK (20 gennaio)
+            +  grafico 2) "matches", mostra le bande di confidenza per i match ordinati (legenda, messa tabellina anche (19 gennaio)) ---> OK
             + DOCUMENTATION
 
   (iv)   foot_rank:

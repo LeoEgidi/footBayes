@@ -9,11 +9,19 @@
 #' @param type  Type of plots, one among \code{"aggregated"} or \code{"matches"}.
 #' @param alpha Argument to specify the width of \eqn{1-\alpha} posterior probability intervals.
 #'
+#'@return
+#'
+#'Posterior predictive plots: when \code{"aggregated"} (default) is selected
+#'
+#'@author Leonardo Egidi \email{legidi@units.it}
+#'
+#'
 #' @importFrom bayesplot yaxis_text
 #' @importFrom bayesplot xaxis_text
 #' @importFrom matrixStats colMedians
 #' @importFrom matrixStats colVars
 #' @importFrom matrixStats colQuantiles
+#' @importFrom reshape2 melt
 #' @export
 
 
@@ -30,9 +38,9 @@ pp_foot <- function(data, object,
   diff_gol <- as.vector(y[,1] - y[,2])
   diff_gol_rep <- sims$diff_y_rep
   esiti_short <- seq(-3,3,1)
-  M <-dim(sims$diff_y_rep)[1]
+  M <-dim(diff_gol_rep)[1]
   freq_rel_matrix <- matrix(NA, M, length(esiti_short))
-  ngames_train <- dim(sims$y_rep)[2]
+  ngames_train <- dim(diff_gol_rep)[2]
 
   if (missing(alpha)){
     alpha <- 0.95
@@ -47,7 +55,9 @@ pp_foot <- function(data, object,
       x == round(x)
     }
 
-    if (check.integer(median(diff_gol_rep))==TRUE){
+    if (check.integer(median(diff_gol_rep))==FALSE){ # student_t models adjustment
+      diff_gol_rep <- round(diff_gol_rep,0)
+    }
 
   for (j in 1:M){
     for (u in 1:length(esiti_short)){
@@ -74,9 +84,9 @@ pp_foot <- function(data, object,
   frame <- data.frame(valori=esiti_short, rel=freq_rel_frame_add[,2] )
 
   ggplot(frame, aes(x=valori, y=rel))+
-    geom_point(position = "jitter", alpha = 0.2, col="gray") +
+    geom_point(position = "jitter", alpha = 0.2, aes( colour="simulated")) +
     geom_segment(mapping=aes( x=-3-0.5, y=freq_rel_obs[1],
-                              xend=-3+0.5, yend=freq_rel_obs[1]) , size=2, color = "blue")+
+                              xend=-3+0.5, yend=freq_rel_obs[1], colour ="observed") , size=2)+
     geom_segment(mapping=aes( x=-2-0.5, y=freq_rel_obs[2],
                               xend=-2+0.5, yend=freq_rel_obs[2]) , size=2, color = "blue")+
     geom_segment(mapping=aes( x=-1-0.5, y=freq_rel_obs[3],
@@ -90,26 +100,17 @@ pp_foot <- function(data, object,
     geom_segment(mapping=aes( x=3-0.5, y=freq_rel_obs[7],
                               xend=3+0.5, yend=freq_rel_obs[7]) , size=2, color = "blue")+
     labs(x="Goal difference", y="Posterior pred. distrib.")+
+    scale_colour_manual(name="",
+                        values=c(observed="blue", simulated ="#F0E442"))+
     yaxis_text(size=rel(1.2))+
     xaxis_text( size = rel(1.2))+
-    scale_x_discrete(limits=esiti_short, labels=c("-3", "-2", "-1", "0","1", "2", "3"))+
+    scale_x_discrete(limits = esiti_short, labels=c("-3", "-2", "-1", "0","1", "2", "3"))+
     theme(axis.title=element_text(size=19),
           axis.text.x = element_text(size=15),
-          axis.text.y = element_text(size=15))
-    }else{
-      #ppc_dens_overlay(diff_gol, diff_gol_rep)
-      plot(density(diff_gol, bw =0.5),
-           xlab = "Goal difference",
-           ylab = "Posterior pred. distrib.",
-           main = "",
-           lwd =3, col = "blue", cex.lab=1.3)
-      for (i in 1:M){
-        lines(density(diff_gol_rep[i,], bw =0.5),
-              col = "lightgray")
-      }
-      lines(density(diff_gol, bw =0.5), col = "blue",
-            lwd=3)
-    }
+          axis.text.y = element_text(size=15),
+          legend.position = "bottom",
+          legend.text = element_text(size = 15))
+
 
 
   }else if (type=="matches"){
@@ -145,13 +146,13 @@ pp_foot <- function(data, object,
                           ))
 
 p <- ggplot(df, aes(x = c(1:ngames_train))) +
-      geom_ribbon(aes(ymin = scd_lb, ymax = scd_ub),
-                  fill="#F0E442") +
+      geom_ribbon(aes(ymin = scd_lb, ymax = scd_ub, colour="simulated"),
+                  fill = "#F0E442") +
       #geom_ribbon(aes(ymin = scd_lb2, ymax = scd_ub2),
       #            fill="khaki3") +
       #geom_line(aes(y=scd_hat),colour="darkred") +
       #geom_point(aes(y=scd_hat),colour="darkred",shape=4) +
-      geom_point(aes(y=scd), size = 0.5, col="blue") +
+      geom_point(aes(y=scd, colour ="observed"), size = 0.5) +
       scale_x_continuous(name="games") +
       #scale_y_discrete(name="score difference", limits=seq(-8,8)) +
       scale_y_continuous(name="Goal difference",
@@ -159,9 +160,13 @@ p <- ggplot(df, aes(x = c(1:ngames_train))) +
                   sec.axis = dup_axis()) +
       yaxis_text(size=rel(1.4))+
       xaxis_text( size = rel(1.4))+
+      scale_colour_manual(name="",
+                      values=c(observed="blue", simulated ="#F0E442"))+
       theme(axis.title=element_text(size=19),
       axis.text.x = element_text(size=15),
-      axis.text.y = element_text(size=15))
+      axis.text.y = element_text(size=15),
+      legend.position = "bottom",
+      legend.text = element_text(size = 15))
 
       tbl = data.frame(alpha = alpha, coverage = round(ci_alpha,3))
 
