@@ -7,13 +7,26 @@
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'home goals, away goals.
 #' @param type  Type of plots, one among \code{"aggregated"} or \code{"matches"}.
-#' @param alpha Argument to specify the width of \eqn{1-\alpha} posterior probability intervals.
+#' @param alpha Argument to specify the width of posterior probability intervals. Default is 0.95.
 #'
 #'@return
 #'
-#'Posterior predictive plots: when \code{"aggregated"} (default) is selected
+#'Posterior predictive plots: when \code{"aggregated"} (default) is selected, the function
+#'returns a frequency plots for some pre-selected goal-difference values,
+#'along with their correspondent Bayesian p-values, computed as
+#'\eqn{Pr(y^{rep} \geq y)|y} (more details in Gelman et al., 2013).
+#'Bayesian p-values very close to 0 or 1 could exhibit
+#'possible model misfits.
+#'
+#'When \code{"matches"} is selected an ordered-frequency plot for all the
+#'goal-differences in the considered matches is provided, along with the
+#'empirical Bayesian coverage at level \eqn{1-\alpha}.
 #'
 #'@author Leonardo Egidi \email{legidi@units.it}
+#'
+#'@references
+#'
+#'Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., & Rubin, D. B. (2013). Bayesian data analysis. CRC press.
 #'
 #'
 #' @importFrom bayesplot yaxis_text
@@ -27,7 +40,7 @@
 
 pp_foot <- function(data, object,
                     type = c("aggregated", "matches"),
-                    alpha = 0.95){
+                    coverage = 0.95){
 
   if (class(object)!="stanfit"){
     stop("Please consider a 'stanfit' class model.")
@@ -42,8 +55,8 @@ pp_foot <- function(data, object,
   freq_rel_matrix <- matrix(NA, M, length(esiti_short))
   ngames_train <- dim(diff_gol_rep)[2]
 
-  if (missing(alpha)){
-    alpha <- 0.95
+  if (missing(coverage)){
+    coverage <- 0.95
   }
 
   if (missing(type)){
@@ -83,7 +96,7 @@ pp_foot <- function(data, object,
 
   frame <- data.frame(valori=esiti_short, rel=freq_rel_frame_add[,2] )
 
-  ggplot(frame, aes(x=valori, y=rel))+
+  p<- ggplot(frame, aes(x=valori, y=rel))+
     geom_point(position = "jitter", alpha = 0.2, aes( colour="simulated")) +
     geom_segment(mapping=aes( x=-3-0.5, y=freq_rel_obs[1],
                               xend=-3+0.5, yend=freq_rel_obs[1], colour ="observed") , size=2)+
@@ -104,21 +117,28 @@ pp_foot <- function(data, object,
                         values=c(observed="blue", simulated ="#F0E442"))+
     yaxis_text(size=rel(1.2))+
     xaxis_text( size = rel(1.2))+
-    scale_x_discrete(limits = esiti_short, labels=c("-3", "-2", "-1", "0","1", "2", "3"))+
+    scale_x_discrete(limits = esiti_short,
+                     labels=c("-3", "-2", "-1", "0","1", "2", "3"))+
     theme(axis.title=element_text(size=19),
           axis.text.x = element_text(size=15),
           axis.text.y = element_text(size=15),
           legend.position = "bottom",
           legend.text = element_text(size = 15))
 
+   p_value <- c()
+     for (j in 1:length(esiti_short))
+        p_value[j] <- round(sum(frame$rel[frame$valori==esiti_short[j]]>=freq_rel_obs[j])/M,3)
 
+   tbl <- data.frame(valori = esiti_short, p_val = p_value)
+   colnames(tbl) <- c("goal diff.",  "Bayesian p-value")
+   return(list(pp_plot = p, pp_table = tbl))
 
   }else if (type=="matches"){
     scd <- as.numeric(as.vector(diff_gol))[1:ngames_train]
     scd_sims <- diff_gol_rep
     scd_hat <- colMedians(scd_sims)
     scd_se <- sqrt(colVars(scd_sims))
-    alpha <- alpha
+    alpha <- coverage
     scd_ub <- colQuantiles(scd_sims, probs = 1-(1-alpha)/2)
     scd_lb <- colQuantiles(scd_sims, probs = (1-alpha)/2)
     ci_alpha <- sum(scd < scd_ub & scd_lb<scd)/ngames_train
@@ -146,13 +166,13 @@ pp_foot <- function(data, object,
                           ))
 
 p <- ggplot(df, aes(x = c(1:ngames_train))) +
-      geom_ribbon(aes(ymin = scd_lb, ymax = scd_ub, colour="simulated"),
+      geom_ribbon(aes(ymin = scd_lb, ymax = scd_ub),
                   fill = "#F0E442") +
       #geom_ribbon(aes(ymin = scd_lb2, ymax = scd_ub2),
       #            fill="khaki3") +
-      #geom_line(aes(y=scd_hat),colour="darkred") +
+      geom_line(aes(y=scd_hat, colour="simulated")) +
       #geom_point(aes(y=scd_hat),colour="darkred",shape=4) +
-      geom_point(aes(y=scd, colour ="observed"), size = 0.5) +
+      geom_point(aes(y=scd, colour ="observed"), fill="blue", size = 0.5) +
       scale_x_continuous(name="games") +
       #scale_y_discrete(name="score difference", limits=seq(-8,8)) +
       scale_y_continuous(name="Goal difference",
@@ -168,8 +188,8 @@ p <- ggplot(df, aes(x = c(1:ngames_train))) +
       legend.position = "bottom",
       legend.text = element_text(size = 15))
 
-      tbl = data.frame(alpha = alpha, coverage = round(ci_alpha,3))
-
+      tbl = data.frame(alpha = coverage, coverage = round(ci_alpha,3))
+      colnames(tbl) <- c("1-alpha", "emp. coverage")
       return(list(pp_plot = p, pp_table = tbl))
 
       }
