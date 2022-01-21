@@ -27,6 +27,10 @@
             + DOCUMENTATION ---> BOZZA OK
 
   (iv)   foot_rank:
+            test (iniziati, 21 gennaio)
+                   ---> uniformati colori (giallo per simulati, blu per previsti, sia scenari "in-sample" che "out-of-sample").
+                   ---> Pensare se mettere tabella classifica.
+                   ---> estendere anche per mle_foot? Magari non in questa versione del pacchetto.
             grafico 1) rank con bande di confidenza
                        (farlo sempre? Probabilmente farlo sempre non ha senso, solo se interno a stagione
                         solo se considero dati di una stagione sola? si, solo se dati di un'unica stagione
@@ -43,6 +47,7 @@
                                       predict > 9 ok                             predict > 9  ok
                    -------------------------------------------------------
                     in-sample          ok               ok
+		       + DOCUMENTATION 
 
   (v)    foot_round_robin
             grafico 1) grafico a scacchiera con probabilità di vittoria (da testare)

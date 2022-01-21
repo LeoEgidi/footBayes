@@ -2,10 +2,16 @@
 % Please edit documentation in R/foot_rank.R
 \name{foot_rank}
 \alias{foot_rank}
-\title{Predicted rank positions}
+\title{Rank and points predictions}
 \usage{
-foot_rank(data, object, team_sel, visualize = c("aggregated", "single teams"))
+foot_rank(data, object, team_sel, visualize = c("aggregated", "individual"))
+}
+\arguments{
+\item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
+home goals, away goals.}
+
+\item{object}{An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.}
 }
 \description{
-Predicted rank positions
+Predictive plots for football ranks.
 }

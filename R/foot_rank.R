@@ -1,4 +1,11 @@
-#' Predicted rank positions
+#' Rank and points predictions
+#'
+#' Predictive plots for football ranks.
+#'
+#' @param object An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.
+#' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
+#'home goals, away goals.
+#'
 #'
 #' @importFrom reshape2 melt
 #' @importFrom bayesplot color_scheme_get
@@ -6,10 +13,10 @@
 
 foot_rank <- function(data, object,
                       team_sel,
-                      visualize = c("aggregated","single teams"))
+                      visualize = c("aggregated","individual"))
   {
   #checks
-  good_names <- c("aggregated","single teams")
+  good_names <- c("aggregated","individual")
   check_vis <- match.arg(visualize, good_names)
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
@@ -213,7 +220,7 @@ refit the model with the argument predict greater
   conta_punti_veri <- rep(0, length(teams))
   number_match_days <- length(unique(team1_prev))*2-2
 
-  fill_test <- c("red", "gray")[c(!in_sample_cond, in_sample_cond)]
+  fill_test <- c("yellow", "yellow")[c(!in_sample_cond, in_sample_cond)]
 
 
   # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
@@ -422,25 +429,28 @@ refit the model with the argument predict greater
   ggplot()+
     geom_ribbon(aes(x=squadre, ymin=lo2, ymax=hi2, group=1),
                 data=rank_frame,
-                fill = color_scheme_get(fill_test)[[1]]
+                fill = color_scheme_get(fill_test)[[4]]
     )+
     geom_ribbon(aes(x=squadre, ymin=lo, ymax=hi, group=1),
                 data=rank_frame,
-                fill = color_scheme_get(fill_test)[[2]]
+                fill = color_scheme_get(fill_test)[[5]]
     )+
-    geom_line(aes(x=squadre, y= mid, group=1),
-              data=rank_frame,
-              color = color_scheme_get(fill_test)[[4]]
+    geom_line(aes(x=squadre, y= mid, group=1, color ="simulated"),
+              data=rank_frame
     )+
-    geom_point(aes(x=squadre, y=obs),
+    geom_point(aes(x=squadre, y=obs, color = "observed"),
               data=rank_frame)+
-    scale_color_manual(values = c(color_scheme_get("blue")[[2]],
-                                  color_scheme_get("red")[[2]]))+
+    scale_colour_manual(name="",
+                        values=c(observed="blue", simulated =  color_scheme_get(fill_test)[[4]]))+
+    # scale_color_manual(values = c(color_scheme_get("blue")[[2]],
+    #                               color_scheme_get("red")[[2]]))+
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
     ggtitle("Posterior predicted points and ranks")+
-    labs(x="Teams", y="Points")
+    labs(x="Teams", y="Points")+
+    theme(legend.position = "bottom",
+          legend.text = element_text(size = 15))
 
-  }else if(visualize == "single teams"){
+  }else if(visualize == "individual"){
 
     if ( cond_1 == TRUE ){
 
@@ -703,31 +713,32 @@ df_team_sel <- data.frame(obs = mt_obs,
 
     ggplot(df_team_sel,aes(day, obs))+
       geom_ribbon(aes(x=day, ymin=q_025, ymax=q_975, group=1),
-                  data=df_team_sel,
-                  fill = color_scheme_get(fill_test)[[1]]
-      )+
+                  fill = color_scheme_get(fill_test)[[4]],
+                  data=df_team_sel)+
       geom_ribbon(aes(x=day, ymin=q_25, ymax=q_75, group=1),
                   data=df_team_sel,
-                  fill = color_scheme_get(fill_test)[[2]]
-      )+
-      # geom_line(aes(x= day, y= q_50),
-      #           data=df_team_sel,
-      #           color = color_scheme_get("red")[[4]],
-      #           #fill = color_scheme_get("red")[[2]],
-      #           size =1.1
-      # )+
-      geom_line(size=0.8, linetype="solid")+
+                  fill = color_scheme_get(fill_test)[[5]])+
+       geom_line(aes(x= day, y= q_50, color = "simulated"),
+                 data=df_team_sel,
+                 #fill = color_scheme_get("red")[[2]],
+                 size =1.1
+       )+
+      geom_line(size=0.8, linetype="solid", aes(color = "observed"))+
       # geom_vline(
       #             xintercept =day_index,
       #             linetype="solid",
       #             color=fill_test, size=1)+
       xlab("Match day")+
       ylab("Cumulated Points")+
+      scale_colour_manual(name="",
+                          values=c(observed="blue", simulated =  color_scheme_get(fill_test)[[4]]))+
       facet_wrap("teams", scales ="free")+
       ggtitle("Posterior predicted points")+
-      theme(plot.title = element_text(size=22))+
-      annotate("rect",xmin=-Inf,xmax=day_index,ymin=-Inf,ymax=Inf, alpha=0.1, fill="black")+
-      annotate("rect",xmin=day_index ,xmax= max(day_index_prev),ymin=-Inf,ymax=Inf, alpha=0.1, fill=fill_test)
+      theme(plot.title = element_text(size=22),
+            legend.position = "bottom",
+            legend.text = element_text(size = 15))+
+      annotate("rect",xmin=-Inf,xmax=day_index,ymin=-Inf,ymax=Inf, alpha=0.1, fill="white")+
+      annotate("rect",xmin=day_index ,xmax= max(day_index_prev),ymin=-Inf,ymax=Inf, alpha=0.1, fill="white")
 
   }
 }
