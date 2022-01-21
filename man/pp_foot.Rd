@@ -14,13 +14,13 @@ home goals, away goals.}
 
 \item{type}{Type of plots, one among \code{"aggregated"} or \code{"matches"}.}
 
-\item{alpha}{Argument to specify the width of posterior probability intervals. Default is 0.95.}
+\item{coverage}{Argument to specify the width \eqn{1-\alpha} of posterior probability intervals. Default is 0.95.}
 }
 \value{
 Posterior predictive plots: when \code{"aggregated"} (default) is selected, the function
-returns a frequency plots for some pre-selected goal-difference values,
+returns a frequency plot for some pre-selected goal-difference values,
 along with their correspondent Bayesian p-values, computed as
-\eqn{Pr(y^{rep} \geq y)|y} (more details in Gelman et al., 2013).
+\eqn{Pr(y^{rep} \geq y)|y)} (more details in Gelman et al., 2013).
 Bayesian p-values very close to 0 or 1 could exhibit
 possible model misfits.
 
