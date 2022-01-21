@@ -14,7 +14,7 @@
 #'Posterior predictive plots: when \code{"aggregated"} (default) is selected, the function
 #'returns a frequency plot for some pre-selected goal-difference values,
 #'along with their correspondent Bayesian p-values, computed as
-#'\eqn{Pr(y^{rep} \geq y)|y)} (more details in Gelman et al., 2013).
+#'\eqn{Pr(y^{rep} \ge y)|y)} (more details in Gelman et al., 2013).
 #'Bayesian p-values very close to 0 or 1 could exhibit
 #'possible model misfits.
 #'
