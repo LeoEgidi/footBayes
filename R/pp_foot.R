@@ -30,6 +30,23 @@
 #'Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., & Rubin, D. B. (2013). Bayesian data analysis. CRC press.
 #'
 #'
+#'@examples
+#'
+#'\dontrun{
+#'library(tidyverse)
+#'library(engsoccerdata)
+#'
+#'italy_2000<- italy %>%
+#'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+#'  filter(Season=="2000")
+#'
+#'fit <- stan_foot(italy_2000, "double_pois", iter = 200)
+#'
+#'pp_foot(italy_2000, fit)
+#'
+#'
+#'}
+#'
 #' @importFrom bayesplot yaxis_text
 #' @importFrom bayesplot xaxis_text
 #' @importFrom matrixStats colMedians
@@ -59,6 +76,9 @@ pp_foot <- function(data, object,
   if (missing(coverage)){
     coverage <- 0.95
   }
+
+  type_type <- c("aggregated", "matches")
+  match.arg(type, type_type)
 
   if (missing(type)){
     type <- "aggregated"

@@ -33,6 +33,24 @@ empirical Bayesian coverage at level \eqn{1-\alpha}.
 The function provides posterior predictive plots to check the adequacy of the Bayesian models as
 returned by the \code{stan_foot} function.
 }
+\examples{
+
+\dontrun{
+library(tidyverse)
+library(engsoccerdata)
+
+italy_2000<- italy \%>\%
+ dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
+ filter(Season=="2000")
+
+fit <- stan_foot(italy_2000, "double_pois", iter = 200)
+
+pp_foot(italy_2000, fit)
+
+
+}
+
+}
 \references{
 Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., & Rubin, D. B. (2013). Bayesian data analysis. CRC press.
 }
