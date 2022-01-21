@@ -20,7 +20,8 @@ home goals, away goals.}
 Posterior predictive plots: when \code{"aggregated"} (default) is selected, the function
 returns a frequency plot for some pre-selected goal-difference values,
 along with their correspondent Bayesian p-values, computed as
-\eqn{Pr(y^{rep} \ge y)|y)} (more details in Gelman et al., 2013).
+\eqn{Pr(y_rep \ge y)|y)}, where \eqn{y_rep} is a data replication from the
+posterior predictive distribution (more details in Gelman et al., 2013).
 Bayesian p-values very close to 0 or 1 could exhibit
 possible model misfits.
 
