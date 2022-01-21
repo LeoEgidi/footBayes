@@ -4,7 +4,7 @@
 \alias{pp_foot}
 \title{Posterior predictive checks for football models}
 \usage{
-pp_foot(data, object, type = c("aggregated", "matches"), alpha = 0.95)
+pp_foot(data, object, type = c("aggregated", "matches"), coverage = 0.95)
 }
 \arguments{
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
@@ -14,9 +14,27 @@ home goals, away goals.}
 
 \item{type}{Type of plots, one among \code{"aggregated"} or \code{"matches"}.}
 
-\item{alpha}{Argument to specify the width of \eqn{1-\alpha} posterior probability intervals.}
+\item{alpha}{Argument to specify the width of posterior probability intervals. Default is 0.95.}
+}
+\value{
+Posterior predictive plots: when \code{"aggregated"} (default) is selected, the function
+returns a frequency plots for some pre-selected goal-difference values,
+along with their correspondent Bayesian p-values, computed as
+\eqn{Pr(y^{rep} \geq y)|y} (more details in Gelman et al., 2013).
+Bayesian p-values very close to 0 or 1 could exhibit
+possible model misfits.
+
+When \code{"matches"} is selected an ordered-frequency plot for all the
+goal-differences in the considered matches is provided, along with the
+empirical Bayesian coverage at level \eqn{1-\alpha}.
 }
 \description{
 The function provides posterior predictive plots to check the adequacy of the Bayesian models as
 returned by the \code{stan_foot} function.
+}
+\references{
+Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., & Rubin, D. B. (2013). Bayesian data analysis. CRC press.
+}
+\author{
+Leonardo Egidi \email{legidi@units.it}
 }
