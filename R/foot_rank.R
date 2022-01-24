@@ -222,10 +222,13 @@ refit the model with the argument predict greater
 
   fill_test <- c("yellow", "yellow")[c(!in_sample_cond, in_sample_cond)]
 
+  defaultW <- getOption("warn")
+  options(warn = -1)
 
   # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
   cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev)))
   #& N < length(unique(team1_prev[(1:N)[data$season==season_prev]]))*( length(unique(team1_prev[(1:N)[data$season==season_prev]]))-1)
+
 
   # questa condizione significa che il training NON ha
   # le stesse squadre del test, e che stiamo considerando
@@ -237,6 +240,7 @@ refit the model with the argument predict greater
 
   # questa condizione significa che siamo alla fine di una   # stagione
   cond_3 <-  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))==0
+  options(warn = defaultW)
 
 
 
@@ -417,16 +421,16 @@ refit the model with the argument predict greater
   rank_frame=data.frame(
     squadre=rank_bar[,1],
     mid=as.numeric(as.vector(rank_bar[,2])),
+    obs=obs[  match(  rank_bar[,1], teams_rank_names)],
     lo=as.numeric(as.vector(rank_bar[,3])),
     hi=as.numeric(as.vector(rank_bar[,4])),
-    obs=obs[  match(  rank_bar[,1], teams_rank_names)],
     lo2=as.numeric(as.vector(rank_bar[,5])),
     hi2=as.numeric(as.vector(rank_bar[,6]))
   )
 
   rank_frame$squadre=factor(rank_frame$squadre,
                             levels=rank_bar[,1])
-  ggplot()+
+  p <- ggplot()+
     geom_ribbon(aes(x=squadre, ymin=lo2, ymax=hi2, group=1),
                 data=rank_frame,
                 fill = color_scheme_get(fill_test)[[4]]
@@ -449,6 +453,19 @@ refit the model with the argument predict greater
     labs(x="Teams", y="Points")+
     theme(legend.position = "bottom",
           legend.text = element_text(size = 15))
+
+    tbl <- rank_frame[,1:5]
+    tbl$lo <- round(tbl$lo)
+    tbl$hi <- round(tbl$hi)
+    tbl$mid <- round(tbl$mid)
+
+    if (length(team_sel)==1){
+      rownames(tbl) <- "1"
+      return(list(rank_table = tbl))
+    }else{
+
+  return(list(rank_table = tbl, rank_plot = p))
+    }
 
   }else if(visualize == "individual"){
 
@@ -667,6 +684,15 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
   if (cond_1 == TRUE)
     {
     if (in_sample_cond==FALSE){
+      if (length(team_sel)==1){
+        mt_obs <- melt(c(cumsum_punti_pre[team_index, ],
+                             cumsum_punti_pre[team_index,day_index]+
+                               cumsum_punti_post[team_index,]))$value
+        mt_50 <- melt(c(rep(NA, day_index),
+                            punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
+
+      }else{
+
     mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
                      cumsum_punti_pre[team_index,day_index]+
                       cumsum_punti_post[team_index,]))$value
@@ -676,6 +702,7 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
       #length(unique(team_home)),
       day_index),
       punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
+      }
 
     }else{
       mt_obs <- melt(cumsum_punti_pre[team_index, ])$value
@@ -683,6 +710,15 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
     }
 
   }else if ( cond_2 == TRUE ){
+    if (length(team_sel)==1){
+      mt_obs <- melt(c(cumsum_punti_pre[team_index, ],
+                       cumsum_punti_pre[team_index,day_index]+
+                         cumsum_punti_post[team_index,]))$value
+      mt_50 <- melt(c(rep(NA, day_index),
+                      punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
+
+    }else{
+
     mt_obs <- melt(cbind(cumsum_punti_pre[team_index, ],
                          cumsum_punti_pre[team_index,day_index]+
                          cumsum_punti_post[team_index,] ))$value
@@ -691,6 +727,7 @@ punti_dyn_975 <- apply(cumsum_punti_dyn, c(2,3), function(x) quantile(x, c(0.975
                                #length(unique(team_home)),
                                day_index),
                         punti_dyn_med[team_index, (day_index+1):max(day_index_prev)]))$value
+    }
 
   }else if (cond_3 == TRUE){
     mt_obs <- melt( cumsum_punti_post[team_index,])$value
@@ -711,7 +748,9 @@ df_team_sel <- data.frame(obs = mt_obs,
                               q_975 = mt_975,
                               teams = rep(teams[team_index], max(day_index_prev)))
 
-    ggplot(df_team_sel,aes(day, obs))+
+
+
+    p <- ggplot(df_team_sel,aes(day, obs))+
       geom_ribbon(aes(x=day, ymin=q_025, ymax=q_975, group=1),
                   fill = color_scheme_get(fill_test)[[4]],
                   data=df_team_sel)+
@@ -730,6 +769,7 @@ df_team_sel <- data.frame(obs = mt_obs,
       #             color=fill_test, size=1)+
       xlab("Match day")+
       ylab("Cumulated Points")+
+      ylim(0, max(mt_975)+2)+
       scale_colour_manual(name="",
                           values=c(observed="blue", simulated =  color_scheme_get(fill_test)[[4]]))+
       facet_wrap("teams", scales ="free")+
@@ -740,6 +780,11 @@ df_team_sel <- data.frame(obs = mt_obs,
       annotate("rect",xmin=-Inf,xmax=day_index,ymin=-Inf,ymax=Inf, alpha=0.1, fill="white")+
       annotate("rect",xmin=day_index ,xmax= max(day_index_prev),ymin=-Inf,ymax=Inf, alpha=0.1, fill="white")
 
+     defaultW <- getOption("warn")
+     options(warn = -1)
+     options(warn = defaultW)
+
+     return(list(rank_plot = p))
   }
 }
 

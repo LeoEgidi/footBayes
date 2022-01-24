@@ -29,18 +29,19 @@
   (iv)   foot_rank:
             test (iniziati, 21 gennaio)
                    ---> uniformati colori (giallo per simulati, blu per previsti, sia scenari "in-sample" che "out-of-sample").
-                   ---> Pensare se mettere tabella classifica.
+                   ---> Pensare se mettere tabella classifica.  ---> OK (24 gennaio)
                    ---> estendere anche per mle_foot? Magari non in questa versione del pacchetto.
+                   ---> ci sono warnings, sia per punti mancanti (allargare width dei plots), sia per le condizioni di verità.  ---> OK (i warnings dei plot sono "fisiologici")
             grafico 1) rank con bande di confidenza
                        (farlo sempre? Probabilmente farlo sempre non ha senso, solo se interno a stagione
                         solo se considero dati di una stagione sola? si, solo se dati di un'unica stagione
                         come inserisco i valori osservati? creo funzione conta_punti_veri)
             grafico 2) cumulato per ogni squadra? Con punto di partenza in base al momento da cui si prevede?
-                       Si, fatto con bando di confidenza
-                       + da correggere visualizzazione.
-                       + perchè non solo una squadra nel secondo tipo di grafici?
+                       Si, fatto con bando di confidenza   ---> OK
+                       + da correggere visualizzazione. ----> OK
+                       + perchè non solo una squadra nel secondo tipo di grafici? ---> OK
                        + errore quando c'è solo una stagione
-            grafico 3) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata?
+            grafico 3) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata?   ---> NO
 
            Check 25-5 :              più stagioni -                            una sola stagione
                   out-of-sample       predict <= 9                               predict <= 9       problema sulle ultime 2 giornate...mancano squadre  (per ora c'è uno STOP riga 178)
