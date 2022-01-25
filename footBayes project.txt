@@ -50,11 +50,13 @@
                     in-sample          ok               ok
 
 		Check 'ultima giornata'  ---> quando il numero di giornate previste è minore di 2, scatta errore. Da revisionare in nuove versioni del pacchetto. OK
-		       + DOCUMENTATION 
+		       + DOCUMENTATION ---> BOZZA OK
 
   (v)    foot_round_robin
+            test
             grafico 1) grafico a scacchiera con probabilità di vittoria (da testare)
-            grafico 2) tabellone del torneo (eliminazione diretta)
+            grafico 2) tabellone del torneo (eliminazione diretta)   ---> non in questa funzione, e non in questa versione del pacchetto.
+            + DOCEMENTATION 
 
   (VI)   brier score e affini (f.ne da fare)
 

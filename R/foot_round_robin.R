@@ -1,6 +1,29 @@
-#' Round-robin
+#' Round-robin for football leagues
+#'
+#' Posterior predictive probabilities for a football season in a round-robin format
+#'
+#' @param object An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.
+#' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
+#'home goals, away goals.
+#' @param team_sel Selected team(s). By default, all the teams are selected.
+#'
+#'@details
+#'
+#'For Bayesian models fitted via \code{stan_foot} the round-robin table is computed according to the
+#'simulation from the posterior predictive distribution of future (out-of-sample) matches.
+#'The dataset should refer to one or more seasons from a given national football league (Premier League, Serie A, La Liga, etc.).
+#'
+#'@return
+#'
+#'Round-robin plot with the home-win posterior probabilities computed from the ppd of the fitted model via the \code{stan_foot} function.
 #'
 #'
+#'@author Leonardo Egidi \email{legidi@units.it}
+#'
+#'@examples
+#'
+#'\dontrun{
+#'}
 #' @export
 
 
@@ -82,6 +105,8 @@ foot_round_robin <- function(data, object, team_sel){
   number_match_days <- length(unique(team1_prev))*2-2
   punt <- matrix("-", nteams, nteams)
 
+  defaultW <- getOption("warn")
+  options(warn = -1)
   # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
   cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev))) & N < length(unique(team1_prev))*( length(unique(team1_prev))-1)
 
@@ -95,7 +120,7 @@ foot_round_robin <- function(data, object, team_sel){
 
   # questa condizione significa che siamo alla fine di una   # stagione
   cond_3 <-  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))==0
-
+  options(warn = defaultW)
 
 
 
@@ -138,7 +163,8 @@ foot_round_robin <- function(data, object, team_sel){
   y_ex <- seq(1,nteams_new, length.out=nteams_new)
    data_ex <- expand.grid(Home=x_ex, Away=y_ex)
    data_ex$prob=as.double(counts_mix[1:nteams, 1:nteams][team_index, team_index])
-  ggplot(data_ex, aes(Home, Away, z= prob)) +
+
+   p <- ggplot(data_ex, aes(Home, Away, z= prob)) +
     geom_tile(aes(fill = prob)) +
     theme_bw() +
     labs(x_ex, xaxis_text( size = rel(1.2)))+
@@ -155,5 +181,7 @@ foot_round_robin <- function(data, object, team_sel){
                   fill = "black", color = "black",
                   size = 1)+
     ggtitle("Home win posterior probabilities")
+   tbl <- cbind(data_ex, as.vector(punt[team_index, team_index])))
+   return(list(round_plot = p, round_table = tbl))
 
 }

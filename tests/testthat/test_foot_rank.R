@@ -16,6 +16,8 @@ context("one season")
 # in-sample
 fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 fit_t <- stan_foot(italy_2000, "student_t", iter = 200)
+
+testthat("in-sample models", {
 expect_error(foot_rank(italy_2000, fit), NA)
 expect_error(foot_rank(italy_2000, fit, "AS Roma"), NA)
 expect_error(foot_rank(italy_2000, fit, "AS Roma", "individual"), NA)
@@ -29,12 +31,11 @@ expect_error(foot_rank(italy_2000, fit_t, "AS Roma", "individual"), NA)
 expect_error(foot_rank(italy_2000, fit_t, c("AS Roma", "US Lecce")), NA)
 expect_error(foot_rank(italy_2000, fit_t, c("AS Roma", "US Lecce"), "individual"), NA)
 expect_error(foot_rank(italy_2000, fit_t, visualize =  "individual"), NA)
-
-
-
+})
 
 # out-of-sample
 
+testthat("out-of-sample models", {
 fit_out <- stan_foot(italy_2000, "double_pois", iter = 200, predict = 45)
 expect_error(foot_rank(italy_2000, fit_out), NA)
 expect_error(foot_rank(italy_2000, fit_out, visualize = "individual"), NA)
@@ -58,14 +59,14 @@ expect_error(foot_rank(italy_2000, fit_out_but_last), NA)
 expect_error(foot_rank(italy_2000, fit_out_but_last, visualize = "individual"), NA)
 expect_error(foot_rank(italy_2000, fit_out_but_last, "AS Roma",  visualize = "individual"),NA)
 expect_error(foot_rank(italy_2000, fit_out_but_last, c("AS Roma", "US Lecce", "Lazio Roma"), "individual"), NA)
-
-
+})
 
 
 
 context("more seasons")
 
 # in-sample
+testthat("in-sample models", {
 fit_dyn <- stan_foot(italy_1999_2000, "double_pois", iter = 200)
 expect_error(foot_rank(italy_1999_2000, fit_dyn), NA)
 expect_error(foot_rank(italy_1999_2000, fit_dyn, "AS Roma"), NA)
@@ -73,9 +74,10 @@ expect_error(foot_rank(italy_1999_2000, fit_dyn, "AS Roma", "individual"), NA)
 expect_error(foot_rank(italy_1999_2000, fit_dyn, c("AS Roma", "US Lecce")), NA)
 expect_error(foot_rank(italy_1999_2000, fit_dyn, c("AS Roma", "US Lecce"), "individual"), NA)
 expect_error(foot_rank(italy_1999_2000, fit_dyn, visualize =  "individual"), NA)
-
+})
 
 # out-of-sample
+testthat("out-of-sample models", {
 fit_dyn_out <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter = 200)
 expect_error(foot_rank(italy_1999_2000, fit_dyn_out), NA)
 expect_error(foot_rank(italy_1999_2000, fit_dyn_out, "AS Roma"), NA)
@@ -99,6 +101,6 @@ expect_error(foot_rank(italy_1999_2000, fit_dyn_out_too, "AS Roma", "individual"
 expect_error(foot_rank(italy_1999_2000, fit_dyn_out_too, c("AS Roma", "US Lecce")))
 expect_error(foot_rank(italy_1999_2000, fit_dyn_out_too, c("AS Roma", "US Lecce"), "individual"))
 expect_error(foot_rank(italy_1999_2000, fit_dyn_out_too, visualize =  "individual"))
-
+})
 
 
