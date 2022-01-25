@@ -1,17 +1,17 @@
 #' Rank and points predictions
 #'
-#' Posterior predictive plots and final rank table for football ranks.
+#' Posterior predictive plots and final rank table for football seasons.
 #'
 #' @param object An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'home goals, away goals.
 #' @param team_sel Selected team(s). By default, all the teams are selected.
-#' @param visualize Type of plot, defaults is \code{"aggregated"}.
+#' @param visualize Type of plot, default is \code{"aggregated"}.
 #'
 #' @return
 #'
 #' Final rank tables and plots with the predicted points for the selected teams as given by the models fitted via the \code{stan_foot}
-# function.
+#' function.
 #'
 #' @details
 #'

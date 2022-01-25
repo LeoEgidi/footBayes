@@ -14,13 +14,14 @@ home goals, away goals.}
 
 \item{team_sel}{Selected team(s). By default, all the teams are selected.}
 
-\item{visualize}{Type of plot, defaults is \code{"aggregated"}.}
+\item{visualize}{Type of plot, default is \code{"aggregated"}.}
 }
 \value{
 Final rank tables and plots with the predicted points for the selected teams as given by the models fitted via the \code{stan_foot}
+function.
 }
 \description{
-Posterior predictive plots and final rank table for football ranks.
+Posterior predictive plots and final rank table for football seasons.
 }
 \details{
 For Bayesian models fitted via \code{stan_foot} the final rank tables are computed according to the
