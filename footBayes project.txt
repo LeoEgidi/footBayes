@@ -2,6 +2,7 @@
 - Visualization
 
   (i)    foot_abilities
+            + test
             + grafici mle (solo coefplot. Da aggiustare le dimensioni. Forse consentire parametri opzionali grafici nella funzione) ---> OK
 	    + distinguere in attacco, difesa ed entrambi ---> OK (10-12)
             + grafici stan: aggiustare dimensioni
@@ -14,7 +15,7 @@
             + DOCUMENTATION  ---> BOZZA OK
 
   (ii)   foot_prob
-            + da fare test ---> iniziati (18/19 gennaio)
+            + test ---> iniziati (18/19 gennaio)
             + mettere tanti grafici assieme, per più partite. Mettere tabella probabilità --> OK (8 giugno)
             + allargare anche per student_t ---> OK (19 gennaio)
             + allargare per MLE (senza plots, solo tabella) ---> OK (19 gennaio) 
@@ -54,17 +55,17 @@
 
   (v)    foot_round_robin
             test (iniziati, 25 gennaio)
-            grafico 1) grafico a scacchiera con probabilità di vittoria (da testare)
+            grafico 1) grafico a scacchiera con probabilità di vittoria (da testare)  --> OK
             grafico 2) tabellone del torneo (eliminazione diretta)   ---> non in questa funzione, e non in questa versione del pacchetto.
-            + DOCEMENTATION 
+            + DOCEMENTATION ---> BOZZA OK
 
-  (VI)   brier score e affini (f.ne da fare)
+  (VI)   brier score e affini (f.ne da fare)  ---> non in questa versione del pacchetto
 
 
 
 - Models
 
-  4 modelli per ora: doble Poisson, bivariate Poisson, Skellam, student-t.
+  4 modelli per ora: double Poisson, bivariate Poisson, Skellam, student-t.
   + Nel BP e negli altri bisognerebbe inserire la componente \mu nel predittore lineare (l'intercetta costante)
   + Nel BP inserire predittori.
   + Nel BP, inserire prior per "rho" (al momento, nel biv_pois_fit è stata leggermente modificata).

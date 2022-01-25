@@ -30,13 +30,11 @@ test_that("object argument gives errors/warnings", {
 })
 
 
-# test_that("student_t does not have attack/defence types",{
-#
-#    # fit a student t model
-#    fit <- stan_foot(england_1999_2001, "student_t",
-#                     iter = 200)
-#    expect_warning(foot_abilities(fit, england_1999_2001, type = "attack"))
-# })
-
-
 context("dynamic models")
+
+test_that("no errors from dynamics",{
+fit <- stan_foot(england_1999_2001, "biv_pois", dynamic_type = "seasonal", iter = 200)
+expect_error(foot_abilities(fit, england_1999_2001), NA)
+expect_error(foot_abilities(fit, england_1999_2001, "Arsenal"), NA)
+expect_error(foot_abilities(fit, england_1999_2001, c("Arsenal", "Everton")), NA)
+})
