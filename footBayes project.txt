@@ -31,7 +31,7 @@
                    ---> uniformati colori (giallo per simulati, blu per previsti, sia scenari "in-sample" che "out-of-sample").
                    ---> Pensare se mettere tabella classifica.  ---> OK (24 gennaio)
                    ---> estendere anche per mle_foot? Magari non in questa versione del pacchetto.
-                   ---> ci sono warnings, sia per punti mancanti (allargare width dei plots), sia per le condizioni di verità.  ---> OK (i warnings dei plot sono "fisiologici")
+                   ---> ci sono warnings, sia per punti mancanti (allargare width dei plots), sia per le condizioni di verità.  ---> OK (na.rm=TRUE)
             grafico 1) rank con bande di confidenza
                        (farlo sempre? Probabilmente farlo sempre non ha senso, solo se interno a stagione
                         solo se considero dati di una stagione sola? si, solo se dati di un'unica stagione

@@ -1,10 +1,42 @@
 #' Rank and points predictions
 #'
-#' Predictive plots for football ranks.
+#' Posterior predictive plots and final rank table for football ranks.
 #'
 #' @param object An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'home goals, away goals.
+#' @param team_sel Selected team(s). By default, all the teams are selected.
+#' @param visualize Type of plot, defaults is \code{"aggregated"}.
+#'
+#' @return
+#'
+#' Final rank tables and plots with the predicted points for the selected teams as given by the models fitted via the \code{stan_foot}
+# function.
+#'
+#' @details
+#'
+#'For Bayesian models fitted via \code{stan_foot} the final rank tables are computed according to the
+#'simulation from the posterior predictive distribution of future (out-of-sample) matches.
+#'The dataset should refer to one or more seasons from a given national football league (Premier League, Serie A, La Liga, etc.).
+#'
+#'
+#'
+#' @author Leonardo Egidi \email{legidi@units.it}
+#'
+#' @examples
+#'
+#' \dontrun{
+#' library(engsoccerdata)
+#' library(tidyverse)
+#'
+#' italy_1999_2000<- italy %>%
+#' dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+#' filter(Season == "1999"|Season=="2000")
+#'
+#' fit <- stan_foot(italy_2000, "double_pois", iter = 200)
+#' foot_rank(italy_1999_2000, fit)
+#' foot_rank(italy_1999_2000, fit, visualize =  "individual")
+#' }
 #'
 #'
 #' @importFrom reshape2 melt
@@ -760,9 +792,9 @@ df_team_sel <- data.frame(obs = mt_obs,
        geom_line(aes(x= day, y= q_50, color = "simulated"),
                  data=df_team_sel,
                  #fill = color_scheme_get("red")[[2]],
-                 size =1.1
+                 size =1.1, na.rm = TRUE
        )+
-      geom_line(size=0.8, linetype="solid", aes(color = "observed"))+
+      geom_line(size=0.8, linetype="solid", aes(color = "observed"), na.rm = TRUE)+
       # geom_vline(
       #             xintercept =day_index,
       #             linetype="solid",
@@ -780,9 +812,7 @@ df_team_sel <- data.frame(obs = mt_obs,
       annotate("rect",xmin=-Inf,xmax=day_index,ymin=-Inf,ymax=Inf, alpha=0.1, fill="white")+
       annotate("rect",xmin=day_index ,xmax= max(day_index_prev),ymin=-Inf,ymax=Inf, alpha=0.1, fill="white")
 
-     defaultW <- getOption("warn")
-     options(warn = -1)
-     options(warn = defaultW)
+      #suppressWarnings(print(p))
 
      return(list(rank_plot = p))
   }
