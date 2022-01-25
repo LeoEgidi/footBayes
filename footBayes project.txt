@@ -53,7 +53,7 @@
 		       + DOCUMENTATION ---> BOZZA OK
 
   (v)    foot_round_robin
-            test
+            test (iniziati, 25 gennaio)
             grafico 1) grafico a scacchiera con probabilità di vittoria (da testare)
             grafico 2) tabellone del torneo (eliminazione diretta)   ---> non in questa funzione, e non in questa versione del pacchetto.
             + DOCEMENTATION 

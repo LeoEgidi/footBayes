@@ -23,7 +23,22 @@
 #'@examples
 #'
 #'\dontrun{
+#'library(engsoccerdata)
+#'library(tidyverse)
+#'
+#'
+#'italy_1999_2000<- italy %>%
+#'dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+#'filter(Season == "1999"|Season=="2000")
+#'
+#'fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter = 200)
+#'
+#'foot_round_robin(italy_1999_2000, fit)
+#'foot_round_robin(italy_1999_2000, fit, c("Parma AC", "AS Roma"))
+#'
 #'}
+#'
+#'@importFrom dplyr as_tibble
 #' @export
 
 
@@ -84,8 +99,6 @@ foot_round_robin <- function(data, object, team_sel){
   }
 
   if (missing(team_sel)){
-    team_sel <- teams[unique(team1_prev)]
-  }else if (team_sel =="all"){
     team_sel <- teams[unique(team1_prev)]
   }
   team_index <- match(team_sel, teams)
@@ -181,7 +194,16 @@ foot_round_robin <- function(data, object, team_sel){
                   fill = "black", color = "black",
                   size = 1)+
     ggtitle("Home win posterior probabilities")
-   tbl <- cbind(data_ex, as.vector(punt[team_index, team_index])))
+   if (sum(data_ex$prob)==0){
+      tbl <- cbind(team_sel[data_ex$Home], team_sel[data_ex$Away], as.vector(punt[team_index, team_index]))
+      colnames(tbl) <- c("Home", "Away", "Observed")
+      tbl <- dplyr::as_tibble(tbl) %>% filter(Home!=Away)
+      }else{
+      tbl <- cbind(team_sel[data_ex$Home], team_sel[data_ex$Away], round(data_ex$prob,3),
+                   as.vector(punt[team_index, team_index]))
+      colnames(tbl) <- c("Home", "Away", "Home_prob", "Observed")
+      tbl <- dplyr::as_tibble(tbl) %>% filter(Home!=Away & Home_prob!=0 )
+    }
    return(list(round_plot = p, round_table = tbl))
 
 }

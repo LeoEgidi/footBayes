@@ -2,10 +2,48 @@
 % Please edit documentation in R/foot_round_robin.R
 \name{foot_round_robin}
 \alias{foot_round_robin}
-\title{Round-robin}
+\title{Round-robin for football leagues}
 \usage{
 foot_round_robin(data, object, team_sel)
 }
+\arguments{
+\item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
+home goals, away goals.}
+
+\item{object}{An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.}
+
+\item{team_sel}{Selected team(s). By default, all the teams are selected.}
+}
+\value{
+Round-robin plot with the home-win posterior probabilities computed from the ppd of the fitted model via the \code{stan_foot} function.
+}
 \description{
-Round-robin
+Posterior predictive probabilities for a football season in a round-robin format
+}
+\details{
+For Bayesian models fitted via \code{stan_foot} the round-robin table is computed according to the
+simulation from the posterior predictive distribution of future (out-of-sample) matches.
+The dataset should refer to one or more seasons from a given national football league (Premier League, Serie A, La Liga, etc.).
+}
+\examples{
+
+\dontrun{
+library(engsoccerdata)
+library(tidyverse)
+
+
+italy_1999_2000<- italy \%>\%
+dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
+filter(Season == "1999"|Season=="2000")
+
+fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter = 200)
+
+foot_round_robin(italy_1999_2000, fit)
+foot_round_robin(italy_1999_2000, fit, c("Parma AC", "AS Roma"))
+
+}
+
+}
+\author{
+Leonardo Egidi \email{legidi@units.it}
 }
