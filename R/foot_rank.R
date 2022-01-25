@@ -125,9 +125,9 @@ foot_rank <- function(data, object,
   if (length(unique(data$season[(N+1):(N+N_prev)][!is.na(data$season[(N+1):(N+N_prev)])])) !=1){
     stop("Please, to use this function,
           do not provide out-of-sample
-         matches belonging to different seasons, provide
-         only out-of samples matches from one season.
-         Consider to refit the model.")
+          matches belonging to different seasons, provide
+          only out-of samples matches from one season.
+          Consider to refit the model.")
 
   # warning("Please, do not provide out-of-sample
   #     matches belonging to different seasons, provide
@@ -183,12 +183,13 @@ foot_rank <- function(data, object,
         seasons_levels]
 
   if (N_prev < length(team_seasons[[ind_season_prev]])/2 & N_prev!=0){
-      warning(paste("The number of out-of-samples matches
-      is too small,  then is forced to be zero.
-Please, to allow for out-of-samples matches, consider to
-refit the model with the argument predict greater
-      or equal than",
+      stop(paste("The number of out-of-samples matches
+                  is too small,  then is forced to be zero.
+                  Please, to allow for out-of-samples matches, consider to
+                  refit the model with the argument predict greater
+                  or equal than",
         length(team_seasons[[ind_season_prev]])/2 ))
+
 
     sims$diff_y_prev <- as.null(sims$diff_y_prev)
     sims$y_prev <- as.null(sims$y_prev)
@@ -216,12 +217,14 @@ refit the model with the argument predict greater
   # questa condizione è sbagliata? si, per le ultime giornate è sbagliata!
   if (length(unique(team1_prev)) !=
       length(unique(c(team1_prev, team2_prev)))  ){
-    stop("Please, select more out-of-sample matches through
-          the argument 'predict' of the 'stan_foot' function
-          (hint: select at least two complete match-days for
-           out-of-sample predictions)")
-  #   team1_prev <- c(team1_prev, team2_prev)
-  #   team2_prev <- c(team2_prev, team1_prev)
+     stop("Please, select more out-of-sample matches through
+           the argument 'predict' of the 'stan_foot' function
+           (hint: select at least two complete match-days for
+            out-of-sample predictions)")
+     # team1_prev_temp <- c(team1_prev, team2_prev)
+     # team2_prev_temp <- c(team2_prev, team1_prev)
+     # team1_prev <- team1_prev_temp
+     # team2_prev <- team2_prev_temp
    }
 
   ## condizione fondamentale per in-sample o out-of-sample

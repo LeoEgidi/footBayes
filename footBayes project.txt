@@ -43,11 +43,13 @@
                        + errore quando c'è solo una stagione
             grafico 3) grafico indipendente dall'annata, con una sorta di trend per ogni squadra considerata?   ---> NO
 
-           Check 25-5 :              più stagioni -                            una sola stagione
+            Check 25-5 :              più stagioni -                            una sola stagione
                   out-of-sample       predict <= 9                               predict <= 9       problema sulle ultime 2 giornate...mancano squadre  (per ora c'è uno STOP riga 178)
                                       predict > 9 ok                             predict > 9  ok
                    -------------------------------------------------------
                     in-sample          ok               ok
+
+		Check 'ultima giornata'  ---> quando il numero di giornate previste è minore di 2, scatta errore. Da revisionare in nuove versioni del pacchetto. OK
 		       + DOCUMENTATION 
 
   (v)    foot_round_robin

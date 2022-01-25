@@ -11,7 +11,39 @@ foot_rank(data, object, team_sel, visualize = c("aggregated", "individual"))
 home goals, away goals.}
 
 \item{object}{An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.}
+
+\item{team_sel}{Selected team(s). By default, all the teams are selected.}
+
+\item{visualize}{Type of plot, defaults is \code{"aggregated"}.}
+}
+\value{
+Final rank tables and plots with the predicted points for the selected teams as given by the models fitted via the \code{stan_foot}
 }
 \description{
-Predictive plots for football ranks.
+Posterior predictive plots and final rank table for football ranks.
+}
+\details{
+For Bayesian models fitted via \code{stan_foot} the final rank tables are computed according to the
+simulation from the posterior predictive distribution of future (out-of-sample) matches.
+The dataset should refer to one or more seasons from a given national football league (Premier League, Serie A, La Liga, etc.).
+}
+\examples{
+
+\dontrun{
+library(engsoccerdata)
+library(tidyverse)
+
+italy_1999_2000<- italy \%>\%
+dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
+filter(Season == "1999"|Season=="2000")
+
+fit <- stan_foot(italy_2000, "double_pois", iter = 200)
+foot_rank(italy_1999_2000, fit)
+foot_rank(italy_1999_2000, fit, visualize =  "individual")
+}
+
+
+}
+\author{
+Leonardo Egidi \email{legidi@units.it}
 }
