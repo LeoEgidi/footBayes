@@ -135,7 +135,10 @@
 
 - Technical stuff
 
- Compilare i modelli prima?
- Usare march.arg()
+ Compilare i modelli prima?  
+
+https://mc-stan.org/rstantools/articles/minimal-rstan-package.html
+
+Usare march.arg()
  cores per calcolo parallelo (vedi rstanarm)
  fare in modo di risolvere l'acquisizione delle 'priors' da rstanarm (possibilmente senza installare tutto il pacchetto, come avviene adesso in "Depends")
