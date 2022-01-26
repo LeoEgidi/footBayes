@@ -15,5 +15,7 @@ LinkingTo: StanHeaders (>= 2.18.0), rstan (>= 2.18.1), BH (>= 1.66.0),
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
+VignetteBuilder: knitr
 Suggests: 
-    testthat
+    testthat, knitr, rmarkdown
+

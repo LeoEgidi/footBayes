@@ -29,5 +29,4 @@ testthat("foot_prob gets errors", {
   expect_error(foot_prob(fit5, italy_2000))
 
 
-
 })
