@@ -88,7 +88,8 @@
 
 normal <- function(location = 0, scale = NULL, autoscale = TRUE) {
   validate_parameter_value(scale)
-  list(dist = "normal", df = NA, location = location,
+  list(dist = "normal", df = NA,
+    location = location,
        scale = scale,
        autoscale = autoscale)
 }
@@ -107,13 +108,18 @@ student_t <- function(df = 1, location = 0, scale = NULL, autoscale = TRUE) {
 #' @rdname priors
 #' @export
 cauchy <- function(location = 0, scale = NULL, autoscale = TRUE) {
-  student_t(df = 1, location = location, scale = scale, autoscale)
+  student_t(df = 1, location = location,
+    scale = scale,
+    autoscale = autoscale)
 }
 
 #' @rdname priors
 #' @export
 laplace <- function(location = 0, scale = NULL, autoscale = TRUE) {
-  list(dist = "laplace", df = NA, location, scale, autoscale)
+  list(dist = "laplace", df = NA,
+    location = location,
+    scale = scale,
+    autoscale = autoscale)
 }
 
 

@@ -145,6 +145,10 @@ test_that("no prior errors occur",{
           prior = student_t(4, 0,1), iter = 200), NA)
 
   expect_error(stan_foot(england_2004, "biv_pois",
+    prior = student_t(4, 0,1),
+    prior_sd = laplace(0,1), iter = 200), NA)
+
+  expect_error(stan_foot(england_2004, "biv_pois",
           prior = laplace(0,1), iter = 200), NA)
 
   expect_error(stan_foot(england_2004, "biv_pois",
