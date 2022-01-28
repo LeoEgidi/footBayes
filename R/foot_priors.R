@@ -2,7 +2,9 @@
 #'
 #' @name priors
 #' @description This prior specification is just a duplicate
-#' of some of the priors used by the \pkg{rstanarm} package. They can be passed to the
+#' of some of the priors used by the \pkg{rstanarm} package.
+#'
+#' These prior distributions can be passed to the
 #' \code{stan_foot} function, through the arguments \code{prior} and \code{prior_sd}.
 #' See  the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
 #'   Distributions for rstanarm Models}} for further details (to view the priors used for an existing model see
@@ -65,8 +67,9 @@
 #'
 #' }
 #'
-#' @return A named list to be used internally by the \pkg{rstanarm} model
-#'   fitting functions.
+#' @return A named list to be used internally by the
+#'  \code{stan_foot} model fitting function.
+#'
 #' @seealso The various vignettes for the \pkg{rstanarm} package also discuss
 #'   and demonstrate the use of some of the supported prior distributions.
 #'
