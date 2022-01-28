@@ -7,8 +7,8 @@
 normal(location = 0, scale = NULL, autoscale = TRUE)
 }
 \description{
-This prior specification is just a duplicate 
-of some of the priors used by the \pkg{rstanarm} package. They can be passed to the 
+This prior specification is just a duplicate
+of some of the priors used by the \pkg{rstanarm} package. They can be passed to the
 \code{stan_foot} function, through the arguments \code{prior} and \code{prior_sd}.
 See  the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
   Distributions for rstanarm Models}} for further details.
