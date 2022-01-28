@@ -1,6 +1,6 @@
 #' Football priors distributions and options
 #'
-#' @name football_priors
+#' @name priors
 #'
 #' This prior specification is just a duplicate
 #' of some of the priors used by the \pkg{rstanarm} package. They can be passed to the
@@ -89,7 +89,7 @@ normal <- function(location = 0, scale = NULL, autoscale = TRUE) {
        autoscale = autoscale)
 }
 
-#' @rdname football_priors
+#' @rdname priors
 #' @export
 student_t <- function(df = 1, location = 0, scale = NULL, autoscale = TRUE) {
   validate_parameter_value(scale)
@@ -100,13 +100,13 @@ student_t <- function(df = 1, location = 0, scale = NULL, autoscale = TRUE) {
        autoscale = autoscale)
 }
 
-#' @rdname football_priors
+#' @rdname priors
 #' @export
 cauchy <- function(location = 0, scale = NULL, autoscale = TRUE) {
   student_t(df = 1, location = location, scale = scale, autoscale)
 }
 
-#' @rdname football_priors
+#' @rdname priors
 #' @export
 laplace <- function(location = 0, scale = NULL, autoscale = TRUE) {
   list(dist = "laplace", df = NA, location, scale, autoscale)
