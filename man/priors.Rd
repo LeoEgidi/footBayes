@@ -27,9 +27,18 @@ See  the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{
 
 You can choose between: \code{normal}, \code{cauchy}, \code{laplace}, \code{student_t}.}
 \alias{normal}
+\alias{student_t}
+\alias{cauchy}
+\alias{laplace}
 \title{Football priors distributions and options}
 \usage{
 normal(location = 0, scale = NULL, autoscale = TRUE)
+
+student_t(df = 1, location = 0, scale = NULL, autoscale = TRUE)
+
+cauchy(location = 0, scale = NULL, autoscale = TRUE)
+
+laplace(location = 0, scale = NULL, autoscale = TRUE)
 }
 \arguments{
 \item{location}{Prior location. In most cases, this is the prior mean, but

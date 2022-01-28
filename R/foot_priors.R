@@ -77,7 +77,7 @@
 #' models. \emph{Annals of Applied Statistics}. 2(4), 1360--1383.
 #'
 #'
-#' @rdname football_priors
+#' @rdname priors
 #' @export
 #'
 #'
