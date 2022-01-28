@@ -136,21 +136,21 @@ context("optional arguments")
 test_that("no prior errors occur",{
 
   expect_error(stan_foot(england_2004, "biv_pois",
-                         prior = normal(0,10), iter = 200), NA)
+          prior = normal(0,10), iter = 200), NA)
 
   expect_error(stan_foot(england_2004, "biv_pois",
-                         prior = cauchy(0,1), iter = 200), NA)
+          prior = cauchy(0,1), iter = 200), NA)
 
   expect_error(stan_foot(england_2004, "biv_pois",
-                         prior = student_t(4, 0,1), iter = 200), NA)
+          prior = student_t(4, 0,1), iter = 200), NA)
 
   expect_error(stan_foot(england_2004, "biv_pois",
-                         prior = laplace(0,1), iter = 200), NA)
+          prior = laplace(0,1), iter = 200), NA)
 
   expect_error(stan_foot(england_2004, "biv_pois",
-                         prior = dirichlet(4, 0,1), iter = 200))
+          prior = dirichlet(4, 0,1), iter = 200))
 
   a <- "d"
   expect_error(stan_foot(england_2004, "biv_pois",
-                         prior = normal(0, a), iter = 200))
+          prior = normal(0, a), iter = 200))
   })
