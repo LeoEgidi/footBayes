@@ -142,4 +142,4 @@ https://mc-stan.org/rstantools/articles/minimal-rstan-package.html
 Usare march.arg()
  cores per calcolo parallelo (vedi rstanarm)
  fare in modo di risolvere l'acquisizione delle 'priors' da rstanarm (possibilmente senza installare tutto il pacchetto, come avviene adesso in "Depends")
-	---> levare rstanarm da Depends, creare funzioni "proprie". OK
+	---> levare rstanarm da Depends, creare funzioni "proprie". OK (foot_priors.R)
