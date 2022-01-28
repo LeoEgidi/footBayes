@@ -1,11 +1,16 @@
 Package: footBayes
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Fitting Bayesian and MLE football models
 Version: 0.1.0
 Author: Leonardo Egidi
 Maintainer: Leonardo Egidi <legidi@units.it>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: This is the first package allowing for the estimation,
+             visualization and prediction of the most well-known 
+             football models: double Poisson, bivariate Poisson,
+             Skellam, student_t. The package allows Hamiltonian
+             Monte Carlo (HMC) estimation through the underlying Stan
+             environment and Maximum Likelihood estimation (MLE, for 
+             'static' models only).
 License: What license is it under?
 Depends: R (>= 3.1.0)
 Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats,
