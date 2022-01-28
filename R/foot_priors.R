@@ -1,8 +1,7 @@
 #' Football priors distributions and options
 #'
 #' @name priors
-#'
-#' This prior specification is just a duplicate
+#' @description This prior specification is just a duplicate
 #' of some of the priors used by the \pkg{rstanarm} package. They can be passed to the
 #' \code{stan_foot} function, through the arguments \code{prior} and \code{prior_sd}.
 #' See  the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
@@ -70,6 +69,8 @@
 #'   fitting functions.
 #' @seealso The various vignettes for the \pkg{rstanarm} package also discuss
 #'   and demonstrate the use of some of the supported prior distributions.
+#'
+#' @author Leonardo Egidi \email{legidi@units.it}
 #'
 #' @references
 #' Gelman, A., Jakulin, A., Pittau, M. G., and Su, Y. (2008). A weakly
