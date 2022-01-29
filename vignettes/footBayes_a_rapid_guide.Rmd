@@ -3,11 +3,11 @@ title: "Fitting football models and visualizing predictions with the ```footBaye
 author: "Leonardo Egidi"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
+bibliography: thesis.bib
 vignette: >
   %\VignetteIndexEntry{Fitting football models with the ```footBayes``` package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-bibliography: thesis.bib
 ---
 
 ```{r setup, include = FALSE}
@@ -60,7 +60,7 @@ The package is also available at the following link:
 
 [https://github.com/LeoEgidi/footBayes](https://github.com/LeoEgidi/footBayes)
 
-To say in art's terms, I love this quote from Antoine de Saint-Exupéry (partially rephrased):
+In my opinion building packages is like an art's work, likely to be *never-ending*. To say in art's terms, I love this quote from Antoine de Saint-Exupéry (partially rephrased):
 
 >"A (software) designer knows that he has reached perfection not when there is nothing more to add, but when there is nothing left to take away!"
 
@@ -296,7 +296,7 @@ In the model above, we are assuming that the covariance $\lambda_{3n}$ is consta
 \rho \sim & \ \mathcal{N}^+(0,1),\\
 \end{align}
 
-where $\rho$ is assigned an half-Gaussian distribution with standard deviation equal to 1. According to the fit above, this means that in the model above we get an estimate of $\lambda_{3n}= \exp\{-4.25\} \approx 0.014$, suggesting a low, despite non-null, amount of goals-correlation existing in the 2000/2001 Italian Serie A. Of course, in the final package's version, the user will be allowed to specify a more general linear predictor for $\log(\lambda_{3n})$, as outlined in the BP presentation above, along with some prior distributions for the  parameters involved in the covariance formulation.
+where $\rho$ is assigned an half-Gaussian distribution with standard deviation equal to 1. According to the fit above, this means that in the model above we get an estimate of $\lambda_{3n}= \exp\{-4.25\} \approx 0.014$, suggesting a low, despite non-null, amount of goals-correlation existing in the 2000/2001 Italian Serie A. Of course, in the next package's version, the user will be allowed to specify a more general linear predictor for $\log(\lambda_{3n})$, as outlined in the BP presentation above, along with some prior distributions for the  parameters involved in the covariance formulation.
 
 
 We can also depict the marginal posterior distributions for $\rho$ (and eventually for the other fixed-effects parameters) using the ```bayesplot``` package for Bayesian visualizations:
@@ -309,7 +309,7 @@ mcmc_areas(posterior1, regex_pars=c("home", "rho",
   "sigma_att", "sigma_def"))
 ```
 
-We can also access the original Stan code by typing:
+We can also access the original BP Stan code by typing:
 
 ```{r stan_extract, echo =TRUE, eval = TRUE}
 ### Model's code extraction
@@ -547,9 +547,9 @@ pp_foot(data = italy_2000, object = fit1_stan,
 
 ```
 
-The aggregated goal difference frequencies seem to be decently captured by the model's replications: in the first plot, blue horizontal lines denote the observed goal differences frequencies registered in the dataset, wehreas yellow jittered points denote the correspondent replications. Goal-difference of 0, corresponding to the draws occurrences, is only slightly underestimated by the model. However, in general there are no particular clues of model's misfit.
+The aggregated goal difference frequencies seem to be decently captured by the model's replications: in the first plot, blue horizontal lines denote the observed goal differences frequencies registered in the dataset, whereas yellow jittered points denote the correspondent replications. Goal-difference of 0, corresponding to the draws occurrences, is only slightly underestimated by the model. However, in general there are no particular clues of model's misfit.
 
-In the second plot, the ordered observed goal differences are plotted against their replications (50% and 95% credible intervals), and from this plot also we have not particular signs of model's misfits.
+In the second plot, the ordered observed goal differences are plotted against their replications (50% and 95% credible intervals), and from this plot also we do not have particular signs of model's misfits.
 
 Other useful PP checks, such as the overlap between data density and replicated data densities to check eventual inconsistencies, can be obtained through the standard use of the ```bayesplot``` package, in this case providing an approximation to a continuous distribution using an input kernel choice (```bw = 0.5``` in the ```ppc_dens_overlay``` used below):
 
@@ -729,7 +729,7 @@ According to the above model LOOIC comparisons, the weekly-dynamic double Poisso
 
 # Extensions in next versions
 
-Extensions and to-do list for the final package's version:
+Extensions and to-do list for the next package's versions:
 
 1. **Data Web-scraping**: automatic routine to scrape data from internet;
 
