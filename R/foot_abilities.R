@@ -203,6 +203,7 @@ foot_abilities <- function(object, data,
     timings_breaks <- timings[sp*c(1:5)]
   }else{
     timings <- unique(data$season)
+    timings_breaks <- timings
   }
   if (type =="both"){
   position_lookup <-
@@ -444,6 +445,7 @@ foot_abilities <- function(object, data,
 
       }else{
         timings <- unique(data$season)
+        timings_breaks <-timings
       }
 
       position_lookup <-
