@@ -234,7 +234,8 @@ foot_abilities <- function(object, data,
       data = def_data,
       size = 1
       )+
-    scale_color_manual(values = c(defence = color_scheme_get("blue")[[4]],
+    scale_color_manual(name ="",
+      values = c(defence = color_scheme_get("blue")[[4]],
                                 attack=  color_scheme_get("red")[[4]]))+
     facet_wrap("teams", scales = "free")+
     lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
@@ -252,7 +253,9 @@ foot_abilities <- function(object, data,
                                                    color="black",
                                                    angle=45, size =9),
           axis.text.y = element_text(size=11),
-          plot.subtitle=element_text(size=12))
+          plot.subtitle=element_text(size=12),
+      legend.position = "bottom",
+      legend.text = element_text(size = 15))
   }else if (type =="attack"){
     position_lookup <-
       att_data %>%
@@ -272,10 +275,12 @@ foot_abilities <- function(object, data,
         data = att_data,
         size = 1
       )+
-      scale_color_manual(values = c(attack =
+      scale_color_manual(name="",
+        values = c(attack =
           color_scheme_get("red")[[4]]))+
       facet_wrap("teams", scales = "free")+
-      lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
+      lims(y = c( min(att_25-0.3),
+        max(att_75+0.3))) +
       scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
       labs(x = "Times", y = "Teams' effects",
            title = "Attack effects (50% posterior bars)"
@@ -285,10 +290,12 @@ foot_abilities <- function(object, data,
       theme(plot.title = element_text(size = 16),
             strip.text = element_text(size = 8),
             axis.text.x =  element_text(face="bold",
-                                        color="black",
-                                        angle=45, size =9),
+                          color="black",
+                          angle=45, size =9),
             axis.text.y = element_text(size=11),
-            plot.subtitle=element_text(size=12))
+            plot.subtitle=element_text(size=12),
+            legend.position = "bottom",
+            legend.text = element_text(size = 15))
 
   }else if (type =="defense"){
     position_lookup <-
@@ -309,7 +316,8 @@ foot_abilities <- function(object, data,
         data = def_data,
         size = 1
       )+
-      scale_color_manual(values = c(defence =
+      scale_color_manual(name="",
+        values = c(defence =
           color_scheme_get("blue")[[4]]
       ))+
       facet_wrap("teams", scales = "free")+
@@ -326,7 +334,9 @@ foot_abilities <- function(object, data,
                                         color="black",
                                         angle=45, size =9),
             axis.text.y = element_text(size=11),
-            plot.subtitle=element_text(size=12))
+            plot.subtitle=element_text(size=12),
+        legend.position = "bottom",
+        legend.text = element_text(size = 15))
   }
 
 
@@ -467,7 +477,8 @@ foot_abilities <- function(object, data,
           size = 1,
           color = color_scheme_get("red")[[4]]
         )+
-        scale_color_manual(values = c(color_scheme_get("blue")[[4]],
+        scale_color_manual(name = "",
+          values = c(color_scheme_get("blue")[[4]],
                                       color_scheme_get("red")[[4]]))+
         facet_wrap("teams", scales = "free")+
         lims(y = c( min(ability_25-0.2), max(ability_75+0.2))) +
@@ -485,7 +496,9 @@ foot_abilities <- function(object, data,
                                           color="black",
                                           angle=45, size =9),
               axis.text.y = element_text(size=11),
-              plot.subtitle=element_text(size=12))
+              plot.subtitle=element_text(size=12),
+          legend.position = "bottom",
+          legend.text = element_text(size = 15))
 
 
     }else if (length(dim(ability))==2){
