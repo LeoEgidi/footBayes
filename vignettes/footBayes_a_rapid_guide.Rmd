@@ -14,6 +14,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+knitr::opts_chunk$set(fig.align = 'center', warning=FALSE, message=FALSE, fig.asp=0.625, fig.height =10, fig.width = 8, out.width='750px', dpi=200, 
+  dev='png', global.par = TRUE, dev.args=list(pointsize=10), fig.path = 'figs/')
 ```
 
 
@@ -267,7 +269,7 @@ italy_2000<- italy %>%
 ## no dynamics, no predictions
 ## 4 Markov chains, 'n_iter' iterations each
 
-n_iter <- 1500    # number of MCMC iterations
+n_iter <- 200    # number of MCMC iterations
 fit1_stan <- stan_foot(data = italy_2000,
                        model="biv_pois",
                        chains = 4,
@@ -500,7 +502,7 @@ Once the model has been fitted, there is a large amount of interesting summaries
 
 We can produce the team-specific abilities for the two static fits above, ```fit1_mle``` (MLE) and ```fit1_stan``` (Bayes), with red bars for the attack and blue bars for the defence, respectively:
 
-```{r abilities, echo = TRUE, eval = TRUE, fig.show="hold", out.width="90%"}
+```{r abilities, echo = TRUE, eval = TRUE, fig.show="hold"}
 ## Plotting abilities: credible and confidence 95% intervals
 
 foot_abilities(object = fit1_stan, data = italy_2000, cex.var = 1)
@@ -511,7 +513,7 @@ AS Roma, the team winning the Serie A 2000/2001, is associated with the highest 
 
 We can also depict the team-specific dynamic plots for the dynamic models:
 
-```{r abilities_dyn, echo = TRUE, eval = TRUE, fig.show="hold", out.width="90%"}
+```{r abilities_dyn, echo = TRUE, eval = TRUE, fig.show="hold"}
 ## Plotting abilities: credible and confidence 95% intervals
 
 foot_abilities(fit2_stan, italy_2000)
@@ -636,7 +638,7 @@ We can provide here:
 
 - **rank-league reconstruction** for the first model ```fit1_stan```  by using the **in-sample** replications $\mathcal{D}^{\text{rep}}$ (yellow ribbons for the credible intervals, solid blue lines for the observed cumulated points):
 
-```{r rank_pred1, echo=TRUE, eval= TRUE,  out.width="90%"}
+```{r rank_pred1, echo=TRUE, eval= TRUE}
 ## Rank league reconstruction
 
 # aggregated plot
@@ -645,14 +647,14 @@ foot_rank(data = italy_2000, object = fit1_stan)
 
 # team-specific plot
 
-foot_rank(data = italy_2000, object = fit1_stan, visualize = "single teams")
+foot_rank(data = italy_2000, object = fit1_stan, visualize = "individual")
 
 ```
 
 
 - **rank-league prediction** (aggregated or at team-level) for the fourth model ```fit4_stan``` by using the **out-of-sample** replications $\tilde{\mathcal{D}}$ (yellow ribbons for the credible intervals, solid blue lines for the observed cumulated points):
 
-```{r rank_pred2, echo=TRUE, eval= TRUE, out.width="90%"}
+```{r rank_pred2, echo=TRUE, eval= TRUE}
 ## Rank predictions for individual teams
 
 # aggregated plot
@@ -663,10 +665,10 @@ foot_rank(data = italy_2000, object = fit4_stan)
 
 foot_rank(italy_2000, fit4_stan, 
           team_sel = c("AC Milan", "AS Roma"), 
-          visualize = "single teams")
+          visualize = "individual")
 
 foot_rank(italy_2000, fit4_stan, 
-          visualize = "single teams")
+          visualize = "individual")
 
 ```
 
