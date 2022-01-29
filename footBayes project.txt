@@ -2,8 +2,8 @@
 - Visualization
 
   (i)    foot_abilities
-            + test
-            + DOCUMENTATION  ---> BOZZA OK
+            + test 
+            + DOCUMENTATION
 
   (ii)   foot_prob
             + test ---> iniziati (18/19 gennaio)
