@@ -224,19 +224,17 @@ foot_abilities <- function(object, data,
       fill = color_scheme_get("gray")[[2]]
       )+
     geom_line(
-      aes(x = times, y = mid),
+      aes(x = times, y = mid, colour = "attack"),
       data = att_data,
-      size = 1,
-      color = color_scheme_get("red")[[4]]
+      size = 1
       )+
     geom_line(
-      aes(x = times, y = mid),
+      aes(x = times, y = mid, colour = "defence"),
       data = def_data,
-      size = 1,
-      color = color_scheme_get("blue")[[4]]
+      size = 1
       )+
-    scale_color_manual(values = c(color_scheme_get("blue")[[4]],
-                                  color_scheme_get("red")[[4]]))+
+    scale_color_manual(values = c(defence = color_scheme_get("blue")[[4]],
+                                attack=  color_scheme_get("red")[[4]]))+
     facet_wrap("teams", scales = "free")+
     lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
     scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
@@ -269,12 +267,12 @@ foot_abilities <- function(object, data,
         fill = color_scheme_get("gray")[[2]]
       ) +
       geom_line(
-        aes(x = times, y = mid),
+        aes(x = times, y = mid, colour = "attack"),
         data = att_data,
-        size = 1,
-        color = color_scheme_get("red")[[4]]
+        size = 1
       )+
-      scale_color_manual(values = c(color_scheme_get("red")[[4]]))+
+      scale_color_manual(values = c(attack =
+          color_scheme_get("red")[[4]]))+
       facet_wrap("teams", scales = "free")+
       lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
       scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
@@ -306,12 +304,12 @@ foot_abilities <- function(object, data,
         fill = color_scheme_get("gray")[[2]]
       )+
       geom_line(
-        aes(x = times, y = mid),
+        aes(x = times, y = mid, colour = "defence"),
         data = def_data,
-        size = 1,
-        color = color_scheme_get("blue")[[4]]
+        size = 1
       )+
-      scale_color_manual(values = c(color_scheme_get("blue")[[4]]
+      scale_color_manual(values = c(defence =
+          color_scheme_get("blue")[[4]]
       ))+
       facet_wrap("teams", scales = "free")+
       lims(y = c( min(def_25-0.3), max(def_75+0.3))) +
