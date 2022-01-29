@@ -454,7 +454,7 @@ foot_rank <- function(data, object,
                  points_975[class$ix])
 
   rank_frame=data.frame(
-    squadre=rank_bar[,1],
+    teams=rank_bar[,1],
     mid=as.numeric(as.vector(rank_bar[,2])),
     obs=obs[  match(  rank_bar[,1], teams_rank_names)],
     lo=as.numeric(as.vector(rank_bar[,3])),
@@ -463,21 +463,21 @@ foot_rank <- function(data, object,
     hi2=as.numeric(as.vector(rank_bar[,6]))
   )
 
-  rank_frame$squadre=factor(rank_frame$squadre,
+  rank_frame$teams=factor(rank_frame$teams,
                             levels=rank_bar[,1])
   p <- ggplot()+
-    geom_ribbon(aes(x=squadre, ymin=lo2, ymax=hi2, group=1),
+    geom_ribbon(aes(x=teams, ymin=lo2, ymax=hi2, group=1),
                 data=rank_frame,
                 fill = color_scheme_get(fill_test)[[4]]
     )+
-    geom_ribbon(aes(x=squadre, ymin=lo, ymax=hi, group=1),
+    geom_ribbon(aes(x=teams, ymin=lo, ymax=hi, group=1),
                 data=rank_frame,
                 fill = color_scheme_get(fill_test)[[5]]
     )+
-    geom_line(aes(x=squadre, y= mid, group=1, color ="simulated"),
+    geom_line(aes(x=teams, y= mid, group=1, color ="simulated"),
               data=rank_frame
     )+
-    geom_point(aes(x=squadre, y=obs, color = "observed"),
+    geom_point(aes(x=teams, y=obs, color = "observed"),
               data=rank_frame)+
     scale_colour_manual(name="",
                         values=c(observed="blue", simulated =  color_scheme_get(fill_test)[[4]]))+
