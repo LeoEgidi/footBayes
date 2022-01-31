@@ -17,7 +17,7 @@ context("one season")
 fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 fit_t <- stan_foot(italy_2000, "student_t", iter = 200)
 
-testthat("in-sample models", {
+test_that("in-sample models", {
 expect_error(foot_rank(italy_2000, fit), NA)
 expect_error(foot_rank(italy_2000, fit, "AS Roma"), NA)
 expect_error(foot_rank(italy_2000, fit, "AS Roma", "individual"), NA)
@@ -35,7 +35,7 @@ expect_error(foot_rank(italy_2000, fit_t, visualize =  "individual"), NA)
 
 # out-of-sample
 
-testthat("out-of-sample models", {
+test_that("out-of-sample models", {
 fit_out <- stan_foot(italy_2000, "double_pois", iter = 200, predict = 45)
 expect_error(foot_rank(italy_2000, fit_out), NA)
 expect_error(foot_rank(italy_2000, fit_out, visualize = "individual"), NA)

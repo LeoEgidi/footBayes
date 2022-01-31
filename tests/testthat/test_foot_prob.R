@@ -6,7 +6,7 @@ italy_2000<- italy %>%
   dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
   filter(Season=="2000")
 
-testthat("foot_prob gets errors", {
+test_that("foot_prob gets errors", {
 
   # different numbers of home_team and away team
   fit2 <- stan_foot(italy_2000, "biv_pois", predict = 36, iter = 200)
