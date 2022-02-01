@@ -37,6 +37,6 @@ context("dynamic models")
 test_that("no errors from dynamics",{
 fit <- stan_foot(england_1999_2001, "biv_pois", dynamic_type = "seasonal", iter = 200)
 expect_error(foot_abilities(fit, england_1999_2001), NA)
-expect_error(foot_abilities(fit, england_1999_2001, "Arsenal"), NA)
-expect_error(foot_abilities(fit, england_1999_2001, c("Arsenal", "Everton")), NA)
+expect_error(foot_abilities(fit, england_1999_2001, sel_team = "Arsenal"), NA)
+expect_error(foot_abilities(fit, england_1999_2001, sel_team = c("Arsenal", "Everton")), NA)
 })
