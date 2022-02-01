@@ -1,3 +1,5 @@
+## all the test PASSED (also the skipped ones!)
+
 library(engsoccerdata)
 library(tidyverse)
 
