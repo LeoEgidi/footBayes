@@ -73,7 +73,9 @@
 #' foot_abilities(fit6, italy_2000)
 #' foot_abilities(fit7, italy_2000)
 #'
+#'#'@importFrom rstan traceplot
 #'@export
+
 
 
 foot_abilities <- function(object, data,
