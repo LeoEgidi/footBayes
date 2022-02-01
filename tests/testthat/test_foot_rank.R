@@ -68,7 +68,7 @@ expect_error(foot_rank(italy_2000, fit_out_but_last, c("AS Roma", "US Lecce", "L
 context("more seasons")
 
 # in-sample
-testthat("in-sample models", {
+test_that("in-sample models", {
 fit_dyn <- stan_foot(italy_1999_2000, "double_pois", iter = 200)
 expect_error(foot_rank(italy_1999_2000, fit_dyn), NA)
 expect_error(foot_rank(italy_1999_2000, fit_dyn, "AS Roma"), NA)
@@ -79,7 +79,7 @@ expect_error(foot_rank(italy_1999_2000, fit_dyn, visualize =  "individual"), NA)
 })
 
 # out-of-sample
-testthat("out-of-sample models", {
+test_that("out-of-sample models", {
 fit_dyn_out <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter = 200)
 expect_error(foot_rank(italy_1999_2000, fit_dyn_out), NA)
 expect_error(foot_rank(italy_1999_2000, fit_dyn_out, "AS Roma"), NA)
