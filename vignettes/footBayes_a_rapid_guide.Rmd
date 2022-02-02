@@ -242,6 +242,7 @@ library(footBayes)
 library(engsoccerdata)
 library(bayesplot)
 library(loo)
+require(dplyr)
 ```
 
 # Model fit
