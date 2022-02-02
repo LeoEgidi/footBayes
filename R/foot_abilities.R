@@ -74,6 +74,7 @@
 #' foot_abilities(fit7, italy_2000)
 #'
 #'@importFrom arm coefplot
+#'@importFrom rstan traceplot
 #'@export
 
 
