@@ -240,7 +240,6 @@ and load the following required packages (please, install them on your laptops):
 ```{r libraries, echo = TRUE, eval = TRUE}
 library(footBayes)
 library(engsoccerdata)
-library(tidyverse)
 library(bayesplot)
 library(loo)
 ```
