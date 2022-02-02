@@ -1,29 +1,30 @@
 ## all the test PASSED (also the skipped ones!)
 
-require(tidyverse)
-require(dplyr)
-
-##########################
-## DATA
-#########################
-
-england <- as_tibble(england)
-# one season only
-england_2004 <- england %>%
-  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-  filter(  Season=="2004")
-
-# more seasons
-england_1999_2001 <- england %>%
-  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-  filter(  Season=="2001" | Season == "2000" | Season =="1999")
-
 #------------------------------------------------------
-
 
 context("stan data reading")
 
 test_that("stan models recognize errors/warnings" , {
+
+  require(engsoccerdata)
+  require(dplyr)
+
+  ##########################
+  ## DATA
+  #########################
+
+  england <- as_tibble(england)
+  # one season only
+  england_2004 <- england %>%
+    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+    filter(  Season=="2004")
+
+  # more seasons
+  england_1999_2001 <- england %>%
+    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+    filter(  Season=="2001" | Season == "2000" | Season =="1999")
+
+
   england <- as_tibble(england)
   england_2004_six <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal,
@@ -70,6 +71,25 @@ test_that("stan models recognize errors/warnings" , {
 context("stan static models")
 test_that("prediction causes  warnings/errors", {
 
+  require(engsoccerdata)
+  require(dplyr)
+
+  ##########################
+  ## DATA
+  #########################
+
+  england <- as_tibble(england)
+  # one season only
+  england_2004 <- england %>%
+    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+    filter(  Season=="2004")
+
+  # more seasons
+  england_1999_2001 <- england %>%
+    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+    filter(  Season=="2001" | Season == "2000" | Season =="1999")
+
+
   ## predict > N
   expect_error(stan_foot(england_2004,
             model ="student_t",
@@ -89,6 +109,25 @@ test_that("prediction causes  warnings/errors", {
 #----------------------------------------------------
 context("stan dynamic models")
 test_that("dymanics cause warnings/errors",{
+
+  require(engsoccerdata)
+  require(dplyr)
+
+  ##########################
+  ## DATA
+  #########################
+
+  england <- as_tibble(england)
+  # one season only
+  england_2004 <- england %>%
+    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+    filter(  Season=="2004")
+
+  # more seasons
+  england_1999_2001 <- england %>%
+    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+    filter(  Season=="2001" | Season == "2000" | Season =="1999")
+
 
   ### one season type
   ##  wrong dynamic
