@@ -3,8 +3,8 @@
 context("static models")
 test_that("object argument gives errors/warnings", {
 
-  require(dplyr)
-  require(engsoccerdata)
+  library(dplyr)
+  library(engsoccerdata)
 
   ##########################
   ## DATA
