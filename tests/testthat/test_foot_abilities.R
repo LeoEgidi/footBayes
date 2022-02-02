@@ -14,12 +14,12 @@ test_that("object argument gives errors/warnings", {
   # one season only
   england_2004 <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter(  Season=="2004")
+    dplyr::filter(  Season=="2004")
 
   # more seasons
   england_1999_2001 <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter(  Season=="2001" | Season == "2000" | Season =="1999")
+    dplyr::filter(  Season=="2001" | Season == "2000" | Season =="1999")
 
 
 

@@ -17,19 +17,19 @@ test_that("stan models recognize errors/warnings" , {
   # one season only
   england_2004 <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter(  Season=="2004")
+    dplyr::filter(  Season=="2004")
 
   # more seasons
   england_1999_2001 <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter(  Season=="2001" | Season == "2000" | Season =="1999")
+    dplyr::filter(  Season=="2001" | Season == "2000" | Season =="1999")
 
 
   england <- as_tibble(england)
   england_2004_six <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal,
                   FT) %>%
-    filter(  Season=="2004")
+    dplyr::filter(  Season=="2004")
 
   ## six arguments
   #expect_warning(stan_foot(data = england_2004_six,
@@ -82,12 +82,12 @@ test_that("prediction causes  warnings/errors", {
   # one season only
   england_2004 <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter(  Season=="2004")
+    dplyr::filter(  Season=="2004")
 
   # more seasons
   england_1999_2001 <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter(  Season=="2001" | Season == "2000" | Season =="1999")
+    dplyr::filter(  Season=="2001" | Season == "2000" | Season =="1999")
 
 
   ## predict > N
@@ -121,12 +121,12 @@ test_that("dymanics cause warnings/errors",{
   # one season only
   england_2004 <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter(  Season=="2004")
+    dplyr::filter(  Season=="2004")
 
   # more seasons
   england_1999_2001 <- england %>%
     dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-    filter(  Season=="2001" | Season == "2000" | Season =="1999")
+    dplyr::filter(  Season=="2001" | Season == "2000" | Season =="1999")
 
 
   ### one season type
