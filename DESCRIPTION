@@ -15,8 +15,8 @@ License: GPL-2
 Depends: R (>= 3.1.0)
 Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats,
          extraDistr, parallel, metRology, dplyr, engsoccerdata, numDeriv
-LinkingTo: StanHeaders (>= 2.18.0), rstan (>= 2.18.1), BH (>= 1.66.0),
-        Rcpp (>= 0.12.0), RcppEigen (>= 0.3.3.3.0)
+#LinkingTo: StanHeaders (>= 2.18.0), rstan (>= 2.18.1), BH (>= 1.66.0),
+#        Rcpp (>= 0.12.0), RcppEigen (>= 0.3.3.3.0)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
