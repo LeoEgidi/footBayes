@@ -11,7 +11,7 @@ Description: This is the first package allowing for the estimation,
              Monte Carlo (HMC) estimation through the underlying Stan
              environment and Maximum Likelihood estimation (MLE, for 
              'static' models only).
-License: What license is it under?
+License: GPL-2
 Depends: R (>= 3.1.0)
 Imports: rstan (>= 2.18.1), reshape2, ggplot2, bayesplot, matrixStats,
          extraDistr, parallel, metRology, dplyr, engsoccerdata, numDeriv
