@@ -11,6 +11,7 @@
 #'            home goals, away goals.
 #' @param type Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}.
 #' @param team  Valid team names.
+#' @param ... Optional graphical parameters.
 #'
 #' @return
 #'
@@ -20,6 +21,7 @@
 #' @author Leonardo Egidi \email{legidi@units.it}
 #'
 #' @examples
+#' \dontrun{
 #' require(engsoccerdata)
 #' require(dplyr)
 #' italy <- as_tibble(italy)
@@ -46,7 +48,6 @@
 #' foot_abilities(fit2, italy_2000_2002)
 #' foot_abilities(fit3, italy_2000_2002)
 #' foot_abilities(fit4, italy_2000_2002)
-#' ggsave(file="student_t_ab.pdf", width =12, height =7)
 #'
 #' ### seasonal dynamics, predict the last season
 #'
@@ -72,9 +73,11 @@
 #'
 #' foot_abilities(fit6, italy_2000)
 #' foot_abilities(fit7, italy_2000)
-#'
+#'}
 #'@importFrom arm coefplot
 #'@importFrom rstan traceplot
+#'@importFrom graphics par
+#'@importFrom stats dpois filter median optim pchisq quantile rpois sd
 #'@export
 
 
@@ -156,16 +159,16 @@ foot_abilities <- function(object, data,
   if (length(dim(att))==3){
   T <- dim(att)[2]
   nteams <- dim(att)[3]
-  att_med=apply(att,c(2,3), median)
-  def_med=apply(def,c(2,3), median)
-  att_025=apply(att, c(2,3), function(x) quantile(x, 0.025))
-  att_25=apply(att, c(2,3), function(x) quantile(x, 0.25))
-  att_75=apply(att, c(2,3), function(x) quantile(x, 0.75))
-  att_975=apply(att, c(2,3), function(x) quantile(x, 0.975))
-  def_025=apply(def, c(2,3), function(x) quantile(x, 0.025))
-  def_25=apply(def, c(2,3), function(x) quantile(x, 0.25))
-  def_75=apply(def, c(2,3), function(x)  quantile(x, 0.75))
-  def_975=apply(def, c(2,3), function(x)  quantile(x, 0.975))
+  att_med=apply(att,c(2,3), stats::median)
+  def_med=apply(def,c(2,3), stats::median)
+  att_025=apply(att, c(2,3), function(x) stats::quantile(x, 0.025))
+  att_25=apply(att, c(2,3), function(x) stats::quantile(x, 0.25))
+  att_75=apply(att, c(2,3), function(x) stats::quantile(x, 0.75))
+  att_975=apply(att, c(2,3), function(x) stats::quantile(x, 0.975))
+  def_025=apply(def, c(2,3), function(x) stats::quantile(x, 0.025))
+  def_25=apply(def, c(2,3), function(x) stats::quantile(x, 0.25))
+  def_75=apply(def, c(2,3), function(x)  stats::quantile(x, 0.75))
+  def_975=apply(def, c(2,3), function(x)  stats::quantile(x, 0.975))
 
   squadre_valide <- match(sel_teams,unique(c(data$home, data$away)))
 
@@ -346,12 +349,12 @@ foot_abilities <- function(object, data,
   }else if (length(dim(att))==2){
     att_mean <- apply(att, 2, mean)[sel_teams_index]
     att_sd <- apply(att, 2, sd)[sel_teams_index]
-    att_025 <- apply(att, 2, function(x) quantile(x, 0.025))[sel_teams_index]
-    att_975 <- apply(att, 2, function(x) quantile(x, 0.975))[sel_teams_index]
+    att_025 <- apply(att, 2, function(x) stats::quantile(x, 0.025))[sel_teams_index]
+    att_975 <- apply(att, 2, function(x) stats::quantile(x, 0.975))[sel_teams_index]
     def_mean <- apply(def, 2, mean)[sel_teams_index]
     def_sd <- apply(def, 2, sd)[sel_teams_index]
-    def_025 <- apply(def, 2, function(x) quantile(x, 0.025))[sel_teams_index]
-    def_975 <- apply(def, 2, function(x) quantile(x, 0.975))[sel_teams_index]
+    def_025 <- apply(def, 2, function(x) stats::quantile(x, 0.025))[sel_teams_index]
+    def_975 <- apply(def, 2, function(x) stats::quantile(x, 0.975))[sel_teams_index]
 
     par(mfrow=c(1,1), oma =c(1,1,1,1))
     par(mfrow=c(1,1), oma =c(1,1,1,1))
@@ -426,11 +429,11 @@ foot_abilities <- function(object, data,
 
       T <- dim(ability)[2]
       nteams <- dim(ability)[3]
-      ability_med=apply(ability,c(2,3), median)
-      ability_025=apply(ability, c(2,3), function(x) quantile(x, 0.025))
-      ability_25=apply(ability, c(2,3), function(x) quantile(x, 0.25))
-      ability_75=apply(ability, c(2,3), function(x) quantile(x, 0.75))
-      ability_975=apply(ability, c(2,3), function(x) quantile(x, 0.975))
+      ability_med=apply(ability,c(2,3), stats::median)
+      ability_025=apply(ability, c(2,3), function(x) stats::quantile(x, 0.025))
+      ability_25=apply(ability, c(2,3), function(x) stats::quantile(x, 0.25))
+      ability_75=apply(ability, c(2,3), function(x) stats::quantile(x, 0.75))
+      ability_975=apply(ability, c(2,3), function(x) stats::quantile(x, 0.975))
 
       squadre_valide <- match(sel_teams,unique(c(data$home, data$away)))
 
@@ -507,8 +510,8 @@ foot_abilities <- function(object, data,
     }else if (length(dim(ability))==2){
       ability_mean <- apply(ability, 2, mean)[sel_teams_index]
       ability_sd <- apply(ability, 2, sd)[sel_teams_index]
-      ability_025 <- apply(ability, 2, function(x) quantile(x, 0.025))[sel_teams_index]
-      ability_975 <- apply(ability, 2, function(x) quantile(x, 0.975))[sel_teams_index]
+      ability_025 <- apply(ability, 2, function(x) stats::quantile(x, 0.025))[sel_teams_index]
+      ability_975 <- apply(ability, 2, function(x) stats::quantile(x, 0.975))[sel_teams_index]
 
       par(mfrow=c(1,1), oma =c(1,1,1,1))
       par(mfrow=c(1,1), oma =c(1,1,1,1))

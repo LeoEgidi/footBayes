@@ -8,6 +8,9 @@
 #'@param model The type of model used to fit the data.
 #'             One among the following: \code{"double_pois"},
 #'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.
+#'@param predict The number of out-of-sample matches. If missing, the function returns
+#'the fit for the training set only.
+#'@param ... Optional arguments for MLE fit algorithms.
 #'
 #'@return
 #'

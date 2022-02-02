@@ -8,7 +8,7 @@
 #' \code{stan_foot} function, through the arguments \code{prior} and \code{prior_sd}.
 #' See  the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
 #'   Distributions for rstanarm Models}} for further details (to view the priors used for an existing model see
-#'   \code{\link{prior_summary}}).
+#'   \code{\link[https://mc-stan.org/rstanarm/reference/prior_summary.stanreg.html]{prior_summary}}).
 #'   The default priors used in the \pkg{stan_foot} modeling function
 #'   are intended to be \emph{weakly informative} in that they provide moderate
 #'   regularlization and help stabilize computation.

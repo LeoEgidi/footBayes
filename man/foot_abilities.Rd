@@ -17,6 +17,8 @@ home goals, away goals.}
 \item{type}{Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}.}
 
 \item{team}{Valid team names.}
+
+\item{...}{Optional graphical parameters.}
 }
 \value{
 Abilities plots for the selected teams: for Poisson models only, red denotes the attack,
@@ -27,6 +29,7 @@ Depicts teams' abilities either from the Stan models fitted via the \code{stan_f
 or from MLE models fitted via the \code{mle_foot} function.
 }
 \examples{
+\dontrun{
 require(engsoccerdata)
 require(dplyr)
 italy <- as_tibble(italy)
@@ -53,7 +56,6 @@ foot_abilities(fit1, italy_2000_2002)
 foot_abilities(fit2, italy_2000_2002)
 foot_abilities(fit3, italy_2000_2002)
 foot_abilities(fit4, italy_2000_2002)
-ggsave(file="student_t_ab.pdf", width =12, height =7)
 
 ### seasonal dynamics, predict the last season
 
@@ -79,7 +81,7 @@ fit7 <- stan_foot(data = italy_2000,
 
 foot_abilities(fit6, italy_2000)
 foot_abilities(fit7, italy_2000)
-
+}
 }
 \author{
 Leonardo Egidi \email{legidi@units.it}
