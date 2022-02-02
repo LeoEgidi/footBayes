@@ -31,8 +31,8 @@ The dataset should refer to one or more seasons from a given national football l
 \examples{
 
 \dontrun{
-library(engsoccerdata)
-library(tidyverse)
+require(engsoccerdata)
+require(tidyverse)
 
 italy_1999_2000<- italy \%>\%
 dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%

@@ -124,8 +124,8 @@
 #'
 #'@examples
 #'\dontrun{
-#'library(engsoccerdata)
-#'library(tidyverse)
+#'require(engsoccerdata)
+#'require(tidyverse)
 #'
 #'### Use Italian Serie A from 2000 to 2002
 #'

@@ -35,8 +35,8 @@ fitted via the \code{mle_foot} the probabilities are computed by simulating from
 \examples{
 \dontrun{
 ### weekly dynamics, predict the last four weeks
-library(engsoccerdata)
-library(dplyr)
+require(engsoccerdata)
+require(dplyr)
 
 italy_2000<- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%

@@ -20,8 +20,8 @@
 #' @author Leonardo Egidi \email{legidi@units.it}
 #'
 #' @examples
-#' library(engsoccerdata)
-#' library(tidyverse)
+#' require(engsoccerdata)
+#' require(dplyr)
 #' italy <- as_tibble(italy)
 #'
 #' ### no dynamics, no prediction

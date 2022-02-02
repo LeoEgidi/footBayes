@@ -27,8 +27,8 @@ Depicts teams' abilities either from the Stan models fitted via the \code{stan_f
 or from MLE models fitted via the \code{mle_foot} function.
 }
 \examples{
-library(engsoccerdata)
-library(tidyverse)
+require(engsoccerdata)
+require(dplyr)
 italy <- as_tibble(italy)
 
 ### no dynamics, no prediction

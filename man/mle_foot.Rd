@@ -30,8 +30,8 @@ of the \code{\link[optim]{optim}} function.
 }
 \examples{
 \dontrun{
-library(engsoccerdata)
-library(tidyverse)
+require(engsoccerdata)
+require(dplyr)
 
 italy <- as_tibble(italy)
 italy_2008<- italy \%>\%

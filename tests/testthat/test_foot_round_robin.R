@@ -1,7 +1,7 @@
 ## all the test PASSED (also the skipped ones!)
 
-# library(engsoccerdata)
-# library(tidyverse)
+# require(engsoccerdata)
+# require(dplyr)
 #
 # italy_2000<- italy %>%
 #    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%

@@ -239,9 +239,9 @@ and load the following required packages (please, install them on your laptops):
 
 ```{r libraries, echo = TRUE, eval = TRUE}
 library(footBayes)
-library(engsoccerdata)
-library(bayesplot)
-library(loo)
+require(engsoccerdata)
+require(bayesplot)
+require(loo)
 require(dplyr)
 ```
 

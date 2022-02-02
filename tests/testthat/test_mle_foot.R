@@ -1,7 +1,7 @@
 ## all the test PASSED (also the skipped ones!)
 
-# library(tidyverse)
-# library(engsoccerdata)
+# require(dplyr)
+# require(engsoccerdata)
 #
 # # data
 # italy <- as_tibble(italy)
