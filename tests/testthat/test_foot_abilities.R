@@ -3,7 +3,7 @@
 context("static models")
 test_that("object argument gives errors/warnings", {
 
-  library(dplyr)
+  library(tidyverse)
   library(engsoccerdata)
 
   ##########################

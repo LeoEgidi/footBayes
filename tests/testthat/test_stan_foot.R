@@ -7,7 +7,7 @@ context("stan data reading")
 test_that("stan models recognize errors/warnings" , {
 
   library(engsoccerdata)
-  library(dplyr)
+  library(tidyverse)
 
   ##########################
   ## DATA
