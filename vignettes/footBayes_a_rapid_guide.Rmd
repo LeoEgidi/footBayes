@@ -239,10 +239,10 @@ and load the following required packages (please, install them on your laptops):
 
 ```{r libraries, echo = TRUE, eval = TRUE}
 library(footBayes)
-require(engsoccerdata)
-require(bayesplot)
-require(loo)
-require(dplyr)
+library(engsoccerdata)
+library(bayesplot)
+library(loo)
+library(dplyr)
 ```
 
 # Model fit
