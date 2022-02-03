@@ -15,8 +15,11 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-knitr::opts_chunk$set(fig.align = 'center', warning=FALSE, message=FALSE, fig.asp=0.625, fig.height =10, fig.width = 8, out.width='750px', dpi=200, 
-  dev='png', global.par = TRUE, dev.args=list(pointsize=10), fig.path = 'figs/')
+knitr::opts_chunk$set(fig.align = 'center', 
+                      warning=FALSE, message=FALSE, fig.asp=0.625, fig.height =10, fig.width = 8, 
+                      out.width='750px', dpi=200, global.par = TRUE
+                      #,dev='png',  dev.args=list(pointsize=10), fig.path = 'figs/'
+                      )
 ```
 
 
