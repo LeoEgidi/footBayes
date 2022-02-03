@@ -113,3 +113,79 @@ fit2_stan <- stan_foot(data = italy_2000,
 print(fit2_stan, pars =c("home", "rho", "sigma_att",
                         "sigma_def"))
 
+## ----weekly_fit, echo = TRUE, eval = TRUE-------------------------------------
+### Fit Stan models
+## weekly dynamics, no predictions
+## 4 chains, 'n_iter' iterations each
+
+fit3_stan <- stan_foot(data = italy_2000,
+                       model="double_pois",
+                       dynamic_type = "weekly",
+                       cores = 4,
+                       iter = n_iter)  # double poisson
+print(fit3_stan, pars =c("home", "sigma_att",
+                        "sigma_def"))
+
+## ----weekly_fit_t, echo = TRUE, eval = TRUE-----------------------------------
+### Fit Stan models
+## weekly dynamics, no predictions
+## 4 chains, 'n_iter' iterations each
+
+fit3_stan_t <- stan_foot(data = italy_2000,
+                model="double_pois",
+                prior = student_t(4,0, NULL), # 4 df
+                prior_sd = cauchy(0,25),
+                dynamic_type = "weekly",
+                cores = 4,
+                iter = n_iter)  # double poisson
+print(fit3_stan_t, pars =c("home", "sigma_att",
+                           "sigma_def"))
+
+## ----abilities, echo = TRUE, eval = TRUE, fig.show="hold"---------------------
+## Plotting abilities: credible and confidence 95% intervals
+
+foot_abilities(object = fit1_stan, data = italy_2000, cex.var = 1)
+foot_abilities(object = fit1_mle, data = italy_2000, cex.var = 1)
+
+## ----abilities_dyn, echo = TRUE, eval = TRUE, fig.show="hold"-----------------
+## Plotting abilities: credible and confidence 95% intervals
+
+foot_abilities(fit2_stan, italy_2000)
+
+## ----pp_foot, echo = TRUE, eval = TRUE----------------------------------------
+## PP checks: aggregated goal's differences and ordered goal differences
+
+pp_foot(data = italy_2000, object = fit1_stan, 
+        type = "aggregated")
+
+pp_foot(data = italy_2000, object = fit1_stan, 
+        type = "matches")
+
+
+## ----pp_checks, echo = TRUE, eval = TRUE--------------------------------------
+## PPC densities overlay with the bayesplot package
+
+# extracting the replications
+
+sims <-rstan::extract(fit1_stan)
+goal_diff <- italy_2000$hgoal-italy_2000$vgoal
+
+# plotting data density vs replications densities
+
+ppc_dens_overlay(goal_diff, sims$y_rep[,,1]-sims$y_rep[,,2], bw = 0.5)
+
+## ----weekly_predict, echo=TRUE, eval= TRUE------------------------------------
+### Fit Stan models
+## weekly dynamics, predictions of last four weeks
+## 4 chains 'n_iter' iterations each
+
+fit4_stan <- stan_foot(data = italy_2000,
+                       model="biv_pois", 
+                       predict = 36,
+                       dynamic_type = "weekly",
+                       cores = 4,
+                       iter = n_iter)  # biv poisson
+foot_prob(object = fit4_stan, data = italy_2000,
+          home_team = "Reggina Calcio",
+          away_team= "AC Milan")
+
