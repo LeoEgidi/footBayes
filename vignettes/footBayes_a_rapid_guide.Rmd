@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(fig.align = 'center', 
                       warning=FALSE, message=FALSE, fig.asp=0.625, fig.height =10, fig.width = 8, 
                       out.width='750px', dpi=200, global.par = TRUE
-                      #,dev='png',  dev.args=list(pointsize=10), fig.path = 'figs/'
+                      ,dev='png',  dev.args=list(pointsize=10), fig.path = 'figs/'
                       )
 ```
 
@@ -242,7 +242,7 @@ and load the following required packages (please, install them on your laptops):
 
 ```{r libraries, echo = TRUE, eval = TRUE}
 library(footBayes)
-#library(tidyverse)
+library(tidyverse)
 library(engsoccerdata)
 library(bayesplot)
 library(loo)
