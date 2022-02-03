@@ -239,12 +239,12 @@ and load the following required packages (please, install them on your laptops):
 
 ```{r libraries, echo = TRUE, eval = TRUE}
 library(footBayes)
-library(tidyverse)
+#library(tidyverse)
 library(engsoccerdata)
 library(bayesplot)
 library(loo)
-#library(dplyr)
-#library(ggplot2)
+library(dplyr)
+library(ggplot2)
 ```
 
 # Model fit
