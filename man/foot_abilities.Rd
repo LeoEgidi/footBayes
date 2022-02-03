@@ -8,7 +8,7 @@ foot_abilities(object, data, type = c("attack", "defense", "both"), team, ...)
 }
 \arguments{
 \item{object}{An object either of class \code{stanfit} as given by \code{stan_foot} function or class
-\code{list} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
+\code{\link{list}} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
  with \code{mle_foot}.}
 
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,

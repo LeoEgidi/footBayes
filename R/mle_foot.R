@@ -22,7 +22,7 @@
 #'See documentation of \code{stan_foot} function for model details.
 #'MLE can be obtained only for static models, with no time-dependence.
 #'Likelihood optimization is performed via the \code{BFGS} method
-#'of the \code{\link[optim]{optim}} function.
+#'of the \code{\link{optim}} function.
 #'
 #'@author Leonardo Egidi \email{legidi@units.it}
 #'

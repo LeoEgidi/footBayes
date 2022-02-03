@@ -4,7 +4,7 @@
 #' out-of-sample matches as specified by \code{stan_foot} or \code{mle_foot}.
 #'
 #' @param object An object either of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function or
-#' \code{\link[list]{link}} as given by \code{mle_foot}.
+#' \code{\link{list}} as given by \code{mle_foot}.
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'home goals, away goals.
 #' @param home_team The home team(s) for the predicted matches.
@@ -12,7 +12,7 @@
 #'
 #'@return
 #'
-#'A \link[data.frame]{data.frame} containing the number of out-of-sample matches specified through the
+#'A \code{\link{data.frame}} containing the number of out-of-sample matches specified through the
 #'argument \code{predict}  passed either in the \code{mle_foot} or in the \code{stan_foot} function.
 #'For Bayesian Poisson models the function returns also the most likely outcome (mlo) and a posterior
 #' probability plot for the exact results.
