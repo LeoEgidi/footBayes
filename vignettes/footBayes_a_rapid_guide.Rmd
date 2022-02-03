@@ -244,7 +244,7 @@ library(engsoccerdata)
 library(bayesplot)
 library(loo)
 #library(dplyr)
-library(ggplot2)
+#library(ggplot2)
 ```
 
 # Model fit
@@ -381,8 +381,8 @@ gl_posterior <- cbind(posterior1[,"sigma_att"],
                       posterior1_t[,"sigma_att"])
 colnames(gl_posterior)<-c("sigma_att", "sigma_att_t")
 mcmc_areas(gl_posterior, pars=c("sigma_att", "sigma_att_t"))+
-  xaxis_text(on =TRUE, size=rel(2.9))+
-  yaxis_text(on =TRUE, size=rel(2.9))+
+  xaxis_text(on =TRUE, size=ggplot2::rel(2.9))+
+  yaxis_text(on =TRUE, size=ggplot2::rel(2.9))+
   scale_y_discrete(labels = ((parse(text= model_names))))+
   ggtitle("Att/def sds")+
   theme(plot.title = element_text(hjust = 0.5, size =rel(2.6)))
