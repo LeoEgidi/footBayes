@@ -265,8 +265,8 @@ At this stage, we are currently ignoring any time-dependence in our parameters, 
 
 italy <- as_tibble(italy)
 italy_2000<- italy %>%
- dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
- dplyr::filter(Season=="2000")
+ select(Season, home, visitor, hgoal,vgoal) %>%
+ filter(Season=="2000")
 
 ### Fit Stan models
 ## no dynamics, no predictions
