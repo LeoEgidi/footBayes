@@ -100,3 +100,16 @@ mcmc_areas(gl_posterior, pars=c("sigma_att", "sigma_att_t"))+
   ggtitle("Att/def sds")+
   theme(plot.title = element_text(hjust = 0.5, size =rel(2.6)))
 
+## ----dynamic_fit, echo =TRUE, eval = TRUE-------------------------------------
+### Fit Stan models
+## seasonal dynamics, no predictions
+## 4 Markov chains, 'n_iter' iterations each
+
+fit2_stan <- stan_foot(data = italy_2000,
+                       model="biv_pois",
+                       dynamic_type ="weekly", 
+                       cores = 4,
+                       iter = n_iter) # biv poisson
+print(fit2_stan, pars =c("home", "rho", "sigma_att",
+                        "sigma_def"))
+
