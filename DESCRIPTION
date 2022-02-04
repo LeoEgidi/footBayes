@@ -13,7 +13,7 @@ Description: This is the first package allowing for the estimation,
              'static' models only).
 License: GPL-2
 Depends: R (>= 3.1.0)
-Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats,
+Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats, loo,
          extraDistr, parallel, metRology, dplyr, engsoccerdata, numDeriv, tidyverse
 Encoding: UTF-8
 LazyData: true
