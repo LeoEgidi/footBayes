@@ -279,7 +279,7 @@ n_iter <- 200    # number of MCMC iterations
 fit1_stan <- stan_foot(data = italy_2000,
                        model="biv_pois",
                        chains = 4,
-                       cores = 4,
+                       #cores = 4,
                        iter = n_iter) # biv poisson
 
 ## print of model summary for parameters:
@@ -367,7 +367,7 @@ fit1_stan_t <- stan_foot(data = italy_2000,
                          chains = 4, 
                          prior = student_t(4,0,NULL),
                          prior_sd = laplace(0,1),
-                         cores = 4,
+                         #cores = 4,
                          iter = n_iter) # biv poisson
 
 ```
@@ -440,7 +440,7 @@ with hyperparameters $\mu_{\text{att}}, \mu_{\text{def}}, \sigma_{\text{att}}, \
 fit2_stan <- stan_foot(data = italy_2000,
                        model="biv_pois",
                        dynamic_type ="weekly", 
-                       cores = 4,
+                       #cores = 4,
                        iter = n_iter) # biv poisson
 print(fit2_stan, pars =c("home", "rho", "sigma_att",
                         "sigma_def"))
@@ -458,7 +458,7 @@ To deal with these issues and broaden the set of candidate models, let's fit als
 fit3_stan <- stan_foot(data = italy_2000,
                        model="double_pois",
                        dynamic_type = "weekly",
-                       cores = 4,
+                       #cores = 4,
                        iter = n_iter)  # double poisson
 print(fit3_stan, pars =c("home", "sigma_att",
                         "sigma_def"))
@@ -483,7 +483,7 @@ fit3_stan_t <- stan_foot(data = italy_2000,
                 prior = student_t(4,0, NULL), # 4 df
                 prior_sd = cauchy(0,25),
                 dynamic_type = "weekly",
-                cores = 4,
+                #cores = 4,
                 iter = n_iter)  # double poisson
 print(fit3_stan_t, pars =c("home", "sigma_att",
                            "sigma_def"))
@@ -603,7 +603,7 @@ fit4_stan <- stan_foot(data = italy_2000,
                        model="biv_pois", 
                        predict = 36,
                        dynamic_type = "weekly",
-                       cores = 4,
+                       #cores = 4,
                        iter = n_iter)  # biv poisson
 foot_prob(object = fit4_stan, data = italy_2000,
           home_team = "Reggina Calcio",
