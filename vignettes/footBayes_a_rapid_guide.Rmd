@@ -623,13 +623,13 @@ p_{\text{draw}} = &\ \textrm{Pr}(X=Y) = \frac{1}{S}\sum_{s=1}^S| \tilde{x}^{(s)}
 p_{\text{loss}} = &\ \textrm{Pr} (X<Y)=\frac{1}{S}\sum_{s=1}^S| \tilde{x}^{(s)}< \tilde{y}^{(s)}|,
 \end{align}
 
-where $(\tilde{x}^{(s)}, \tilde{y}^{(s)})$ represents the $s$-th MCMC pair of the future home goals and away goals for a given match, respectively. According to this scenario, we can depict the home-win posterior probabilities of a given test set through the function ```foot_round_robin``` (yet under development!)
+where $(\tilde{x}^{(s)}, \tilde{y}^{(s)})$ represents the $s$-th MCMC pair of the future home goals and away goals for a given match, respectively. According to this scenario, we can depict the home-win posterior probabilities of a given test set through the function ```foot_round_robin```:
 
 
-```{r foot_round_robin}
+```{r foot_roundrobin, echo=TRUE, eval= TRUE}
 ## Home win out-of-sample probabilities
 
-foot_round_robin(data= italy_2000, object = fit4_stan)
+foot_round_robin(data = italy_2000, object = fit4_stan)
 ```
 
 Red cells denote more likely home-wins (close to 0.6), such as: Lazio Roma - Fiorentina (observed result: 3-0, home win), Lazio Roma - Udinese (observed result: 3-1, home win), Juventus - AC Perugia (observed result: 1-0, home win), Brescia Calcio - AS Bari (observed result: 3-1, home win). Conversely, lighter cells denote more likely away wins (close to 0.6), such as: AS Bari - AS Roma (observed result: 1-4, away win), AS Bari - Inter (observed result: 1-2, away win).
