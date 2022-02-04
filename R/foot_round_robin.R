@@ -197,12 +197,12 @@ foot_round_robin <- function(data, object, team_sel){
    if (sum(data_ex$prob)==0){
       tbl <- cbind(team_sel[data_ex$Home], team_sel[data_ex$Away], as.vector(punt[team_index, team_index]))
       colnames(tbl) <- c("Home", "Away", "Observed")
-      tbl <- dplyr::as_tibble(tbl) %>% filter(Home!=Away)
+      tbl <- dplyr::as_tibble(tbl) %>% dplyr::filter(Home!=Away)
       }else{
       tbl <- cbind(team_sel[data_ex$Home], team_sel[data_ex$Away], round(data_ex$prob,3),
                    as.vector(punt[team_index, team_index]))
       colnames(tbl) <- c("Home", "Away", "Home_prob", "Observed")
-      tbl <- dplyr::as_tibble(tbl) %>% filter(Home!=Away & Home_prob!=0 )
+      tbl <- dplyr::as_tibble(tbl) %>% dplyr::filter(Home!=Away & Home_prob!=0 )
     }
    return(list(round_plot = p, round_table = tbl))
 
