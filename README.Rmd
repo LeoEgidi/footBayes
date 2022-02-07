@@ -1,0 +1,65 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-"
+)
+```
+
+# footBayes
+
+The goal of ```footBayes``` is to propose a complete workflow to:
+
+- fit the most well-known football models: double Poisson, bivariate Poisson, Skellam, student-t, according to both maximum likelihood and Bayesian methods (+ Hamiltonian Monte Carlo engine);
+
+- visualize the teams' abilities, the model checks, the rank-league reconstruction;
+
+- predict out-of-sample matches.
+
+
+## Installation
+
+Alternatively to CRAN, you can safely install ```footBayes``` from github with:
+
+```{r gh-installation, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("leoegidi/footBayes")
+```
+
+## Example 
+
+In what follows, a quick example to fit a Bayesian double Poisson model for the Italian Serie A (seasons 2000-2001, 2001-2002, 2002-2003), visualize the estimated teams' abilities, and predict the last four match days for the season 2002-2003:
+
+```{r example, eval = FALSE}
+library(footBayes)
+require(engsoccerdata)
+require(dplyr)
+
+# dataset for Italian serie A
+
+italy <- as_tibble(italy)
+italy_2000_2002<- italy %>%
+ dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
+ filter(Season=="2000" |  Season=="2001" | Season =="2002")
+
+fit1 <- stan_foot(data = italy_2000_2002,
+                model="double_pois",
+                predict = 36)             # double poisson fit (predict last 4 match-days)
+foot_abilities(fit1, italy_2000_2002)     # teams abilities
+pp_foot(italy_2000_2002, fit1)            # pp checks
+foot_rank(italy_2000_2002, fit1)          # rank league reconstruction
+foot_prob(fit1, italy_2000_2002)          # out-of-sample posterior pred. probabilities
+
+
+```
+
+For more and more technical details and references, see the vignette!
+
+
+
