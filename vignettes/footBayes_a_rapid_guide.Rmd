@@ -246,6 +246,7 @@ library(engsoccerdata)
 library(bayesplot)
 library(loo)
 library(ggplot2)
+library(dplyr)
 ```
 
 # Model fit
