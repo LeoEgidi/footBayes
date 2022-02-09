@@ -264,7 +264,7 @@ At this stage, we are currently ignoring any time-dependence in our parameters, 
 
 ### Use Italian Serie A 2000/2001
 
-italy <- as_tibble(italy)
+italy <- tidyverse::as_tibble(italy)
 italy_2000 <- subset(italy[, c(2,3,4,6,7)], 
                      Season =="2000")
 
