@@ -20,6 +20,5 @@ Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats, loo,
 Encoding: UTF-8
 RoxygenNote: 7.1.2
 VignetteBuilder: knitr
-Suggests: 
-    testthat, knitr, rmarkdown
+Suggests: testthat, knitr, rmarkdown
 BuildManual: yes
