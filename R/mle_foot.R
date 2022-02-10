@@ -50,12 +50,13 @@
 #'@examples
 #'\dontrun{
 #'require(engsoccerdata)
+#'require(tidyverse)
 #'require(dplyr)
 #'
 #'italy <- as_tibble(italy)
 #'italy_2008<- italy %>%
 #'    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-#'    filter( Season=="2008")
+#'    dplyr::filter( Season=="2008")
 #'
 #'mle_fit <- mle_foot(data  = italy_2008,
 #'                    model = "double_pois")
@@ -71,6 +72,7 @@
 #' @importFrom parallel clusterExport
 #' @importFrom parallel makeCluster
 #' @importFrom numDeriv hessian
+#' @importFrom magrittr "%>%"
 #' @export
 #'
 

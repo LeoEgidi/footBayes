@@ -16,7 +16,7 @@ URL: https://github.com/leoegidi/footBayes
 License: GPL-2
 Depends: R (>= 3.1.0)
 Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats, loo,
-         extraDistr, parallel, metRology, dplyr, engsoccerdata, numDeriv, tidyverse
+         extraDistr, parallel, metRology, dplyr, engsoccerdata, numDeriv, tidyverse, magrittr
 Encoding: UTF-8
 RoxygenNote: 7.1.2
 VignetteBuilder: rmarkdown

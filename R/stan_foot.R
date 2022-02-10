@@ -33,8 +33,8 @@
 #'(Karlis & Ntzoufras, 2003) is the following:
 #'
 #'\deqn{ Y^H_n, Y^A_n| \lambda_{1n}, \lambda_{2n}, \lambda_{3n}  \sim \mathsf{BivPoisson}(\lambda_{1n}, \lambda_{2n}, \lambda_{3n})}
-#'\deqn{\log(\lambda_{1n})  = \mu+{att}_{h_n}+{def}_{a_n}}
-#'\deqn{\log(\lambda_{2n})  = {att}_{a_n}+{def}_{h_n}}
+#'\deqn{\log(\lambda_{1n})  = \mu+att_{h_n} + def_{a_n}}
+#'\deqn{\log(\lambda_{2n})  = att_{a_n} + def_{h_n}}
 #'\deqn{\log(\lambda_{3n})  =\beta_0,}
 #'
 #' where the case \eqn{\lambda_{3n}=0} reduces to
@@ -42,8 +42,8 @@
 #'  \eqn{\lambda_{1n}, \lambda_{2n}} represent the
 #'  scoring rates for the home and the away team,
 #'  respectively, where: \eqn{\mu} is the home effect;
-#'  the parameters \eqn{{att}_T} and
-#'   \eqn{{def}_T} represent the attack and the
+#'  the parameters \eqn{att_T} and
+#'   \eqn{def_T} represent the attack and the
 #'   defence abilities,
 #' respectively, for each team \eqn{T}, \eqn{T=1,\ldots,N_T};
 #' the nested indexes \eqn{h_{n}, a_{n}=1,\ldots,N_T}
@@ -52,10 +52,10 @@
 #' sum-to-zero constraint to achieve identifiability and
 #' assigned some weakly-informative prior distributions:
 #'
-#' \deqn{{att}_T \sim \mathcal{N}(\mu_{{att}}, \sigma_{{att}})}
-#' \deqn{{def}_T \sim \mathcal{N}(\mu_{{def}}, \sigma_{{def}}),}
+#' \deqn{att_T \sim \mathcal{N}(\mu_{att}, \sigma_{att})}
+#' \deqn{def_T \sim \mathcal{N}(\mu_{def}, \sigma_{def}),}
 #'
-#' with hyperparameters \eqn{\mu_{{att}}, \sigma_{{att}}, \mu_{{def}}, \sigma_{{def}}}.
+#' with hyperparameters \eqn{\mu_{att}, \sigma_{att}, \mu_{def}, \sigma_{def}}.
 #'
 #' Instead of using the marginal number of goals,
 #' another alternative is to modelling directly
@@ -72,11 +72,11 @@
 #' use a student t distribution with 7 degrees of
 #' freedom (Gelman, 2014):
 #'
-#' \deqn{y^{H}_{n}- y^{A}_{n} \sim t(7, {ab}_{h_{n}}-{ab}_{a(n)}, \sigma_y)}
-#' \deqn{{ab}_t \sim \mathcal{N}(\mu + b \times {prior\_score}_t, sigma_{{ab}}),}
+#' \deqn{y^{H}_{n}- y^{A}_{n} \sim t(7, ab_{h_{n}}-ab_{a(n)}, \sigma_y)}
+#' \deqn{ab_t \sim \mathcal{N}(\mu + b \times {prior\_score}_t, sigma_{ab}),}
 #'
-#' where \eqn{{ab}_t} is the overall ability for
-#' the \eqn{t}-th team, whereas \eqn{{prior\_score}_t}
+#' where \eqn{ab_t} is the overall ability for
+#' the \eqn{t}-th team, whereas \eqn{prior\_score_t}
 #' is a prior measure of team's strength (for instance a
 #' ranking).
 #'
@@ -88,15 +88,15 @@
 #' above would be unchanged, but the priors for the abilities
 #' parameters at each time \eqn{\tau, \tau=2,\ldots, \mathcal{T},} would be:
 #'
-#' \deqn{{att}_{T, \tau} \sim \mathcal{N}({{att}}_{T, \tau-1}, \sigma_{{att}})}
-#' \deqn{{def}_{T, \tau} \sim \mathcal{N}({{def}}_{T, \tau-1}, \sigma_{{def}}),}
+#' \deqn{att_{T, \tau} \sim \mathcal{N}({att}_{T, \tau-1}, \sigma_{att})}
+#' \deqn{def_{T, \tau} \sim \mathcal{N}({def}_{T, \tau-1}, \sigma_{def}),}
 #'
 #' whereas for \eqn{\tau=1} we have:
 #'
-#' \deqn{{att}_{T, 1} \sim \mathcal{N}(\mu_{{att}}, \sigma_{{att}})}
-#' \deqn{{def}_{T, 1} \sim \mathcal{N}(\mu_{{def}}, \sigma_{{def}}).}
+#' \deqn{att_{T, 1} \sim \mathcal{N}(\mu_{att}, \sigma_{att})}
+#' \deqn{def_{T, 1} \sim \mathcal{N}(\mu_{def}, \sigma_{def}).}
 #'
-#' Of course, the identifiability constraint must be impoed for
+#' Of course, the identifiability constraint must be imposed for
 #' each time \eqn{\tau}.
 #'
 #'@author Leonardo Egidi \email{legidi@units.it}
@@ -126,13 +126,14 @@
 #'\dontrun{
 #'require(engsoccerdata)
 #'require(tidyverse)
+#'require(dplyr)
 #'
 #'### Use Italian Serie A from 2000 to 2002
 #'
 #'italy <- as_tibble(italy)
 #'italy_2000_2002<- italy %>%
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-#'  filter(Season=="2000" |  Season=="2001"| Season=="2002")
+#'  dplyr::filter(Season=="2000" |  Season=="2001"| Season=="2002")
 #'
 #'
 #' ### Fit Stan models

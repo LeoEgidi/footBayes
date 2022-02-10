@@ -36,11 +36,12 @@ fitted via the \code{mle_foot} the probabilities are computed by simulating from
 \dontrun{
 ### weekly dynamics, predict the last four weeks
 require(engsoccerdata)
+require(tidyverse)
 require(dplyr)
 
 italy_2000<- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
- filter(Season=="2000")
+ dplyr::filter(Season=="2000")
 
 fit <- stan_foot(data = italy_2000,
                  model="double_pois", predict =18,

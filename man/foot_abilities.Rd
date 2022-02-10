@@ -32,13 +32,15 @@ or from MLE models fitted via the \code{mle_foot} function.
 \dontrun{
 require(engsoccerdata)
 require(dplyr)
+require(tidyverse)
+
 italy <- as_tibble(italy)
 
 ### no dynamics, no prediction
 
 italy_2000_2002<- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
- filter(Season=="2000" |  Season=="2001" | Season =="2002")
+ dplyr::filter(Season=="2000" |  Season=="2001" | Season =="2002")
 
 fit1 <- stan_foot(data = italy_2000_2002,
                 model="double_pois") # double poisson
@@ -68,7 +70,7 @@ foot_abilities(fit5, italy_2000_2002)
 
 italy_2000<- italy \%>\%
   dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
-  filter(Season=="2000")
+  dplyr::filter(Season=="2000")
 
 fit6 <- stan_foot(data = italy_2000,
                 model="double_pois", predict =36,

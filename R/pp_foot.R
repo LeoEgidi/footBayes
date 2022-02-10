@@ -38,7 +38,7 @@
 #'
 #'italy_2000<- italy %>%
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-#'  filter(Season=="2000")
+#'  dplyr::filter(Season=="2000")
 #'
 #'fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 #'
