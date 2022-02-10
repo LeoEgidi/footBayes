@@ -19,7 +19,7 @@ Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats, loo,
          extraDistr, parallel, metRology, dplyr, engsoccerdata, numDeriv, tidyverse, magrittr
 Encoding: UTF-8
 RoxygenNote: 7.1.2
-VignetteBuilder: knitr
+VignetteBuilder: rmarkdown
 Suggests: 
     testthat, knitr, rmarkdown
 BuildManual: yes
