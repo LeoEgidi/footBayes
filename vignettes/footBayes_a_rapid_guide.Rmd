@@ -278,7 +278,7 @@ At this stage, we are currently ignoring any time-dependence in our parameters, 
 
 italy_2000 <- subset(italy[, c(2,3,4,6,7)], 
                      Season =="2000")
-
+head(italy_2000)
 
 ### Fit Stan models
 ## no dynamics, no predictions
