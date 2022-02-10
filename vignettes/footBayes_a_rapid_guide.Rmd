@@ -266,17 +266,18 @@ At this stage, we are currently ignoring any time-dependence in our parameters, 
 
 ### Use Italian Serie A 2000/2001
 
-italy <- as_tibble(italy)
-italy_2000<- italy %>%
-  dplyr::select(Season, home, visitor, hgoal,vgoal) #%>%
-  dplyr::filter(Season=="2000")
-italy_2000
+## with 'tidyverse' environment
+#italy <- as_tibble(italy)
+#italy_2000<- italy %>%
+#  dplyr::select(Season, home, visitor, hgoal,vgoal) #%>%
+#  dplyr::filter(Season=="2000")
+#italy_2000
 
 ## alternatively, you can use the basic 'subsetting' code, 
 ## not using the 'tidyverse' environment: 
 
-#italy_2000 <- subset(italy[, c(2,3,4,6,7)], 
-#                     Season =="2000")
+italy_2000 <- subset(italy[, c(2,3,4,6,7)], 
+                     Season =="2000")
 
 
 ### Fit Stan models
