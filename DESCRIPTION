@@ -13,7 +13,6 @@ Description: This is the first package allowing for the estimation,
              environment and Maximum Likelihood estimation (MLE, for 
              'static' models only).
 URL: https://github.com/leoegidi/footBayes
-Encoding: UTF-8             
 License: GPL-2
 Depends: R (>= 3.1.0)
 Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats, loo,
