@@ -6,7 +6,7 @@ output: rmarkdown::html_vignette
 bibliography: thesis.bib
 vignette: >
   %\VignetteIndexEntry{Fitting football models with the ```footBayes``` package}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{rmarkdown::render}
   %\VignetteEncoding{UTF-8}
 ---
 
@@ -268,7 +268,8 @@ At this stage, we are currently ignoring any time-dependence in our parameters, 
 italy_2000 <- subset(italy[, c(2,3,4,6,7)], 
                      Season =="2000")
 
-## alternatively, you can use the following code:  
+## alternatively, you can use the following 'tidyverse-based' code: 
+
 # library(tidyverse)
 # italy <- as_tibble(italy)
 # italy_2000<- italy %>%
