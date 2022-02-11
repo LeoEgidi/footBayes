@@ -246,8 +246,6 @@ library(engsoccerdata)
 library(bayesplot)
 library(loo)
 library(ggplot2)
-library(dplyr)
-library(tidyverse)
 ```
 
 # Model fit
@@ -267,6 +265,8 @@ At this stage, we are currently ignoring any time-dependence in our parameters, 
 ### Use Italian Serie A 2000/2001
 
 ## with 'tidyverse' environment
+#library(dplyr)
+#library(tidyverse)
 #italy <- as_tibble(italy)
 #italy_2000<- italy %>%
 #  dplyr::select(Season, home, visitor, hgoal,vgoal) #%>%
@@ -275,7 +275,8 @@ At this stage, we are currently ignoring any time-dependence in our parameters, 
 
 ## alternatively, you can use the basic 'subsetting' code, 
 ## not using the 'tidyverse' environment: 
-
+data(italy)
+italy <- as.data.frame(italy)
 italy_2000 <- subset(italy[, c(2,3,4,6,7)], 
                      Season =="2000")
 head(italy_2000)
