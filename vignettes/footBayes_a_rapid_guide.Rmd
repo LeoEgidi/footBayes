@@ -7,7 +7,7 @@ bibliography: thesis.bib
 vignette: >
   %\VignetteIndexEntry{Fitting football models with the ```footBayes``` package}
   %\VignetteEngine{knitr::rmarkdown}
-  %\usepackage[utf8]{inputenc}
+   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include = FALSE}
