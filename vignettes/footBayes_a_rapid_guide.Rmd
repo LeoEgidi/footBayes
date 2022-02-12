@@ -7,7 +7,8 @@ bibliography: thesis.bib
 vignette: >
   %\VignetteIndexEntry{Fitting football models with the ```footBayes``` package}
   %\VignetteEngine{knitr::rmarkdown}
-   %\usepackage[utf8]{inputenc}
+  %\VignetteEncoding{UTF-8}
+   
 ---
 
 ```{r setup, include = FALSE}
@@ -805,3 +806,4 @@ Extensions and to-do list for the next package's versions:
 
 <!-- > "He who gives up [code] safety for [code] speed deserves neither." -->
 <!-- ([via](https://twitter.com/hadleywickham/status/504368538874703872)) -->
+<!--%\usepackage[utf8]{inputenc}-->
