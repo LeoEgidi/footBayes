@@ -8,7 +8,6 @@ vignette: >
   %\VignetteIndexEntry{Fitting football models with the ```footBayes``` package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-   
 ---
 
 ```{r setup, include = FALSE}
