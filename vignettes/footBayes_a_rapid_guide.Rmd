@@ -6,7 +6,7 @@ output: rmarkdown::html_vignette
 bibliography: thesis.bib
 vignette: >
   %\VignetteIndexEntry{Fitting football models with the ```footBayes``` package}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{rmarkdown::render}
   %\VignetteEncoding{UTF-8}
 ---
 
@@ -25,7 +25,7 @@ knitr::opts_chunk$set(fig.align = 'center',
                       )
 ```
 
-
+<!-- knitr::rmarkdown -->
 # Modeling football outcomes
 
 Modeling football outcomes became incredibly popular over the last years. However, an **encompassing computational tool** able to fit in one step many alternative football models is missing yet.
