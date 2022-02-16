@@ -2,7 +2,7 @@
 title: "Fitting football models and visualizing predictions with the ```footBayes``` package"
 author: "Leonardo Egidi"
 date: "`r Sys.Date()`"
-output: rmarkdown::pdf_vignette
+output: rmarkdown::html_vignette
 bibliography: thesis.bib
 vignette: >
   %\VignetteIndexEntry{Fitting football models and visualizing predictions with the ```footBayes``` package}
