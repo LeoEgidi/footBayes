@@ -6,14 +6,14 @@ output: rmarkdown::html_vignette
 bibliography: thesis.bib
 vignette: >
   %\VignetteIndexEntry{Fitting football models and visualizing predictions with the ```footBayes``` package}
-  %\VignetteEngine{knitr::knitr}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-
 ---
 
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
+  eval = FALSE,
   collapse = TRUE,
   comment = "#>"
 )
@@ -23,7 +23,7 @@ knitr::opts_chunk$set(fig.align = 'center',
                       global.par = TRUE,
                       dev='png',  
                       dev.args=list(pointsize=10)
-                      #,fig.path = 'figs/'
+                      ,fig.path = 'figs/'
                       )
 ```
 
