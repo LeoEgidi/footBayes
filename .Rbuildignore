@@ -5,6 +5,4 @@
 ^README\.Rmd$
 ^\.travis\.yml$
 ^CRAN-RELEASE$
-^doc$
-^Meta$
 ^CRAN-SUBMISSION$
