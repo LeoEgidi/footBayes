@@ -6,4 +6,4 @@
 ^\.travis\.yml$
 ^CRAN-RELEASE$
 ^CRAN-SUBMISSION$
-^doc$
+^inst/doc$
