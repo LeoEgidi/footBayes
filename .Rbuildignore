@@ -6,4 +6,5 @@
 ^\.travis\.yml$
 ^CRAN-RELEASE$
 ^CRAN-SUBMISSION$
-
+^doc$
+^vignettes$
