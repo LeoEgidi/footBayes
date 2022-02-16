@@ -20,6 +20,6 @@ Depends: R (>= 3.1.0)
 Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats, loo,
          extraDistr, parallel, metRology, dplyr, engsoccerdata, numDeriv, tidyverse, magrittr
 Suggests: testthat, knitr (>= 1.37), rmarkdown (>= 2.10)
-VignetteBuilder: knitr (>= 1.37)
+VignetteBuilder: knitr
 RoxygenNote: 7.1.2
 BuildManual: yes
