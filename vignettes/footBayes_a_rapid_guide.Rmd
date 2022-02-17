@@ -378,7 +378,7 @@ One of the common practices in Bayesian statistics is to change the priors and p
  
 where $t(\text{df}, \mu, \sigma)$ denotes a student-$t$ distribution with df degrees of freedom, location $\mu$ and scale $\sigma$, whereas $\mathsf{Laplace}^+$ denotes a half-Laplace distribution.
 
-```{r static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = TRUE}
+```{r static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = NOT_CRAN}
 ### Fit Stan models
 ## changing priors
 ## student-t for team-specific abilities, laplace for sds
