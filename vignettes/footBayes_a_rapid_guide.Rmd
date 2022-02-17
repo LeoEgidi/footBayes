@@ -2,8 +2,9 @@
 title: "Fitting football models and visualizing predictions with the ```footBayes``` package"
 author: "Leonardo Egidi"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-toc: yes
+output: 
+  rmarkdown::html_vignette:
+    toc: yes
 bibliography: thesis.bib
 vignette: >
   %\VignetteIndexEntry{Fitting football models and visualizing predictions with the ```footBayes``` package}
@@ -375,7 +376,7 @@ One of the common practices in Bayesian statistics is to change the priors and p
  
 where $t(\text{df}, \mu, \sigma)$ denotes a student-$t$ distribution with df degrees of freedom, location $\mu$ and scale $\sigma$, whereas $\mathsf{Laplace}^+$ denotes a half-Laplace distribution.
 
-```{r static_fit_priors, echo =TRUE, eval = TRUE}
+```{r static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = TRUE}
 ### Fit Stan models
 ## changing priors
 ## student-t for team-specific abilities, laplace for sds
@@ -450,7 +451,7 @@ with hyperparameters $\mu_{\text{att}}, \mu_{\text{def}}, \sigma_{\text{att}}, \
  We can use the ```dynamic_type``` argument in the ```stan_foot``` function, with possible options ```'seasonal'``` or ```'weekly'``` in order to consider more seasons (no examples are given in this course) or more week-times within a single season, respectively.  Let's fit a weekly-dynamic parameters model on the Serie A 2000/2001 season:
 
 
-```{r dynamic_fit, echo =TRUE, eval = TRUE}
+```{r dynamic_fit,message = FALSE, results='hide', echo =TRUE, eval = TRUE}
 ### Fit Stan models
 ## seasonal dynamics, no predictions
 ## 4 Markov chains, 'n_iter' iterations each
@@ -468,7 +469,7 @@ From the printed summary, we may note that the degree of goals' correlation seem
 
 To deal with these issues and broaden the set of candidate models, let's fit also a dynamic double-Poisson model with the ```double_pois``` option for the argument ```model```:
 
-```{r weekly_fit, echo = TRUE, eval = TRUE}
+```{r weekly_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 ### Fit Stan models
 ## weekly dynamics, no predictions
 ## 4 chains, 'n_iter' iterations each
@@ -491,7 +492,7 @@ The fitting problems mentioned above remain also for the double Poisson model...
  \sigma_{\text{att}},  \sigma_{\text{def}} &\ \sim \mathsf{Cauchy}^+(0,25),
  \end{align}
 
-```{r weekly_fit_t, echo = TRUE, eval = TRUE}
+```{r weekly_fit_t, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 ### Fit Stan models
 ## weekly dynamics, no predictions
 ## 4 chains, 'n_iter' iterations each
@@ -612,7 +613,7 @@ $$p(\tilde{\mathcal{D}}| \mathcal{D}) = \int p(\tilde{\mathcal{D}}| \boldsymbol{
 
 We may then predict test set matches by using the argument ```predict``` of the ```stan_foot``` function, for instance considering the last four weeks of the 2000/2001 season as the test set, and then computing posterior-results probabilities using the function ```foot_prob``` for two teams belonging to the test set, such as Reggina Calcio and AC Milan:
 
-```{r weekly_predict, echo=TRUE, eval= TRUE}
+```{r weekly_predict,message = FALSE, results='hide', echo=TRUE, eval= TRUE}
 ### Fit Stan models
 ## weekly dynamics, predictions of last four weeks
 ## 4 chains 'n_iter' iterations each
