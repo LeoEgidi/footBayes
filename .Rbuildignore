@@ -7,3 +7,5 @@
 ^CRAN-RELEASE$
 ^CRAN-SUBMISSION$
 ^inst/doc$
+^doc$
+^Meta$
