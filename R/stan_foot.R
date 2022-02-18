@@ -157,7 +157,7 @@
 #'
 #' fit4 <- stan_foot(data = italy_2000_2002,
 #'                 model="student_t")   # student_t
-#' print(fit4, pars =c("home", "beta")
+#' print(fit4, pars =c("home", "beta"))
 #'
 #' ## seasonal dynamics, no prediction
 #'
