@@ -22,7 +22,8 @@
 #'
 #'@examples
 #'
-#'\dontrun{
+#'\donttest{
+#'if(requireNamespace("engsoccerdata")){
 #'require(engsoccerdata)
 #'require(dplyr)
 #'
@@ -36,6 +37,7 @@
 #'foot_round_robin(italy_1999_2000, fit)
 #'foot_round_robin(italy_1999_2000, fit, c("Parma AC", "AS Roma"))
 #'
+#' }
 #'}
 #'
 #'@importFrom dplyr as_tibble
@@ -118,22 +120,26 @@ foot_round_robin <- function(data, object, team_sel){
   number_match_days <- length(unique(team1_prev))*2-2
   punt <- matrix("-", nteams, nteams)
 
-  defaultW <- getOption("warn")
-  options(warn = -1)
+  #defaultW <- getOption("warn")
+  #options(warn = -1)
+  suppressWarnings(
   # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
   cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev))) & N < length(unique(team1_prev))*( length(unique(team1_prev))-1)
-
+  )
   # questa condizione significa che il training NON ha
   # le stesse squadre del test, e che stiamo considerando
   # dati di training di più stagioni
+  suppressWarnings(
   cond_2 <- N > length(unique(team1_prev))*( length(unique(team1_prev))-1) &
     all(sort(unique(team_home))== sort(unique(team1_prev)))==FALSE &
     N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0
+  )
 
-
+  suppressWarnings(
   # questa condizione significa che siamo alla fine di una   # stagione
   cond_3 <-  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))==0
-  options(warn = defaultW)
+  )
+  #options(warn = defaultW)
 
 
 

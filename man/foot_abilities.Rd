@@ -29,7 +29,8 @@ Depicts teams' abilities either from the Stan models fitted via the \code{stan_f
 or from MLE models fitted via the \code{mle_foot} function.
 }
 \examples{
-\dontrun{
+\donttest{
+if(requireNamespace("engsoccerdata")){
 require(engsoccerdata)
 require(dplyr)
 require(tidyverse)
@@ -83,6 +84,7 @@ fit7 <- stan_foot(data = italy_2000,
 
 foot_abilities(fit6, italy_2000)
 foot_abilities(fit7, italy_2000)
+}
 }
 }
 \author{

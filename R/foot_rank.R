@@ -25,7 +25,8 @@
 #'
 #' @examples
 #'
-#' \dontrun{
+#' \donttest{
+#' if(requireNamespace("engsoccerdata")){
 #' require(engsoccerdata)
 #' require(tidyverse)
 #'
@@ -36,6 +37,7 @@
 #' fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 #' foot_rank(italy_1999_2000, fit)
 #' foot_rank(italy_1999_2000, fit, visualize =  "individual")
+#'  }
 #' }
 #'
 #'
@@ -257,25 +259,29 @@ foot_rank <- function(data, object,
 
   fill_test <- c("yellow", "yellow")[c(!in_sample_cond, in_sample_cond)]
 
-  defaultW <- getOption("warn")
-  options(warn = -1)
+  #defaultW <- getOption("warn")
+  #options(warn = -1)
 
   # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
+  suppressWarnings(
   cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev)))
   #& N < length(unique(team1_prev[(1:N)[data$season==season_prev]]))*( length(unique(team1_prev[(1:N)[data$season==season_prev]]))-1)
-
+  )
 
   # questa condizione significa che il training NON ha
   # le stesse squadre del test, e che stiamo considerando
   # dati di training di più stagioni
+  suppressWarnings(
   cond_2 <- N > length(unique(team1_prev))*( length(unique(team1_prev))-1) &
     all(sort(unique(team_home))== sort(unique(team1_prev)))==FALSE &
     N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))!=0
-
+  )
 
   # questa condizione significa che siamo alla fine di una   # stagione
+  suppressWarnings(
   cond_3 <-  N %% (length(unique(team1_prev))*( length(unique(team1_prev))-1))==0
-  options(warn = defaultW)
+  )
+  #options(warn = defaultW)
 
 
 

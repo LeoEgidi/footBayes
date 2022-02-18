@@ -35,7 +35,8 @@ returned by the \code{stan_foot} function.
 }
 \examples{
 
-\dontrun{
+\donttest{
+if(requireNamespace("engsoccerdata")){
 require(dplyr)
 require(engsoccerdata)
 
@@ -47,7 +48,7 @@ fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 
 pp_foot(italy_2000, fit)
 
-
+}
 }
 
 }

@@ -33,7 +33,8 @@ simulation from the posterior predictive distribution of future (out-of-sample) 
 fitted via the \code{mle_foot} the probabilities are computed by simulating from the MLE estimates.
 }
 \examples{
-\dontrun{
+\donttest{
+if(requireNamespace("engsoccerdata")){
 ### weekly dynamics, predict the last four weeks
 require(engsoccerdata)
 require(tidyverse)
@@ -51,6 +52,7 @@ foot_prob(fit, italy_2000, "Inter",
           "Bologna FC")
 
 foot_prob(fit, italy_2000) # all the out-of-sample matches
+}
 }
 }
 \author{

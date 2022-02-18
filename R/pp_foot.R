@@ -32,7 +32,8 @@
 #'
 #'@examples
 #'
-#'\dontrun{
+#'\donttest{
+#'if(requireNamespace("engsoccerdata")){
 #'require(dplyr)
 #'require(engsoccerdata)
 #'
@@ -44,7 +45,7 @@
 #'
 #'pp_foot(italy_2000, fit)
 #'
-#'
+#' }
 #'}
 #'
 #' @importFrom bayesplot yaxis_text

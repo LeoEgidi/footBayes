@@ -48,7 +48,8 @@
 #'
 #'
 #'@examples
-#'\dontrun{
+#'\donttest{
+#'if(requireNamespace("engsoccerdata")){
 #'require(engsoccerdata)
 #'require(tidyverse)
 #'require(dplyr)
@@ -60,6 +61,7 @@
 #'
 #'mle_fit <- mle_foot(data  = italy_2008,
 #'                    model = "double_pois")
+#' }
 #'}
 #'
 #'

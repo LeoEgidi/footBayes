@@ -34,7 +34,8 @@ Likelihood optimization is performed via the \code{BFGS} method
 of the \code{\link{optim}} function.
 }
 \examples{
-\dontrun{
+\donttest{
+if(requireNamespace("engsoccerdata")){
 require(engsoccerdata)
 require(tidyverse)
 require(dplyr)
@@ -46,6 +47,7 @@ italy_2008<- italy \%>\%
 
 mle_fit <- mle_foot(data  = italy_2008,
                    model = "double_pois")
+}
 }
 
 

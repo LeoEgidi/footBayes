@@ -123,7 +123,8 @@
 #'
 #'
 #'@examples
-#'\dontrun{
+#'\donttest{
+#'if(requireNamespace("engsoccerdata")){
 #'require(engsoccerdata)
 #'require(tidyverse)
 #'require(dplyr)
@@ -146,7 +147,7 @@
 #'
 #' fit2 <- stan_foot(data = italy_2000_2002,
 #'                 model="biv_pois")    # bivariate poisson
-#' print(fit2, pars =c("home", "rho"
+#' print(fit2, pars =c("home", "rho",
 #'                     "sigma_att", "sigma_def"))
 #'
 #' fit3 <- stan_foot(data = italy_2000_2002,
@@ -185,10 +186,9 @@
 #'                                             # and laplace prior for the hyper sds
 #' print(fit_p,  pars = c("home", "sigma_att",
 #'                     "sigma_def"))
-#'
+#' }
 #'}
 #'@import rstan
-#'@import engsoccerdata
 #'@import bayesplot
 #'@import matrixStats
 #'@import reshape2
