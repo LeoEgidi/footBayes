@@ -179,7 +179,7 @@
 #' ## other priors' options
 #'
 #' fit_p <- stan_foot(data = italy_2000_2002,
-#'                    model="double_pois"
+#'                    model="double_pois",
 #'                    priors = student_t (4, 0, NULL),
 #'                    prior_sd = laplace(0,1)) # double poisson with
 #'                                             # student_t priors for teams abilities
