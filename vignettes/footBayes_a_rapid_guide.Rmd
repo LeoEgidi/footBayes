@@ -44,7 +44,11 @@ With the ```footBayes``` package we want to fill the gap and to give the possibi
 
 - <span style="color:green">Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>
 
+- <span style="color:green">Zero-Inflated Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>
+
 - <span style="color:green">Student-$t$</span> for goals' differences: <span style="color:red"> @gelman2014stan </span>
+
+- <span style="color:green">Diagonal-Inflated Bivariate Poisson</span>: <span style="color:red">@karlis2003analysis </span>
 
 - <span style="color:green">Zero-Inflated Poisson</span>: <span style="color:red">@karlis2003analysis </span> (*coming soon!*),
 
@@ -158,7 +162,6 @@ Now it's time to fit and interpret the models, and we'll mainly focus on the biv
 - predictions' uncertainty;
 
 - model checking.
- 
 
  <!-- Instead of using the marginal number of goals, -->
  <!-- another alternative is to modelling directly -->
