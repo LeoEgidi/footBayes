@@ -3651,6 +3651,7 @@ transformed parameters{
       // log-priors fixed effects
       target+=normal_lpdf(home|0,5);
       target+=normal_lpdf(gamma|0,1);
+      target+=uniform_lpdf(prob_of_draws|0,1);
 
       // likelihood
       for (n in 1:N){
