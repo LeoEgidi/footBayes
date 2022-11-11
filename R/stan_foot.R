@@ -1,13 +1,13 @@
 #' Fit football models  with Stan
 #'
 #' Stan football modelling for the most famous models:
-#' double Poisson, bivariate Poisson, Skellam and student t.
+#' double Poisson, bivariate Poisson, Skellam, student t, diagonal-inflated bivariate Poisson and zero-inflated Skellam.
 #'
 #'@param data A data frame, or a matrix containing the following mandatory items: season, home team, away team,
 #'home goals, away goals.
 #'@param model The type of Stan model used to fit the data.
 #'             One among the following: \code{"double_pois"},
-#'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.
+#'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}, \code{"diag_infl_biv_pois"}, \code{"zero_infl_skellam"}.
 #'@param predict The number of out-of-sample matches. If missing, the function returns
 #'the fit for the training set only.
 #'@param ranking Eventual numeric ranking provided for the teams in the dataset (e.g., the \href{https://www.fifa.com/fifa-world-ranking}{Coca-Cola Fifa ranking})
@@ -99,7 +99,11 @@
 #' Of course, the identifiability constraint must be imposed for
 #' each time \eqn{\tau}.
 #'
-#'@author Leonardo Egidi \email{legidi@units.it}
+#' The current version of the package allows for the fit of a
+#' diagonal-inflated bivariate Poisson and a zero-inflated Skellam model in the
+#' spirit of (Karlis & Ntzoufras, 2003) to better capture draw occurrences. See the vignette for further details.
+#'
+#'@author Leonardo Egidi \email{legidi@units.it}, Vasilis Palaskas \email{vasilis.palaskas94@gmail.com}.
 #'
 #'@references
 #' Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football

@@ -48,9 +48,8 @@ With the ```footBayes``` package we want to fill the gap and to give the possibi
 
 - <span style="color:green">Student-$t$</span> for goals' differences: <span style="color:red"> @gelman2014stan </span>
 
-- <span style="color:green">Diagonal-Inflated Bivariate Poisson</span>: <span style="color:red">@karlis2003analysis </span>
+- <span style="color:green">Diagonal-Inflated Bivariate Poisson</span>: <span style="color:red">@karlis2003analysis </span>.
 
-- <span style="color:green">Zero-Inflated Poisson</span>: <span style="color:red">@karlis2003analysis </span> (*coming soon!*),
 
 Precisely, we'll learn how to:
 
@@ -155,6 +154,18 @@ assumes the abilities for the $T$-th team are equal to the negative sum of the o
 \end{equation}
  
  
+
+The current version of the package allows for the fit of diagonal-inflated Bivariate Poisson <span style="color:red">@karlis2003analysis </span> and zero-inflated Skellam models to better capture the probability of draw occurrences. A draw between two teams is represented by the outcomes on the diagonal of the probability table. To correct for the excess of draws we may add an inflation component on
+the diagonal of the probability function. This model is an extension of the simple zero-inflated
+model that allows only for an excess in (0,0) draws. Let's focus on the diagonal-inflated bivariate Poisson model, specified as:
+
+\begin{equation}
+P_{X, Y}(x,y) = \textrm{Pr}(X=x, Y=y) = \begin{cases} (1-p) \text{BP}(\lambda_1, \lambda_2, \lambda_3) \ \ \ & \text{if} \    x \ne y \\ (1-p) \text{BP}(\lambda_1, \lambda_2, \lambda_3) + pD(x, \eta) \ \ \ & \text{if} \   x = y, \end{cases}
+\end{equation}
+
+where $D(x, \eta)$ is a discrete distribution with parameter vector $\eta$.
+
+
 Now it's time to fit and interpret the models, and we'll mainly focus on the bivariate Poisson case. Classical estimates for BP models are provided, among the others, by <span style="color:red">@karlis2003analysis</span>  (MLE through an EM algorithm) and <span style="color:red">@koopman2015dynamic</span>; in the following, we quickly revise the maximum likelihood approach, but we'll deeply focus on Bayesian estimation with the underlying ```rstan``` software to better capture:
 
 - parameters' uncertainty;
@@ -239,6 +250,7 @@ The standard approach is to assign some **weakly-informative** prior distributio
  \end{align}
 
 with **hyperparameters** $\mu_{\text{att}}, \sigma_{\text{att}}, \mu_{\text{def}}, \sigma_{\text{def}}$. The model formulation is completed by assigning some weakly-informative priors to the remaining parameters. In what follows, some priors' options will be handled directly by the user.
+
 
 
 # Installing the package
@@ -766,13 +778,11 @@ Extensions and to-do list for the next package's versions:
 
 3. **Diagnostics, pp checks** designed for football;
 
-4. **Zero-inflated models**
+4. **Teams' statistics**
 
-5. **Teams' statistics**
+5. **More covariates** to be included in the model (possibly by users).
 
-6. **More covariates** to be included in the model (possibly by users).
-
-7. **More priors choices**
+6. **More priors choices**
 
 
 # References

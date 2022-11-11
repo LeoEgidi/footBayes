@@ -1,15 +1,16 @@
 Package: footBayes
 Type: Package
 Title: Fitting Bayesian and MLE Football Models
-Version: 0.1.0
-Date: 2022-02-10
-Author: Leonardo Egidi[aut, cre]
+Version: 0.2.0
+Date: 2022-11-10
+Author: Leonardo Egidi[aut, cre], Vasilis Palaskas[aut].
 Maintainer: Leonardo Egidi <legidi@units.it>
 License: GPL-2
 Description: This is the first package allowing for the estimation,
              visualization and prediction of the most well-known 
              football models: double Poisson, bivariate Poisson,
-             Skellam, student_t. The package allows Hamiltonian
+             Skellam, student_t, diagonal-inflated bivariate Poisson, and
+             zero-inflated Skellam. The package allows Hamiltonian
              Monte Carlo (HMC) estimation through the underlying Stan
              environment and Maximum Likelihood estimation (MLE, for 
              'static' models only). The model construction relies on
