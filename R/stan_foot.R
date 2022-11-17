@@ -207,6 +207,7 @@ stan_foot <- function(data,
                       dynamic_type,
                       prior,
                       prior_sd,
+                      ind_home = "TRUE",
                       ...){
 
     ## DATA CHECKS
@@ -517,7 +518,21 @@ stan_foot <- function(data,
     ranking[,1] <- ranking$rank_team[team_order]
     ranking[,2] <- ranking$points[team_order]
     ranking[,2] <- (as.numeric(as.vector(ranking[,2]))-mean(as.numeric(as.vector(ranking[,2]))))/(2*sd(as.numeric(as.vector(ranking[,2]))))
-    }
+  }
+
+  ## HOME EFFECT CKECK
+
+  home_names <- c("TRUE", "FALSE")
+  ind_home <- match.arg(ind_home, home_names)
+
+   if (missing(ind_home)){
+     ind_home = "TRUE"
+   }else{
+     ind_home = ind_home
+   }
+
+  ind_home <- 0*(ind_home=="FALSE") + 1*(ind_home =="TRUE")
+
 
 
 
@@ -541,7 +556,8 @@ stan_foot <- function(data,
                 hyper_sd_location=hyper_sd_location,
                 hyper_sd_scale=hyper_sd_scale,
                 ranking = ranking[,2],
-                nu = user_dots$nu)
+                nu = user_dots$nu,
+                ind_home = ind_home)
 
   if (!missing(dynamic_type)){
     data_stan$ntimes <- ntimes
