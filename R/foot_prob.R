@@ -220,22 +220,25 @@ foot_prob <- function(object, data, home_team, away_team){
 
 
       for (i in 1:length(find_match)){
-        posterior_prop1<-table(subset(previsioni1[,i], previsioni1[,i]<15))
-        posterior_prop2<-table(subset(previsioni2[,i], previsioni2[,i]<15))
+        posterior_prop1<-table(previsioni1[,i])
+        posterior_prop2<-table(previsioni2[,i])
 
         teamaa=home_team[i]
         teamab=away_team[i]
 
-        x_min=y_min=min(length(posterior_prop1),
-                        length(posterior_prop2))
+        x_min=y_min= 5
+          #min(length(posterior_prop1),              ## OLD CODE
+          #              length(posterior_prop2))
 
-        counts_mix<-matrix(0, min(length(posterior_prop1), length(posterior_prop2)),
-                           min(length(posterior_prop1), length(posterior_prop2)))
+        counts_mix<- matrix(0, x_min, y_min)
+          #matrix(0, min(length(posterior_prop1), length(posterior_prop2)),          ## OLD CODE
+          #                 min(length(posterior_prop1), length(posterior_prop2)))
 
-        for (j in 1: min(length(posterior_prop1), length(posterior_prop2))){
-          for (t in 1: min(length(posterior_prop1), length(posterior_prop2))){
+        for (j in 1: x_min ){
+          for (t in 1: y_min ){
             counts_mix[j,t]<-posterior_prop1[j]*posterior_prop2[t]
           }}
+            counts_mix[x_min, ] <- sum(posterior_prop1[x_min])
         dim1 <- dim(counts_mix)[1]
         dim2 <- dim(counts_mix)[2]
 
@@ -283,7 +286,8 @@ foot_prob <- function(object, data, home_team, away_team){
       p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
         theme_bw() +
         scale_fill_gradient(low="white", high="black") +
-        facet_wrap("matches", scales = "free")+
+        facet_wrap("matches", scales = "fixed")+
+        #facet_grid(~"matches")+
         geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
                       xmax = as.numeric(as.vector(true_gol_home))+0.5,
                       ymin = as.numeric(as.vector(true_gol_away))-0.5,
@@ -298,7 +302,8 @@ foot_prob <- function(object, data, home_team, away_team){
               axis.text.y = element_text(size=22),
               plot.subtitle=element_text(size=13),
               axis.title=element_text(size=18,face="bold"),
-              legend.text=element_text(size=14))
+              legend.text=element_text(size=14),
+              panel.spacing = unit(0.2, "lines"))
       #ggsave(file=paste(teams[team1_prev[1]],"-", teams[team2_prev[1]], "Heatmap_pois.pdf", sep=""), width=6, height=6)
 
 
