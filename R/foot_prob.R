@@ -238,7 +238,17 @@ foot_prob <- function(object, data, home_team, away_team){
           for (t in 1: y_min ){
             counts_mix[j,t]<-posterior_prop1[j]*posterior_prop2[t]
           }}
-            counts_mix[x_min, ] <- sum(posterior_prop1[x_min]) # arrivato qui: 23/11
+
+            # qq<-posterior_prop1[as.double(names(posterior_prop1))>=x_min]
+            # rr <- posterior_prop2
+            # qq_rr <- matrix(rep(rr, length(qq)), length(rr), length(qq))
+            # counts_mix[x_min, 1:y_min ] <- qq%*%t(qq_rr)[,1:y_min] # arrivato qui: 23/11
+            # counts_mix[x_min, y_min] <- counts_mix[x_min, y_min] + sum(qq%*%t(qq_rr)[,(y_min+1):length(rr)])
+            # qq2<-posterior_prop2[as.double(names(posterior_prop2))>=y_min]
+            # rr2 <- posterior_prop1
+            # qq_rr2 <- matrix(rep(rr2, length(qq2)), length(rr2), length(qq2))
+            # counts_mix[1:x_min, y_min] <- counts_mix[1:x_min, y_min] +  qq2%*%t(qq_rr2)[,1:x_min]
+            # counts_mix[x_min, y_min] <-counts_mix[x_min, y_min] + sum(qq2%*%t(qq_rr2)[,(x_min+1):length(rr2)])
         dim1 <- dim(counts_mix)[1]
         dim2 <- dim(counts_mix)[2]
 
@@ -286,7 +296,7 @@ foot_prob <- function(object, data, home_team, away_team){
       p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
         theme_bw() +
         scale_fill_gradient(low="white", high="black") +
-        facet_wrap("matches", scales = "fixed")+
+        facet_wrap("matches", scales = "fixed")+  # arrivato fin qui 23/11
         #facet_grid(~"matches")+
         geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
                       xmax = as.numeric(as.vector(true_gol_home))+0.5,
@@ -296,6 +306,8 @@ foot_prob <- function(object, data, home_team, away_team){
         labs(title= "Posterior match probabilities")+
         yaxis_text(size=12)+
         xaxis_text( size = rel(12))+
+        #scale_x_discrete(limits =c(0,1,2,3,4),  labels = c("0", "1", "2", "3", "4+") )+
+        #scale_y_discrete(limits =c(0,1,2,3,4),  labels = c("0", "1", "2", "3", "4+") )+
         theme(plot.title = element_text(size = 22),
               strip.text = element_text(size = 12),
               axis.text.x = element_text(size=22),
