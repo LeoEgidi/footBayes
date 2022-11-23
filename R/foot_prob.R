@@ -238,7 +238,7 @@ foot_prob <- function(object, data, home_team, away_team){
           for (t in 1: y_min ){
             counts_mix[j,t]<-posterior_prop1[j]*posterior_prop2[t]
           }}
-            counts_mix[x_min, ] <- sum(posterior_prop1[x_min])
+            counts_mix[x_min, ] <- sum(posterior_prop1[x_min]) # arrivato qui: 23/11
         dim1 <- dim(counts_mix)[1]
         dim2 <- dim(counts_mix)[2]
 
