@@ -218,13 +218,13 @@ foot_prob <- function(object, data, home_team, away_team){
 
     }else{
 
-
+        teamaa = teamab = c()
       for (i in 1:length(find_match)){
         posterior_prop1<-table(previsioni1[,i])
         posterior_prop2<-table(previsioni2[,i])
 
-        teamaa=home_team[i]
-        teamab=away_team[i]
+        teamaa[i]=home_team[i]
+        teamab[i]=away_team[i]
 
         x_min=y_min= 5
           #min(length(posterior_prop1),              ## OLD CODE
@@ -256,7 +256,7 @@ foot_prob <- function(object, data, home_team, away_team){
         y <- seq(0,dim2-1, length.out=dim2)
         data_exp <- expand.grid(Home=x, Away=y)
         data_exp$Prob <- as.double(counts_mix/(M*M))
-        data_exp$matches <- paste(  teamaa,"-", teamab)
+        data_exp$matches <- paste(  teamaa[i],"-", teamab[i])
         data_exp$true_gol_home <- true_gol_home[i]
         data_exp$true_gol_away <- true_gol_away[i]
 
@@ -290,20 +290,43 @@ foot_prob <- function(object, data, home_team, away_team){
                         prob_a = round(prob_a,3),
                         mlo = mlo)
 
-      new<- data_exp_tot %>%
+      data_exp_tot <- data_exp_tot %>%
         dplyr::group_by(matches)%>%
         dplyr::mutate(prob_h = sum(Prob[Home > Away]),
                       prob_d = sum(Prob[Home == Away]),
                       prob_a = sum(Prob[Home < Away]))
 
+      data_exp_tot$favorite <- rep(teamaa, each = x_min*y_min)
+      data_exp_tot$underdog <- rep(teamab, each = x_min*y_min)
 
+      indexes <- (1:dim(data_exp_tot)[1])[data_exp_tot$prob_h < data_exp_tot$prob_a]
+      temp1 <- data_exp_tot$prob_h[indexes]
+      temp2 <- data_exp_tot$prob_a[indexes]
+      data_exp_tot$prob_h[indexes] <- temp2
+      data_exp_tot$prob_a[indexes] <- temp1
+
+
+
+      temp_name1 <- data_exp_tot$favorite[indexes]
+      temp_name2 <- data_exp_tot$underdog[indexes]
+      data_exp_tot$favorite[indexes] <- temp_name2
+      data_exp_tot$underdog[indexes] <- temp_name1
+
+      data_exp_tot <- dplyr::arrange(data_exp_tot, prob_h)
+      fav_teams <- data_exp_tot%>%distinct(favorite)
+      und_teams <- data_exp_tot%>%distinct(underdog)
+      axes_titles <- data.frame(matches = unique(data_exp_tot$matches),
+                                axis_title_x = fav_teams[,2],
+                                axis_title_y = und_teams[,2])
+      data_exp_tot$new_matches <- paste(data_exp_tot$favorite, "-", data_exp_tot$underdog)
+      #axes_titles$favorite <- as.character(as.vector(axes_titles$favorite))
       # To change the color of the gradation :
 
       p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
         theme_bw() +
         scale_fill_gradient(low="white", high="black") +
-        facet_wrap("matches", scales = "fixed")+  # arrivato fin qui 23/11
-        #facet_grid(~"matches")+
+        facet_wrap(facets = ~reorder(new_matches, -prob_h),
+                   scales = "fixed")+
         geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
                       xmax = as.numeric(as.vector(true_gol_home))+0.5,
                       ymin = as.numeric(as.vector(true_gol_away))-0.5,
@@ -312,17 +335,18 @@ foot_prob <- function(object, data, home_team, away_team){
         labs(title= "Posterior match probabilities")+
         yaxis_text(size=12)+
         xaxis_text( size = rel(12))+
-        #scale_x_discrete(limits =c(0,1,2,3,4),  labels = c("0", "1", "2", "3", "4+") )+
-        #scale_y_discrete(limits =c(0,1,2,3,4),  labels = c("0", "1", "2", "3", "4+") )+
+        ylab("Underdog")+
+        xlab("Favorite")+
         theme(plot.title = element_text(size = 22),
               strip.text = element_text(size = 12),
+              #strip.placement = "outside",   # format to look like title
+              #strip.background = element_blank(),
               axis.text.x = element_text(size=22),
               axis.text.y = element_text(size=22),
-              plot.subtitle=element_text(size=13),
+              plot.subtitle=element_text(size=6.5),
               axis.title=element_text(size=18,face="bold"),
               legend.text=element_text(size=14),
               panel.spacing = unit(0.2, "lines"))
-      #ggsave(file=paste(teams[team1_prev[1]],"-", teams[team2_prev[1]], "Heatmap_pois.pdf", sep=""), width=6, height=6)
 
 
     }
