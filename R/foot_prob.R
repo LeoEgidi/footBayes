@@ -325,7 +325,7 @@ foot_prob <- function(object, data, home_team, away_team){
       p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
         theme_bw() +
         scale_fill_gradient(low="white", high="black") +
-        facet_wrap(facets = ~reorder(new_matches, -prob_h),
+        facet_wrap(facets = ~reorder(new_matches, prob_h),
                    scales = "fixed")+
         geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
                       xmax = as.numeric(as.vector(true_gol_home))+0.5,
