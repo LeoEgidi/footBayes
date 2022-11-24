@@ -338,7 +338,7 @@ foot_prob <- function(object, data, home_team, away_team){
         ylab("Underdog")+
         xlab("Favorite")+
         theme(plot.title = element_text(size = 22),
-              strip.text = element_text(size = 12),
+              strip.text = element_text(size = 9),
               #strip.placement = "outside",   # format to look like title
               #strip.background = element_blank(),
               axis.text.x = element_text(size=22),
