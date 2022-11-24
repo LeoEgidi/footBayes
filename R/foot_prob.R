@@ -290,6 +290,12 @@ foot_prob <- function(object, data, home_team, away_team){
                         prob_a = round(prob_a,3),
                         mlo = mlo)
 
+      new<- data_exp_tot %>%
+        dplyr::group_by(matches)%>%
+        dplyr::mutate(prob_h = sum(Prob[Home > Away]),
+                      prob_d = sum(Prob[Home == Away]),
+                      prob_a = sum(Prob[Home < Away]))
+
 
       # To change the color of the gradation :
 
