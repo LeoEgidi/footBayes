@@ -299,18 +299,27 @@ foot_prob <- function(object, data, home_team, away_team){
       data_exp_tot$favorite <- rep(teamaa, each = x_min*y_min)
       data_exp_tot$underdog <- rep(teamab, each = x_min*y_min)
 
+      # re-order in terms of favorite and underdog
       indexes <- (1:dim(data_exp_tot)[1])[data_exp_tot$prob_h < data_exp_tot$prob_a]
       temp1 <- data_exp_tot$prob_h[indexes]
       temp2 <- data_exp_tot$prob_a[indexes]
       data_exp_tot$prob_h[indexes] <- temp2
       data_exp_tot$prob_a[indexes] <- temp1
 
-
-
       temp_name1 <- data_exp_tot$favorite[indexes]
       temp_name2 <- data_exp_tot$underdog[indexes]
       data_exp_tot$favorite[indexes] <- temp_name2
       data_exp_tot$underdog[indexes] <- temp_name1
+
+      temp_coord1 <- data_exp_tot$Home[indexes]
+      temp_coord2 <- data_exp_tot$Away[indexes]
+      data_exp_tot$Home[indexes] <- temp_coord2
+      data_exp_tot$Away[indexes] <- temp_coord1
+
+      temp_tg1 <- data_exp_tot$true_gol_home[indexes]
+      temp_tg2 <- data_exp_tot$true_gol_away[indexes]
+      data_exp_tot$true_gol_home[indexes] <- temp_tg2
+      data_exp_tot$true_gol_away[indexes] <- temp_tg1
 
       data_exp_tot <- dplyr::arrange(data_exp_tot, prob_h)
       fav_teams <- data_exp_tot%>%distinct(favorite)
@@ -326,7 +335,10 @@ foot_prob <- function(object, data, home_team, away_team){
         theme_bw() +
         scale_fill_gradient(low="white", high="black") +
         facet_wrap(facets = ~reorder(new_matches, prob_h),
-                   scales = "fixed")+
+                   scales = "fixed"
+                   #labeller = as_labeller(c(axes_titles$underdog)),
+                   #strip.position = "left"
+                   )+
         geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
                       xmax = as.numeric(as.vector(true_gol_home))+0.5,
                       ymin = as.numeric(as.vector(true_gol_away))-0.5,
@@ -338,12 +350,12 @@ foot_prob <- function(object, data, home_team, away_team){
         ylab("Underdog")+
         xlab("Favorite")+
         theme(plot.title = element_text(size = 22),
-              strip.text = element_text(size = 10),
+              strip.text = element_text(size = 11),
               #strip.placement = "outside",   # format to look like title
-              #strip.background = element_blank(),
+              strip.background = element_blank(),
               axis.text.x = element_text(size=22),
               axis.text.y = element_text(size=22),
-              plot.subtitle=element_text(size=6.5),
+              plot.subtitle=element_text(size=8.5),
               axis.title=element_text(size=18,face="bold"),
               legend.text=element_text(size=14),
               panel.spacing = unit(0.2, "lines"))
