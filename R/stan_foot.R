@@ -632,6 +632,7 @@ stan_foot <- function(data,
       int time[ntimes];
       int instants[N];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -695,7 +696,7 @@ stan_foot <- function(data,
 
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -810,6 +811,7 @@ stan_foot <- function(data,
       int instants[N];
       int instants_prev[N_prev];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -873,7 +875,7 @@ stan_foot <- function(data,
 
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -951,7 +953,7 @@ stan_foot <- function(data,
       }
 
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(home+att[instants_prev[n], team1_prev[n]]+
+        theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
@@ -998,6 +1000,7 @@ stan_foot <- function(data,
       int team1[N];
       int team2[N];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1031,7 +1034,7 @@ stan_foot <- function(data,
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -1146,6 +1149,7 @@ stan_foot <- function(data,
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1178,7 +1182,7 @@ stan_foot <- function(data,
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -1257,7 +1261,7 @@ stan_foot <- function(data,
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home+att[team1_prev[n]]+
+        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
@@ -1773,6 +1777,7 @@ data{
   int team1[N];
   int team2[N];
   real ranking[nteams];
+  int<lower=0, upper=1> ind_home;
 
   // priors part
   int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1808,7 +1813,7 @@ transformed parameters{
   }
 
   for (n in 1:N){
-    theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+    theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
                        (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
     theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                        (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -1964,6 +1969,7 @@ data{
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1998,7 +2004,7 @@ data{
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -2098,7 +2104,7 @@ generated quantities{
 
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home+att[team1_prev[n]]+
+        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
@@ -2122,6 +2128,7 @@ double_pois_dynamic_fit<-"
       int time[ntimes];
       int instants[N];
       real ranking[nteams];       // eventual fifa/uefa ranking
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2182,7 +2189,7 @@ double_pois_dynamic_fit<-"
       }
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -2264,6 +2271,7 @@ double_pois_dynamic_fit<-"
       int instants[N];
       int instants_prev[N_prev];
       real ranking[nteams];       // eventual fifa/uefa ranking
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2324,7 +2332,7 @@ double_pois_dynamic_fit<-"
       }
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -2394,7 +2402,7 @@ double_pois_dynamic_fit<-"
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(home+att[instants_prev[n],team1_prev[n]]+
+        theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n],team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n],team2_prev[n]]+
@@ -2414,6 +2422,7 @@ double_pois_dynamic_fit<-"
       int team1[N];               // home team index
       int team2[N];               // away team index
       real ranking[nteams];       // eventual fifa/uefa ranking
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2447,7 +2456,7 @@ double_pois_dynamic_fit<-"
       }
 
       for (n in 1:N){
-        theta[n,1] = exp( home+att[team1[n]]+def[team2[n]] +
+        theta[n,1] = exp( home*ind_home+att[team1[n]]+def[team2[n]] +
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta[n,2] = exp( att[team2[n]]+def[team1[n]] -
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -2532,6 +2541,7 @@ double_pois_dynamic_fit<-"
       int team1_prev[N_prev];     // home team for pred.
       int team2_prev[N_prev];     // away team for pred.
       real ranking[nteams];       // eventual fifa/uefa ranking
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2563,7 +2573,7 @@ double_pois_dynamic_fit<-"
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -2636,7 +2646,7 @@ double_pois_dynamic_fit<-"
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home+att[team1_prev[n]]+def[team2_prev[n]]+
+        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+def[team2_prev[n]]+
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+def[team1_prev[n]]-
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
@@ -2663,6 +2673,7 @@ double_pois_dynamic_fit<-"
       int time[ntimes];
       int instants[N];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2722,7 +2733,7 @@ double_pois_dynamic_fit<-"
       }
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -2809,6 +2820,7 @@ double_pois_dynamic_fit<-"
       int instants[N];
       int instants_prev[N_prev];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2868,7 +2880,7 @@ double_pois_dynamic_fit<-"
       }
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -2939,7 +2951,7 @@ double_pois_dynamic_fit<-"
       //out-of-sample predictions
 
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(home+att[instants_prev[n], team1_prev[n]]+
+        theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
@@ -2966,6 +2978,7 @@ double_pois_dynamic_fit<-"
       int team1[N];
       int team2[N];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2997,7 +3010,7 @@ double_pois_dynamic_fit<-"
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -3084,6 +3097,7 @@ double_pois_dynamic_fit<-"
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3115,7 +3129,7 @@ double_pois_dynamic_fit<-"
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -3188,7 +3202,7 @@ double_pois_dynamic_fit<-"
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home+att[team1_prev[n]]+
+        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
@@ -3239,6 +3253,7 @@ data{
       int time[ntimes];
       int instants[N];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3300,7 +3315,7 @@ data{
       }
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -3408,6 +3423,7 @@ data{
       int instants[N];
       int instants_prev[N_prev];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3470,7 +3486,7 @@ transformed parameters{
       }
 
       for (n in 1:N){
-        theta_home[n] = exp(home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -3544,7 +3560,7 @@ transformed parameters{
       //out-of-sample predictions
 
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(home+att[instants_prev[n], team1_prev[n]]+
+        theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
@@ -3591,6 +3607,7 @@ transformed parameters{
       int team1[N];
       int team2[N];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3624,7 +3641,7 @@ transformed parameters{
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -3734,6 +3751,7 @@ transformed parameters{
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       real ranking[nteams];
+      int<lower=0, upper=1> ind_home;
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3767,7 +3785,7 @@ transformed parameters{
       }
 
       for (n in 1:N){
-        theta[n,1] = exp(home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
@@ -3844,7 +3862,7 @@ generated quantities{
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home+att[team1_prev[n]]+
+        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
@@ -3868,6 +3886,7 @@ generated quantities{
       int instants[N];
       vector[nteams] ranking;
       real nu;
+
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
