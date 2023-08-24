@@ -6,7 +6,6 @@ context("stan data reading")
 
 test_that("stan models recognize errors/warnings" , {
 
-  library(engsoccerdata)
   library(tidyverse)
 
   ##########################
@@ -71,7 +70,6 @@ test_that("stan models recognize errors/warnings" , {
 context("stan static models")
 test_that("prediction causes  warnings/errors", {
 
-  require(engsoccerdata)
   require(dplyr)
 
   ##########################
@@ -110,7 +108,6 @@ test_that("prediction causes  warnings/errors", {
 context("stan dynamic models")
 test_that("dymanics cause warnings/errors",{
 
-  require(engsoccerdata)
   require(dplyr)
 
   ##########################

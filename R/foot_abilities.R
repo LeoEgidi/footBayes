@@ -22,8 +22,6 @@
 #'
 #' @examples
 #' \donttest{
-#' if(requireNamespace("engsoccerdata")){
-#' require(engsoccerdata)
 #' require(dplyr)
 #' require(tidyverse)
 #'
@@ -77,7 +75,6 @@
 #' foot_abilities(fit6, italy_2000)
 #' foot_abilities(fit7, italy_2000)
 #' }
-#'}
 #'@importFrom arm coefplot
 #'@importFrom rstan traceplot
 #'@importFrom graphics par

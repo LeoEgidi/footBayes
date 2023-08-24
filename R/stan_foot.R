@@ -128,8 +128,6 @@
 #'
 #'@examples
 #'\donttest{
-#'if(requireNamespace("engsoccerdata")){
-#'require(engsoccerdata)
 #'require(tidyverse)
 #'require(dplyr)
 #'
@@ -191,7 +189,6 @@
 #' print(fit_p,  pars = c("home", "sigma_att",
 #'                     "sigma_def"))
 #' }
-#'}
 #'@import rstan
 #'@import bayesplot
 #'@import matrixStats

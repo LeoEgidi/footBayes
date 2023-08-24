@@ -23,8 +23,6 @@
 #'@examples
 #'
 #'\donttest{
-#'if(requireNamespace("engsoccerdata")){
-#'require(engsoccerdata)
 #'require(dplyr)
 #'
 #'
@@ -37,7 +35,6 @@
 #'foot_round_robin(italy_1999_2000, fit)
 #'foot_round_robin(italy_1999_2000, fit, c("Parma AC", "AS Roma"))
 #'
-#' }
 #'}
 #'
 #'@importFrom dplyr as_tibble

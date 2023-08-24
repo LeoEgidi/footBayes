@@ -38,7 +38,6 @@ In what follows, a quick example to fit a Bayesian double Poisson model for the 
 
 ```{r example, eval = FALSE}
 library(footBayes)
-require(engsoccerdata)
 require(dplyr)
 
 # dataset for Italian serie A

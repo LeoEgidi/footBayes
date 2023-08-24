@@ -4,7 +4,7 @@ context("static models")
 test_that("object argument gives errors/warnings", {
 
   library(tidyverse)
-  library(engsoccerdata)
+
 
   ##########################
   ## DATA

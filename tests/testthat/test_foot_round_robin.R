@@ -1,6 +1,5 @@
 ## all the test PASSED (also the skipped ones!)
 
-# require(engsoccerdata)
 # require(dplyr)
 #
 # italy_2000<- italy %>%

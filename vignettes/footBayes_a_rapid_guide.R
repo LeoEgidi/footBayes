@@ -4,11 +4,11 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-knitr::opts_chunk$set(fig.align = 'center', 
-                      warning=FALSE, message=FALSE, fig.asp=0.625, fig.height =10, fig.width = 8, 
-                      out.width='750px', dpi=200, 
+knitr::opts_chunk$set(fig.align = 'center',
+                      warning=FALSE, message=FALSE, fig.asp=0.625, fig.height =10, fig.width = 8,
+                      out.width='750px', dpi=200,
                       global.par = TRUE,
-                      dev='png',  
+                      dev='png',
                       dev.args=list(pointsize=10)
                       ,fig.path = 'figs/'
                       )
@@ -19,7 +19,6 @@ knitr::opts_chunk$set(fig.align = 'center',
 
 ## ----libraries, echo = TRUE, eval = TRUE--------------------------------------
 library(footBayes)
-library(engsoccerdata)
 library(bayesplot)
 library(loo)
 library(ggplot2)
@@ -39,11 +38,11 @@ library(tidyverse)
 #  dplyr::filter(Season=="2000")
 #italy_2000
 
-## alternatively, you can use the basic 'subsetting' code, 
-## not using the 'tidyverse' environment: 
+## alternatively, you can use the basic 'subsetting' code,
+## not using the 'tidyverse' environment:
 data(italy)
 italy <- as.data.frame(italy)
-italy_2000 <- subset(italy[, c(2,3,4,6,7)], 
+italy_2000 <- subset(italy[, c(2,3,4,6,7)],
                      Season =="2000")
 head(italy_2000)
 
@@ -93,7 +92,7 @@ fit1_mle$home
 
 fit1_stan_t <- stan_foot(data = italy_2000,
                          model="biv_pois",
-                         chains = 4, 
+                         chains = 4,
                          prior = student_t(4,0,NULL),
                          prior_sd = laplace(0,1),
                          #cores = 4,
@@ -102,7 +101,7 @@ fit1_stan_t <- stan_foot(data = italy_2000,
 
 ## ----comparing_priors---------------------------------------------------------
 #  ## comparing posteriors
-#  
+#
 #  posterior1_t <- as.matrix(fit1_stan_t)
 #  model_names <- c("Default", "Stud+Laplace")
 #  color_scheme_set(scheme = "gray")
@@ -123,7 +122,7 @@ fit1_stan_t <- stan_foot(data = italy_2000,
 
 fit2_stan <- stan_foot(data = italy_2000,
                        model="biv_pois",
-                       dynamic_type ="weekly", 
+                       dynamic_type ="weekly",
                        #cores = 4,
                        iter = n_iter) # biv poisson
 print(fit2_stan, pars =c("home", "rho", "sigma_att",
@@ -171,10 +170,10 @@ foot_abilities(fit2_stan, italy_2000)
 ## ----pp_foot, echo = TRUE, eval = TRUE----------------------------------------
 ## PP checks: aggregated goal's differences and ordered goal differences
 
-pp_foot(data = italy_2000, object = fit1_stan, 
+pp_foot(data = italy_2000, object = fit1_stan,
         type = "aggregated")
 
-pp_foot(data = italy_2000, object = fit1_stan, 
+pp_foot(data = italy_2000, object = fit1_stan,
         type = "matches")
 
 
@@ -196,7 +195,7 @@ ppc_dens_overlay(goal_diff, sims$y_rep[,,1]-sims$y_rep[,,2], bw = 0.5)
 ## 4 chains 'n_iter' iterations each
 
 fit4_stan <- stan_foot(data = italy_2000,
-                       model="biv_pois", 
+                       model="biv_pois",
                        predict = 36,
                        dynamic_type = "weekly",
                        #cores = 4,
@@ -231,11 +230,11 @@ foot_rank(data = italy_2000, object = fit4_stan)
 
 # team-specific plot
 
-foot_rank(italy_2000, fit4_stan, 
-          team_sel = c("AC Milan", "AS Roma"), 
+foot_rank(italy_2000, fit4_stan,
+          team_sel = c("AC Milan", "AS Roma"),
           visualize = "individual")
 
-foot_rank(italy_2000, fit4_stan, 
+foot_rank(italy_2000, fit4_stan,
           visualize = "individual")
 
 

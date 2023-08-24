@@ -33,9 +33,7 @@
 #'@examples
 #'
 #'\donttest{
-#'if(requireNamespace("engsoccerdata")){
 #'require(dplyr)
-#'require(engsoccerdata)
 #'
 #'italy_2000<- italy %>%
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
@@ -46,7 +44,6 @@
 #'pp_foot(italy_2000, fit)
 #'
 #' }
-#'}
 #'
 #' @importFrom bayesplot yaxis_text
 #' @importFrom bayesplot xaxis_text

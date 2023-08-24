@@ -26,8 +26,6 @@
 #' @examples
 #'
 #' \donttest{
-#' if(requireNamespace("engsoccerdata")){
-#' require(engsoccerdata)
 #' require(tidyverse)
 #'
 #' italy_1999_2000<- italy %>%
@@ -38,7 +36,6 @@
 #' foot_rank(italy_1999_2000, fit)
 #' foot_rank(italy_1999_2000, fit, visualize =  "individual")
 #'  }
-#' }
 #'
 #'
 #' @importFrom reshape2 melt

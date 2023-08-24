@@ -29,9 +29,7 @@
 #'
 #' @examples
 #' \donttest{
-#' if(requireNamespace("engsoccerdata")){
 #' ### weekly dynamics, predict the last four weeks
-#' require(engsoccerdata)
 #' require(tidyverse)
 #' require(dplyr)
 #'
@@ -47,7 +45,6 @@
 #'           "Bologna FC")
 #'
 #' foot_prob(fit, italy_2000) # all the out-of-sample matches
-#' }
 #'}
 #' @export
 

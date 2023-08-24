@@ -266,7 +266,6 @@ and load the following required packages (please, install them on your laptops):
 
 ```{r libraries, echo = TRUE, eval = TRUE}
 library(footBayes)
-library(engsoccerdata)
 library(bayesplot)
 library(loo)
 library(ggplot2)
@@ -278,7 +277,7 @@ library(tidyverse)
 
 ## Static fit
 
-To start with some analysis, let's now import some data about the Italian Serie A, season 2000/2001, through the ```engsoccerdata``` package: the season consists of $T=18$ teams, we start fitting a static bivariate Poisson model using:
+To start with some analysis, let's now ```italy```  data about the Italian Serie A, specifically season 2000/2001: the season consists of $T=18$ teams, we start fitting a static bivariate Poisson model using:
 
 - the likelihood approach: the ```mle_foot``` function returns the MLE estimates along with 95\% profile-likelihood deviance confidence intervals (by default) and Wald-type confidence intervals. The user can specify the desired confidence interval with the optional argument ```interval = c("profile", "Wald")```.
 

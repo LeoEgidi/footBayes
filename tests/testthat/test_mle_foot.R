@@ -1,7 +1,6 @@
 ## all the test PASSED (also the skipped ones!)
 
 # require(dplyr)
-# require(engsoccerdata)
 #
 # # data
 # italy <- as_tibble(italy)
