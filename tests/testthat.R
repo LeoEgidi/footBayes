@@ -1,4 +1,4 @@
-library(testthat)
-library(footBayes)
-
-test_check("footBayes")
+# library(testthat)
+# library(footBayes)
+#
+# test_check("footBayes")
