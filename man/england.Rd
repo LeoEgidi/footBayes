@@ -26,7 +26,6 @@ england
 }
 \description{
 All results for English soccer games in the top 4 tiers
-from 1888/89 season to 2021/22 season.  For playoff games
-see separate dataset `englandplayoffs`
+from 1888/89 season to 2021/22 season.
 }
 \keyword{datasets}

@@ -39,6 +39,8 @@ See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc
 
 \item{prior_sd}{The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.}
 
+\item{ind_home}{Home effect (default is \code{TRUE}).}
+
 \item{...}{Optional parameters passed to the function
 in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
 }
