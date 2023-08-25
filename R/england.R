@@ -1,8 +1,7 @@
 #' English league results 1888-2022
 #'
 #' All results for English soccer games in the top 4 tiers
-#' from 1888/89 season to 2021/22 season.  For playoff games
-#' see separate dataset `englandplayoffs`
+#' from 1888/89 season to 2021/22 season.
 #'
 #' @format A data frame with 203956 rows and 12 variables:
 #' \describe{
