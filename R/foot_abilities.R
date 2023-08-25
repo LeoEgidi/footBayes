@@ -58,23 +58,6 @@
 #'                        dynamic_type = "seasonal")   # bivariate poisson
 #' foot_abilities(fit5, italy_2000_2002)
 #'
-#' ### weekly dynamics, predict the last four weeks
-#'
-#' italy_2000<- italy %>%
-#'   dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-#'   dplyr::filter(Season=="2000")
-#'
-#' fit6 <- stan_foot(data = italy_2000,
-#'                 model="double_pois", predict =36,
-#'                 dynamic_type = "weekly")  # double poisson
-#'
-#' fit7 <- stan_foot(data = italy_2000,
-#'                 model="student_t", predict =36,
-#'                 dynamic_type = "weekly")  # student_t
-#'
-#'
-#' foot_abilities(fit6, italy_2000)
-#' foot_abilities(fit7, italy_2000)
 #' }
 #'@importFrom arm coefplot
 #'@importFrom rstan traceplot
