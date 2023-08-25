@@ -27,4 +27,5 @@ Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats,
 Suggests: testthat, knitr (>= 1.37), rmarkdown (>= 2.10), loo
 VignetteBuilder: knitr
 RoxygenNote: 7.1.2
+LazyData: true
 BuildManual: yes
