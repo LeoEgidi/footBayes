@@ -36,10 +36,9 @@ returned by the \code{stan_foot} function.
 \examples{
 
 \donttest{
-if(requireNamespace("engsoccerdata")){
 require(dplyr)
-require(engsoccerdata)
 
+data("italy")
 italy_2000<- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
  dplyr::filter(Season=="2000")
@@ -48,7 +47,6 @@ fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 
 pp_foot(italy_2000, fit)
 
-}
 }
 
 }

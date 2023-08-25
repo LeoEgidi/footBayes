@@ -34,12 +34,11 @@ fitted via the \code{mle_foot} the probabilities are computed by simulating from
 }
 \examples{
 \donttest{
-if(requireNamespace("engsoccerdata")){
 ### weekly dynamics, predict the last four weeks
-require(engsoccerdata)
 require(tidyverse)
 require(dplyr)
 
+data("italy")
 italy_2000<- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
  dplyr::filter(Season=="2000")
@@ -52,7 +51,6 @@ foot_prob(fit, italy_2000, "Inter",
           "Bologna FC")
 
 foot_prob(fit, italy_2000) # all the out-of-sample matches
-}
 }
 }
 \author{

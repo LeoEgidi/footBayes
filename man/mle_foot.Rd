@@ -35,11 +35,10 @@ of the \code{\link{optim}} function.
 }
 \examples{
 \donttest{
-if(requireNamespace("engsoccerdata")){
-require(engsoccerdata)
 require(tidyverse)
 require(dplyr)
 
+data("italy")
 italy <- as_tibble(italy)
 italy_2008<- italy \%>\%
    dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
@@ -47,7 +46,6 @@ italy_2008<- italy \%>\%
 
 mle_fit <- mle_foot(data  = italy_2008,
                    model = "double_pois")
-}
 }
 
 

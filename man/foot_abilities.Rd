@@ -30,11 +30,10 @@ or from MLE models fitted via the \code{mle_foot} function.
 }
 \examples{
 \donttest{
-if(requireNamespace("engsoccerdata")){
-require(engsoccerdata)
 require(dplyr)
 require(tidyverse)
 
+data("italy")
 italy <- as_tibble(italy)
 
 ### no dynamics, no prediction
@@ -84,7 +83,6 @@ fit7 <- stan_foot(data = italy_2000,
 
 foot_abilities(fit6, italy_2000)
 foot_abilities(fit7, italy_2000)
-}
 }
 }
 \author{

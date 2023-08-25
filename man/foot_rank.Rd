@@ -31,10 +31,9 @@ The dataset should refer to one or more seasons from a given national football l
 \examples{
 
 \donttest{
-if(requireNamespace("engsoccerdata")){
-require(engsoccerdata)
 require(tidyverse)
 
+data("italy")
 italy_1999_2000<- italy \%>\%
 dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
 dplyr::filter(Season == "1999"|Season=="2000")
@@ -43,7 +42,6 @@ fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 foot_rank(italy_1999_2000, fit)
 foot_rank(italy_1999_2000, fit, visualize =  "individual")
  }
-}
 
 
 }
