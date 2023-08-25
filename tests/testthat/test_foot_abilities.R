@@ -9,7 +9,7 @@ test_that("object argument gives errors/warnings", {
   ##########################
   ## DATA
   #########################
-
+  data("england")
   england <- as_tibble(england)
   # one season only
   england_2004 <- england %>%

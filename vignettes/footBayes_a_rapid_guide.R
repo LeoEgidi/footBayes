@@ -40,7 +40,7 @@ library(tidyverse)
 
 ## alternatively, you can use the basic 'subsetting' code,
 ## not using the 'tidyverse' environment:
-data(italy)
+data("italy")
 italy <- as.data.frame(italy)
 italy_2000 <- subset(italy[, c(2,3,4,6,7)],
                      Season =="2000")

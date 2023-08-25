@@ -11,7 +11,7 @@ test_that("stan models recognize errors/warnings" , {
   ##########################
   ## DATA
   #########################
-
+  data("england")
   england <- as_tibble(england)
   # one season only
   england_2004 <- england %>%
@@ -75,7 +75,7 @@ test_that("prediction causes  warnings/errors", {
   ##########################
   ## DATA
   #########################
-
+  data("england")
   england <- as_tibble(england)
   # one season only
   england_2004 <- england %>%
@@ -113,7 +113,7 @@ test_that("dymanics cause warnings/errors",{
   ##########################
   ## DATA
   #########################
-
+  data("england")
   england <- as_tibble(england)
   # one season only
   england_2004 <- england %>%

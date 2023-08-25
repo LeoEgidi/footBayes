@@ -52,6 +52,7 @@
 #'require(tidyverse)
 #'require(dplyr)
 #'
+#'data("italy")
 #'italy <- as_tibble(italy)
 #'italy_2008<- italy %>%
 #'    dplyr::select(Season, home, visitor, hgoal,vgoal) %>%

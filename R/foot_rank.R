@@ -28,6 +28,7 @@
 #' \donttest{
 #' require(tidyverse)
 #'
+#' data("italy")
 #' italy_1999_2000<- italy %>%
 #' dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #' dplyr::filter(Season == "1999"|Season=="2000")

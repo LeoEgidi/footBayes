@@ -133,6 +133,7 @@
 #'
 #'### Use Italian Serie A from 2000 to 2002
 #'
+#'data("italy")
 #'italy <- as_tibble(italy)
 #'italy_2000_2002<- italy %>%
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%

@@ -25,6 +25,7 @@
 #' require(dplyr)
 #' require(tidyverse)
 #'
+#' data("italy")
 #' italy <- as_tibble(italy)
 #'
 #' ### no dynamics, no prediction

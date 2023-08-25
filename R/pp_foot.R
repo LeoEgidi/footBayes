@@ -35,6 +35,7 @@
 #'\donttest{
 #'require(dplyr)
 #'
+#'data("italy")
 #'italy_2000<- italy %>%
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #'  dplyr::filter(Season=="2000")
