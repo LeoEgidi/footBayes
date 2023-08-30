@@ -32,26 +32,6 @@ For Bayesian models fitted via \code{stan_foot} the results probabilities are co
 simulation from the posterior predictive distribution of future (out-of-sample) matches. For MLE models
 fitted via the \code{mle_foot} the probabilities are computed by simulating from the MLE estimates.
 }
-\examples{
-\dontrun{
-### predict the last two weeks
-require(tidyverse)
-require(dplyr)
-
-data("italy")
-italy_2000<- italy \%>\%
- dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
- dplyr::filter(Season=="2000")
-
-fit <- stan_foot(data = italy_2000,
-                 model="double_pois", predict =18)  # double pois
-
-foot_prob(fit, italy_2000, "Inter",
-          "Bologna FC")
-
-foot_prob(fit, italy_2000) # all the out-of-sample matches
-}
-}
 \author{
 Leonardo Egidi \email{legidi@units.it}
 }
