@@ -28,7 +28,7 @@
 #'
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' ### predict the last two weeks
 #' require(tidyverse)
 #' require(dplyr)
