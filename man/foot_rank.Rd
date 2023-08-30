@@ -28,24 +28,6 @@ For Bayesian models fitted via \code{stan_foot} the final rank tables are comput
 simulation from the posterior predictive distribution of future (out-of-sample) matches.
 The dataset should refer to one or more seasons from a given national football league (Premier League, Serie A, La Liga, etc.).
 }
-\examples{
-
-\donttest{
-require(tidyverse)
-require(dplyr)
-
-data("italy")
-italy_1999_2000<- italy \%>\%
-dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
-dplyr::filter(Season == "1999"|Season=="2000")
-
-fit <- stan_foot(italy_1999_2000, "double_pois", iter = 200)
-foot_rank(italy_1999_2000, fit)
-foot_rank(italy_1999_2000, fit, visualize =  "individual")
- }
-
-
-}
 \author{
 Leonardo Egidi \email{legidi@units.it}
 }
