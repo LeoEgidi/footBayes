@@ -33,7 +33,7 @@ simulation from the posterior predictive distribution of future (out-of-sample) 
 fitted via the \code{mle_foot} the probabilities are computed by simulating from the MLE estimates.
 }
 \examples{
-\donttest{
+\dontrun{
 ### predict the last two weeks
 require(tidyverse)
 require(dplyr)
