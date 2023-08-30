@@ -26,7 +26,25 @@
 #'
 #'@author Leonardo Egidi \email{legidi@units.it}
 #'
+#' @examples
+#' \dontrun{
+#' ### predict the last two weeks
+#' require(tidyverse)
+#' require(dplyr)
 #'
+#' data("italy")
+#' italy_2000<- italy %>%
+#'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+#'  dplyr::filter(Season=="2000")
+#'
+#' fit <- stan_foot(data = italy_2000,
+#'                  model="double_pois", predict =18)  # double pois
+#'
+#' foot_prob(fit, italy_2000, "Inter",
+#'           "Bologna FC")
+#'
+#' foot_prob(fit, italy_2000) # all the out-of-sample matches
+#' }
 #' @export
 
 
@@ -454,22 +472,4 @@ foot_prob <- function(object, data, home_team, away_team){
 }
 
 
-# @examples
-# \dontrun{
-# ### predict the last two weeks
-# require(tidyverse)
-# require(dplyr)
-#
-# data("italy")
-# italy_2000<- italy %>%
-#  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-#  dplyr::filter(Season=="2000")
-#
-# fit <- stan_foot(data = italy_2000,
-#                  model="double_pois", predict =18)  # double pois
-#
-# foot_prob(fit, italy_2000, "Inter",
-#           "Bologna FC")
-#
-# foot_prob(fit, italy_2000) # all the out-of-sample matches
-# }
+

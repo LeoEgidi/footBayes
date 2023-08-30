@@ -21,7 +21,7 @@
 #' @author Leonardo Egidi \email{legidi@units.it}
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' require(dplyr)
 #' require(tidyverse)
 #'

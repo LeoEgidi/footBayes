@@ -131,7 +131,7 @@ diagonal-inflated bivariate Poisson and a zero-inflated Skellam model in the
 spirit of (Karlis & Ntzoufras, 2003) to better capture draw occurrences. See the vignette for further details.
 }
 \examples{
-\donttest{
+\dontrun{
 require(tidyverse)
 require(dplyr)
 

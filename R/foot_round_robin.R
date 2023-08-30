@@ -22,7 +22,7 @@
 #'
 #'@examples
 #'
-#'\donttest{
+#'\dontrun{
 #'require(dplyr)
 #'
 #'data("italy")

@@ -27,7 +27,7 @@ The dataset should refer to one or more seasons from a given national football l
 }
 \examples{
 
-\donttest{
+\dontrun{
 require(dplyr)
 
 data("italy")

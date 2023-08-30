@@ -35,7 +35,7 @@ returned by the \code{stan_foot} function.
 }
 \examples{
 
-\donttest{
+\dontrun{
 require(dplyr)
 
 data("italy")

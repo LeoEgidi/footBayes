@@ -128,7 +128,7 @@
 #'
 #'
 #'@examples
-#'\donttest{
+#'\dontrun{
 #'require(tidyverse)
 #'require(dplyr)
 #'

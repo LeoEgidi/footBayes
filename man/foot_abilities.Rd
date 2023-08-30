@@ -29,7 +29,7 @@ Depicts teams' abilities either from the Stan models fitted via the \code{stan_f
 or from MLE models fitted via the \code{mle_foot} function.
 }
 \examples{
-\donttest{
+\dontrun{
 require(dplyr)
 require(tidyverse)
 

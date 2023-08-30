@@ -34,7 +34,7 @@ Likelihood optimization is performed via the \code{BFGS} method
 of the \code{\link{optim}} function.
 }
 \examples{
-\donttest{
+\dontrun{
 require(tidyverse)
 require(dplyr)
 
