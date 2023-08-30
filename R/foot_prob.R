@@ -29,7 +29,7 @@
 #'
 #' @examples
 #' \donttest{
-#' ### weekly dynamics, predict the last four weeks
+#' ### predict the last two weeks
 #' require(tidyverse)
 #' require(dplyr)
 #'
@@ -39,8 +39,7 @@
 #'  dplyr::filter(Season=="2000")
 #'
 #' fit <- stan_foot(data = italy_2000,
-#'                  model="double_pois", predict =18,
-#'                  dynamic_type = "weekly")  # double pois
+#'                  model="double_pois", predict =18)  # double pois
 #'
 #' foot_prob(fit, italy_2000, "Inter",
 #'           "Bologna FC")
@@ -470,13 +469,5 @@ foot_prob <- function(object, data, home_team, away_team){
 
       return(list(prob_table = prob_matrix))
   }
-
-
-
-
-
-
-
-
 
 }

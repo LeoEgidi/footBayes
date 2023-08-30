@@ -34,7 +34,7 @@ fitted via the \code{mle_foot} the probabilities are computed by simulating from
 }
 \examples{
 \donttest{
-### weekly dynamics, predict the last four weeks
+### predict the last two weeks
 require(tidyverse)
 require(dplyr)
 
@@ -44,8 +44,7 @@ italy_2000<- italy \%>\%
  dplyr::filter(Season=="2000")
 
 fit <- stan_foot(data = italy_2000,
-                 model="double_pois", predict =18,
-                 dynamic_type = "weekly")  # double pois
+                 model="double_pois", predict =18)  # double pois
 
 foot_prob(fit, italy_2000, "Inter",
           "Bologna FC")
