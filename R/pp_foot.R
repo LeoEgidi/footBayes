@@ -59,7 +59,7 @@ pp_foot <- function(data, object,
                     type = c("aggregated", "matches"),
                     coverage = 0.95){
 
-  if (inherits(object, "stanfit")){
+  if (inherits(object, "stanfit") == FALSE){
     stop("Please consider a 'stanfit' class model.")
   }
 
