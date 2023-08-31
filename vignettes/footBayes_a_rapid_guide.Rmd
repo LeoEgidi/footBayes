@@ -762,7 +762,7 @@ loo3_t <- loo(log_lik_3_t)
 
 # compare three looic
 
-compare(loo1, loo1_t, loo2, loo3, loo3_t)
+loo_compare(loo1, loo1_t, loo2, loo3, loo3_t)
 ```
 
 According to the above model LOOIC comparisons, the weekly-dynamic double Poisson models  attain the lowest LOOIC values and are then the favored models in terms of predictive accuracy. The static model's ```fit1_stan``` final looic is suggesting that the assumption of static team-specific parameters is too restrictive and oversimplified to capture teams' skills over time and make reliable predictions. Anyway, from model checking we have the suggestion that even the static model has a reliable goodness of fit and could be used for some simplified analysis not requiring complex dynamic patterns.

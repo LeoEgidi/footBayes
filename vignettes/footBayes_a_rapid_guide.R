@@ -261,5 +261,5 @@ loo3_t <- loo(log_lik_3_t)
 
 # compare three looic
 
-compare(loo1, loo1_t, loo2, loo3, loo3_t)
+loo_compare(loo1, loo1_t, loo2, loo3, loo3_t)
 
