@@ -2,7 +2,7 @@ Package: footBayes
 Type: Package
 Title: Fitting Bayesian and MLE Football Models
 Version: 0.2.0
-Date: 2023-25-08
+Date: 2023-08-25
 Author: Leonardo Egidi[aut, cre], Vasilis Palaskas[aut].
 Maintainer: Leonardo Egidi <legidi@units.it>
 License: GPL-2

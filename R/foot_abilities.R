@@ -111,7 +111,7 @@ foot_abilities <- function(object, data,
   oldpar <- par(no.readonly = TRUE)    # code line i
   on.exit(par(oldpar))                 # code line i + 1
 
-  if (class(object)=="stanfit"){
+  if (inherits(object, "stanfit")){
     sims <- rstan::extract(object)
     # if (is.null(sims$y_prev)){
     #   teams <- unique(c(data$home, data$away))
@@ -522,7 +522,7 @@ foot_abilities <- function(object, data,
 
     }
   }
-  }else if (class(object)=="list"){
+  }else if (inherits(object, "list")){
 
     # check on selected team
 

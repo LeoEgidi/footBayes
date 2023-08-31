@@ -58,10 +58,10 @@ foot_prob <- function(object, data, home_team, away_team){
 
   # predict check: se 0 o nullo, no probabilities
 
-  if (class(object)=="stanfit"){
+  if (inherits(object, "stanfit")){
     sims <- rstan::extract(object)
     predict <- c(dim(sims$y_prev)[2], dim(sims$diff_y_prev)[2])
-  }else if (class(object)=="list"){
+  }else if (inherits(object, "list")){
     predict <- object$predict
   }else{
     stop("Provide one among these two model fit classes: 'stanfit' or 'list'.")
@@ -103,7 +103,7 @@ foot_prob <- function(object, data, home_team, away_team){
 
   # calcola probabilità con stan/mle
 
-  if (class(object)=="stanfit"){
+  if (inherits(object, "stanfit")){
 
     if (is.null(sims$y_prev)){  # student_t model
       M <- dim(sims$diff_y_prev)[1]
@@ -361,7 +361,7 @@ foot_prob <- function(object, data, home_team, away_team){
     return(list(prob_table = tbl, prob_plot = p))
     }
 
-  }else if (class(object)=="list"){
+  }else if (inherits(object, "list")){
     model <- object$model
     predict <- object$predict
     n.iter <- object$n.iter

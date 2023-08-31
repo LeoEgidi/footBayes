@@ -10,7 +10,7 @@
 #'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}, \code{"diag_infl_biv_pois"}, \code{"zero_infl_skellam"}.
 #'@param predict The number of out-of-sample matches. If missing, the function returns
 #'the fit for the training set only.
-#'@param ranking Eventual numeric ranking provided for the teams in the dataset (e.g., the \href{https://www.fifa.com/fifa-world-ranking}{Coca-Cola Fifa ranking})
+#'@param ranking Eventual numeric ranking provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
 #'@param prior The prior distribution for the team-specific abilities.
