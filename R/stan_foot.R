@@ -4196,7 +4196,7 @@ generated quantities{
   vector[N] log_lik;
   for (n in 1:N) {
     diff_y_rep[n] = student_t_rng(nu, ability[team1[n]] - ability[team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1] - ability[team2], sigma_y);
+    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1[n]] - ability[team2[n]], sigma_y);
   }
     }"
 
@@ -4297,7 +4297,7 @@ generated quantities{
 
   for (n in 1:N) {
     diff_y_rep[n] = student_t_rng(nu, ability[team1[n]] - ability[team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1] - ability[team2], sigma_y);
+    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1[n]] - ability[team2[n]], sigma_y);
   }
 
   for (n in 1:N_prev) {
