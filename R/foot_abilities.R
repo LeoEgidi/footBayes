@@ -229,7 +229,7 @@ foot_abilities <- function(object, data,
     scale_color_manual(name ="",
       values = c(defence = color_scheme_get("blue")[[4]],
                                 attack=  color_scheme_get("red")[[4]]))+
-    facet_wrap("teams", scales = "free")+
+    facet_wrap("teams", scales = "free", ncol = 3, nrow = 7)+
     lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
     scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
     labs(x = "Times", y = "Teams' effects",
@@ -270,7 +270,7 @@ foot_abilities <- function(object, data,
       scale_color_manual(name="",
         values = c(attack =
           color_scheme_get("red")[[4]]))+
-      facet_wrap("teams", scales = "free")+
+      facet_wrap("teams", scales = "free", ncol = 3, nrow =7)+
       lims(y = c( min(att_25-0.3),
         max(att_75+0.3))) +
       scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
@@ -312,7 +312,7 @@ foot_abilities <- function(object, data,
         values = c(defence =
           color_scheme_get("blue")[[4]]
       ))+
-      facet_wrap("teams", scales = "free")+
+      facet_wrap("teams", scales = "free", ncol = 3, nrow = 7)+
       lims(y = c( min(def_25-0.3), max(def_75+0.3))) +
       scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
       labs(x = "Times", y = "Teams' effects",
@@ -472,7 +472,7 @@ foot_abilities <- function(object, data,
         scale_color_manual(name = "",
           values = c(color_scheme_get("blue")[[4]],
                                       color_scheme_get("red")[[4]]))+
-        facet_wrap("teams", scales = "free")+
+        facet_wrap("teams", scales = "free", ncol = 3, nrow = 7)+
         lims(y = c( min(ability_25-0.2), max(ability_75+0.2))) +
         scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
         labs(x = "Times", y = "Teams' effects",
