@@ -10,15 +10,19 @@
 #'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}, \code{"diag_infl_biv_pois"}, \code{"zero_infl_skellam"}.
 #'@param predict The number of out-of-sample matches. If missing, the function returns
 #'the fit for the training set only.
-#'@param ranking Eventual numeric ranking provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
+#'@param ranking Eventual numeric ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
+#'@param dynamic_rank Dynamic ranking points (default is \code{FALSE})
 #'@param prior The prior distribution for the team-specific abilities.
 #'Possible choices: \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}.
 #'See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
 #'   Distributions for rstanarm Models}}
 #'@param prior_sd The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.
 #'@param ind_home Home effect (default is \code{TRUE}).
+#'@param norm_method Method used to normalize team-specific ranking points.
+#'                   One among \code{"none"}, \code{"standard"}, \code{"mad"}, \code{"min_max"}.
+#'@param ranking_map An optional mapping argument to associate ranking periods with the corresponding data periods.
 #'@param ... Optional parameters passed to the function
 #' in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
 #'@return
@@ -196,6 +200,7 @@
 #'@import matrixStats
 #'@import reshape2
 #'@import ggplot2
+#'@import dplyr
 #'@export
 
 
@@ -203,15 +208,21 @@ stan_foot <- function(data,
                       model,
                       predict,
                       ranking,
+                      dynamic_rank = FALSE,
                       dynamic_type,
                       prior,
                       prior_sd,
                       ind_home = "TRUE",
+                      norm_method = c("none", "standard", "mad", "min_max"),
+                      ranking_map = NULL, # Argument for mapping ranking periods with data periods
                       ...){
 
-    ## DATA CHECKS
 
-    if (!is.matrix(data) & !is.data.frame(data)){
+#   ____________________________________________________________________________
+#   Data Checks                                                             ####
+  
+
+  if (!is.matrix(data) & !is.data.frame(data)){
     stop("Data are not stored in matrix/data frame
          structure. Pleasy, provide data correctly.")
      }
@@ -232,7 +243,7 @@ stan_foot <- function(data,
                       "homegoals", "awaygoals")
   #}
 
-  # checks sui formati
+  # checks about formats
   if ( !is.numeric(data$homegoals) |!is.numeric(data$awaygoals)){
     stop("Goals are not numeric! Please, provide
          numeric values for the goals")
@@ -252,7 +263,10 @@ stan_foot <- function(data,
     #       home goals, away goals.")
   }
 
-  ## MODEL'S NAME CHECKS
+
+#   ____________________________________________________________________________
+#   Models' Name Checks                                                     ####
+  
 
   good_names <- c("double_pois",
                   "biv_pois",
@@ -263,36 +277,74 @@ stan_foot <- function(data,
   model <- match.arg(model, good_names)
 
 
-  nteams<- length(unique(data$home))
-  user_dots <- list(chains = 4, iter = 2000,
-                    #warmup = floor(iter/2),
-                    thin = 1,
-                    init = "random", seed = sample.int(.Machine$integer.max, 1),
-                    algorithm = c("NUTS", "HMC", "Fixed_param"),
-                    control = NULL, sample_file = NULL, diagnostic_file = NULL,
-                    save_dso = TRUE, verbose = FALSE, include = TRUE,
-                    cores = getOption("mc.cores", 1L),
-                    open_progress = interactive() && !isatty(stdout()) &&
-                      !identical(Sys.getenv("RSTUDIO"), "1"),
-                    boost_lib = NULL, eigen_lib = NULL,
-                    nu = 7)
+  nteams <- length(unique(data$home))
 
+  # Default control parameters
+  default_control <- list(adapt_delta = 0.8, max_treedepth = 10)
+  
+  # Initialize user_dots with default arguments, including the control list
+  user_dots <- list(
+    chains = 4,
+    iter = 2000,
+    # warmup = floor(iter / 2),  
+    thin = 1,
+    init = "random",
+    seed = sample.int(.Machine$integer.max, 1),
+    algorithm = "NUTS",
+    control = default_control,  # Default control parameters
+    sample_file = NULL,
+    diagnostic_file = NULL,
+    save_dso = TRUE,
+    verbose = FALSE,
+    include = TRUE,
+    cores = getOption("mc.cores", 1L),
+    open_progress = interactive() && !isatty(stdout()) && !identical(Sys.getenv("RSTUDIO"), "1"),
+    boost_lib = NULL,
+    eigen_lib = NULL,
+    nu = 7
+  )
+  
+  
 
-  ## OPTIONAL ARGUMENTS CHECKS
-
-  if (missing(...)){
-    user_dots <- user_dots
-  }else{
-    user_dots_prel <- list(...)
-    names_prel <- names(user_dots_prel)
-    names_dots<- names(user_dots)
-    for (u in 1:length(names_prel)){
-      user_dots[names_prel[u] == names_dots]<- user_dots_prel[u]
-    }
+#   ____________________________________________________________________________
+#   Optional Arguments Checks                                               ####
+  
+  user_dots_prel <- list(...)
+  
+  # Handle control argument separately
+  if ("control" %in% names(user_dots_prel)) {
+    # Extract user-supplied control parameters
+    user_control <- user_dots_prel$control
+    
+    # Merge default control with user-supplied control
+    user_dots$control <- modifyList(default_control, user_control)
+    
+    user_dots_prel$control <- NULL
   }
+  
+  # Update 'user_dots'
+  user_dots <- modifyList(user_dots, user_dots_prel)
+  
+  
+  
+  
+
+# if (missing(...)){
+#   user_dots <- user_dots
+# }else{
+#   user_dots_prel <- list(...)
+#   names_prel <- names(user_dots_prel)
+#   names_dots <- names(user_dots)
+#   for (u in 1:length(names_prel)){
+#     user_dots[names_prel[u] == names_dots] <- user_dots_prel[u]
+#   }
+# }
 
 
-  ## PREDICT CHECKS
+
+#   ____________________________________________________________________________
+#   Predict Checks                                                          ####
+  
 
   #predict <- round(predict)
 
@@ -329,16 +381,21 @@ stan_foot <- function(data,
      }
 
 
-  ## DYNAMICS CHECKS
 
+#   ____________________________________________________________________________
+#   Dynamic Models Checks                                                   ####
+  
+  
     # names conditions
-    if (!missing(dynamic_type)){
+  if (!missing(dynamic_type)){
     dynamic_names <- c("weekly", "seasonal")
     dynamic_type <- match.arg(dynamic_type, dynamic_names)
     }
 
   if (missing(dynamic_type)){
     dyn <-""
+    ntimes <- 1
+    instants <- rep(1, N)
   }else if (dynamic_type == "weekly" ){
       dyn <- "dynamic_"
       if (length(unique(data$season))!=1){
@@ -383,8 +440,12 @@ stan_foot <- function(data,
       instants_prev <- season[(N+1):(N+N_prev)]
     }
 
-    ## PRIOR CHECKS
+  
+  
 
+#   ____________________________________________________________________________
+#   Prior Checks                                                            ####
+  
   hyper_df <- 1           # initialization
   if (missing(prior)){    # Normal as default weakly-inf. prior
     prior_dist_num <- 1
@@ -505,21 +566,146 @@ stan_foot <- function(data,
 
 
 
-  ## RANKING CHECKS
-
-  if (missing(ranking)){
-    ranking <- matrix(0, nteams,2)
-  }else if (is.matrix(ranking)==FALSE & is.data.frame(ranking)== FALSE ){
-    stop("Please, ranking must be a matrix or a data frame!")
-  }else{
-    colnames(ranking) <- c("rank_team", "points")
-    team_order <- match(teams, ranking$rank_team)
-    ranking[,1] <- ranking$rank_team[team_order]
-    ranking[,2] <- ranking$points[team_order]
-    ranking[,2] <- (as.numeric(as.vector(ranking[,2]))-mean(as.numeric(as.vector(ranking[,2]))))/(2*sd(as.numeric(as.vector(ranking[,2]))))
+  # ____________________________________________________________________________
+  # Ranking Checks ####
+  
+  # Define normalization function
+  normalize_rank_points <- function(rank_points, method) {
+    if (method == "none") {
+      rank_points
+    } else if (method == "standard") {
+      s <- sd(rank_points, na.rm = TRUE)
+      m <- mean(rank_points, na.rm = TRUE)
+      if (s == 0) {
+        rep(0, length(rank_points))
+      } else {
+        (rank_points - m) / (2 * s)
+      }
+    } else if (method == "mad") {
+      md <- mad(rank_points, na.rm = TRUE)
+      med <- median(rank_points, na.rm = TRUE)
+      if (md == 0) {
+        rep(0, length(rank_points))
+      } else {
+        (rank_points - med) / md
+      }
+    } else if (method == "min_max") {
+      min_rp <- min(rank_points, na.rm = TRUE)
+      max_rp <- max(rank_points, na.rm = TRUE)
+      if (max_rp == min_rp) {
+        rep(0, length(rank_points))
+      } else {
+        (rank_points - min_rp) / (max_rp - min_rp)
+      }
+    }
   }
+  
+  
+  norm_method <- match.arg(norm_method, choices = c("none", "standard", "mad", "min_max"))
+  
+  # Check if ranking is provided
+  if (missing(ranking)) {
+    # If ranking is missing, set dynamic_rank to FALSE and create a default zero matrix
+    warning("Ranking is missing, creating a default zero matrix.")
+    dynamic_rank <- FALSE
+    ntimes_rank <- 1  
+    nteams <- length(unique(data$team))
+    ranking_matrix <- matrix(0, nrow = ntimes_rank, ncol = nteams)
+  } else {
+    # Ensure ranking is either a matrix or a data frame
+    if (!is.matrix(ranking) && !is.data.frame(ranking)) {
+      stop("Ranking must be a matrix or a data frame with at least 5 columns: season, home team, away team, home goals, away goals.")
+    }
+    
+    # Convert ranking to data frame if it's not already
+    ranking <- as.data.frame(ranking)
+    
+    # Check if the ranking dataset has more than the expected number of columns
+    if (ncol(ranking) > 3) {
+      warning("Your ranking dataset seems too large! Only the first three columns will be used as: periods,
+            team, rank_points")
+      ranking <- ranking[, 1:3]
+    }
+    
+    # Check if the required columns are present
+    required_cols <- c("periods", "team", "rank_points")
+    if (!all(required_cols %in% colnames(ranking))) {
+      stop(paste("Ranking data frame must contain the following columns:", paste(required_cols, collapse = ", ")))
+    }
+    
+    # Check for NAs in required columns
+    if (any(is.na(ranking[, required_cols]))) {
+      stop("Ranking data contains NAs in required columns. Please remove or impute NAs.")
+    }
+    
+    # Check if the rank_point variable is an integer or numeric
+    if (!is.numeric(ranking$rank_points) && !is.integer(ranking$rank_points)) {
+      stop("Ranking points type must be numeric or integer. Please check that the column 'rank_points' contains numerical values.")
+    }
+    
+    # Define the number of ranking periods for STAN
+    ntimes_rank <- length(unique(ranking$periods))
+    
+    # Convert rank_points to numeric
+    ranking <- ranking %>%
+      mutate(rank_points = as.numeric(rank_points)) %>%
+      group_by(periods) %>%
+      mutate(rank_points = normalize_rank_points(rank_points, norm_method)) %>%
+      ungroup()
+    
+    # Transform ranking to wide format
+    ranking_transformed <- ranking %>%
+      pivot_wider(
+        names_from = team,  
+        values_from = rank_points    
+      ) %>%
+      arrange(periods)
+    
+    # # Replace NA values with 0 
+    # if (any(is.na(ranking_transformed))) {
+    #   warning("Some ranking points are NAs, they will be set to zero.")
+    #   ranking_transformed[is.na(ranking_transformed)] <- 0
+    # }
+    
+    # Update ranking to be the transformed version
+    ranking_matrix <- as.matrix(ranking_transformed[, -1])
+  }
+  
+  
 
-  ## HOME EFFECT CKECK
+
+##  ............................................................................
+##  Ranking periods map with the data periods                               ####
+  
+  ntimes_fit <- length(unique(instants))
+  
+  if (dynamic_rank) {
+    if (is.null(ranking_map)) {
+      if (ntimes_fit == ntimes_rank) {
+        # Assume periods correspond directly
+        instants_rank <- instants
+      } else {
+        stop("The length of 'ntimes' and 'ntimes_rank' must be equal to directly map the periods.")
+      }
+    } else {
+      # Use user-provided mapping
+      instants_rank <- ranking_map
+      if (length(instants_rank) != N) {
+        stop("Length of 'ranking_map' must equal the number of matches.")
+      }
+    }
+  } else {
+    # If dynamic_rank is FALSE, instants_rank are all equal to 1 and repeated the length of instants
+    instants_rank <- rep(1, length(instants))
+  }
+  
+  
+  
+  
+  
+#   ____________________________________________________________________________
+#   Home Effect Check                                                       ####
+
 
   home_names <- c("TRUE", "FALSE")
   ind_home <- match.arg(ind_home, home_names)
@@ -536,27 +722,33 @@ stan_foot <- function(data,
 
 
 
-  # Stan data
-  data_stan <- list( y=y,
-                spi_std = rep(0, nteams),
-                diff_y = diff_y,
-                N=N,
-                N_prev = N_prev,
-                nteams=nteams,
-                team1 = team1,
-                team2=team2,
-                team1_prev= team1_prev,
-                team2_prev=team2_prev,
-                prior_dist_num = prior_dist_num,
-                prior_dist_sd_num = prior_dist_sd_num,
-                hyper_df=hyper_df,
-                hyper_location=hyper_location,
-                hyper_sd_df=hyper_sd_df,
-                hyper_sd_location=hyper_sd_location,
-                hyper_sd_scale=hyper_sd_scale,
-                ranking = ranking[,2],
-                nu = user_dots$nu,
-                ind_home = ind_home)
+#   ____________________________________________________________________________
+#   STAN Data                                                               ####
+  
+
+  data_stan <- list(y = y,
+                    spi_std = rep(0, nteams),
+                    diff_y = diff_y,
+                    N = N,
+                    N_prev = N_prev,
+                    nteams = nteams,
+                    ntimes_rank = ntimes_rank,
+                    instants_rank = instants_rank,
+                    team1 = team1,
+                    team2 = team2,
+                    team1_prev = team1_prev,
+                    team2_prev = team2_prev,
+                    prior_dist_num = prior_dist_num,
+                    prior_dist_sd_num = prior_dist_sd_num,
+                    hyper_df = hyper_df,
+                    hyper_location = hyper_location,
+                    hyper_sd_df = hyper_sd_df,
+                    hyper_sd_location = hyper_sd_location,
+                    hyper_sd_scale = hyper_sd_scale,
+                    ranking = ranking_matrix,
+                    nu = user_dots$nu,
+                    ind_home = ind_home
+  )
 
   if (!missing(dynamic_type)){
     data_stan$ntimes <- ntimes
@@ -565,6 +757,10 @@ stan_foot <- function(data,
     data_stan$instants_prev <- instants_prev
   }
 
+  
+#   ____________________________________________________________________________
+#   STAN Models                                                             ####
+  
   stanfoot_models <- function(model, dyn, type){
     right_name <- paste(model,"_", dyn, type, sep="")
     models_name <- c("biv_pois_dynamic_fit",
@@ -593,7 +789,13 @@ stan_foot <- function(data,
                      "student_t_prev"
                      )
 
-
+    
+##  ............................................................................
+##  Dynamic Bivariate Poisson                                               ####
+    
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
+    
     biv_pois_dynamic_fit<-
       "functions{
 
@@ -627,10 +829,12 @@ stan_foot <- function(data,
       int nteams;
       int team1[N];
       int team2[N];
+      int ntimes_rank;             // ranking periods
       int ntimes;                 // dynamic periods
       int time[ntimes];
+      int instants_rank[N];       // ranking instants
       int instants[N];
-      real ranking[nteams];
+      matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -696,9 +900,9 @@ stan_foot <- function(data,
 
       for (n in 1:N){
         theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta_corr[n] = exp(rho);
       }
     }
@@ -769,6 +973,9 @@ stan_foot <- function(data,
       }
     }"
 
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+    
     biv_pois_dynamic_prev<-"
     functions{
 
@@ -805,11 +1012,13 @@ stan_foot <- function(data,
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
+      int ntimes_rank;             // ranking periods
       int ntimes;                 // dynamic periods
       int time[ntimes];
+      int instants_rank[N];       // ranking instants
       int instants[N];
       int instants_prev[N_prev];
-      real ranking[nteams];
+      matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -875,9 +1084,9 @@ stan_foot <- function(data,
 
       for (n in 1:N){
         theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta_corr[n] = exp(rho);
       }
     }
@@ -954,16 +1163,23 @@ stan_foot <- function(data,
       for (n in 1:N_prev){
         theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N], team1_prev[n]]-ranking[instants_rank[N], team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
                                    def[instants_prev[n], team1_prev[n]]-
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N], team1_prev[n]]-ranking[instants_rank[N], team2_prev[n]]));
         theta_corr_prev[n] = exp(rho);
         y_prev[n,1] = poisson_rng(theta_home_prev[n]+theta_corr_prev[n]);
         y_prev[n,2] = poisson_rng(theta_away_prev[n]+theta_corr_prev[n]);
       }
     }"
 
+    
+##  ............................................................................
+##  Static Bivariate Poisson                                                ####
+    
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
+    
     biv_pois_fit<-"
     functions{
 
@@ -996,9 +1212,11 @@ stan_foot <- function(data,
       int N;   // number of games
       int y[N,2];
       int nteams;
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking
       int team1[N];
       int team2[N];
-      real ranking[nteams];
+      matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -1034,9 +1252,9 @@ stan_foot <- function(data,
 
       for (n in 1:N){
         theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta[n,3] = exp(rho);
       }
     }
@@ -1110,6 +1328,10 @@ stan_foot <- function(data,
       }
     }"
 
+    
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+    
     biv_pois_prev<-"
     functions{
 
@@ -1143,11 +1365,13 @@ stan_foot <- function(data,
       int N_prev;
       int y[N,2];
       int nteams;
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking
       int team1[N];
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
-      real ranking[nteams];
+      matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -1182,9 +1406,9 @@ stan_foot <- function(data,
 
       for (n in 1:N){
         theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta[n,3] = exp(rho);
       }
     }
@@ -1262,18 +1486,26 @@ stan_foot <- function(data,
       for (n in 1:N_prev){
         theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
                                 def[team1_prev[n]]-
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,3] = exp(rho);
         y_prev[n,1] = poisson_rng(theta_prev[n,1]+theta_prev[n,3]);
         y_prev[n,2] = poisson_rng(theta_prev[n,2]+theta_prev[n,3]);
       }
     }"
 
-    diag_infl_biv_pois_dynamic_fit<-"
-     functions{
+##  ............................................................................
+##  Dynamic Diagonal Inflated Bivariate Poisson                             ####
+
+  
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
+ 
+diag_infl_biv_pois_dynamic_fit <- "
+  functions{
 
     real bipois_lpmf(int[] r , real mu1,real mu2,real mu3) {
       real ss;
@@ -1316,7 +1548,6 @@ stan_foot <- function(data,
 
       return log_prob;
     }
-
 }
     data{
       int N;   // number of games
@@ -1327,7 +1558,9 @@ stan_foot <- function(data,
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -1395,9 +1628,9 @@ stan_foot <- function(data,
 
       for (n in 1:N){
         theta_home[n] = exp(home*ind_home + att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_corr[n] = exp(rho);
       }
     }
@@ -1461,8 +1694,6 @@ stan_foot <- function(data,
  }
 }
 
-
-
 generated quantities{
       int y_rep[N,2];
       vector[N] log_lik;
@@ -1487,6 +1718,10 @@ generated quantities{
   //}
   }
 }"
+
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
 
 diag_infl_biv_pois_dynamic_prev<-"
 functions{
@@ -1546,8 +1781,10 @@ data{
   int ntimes;                 // dynamic periods
   int time[ntimes];
   int instants[N];
+  int instants_rank[N];
+  int ntimes_rank;                 // dynamic periods for ranking      
+  matrix[ntimes_rank,nteams] ranking;
   int instants_prev[N_prev];
-  real ranking[nteams];
   int<lower=0, upper=1> ind_home;
 
   // priors part
@@ -1615,9 +1852,9 @@ transformed parameters{
 
   for (n in 1:N){
     theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
     theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
-                          (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
     theta_corr[n] = exp(rho);
   }
 }
@@ -1712,15 +1949,24 @@ generated quantities{
   for (n in 1:N_prev){
     theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
                                def[instants_prev[n], team2_prev[n]]+
-                               (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                               (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
     theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
                                def[instants_prev[n], team1_prev[n]]-
-                               (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                               (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
     theta_corr_prev[n] = exp(rho);
     y_prev[n,1] = poisson_rng(theta_home_prev[n]+theta_corr_prev[n]);
     y_prev[n,2] = poisson_rng(theta_away_prev[n]+theta_corr_prev[n]);
   }
 }//"
+
+
+
+##  ............................................................................
+##  Static Diagonal Inflated Bivariate Poisson                              ####
+
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
 
 
 diag_infl_biv_pois_fit<-"
@@ -1775,7 +2021,9 @@ data{
   int nteams;
   int team1[N];
   int team2[N];
-  real ranking[nteams];
+  int instants_rank[N];
+  int ntimes_rank;                 // dynamic periods for ranking      
+  matrix[ntimes_rank,nteams] ranking;
   int<lower=0, upper=1> ind_home;
 
   // priors part
@@ -1813,9 +2061,9 @@ transformed parameters{
 
   for (n in 1:N){
     theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
-                       (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                       (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
     theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                       (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                       (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
     theta[n,3] = exp(rho);
   }
 }
@@ -1912,6 +2160,10 @@ generated quantities{
 }"
 
 
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+
+
 diag_infl_biv_pois_prev<-"
    functions{
 
@@ -1965,9 +2217,13 @@ data{
       int nteams;
       int team1[N];
       int team2[N];
+      int instants[N];
+      int ntimes;    \\ Dynamic periods for ranking
       int team1_prev[N_prev];
       int team2_prev[N_prev];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -2004,9 +2260,9 @@ data{
 
       for (n in 1:N){
         theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,3] = exp(rho);
       }
 }
@@ -2105,16 +2361,21 @@ generated quantities{
       for (n in 1:N_prev){
         theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
                                 def[team1_prev[n]]-
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,3] = exp(rho);
         y_prev[n,1] = poisson_rng(theta_prev[n,1]+theta_prev[n,3]);
         y_prev[n,2] = poisson_rng(theta_prev[n,2]+theta_prev[n,3]);
       }
 }"
 
+##  ............................................................................
+##  Dynamic Double Poisson                                                  ####
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
 
 double_pois_dynamic_fit<-"
     data{
@@ -2126,7 +2387,9 @@ double_pois_dynamic_fit<-"
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
-      real ranking[nteams];       // eventual fifa/uefa ranking
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -2189,9 +2452,9 @@ double_pois_dynamic_fit<-"
 
       for (n in 1:N){
         theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -2255,6 +2518,9 @@ double_pois_dynamic_fit<-"
     }"
 
 
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+
     double_pois_dynamic_prev<-"
     data{
       int N;   // number of games
@@ -2269,7 +2535,9 @@ double_pois_dynamic_fit<-"
       int time[ntimes];
       int instants[N];
       int instants_prev[N_prev];
-      real ranking[nteams];       // eventual fifa/uefa ranking
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -2332,9 +2600,9 @@ double_pois_dynamic_fit<-"
 
       for (n in 1:N){
         theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -2403,16 +2671,25 @@ double_pois_dynamic_fit<-"
       for (n in 1:N_prev){
         theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n],team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n],team2_prev[n]]+
                                    def[instants_prev[n], team1_prev[n]]-
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
 
         y_prev[n,1] = poisson_rng(theta_home_prev[n]);
         y_prev[n,2] = poisson_rng(theta_away_prev[n]);
       }
     }"
 
+
+##  ............................................................................
+##  Static Double Poisson                                                   ####
+    
+      
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
+    
+    
     double_pois_fit<-"
     data{
       int N;                      // number of games
@@ -2420,7 +2697,9 @@ double_pois_dynamic_fit<-"
       int nteams;                 // number of teams
       int team1[N];               // home team index
       int team2[N];               // away team index
-      real ranking[nteams];       // eventual fifa/uefa ranking
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -2456,9 +2735,9 @@ double_pois_dynamic_fit<-"
 
       for (n in 1:N){
         theta[n,1] = exp( home*ind_home+att[team1[n]]+def[team2[n]] +
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp( att[team2[n]]+def[team1[n]] -
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -2528,6 +2807,10 @@ double_pois_dynamic_fit<-"
       }
     }"
 
+    
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+    
 
     double_pois_prev<-"
     data{
@@ -2539,7 +2822,9 @@ double_pois_dynamic_fit<-"
       int team2[N];               // away team index
       int team1_prev[N_prev];     // home team for pred.
       int team2_prev[N_prev];     // away team for pred.
-      real ranking[nteams];       // eventual fifa/uefa ranking
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -2573,9 +2858,9 @@ double_pois_dynamic_fit<-"
 
       for (n in 1:N){
         theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -2646,14 +2931,22 @@ double_pois_dynamic_fit<-"
       //out-of-sample predictions
       for (n in 1:N_prev){
         theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+def[team2_prev[n]]+
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+def[team1_prev[n]]-
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         y_prev[n,1] = poisson_rng(theta_prev[n,1]);
         y_prev[n,2] = poisson_rng(theta_prev[n,2]);
       }
     }"
 
+    
+##  ............................................................................
+##  Dynamic Skellam                                                         ####
+    
+    
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
+    
     skellam_dynamic_fit<-"
     functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
@@ -2671,7 +2964,9 @@ double_pois_dynamic_fit<-"
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -2733,9 +3028,9 @@ double_pois_dynamic_fit<-"
 
       for (n in 1:N){
         theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -2797,6 +3092,10 @@ double_pois_dynamic_fit<-"
     }"
 
 
+    
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+    
     skellam_dynamic_prev <- "
     functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
@@ -2818,7 +3117,9 @@ double_pois_dynamic_fit<-"
       int time[ntimes];
       int instants[N];
       int instants_prev[N_prev];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -2880,9 +3181,9 @@ double_pois_dynamic_fit<-"
 
       for (n in 1:N){
         theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -2952,16 +3253,25 @@ double_pois_dynamic_fit<-"
       for (n in 1:N_prev){
         theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
                                    def[instants_prev[n], team1_prev[n]]-
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         y_prev[n,1] = poisson_rng(theta_home_prev[n]);
         y_prev[n,2] = poisson_rng(theta_away_prev[n]);
         diff_y_prev[n] = y_prev[n,1] - y_prev[n,2];
       }
     }"
 
+
+##  ............................................................................
+##  Static Skellam                                                          ####
+    
+        
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
+    
+    
     skellam_fit <- "
     functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
@@ -2976,7 +3286,9 @@ double_pois_dynamic_fit<-"
       int nteams;
       int team1[N];
       int team2[N];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -3010,9 +3322,9 @@ double_pois_dynamic_fit<-"
 
       for (n in 1:N){
         theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -3078,6 +3390,11 @@ double_pois_dynamic_fit<-"
       }
     }"
 
+    
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+    
+
     skellam_prev<- "
     functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
@@ -3095,7 +3412,9 @@ double_pois_dynamic_fit<-"
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -3129,9 +3448,9 @@ double_pois_dynamic_fit<-"
 
       for (n in 1:N){
         theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -3203,17 +3522,25 @@ double_pois_dynamic_fit<-"
       for (n in 1:N_prev){
         theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
                                 def[team1_prev[n]]-
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         y_prev[n,1] = poisson_rng(theta_prev[n,1]);
         y_prev[n,2] = poisson_rng(theta_prev[n,2]);
         diff_y_prev[n] = y_prev[n,1] - y_prev[n,2];
       }
     }"
 
-    zero_infl_skellam_dynamic_fit<-"
+    
+##  ............................................................................
+##  Dynamic Zero-Inflated Skellam                                           ####
+    
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
+    
+zero_infl_skellam_dynamic_fit <- "
     functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
         real r = k;
@@ -3251,7 +3578,9 @@ data{
       int ntimes;                 // dynamic periods
       int time[ntimes];
       int instants[N];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -3315,9 +3644,9 @@ data{
 
       for (n in 1:N){
         theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -3381,7 +3710,12 @@ generated quantities{
       }
 }"
 
-  zero_infl_skellam_dynamic_prev<-"functions{
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+
+
+zero_infl_skellam_dynamic_prev <- "functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
         real r = k;
         return -(lambda1 + lambda2) + (r/2) * log(lambda1/lambda2) +
@@ -3421,7 +3755,9 @@ data{
       int time[ntimes];
       int instants[N];
       int instants_prev[N_prev];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -3486,9 +3822,9 @@ transformed parameters{
 
       for (n in 1:N){
         theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -3561,15 +3897,22 @@ transformed parameters{
       for (n in 1:N_prev){
         theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
                                    def[instants_prev[n], team1_prev[n]]-
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         y_prev[n,1] = poisson_rng(theta_home_prev[n]);
         y_prev[n,2] = poisson_rng(theta_away_prev[n]);
         diff_y_prev[n] = y_prev[n,1] - y_prev[n,2];
       }
     }"
+
+
+##  ............................................................................
+##  Static Zero-Inflated Skellam                                            ####
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
 
   zero_infl_skellam_fit<-"
   functions{
@@ -3605,7 +3948,9 @@ transformed parameters{
       int nteams;
       int team1[N];
       int team2[N];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -3641,9 +3986,9 @@ transformed parameters{
 
       for (n in 1:N){
         theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
     model{
@@ -3712,6 +4057,11 @@ transformed parameters{
       }
 }"
 
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+
+
   zero_infl_skellam_prev<-"
   functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
@@ -3749,7 +4099,9 @@ transformed parameters{
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
-      real ranking[nteams];
+      int instants_rank[N];
+      int ntimes_rank;                 // dynamic periods for ranking      
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
       // priors part
@@ -3785,9 +4137,9 @@ transformed parameters{
 
       for (n in 1:N){
         theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                         (gamma/2)*(ranking[team1[n]]-ranking[team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
     }
 model{
@@ -3863,29 +4215,38 @@ generated quantities{
       for (n in 1:N_prev){
         theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
                                 def[team1_prev[n]]-
-                         (gamma/2)*(ranking[team1_prev[n]]-ranking[team2_prev[n]]));
+                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         y_prev[n,1] = poisson_rng(theta_prev[n,1]);
         y_prev[n,2] = poisson_rng(theta_prev[n,2]);
         diff_y_prev[n] = y_prev[n,1] - y_prev[n,2];
       }
 }"
 
+
+
+##  ............................................................................
+##  Dynamic t-Student                                                       ####
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
+
     student_t_dynamic_fit<-"
     data {
-      int N;   // number of matches
-      int nteams;   // number of teams
-      int team1[N];
-      int team2[N];
-      matrix[N,2] y;
-      int ntimes;                 // dynamic periods
-      int time[ntimes];
-      int instants[N];
-      vector[nteams] ranking;
-      real nu;
-
+      int N;                       // number of matches
+      int nteams;                  // number of teams
+      int team1[N];                // team 1 indices
+      int team2[N];                // team 2 indices
+      matrix[N, 2] y;              // scores: column 1 is team1, column 2 is team2
+      int ntimes;                  // number of dynamic periods for abilities
+      int ntimes_rank;             // number of dynamic periods for rankings
+      int instants[N];             // time indices for abilities
+      int instants_rank[N];        // time indices for rankings
+      matrix[ntimes_rank, nteams] ranking; // rankings over time
+      real nu;                     // degrees of freedom for the Student's t-distribution
+    
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3902,21 +4263,24 @@ generated quantities{
       vector[N] diff_y = y[,1] - y[,2];  // modeled data
     }
     parameters {
-      real beta;            // coefficient for the ranking
-      matrix[ntimes, nteams] alpha;    // vector of per-team weights
-      real<lower=0> sigma_a;   // common variance
-      real<lower=0> sigma_y;   // noise term in our estimate
-      real<lower=0> sigma_alpha;
+      real beta;                           // Coefficient for the ranking
+      matrix[ntimes, nteams] alpha;        // Team-specific abilities over time
+      real<lower=0> sigma_a;               // Scaling parameter for abilities
+      real<lower=0> sigma_y;               // Noise term in the model
+      real<lower=0> sigma_alpha;           // Standard deviation for alpha's prior
     }
     transformed parameters {
       //cov_matrix[ntimes] Sigma_alpha;
       // mixed effects model - common intercept + random effects
-      matrix[ntimes, nteams] ability;
+      vector[N] ability_team1;
+      vector[N] ability_team2;
       matrix[ntimes, nteams] mu_alpha;
-
-      for (t in 1: ntimes){
-        ability[t]= to_row_vector(beta*ranking) + alpha[t]*sigma_a;
-      }
+      
+      // Compute abilities for each match at the data point level
+        for (n in 1:N) {
+          ability_team1[n] = beta * ranking[instants_rank[n], team1[n]] + alpha[instants[n], team1[n]] * sigma_a;
+          ability_team2[n] = beta * ranking[instants_rank[n], team2[n]] + alpha[instants[n], team2[n]] * sigma_a;
+        }
 
       // Gaussian process covariance functions
       // for (i in 1:(ntimes)){
@@ -3926,10 +4290,9 @@ generated quantities{
           //   }}
 
       // Lagged prior mean for attack/defense parameters
-      for (t in 2:(ntimes)){
-        mu_alpha[1]=rep_row_vector(0,nteams);
-        mu_alpha[t]=alpha[t-1];
-        //rep_row_vector(0,nteams);
+      mu_alpha[1, ] = rep_row_vector(0, nteams);
+      for (t in 2:ntimes) {
+        mu_alpha[t, ] = alpha[t - 1, ];
       }
 
     }
@@ -3964,44 +4327,53 @@ generated quantities{
         target+=double_exponential_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
       }
 
+      // Priors for beta and sigma_y
       beta ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
-
-
-      for (n in 1:N)
-        diff_y[n] ~ student_t(nu, ability[instants[n], team1[n]] - ability[instants[n], team2[n]], sigma_y);
+    
+      // Likelihood
+      for (n in 1:N) {
+        diff_y[n] ~ student_t(nu, ability_team1[n] - ability_team2[n], sigma_y);
+      }
     }
     generated quantities {
-      // posterior predictive check - carry along uncertainty!!!
+        // posterior predictive check - carry along uncertainty!!!
         // now estimate a whole season's worth of games
-  // based on the current estimate of our parameters
-  vector[N] diff_y_rep;
-  vector[N] log_lik;
-  for (n in 1:N) {
-    diff_y_rep[n] = student_t_rng(nu, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
-  }
+        // based on the current estimate of our parameters
+        
+        vector[N] diff_y_rep;
+        vector[N] log_lik;
+      
+        for (n in 1:N) {
+          diff_y_rep[n] = student_t_rng(nu, ability_team1[n] - ability_team2[n], sigma_y);
+          log_lik[n] = student_t_lpdf(diff_y[n] | nu, ability_team1[n] - ability_team2[n], sigma_y);
+        }
 
 }"
 
 
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+    
     student_t_dynamic_prev<- "
     data {
-      int N;   // number of matches
-      int N_prev;
-      int nteams;   // number of teams
-      vector[nteams] ranking;  // per-team ranking
-      int team1[N];
-      int team2[N];
-      int team1_prev[N_prev];
-      int team2_prev[N_prev];
-      matrix[N,2] y;
-      real nu;
-      int ntimes;                 // dynamic periods
-      int time[ntimes];
-      int instants[N];
-      int instants_prev[N_prev];
-
+      int N;                       // number of matches
+      int N_prev;                  // number of previous matches for prediction
+      int nteams;                  // number of teams
+      int team1[N];                // team 1 indices for N matches
+      int team2[N];                // team 2 indices for N matches
+      int team1_prev[N_prev];      // team 1 indices for N_prev matches
+      int team2_prev[N_prev];      // team 2 indices for N_prev matches
+      matrix[N, 2] y;              // observed scores: column 1 is team1, column 2 is team2
+      real nu;                     // degrees of freedom for the Student's t-distribution
+      int ntimes;                  // number of dynamic periods for abilities
+      int time[ntimes];            // time periods for abilities
+      int instants[N];             // time indices for abilities for N matches
+      int instants_prev[N_prev];   // time indices for abilities for N_prev matches
+      int instants_rank[N];        // time indices for rankings for N matches
+      int ntimes_rank;             // number of dynamic periods for rankings
+      matrix[ntimes_rank, nteams] ranking; // rankings over time
+      
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
       int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -4013,27 +4385,41 @@ generated quantities{
       real hyper_sd_location;
       real hyper_sd_scale;
     }
+    
     transformed data {
-      vector[N] diff_y = y[,1] - y[,2];  // modeled data
+      vector[N] diff_y = y[, 1] - y[, 2]; // Difference in scores
     }
+    
     parameters {
-      real beta;            // common intercept
-      matrix[ntimes, nteams] alpha;    // vector of per-team weights
-      real<lower=0> sigma_a;   // common variance
-      real<lower=0> sigma_y;   // noise term in our estimate
-      real<lower=0> sigma_alpha;
+      real beta;                           // Coefficient for the ranking
+      matrix[ntimes, nteams] alpha;        // Team-specific abilities over time
+      real<lower=0> sigma_a;               // Scaling parameter for abilities
+      real<lower=0> sigma_y;               // Noise term in the model
+      real<lower=0> sigma_alpha;           // Standard deviation for alpha's prior
     }
+    
     transformed parameters {
       //cov_matrix[ntimes] Sigma_alpha;
       // mixed effects model - common intercept + random effects
-      matrix[ntimes, nteams] ability;
-      matrix[ntimes, nteams] mu_alpha;
-
-      for (t in 1: ntimes){
-        ability[t]= to_row_vector(beta*ranking) + alpha[t]*sigma_a;
-      }
-
-      // Gaussian process covariance functions
+        vector[N] ability_team1;
+        vector[N] ability_team2;
+        vector[N_prev] ability_team1_prev;
+        vector[N_prev] ability_team2_prev;
+        matrix[ntimes, nteams] mu_alpha;
+        
+      // Compute abilities for each match in N
+        for (n in 1:N) {
+          ability_team1[n] = beta * ranking[instants_rank[n], team1[n]] + alpha[instants[n], team1[n]] * sigma_a;
+          ability_team2[n] = beta * ranking[instants_rank[n], team2[n]] + alpha[instants[n], team2[n]] * sigma_a;
+        }
+        
+     // Compute abilities for each match in N_prev
+        for (n in 1:N_prev) {
+          ability_team1_prev[n] = beta * ranking[instants_rank[N], team1_prev[n]] + alpha[instants_prev[n], team1_prev[n]] * sigma_a;
+          ability_team2_prev[n] = beta * ranking[instants_rank[N], team2_prev[n]] + alpha[instants_prev[n], team2_prev[n]] * sigma_a;
+        }
+        
+     // Gaussian process covariance functions
       // for (i in 1:(ntimes)){
         //   for (j in 1:(ntimes)){
           //     Sigma_alpha[i, j] = exp(-pow(time[i] - time[j], 2))
@@ -4041,11 +4427,10 @@ generated quantities{
           //   }}
 
       // Lagged prior mean for attack/defense parameters
-      for (t in 2:(ntimes)){
-        mu_alpha[1]=rep_row_vector(0,nteams);
-        mu_alpha[t]=alpha[t-1];
-        //rep_row_vector(0,nteams);
-      }
+        mu_alpha[1, ] = rep_row_vector(0, nteams);
+        for (t in 2:ntimes) {
+          mu_alpha[t, ] = alpha[t - 1, ];
+        }
 
     }
     model {
@@ -4078,12 +4463,15 @@ generated quantities{
         target+=double_exponential_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
       }
 
+     // Priors for beta and sigma_y
       beta ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
-
-      for (n in 1:N)
-        diff_y[n] ~ student_t(nu, ability[instants[n], team1[n]] - ability[instants[n], team2[n]], sigma_y);
-    }
+    
+     // Likelihood for observed data
+      for (n in 1:N) {
+        diff_y[n] ~ student_t(nu, ability_team1[n] - ability_team2[n], sigma_y);
+      }
+  
     generated quantities {
       // posterior predictive check - carry along uncertainty!!!
         // now estimate a whole season's worth of games
@@ -4094,75 +4482,84 @@ generated quantities{
 
 
   for (n in 1:N) {
-    diff_y_rep[n] = student_t_rng(nu, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[instants[n],team1[n]] - ability[instants[n],team2[n]], sigma_y);
+    diff_y_rep[n] = student_t_rng(nu, ability_team1[n] - ability_team2[n], sigma_y);
+    log_lik[n] = student_t_lpdf(diff_y[n] | nu, ability_team1[n] - ability_team2[n], sigma_y);
   }
 
   for (n in 1:N_prev) {
-    diff_y_prev[n] = student_t_rng(nu, ability[instants_prev[n], team1_prev[n]] - ability[instants_prev[n], team2_prev[n]], sigma_y);
+    diff_y_prev[n] = student_t_rng(nu, ability_team1_prev[n] - ability_team2_prev[n], sigma_y);
   }
 
 }"
 
+    
+##  ............................................................................
+##  Static t-Student                                                        ####
+    
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Fit                                                                     ####
+    
     student_t_fit<-"
     data {
-      int N;   // number of matches
-      int nteams;   // number of teams
-      real ranking[nteams];  // per-team ranking
-      // this is a 4-column data table of per-game outcomes
-      int team1[N];
-      int team2[N];
-      matrix[N,2] y;
-      real nu;
-
-      // priors part
-      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
-      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
-
+      int N;                       // number of matches
+      int nteams;                  // number of teams
+      int ntimes_rank;             // number of dynamic periods for rankings
+      int instants_rank[N];        // time indices for rankings for each match
+      matrix[ntimes_rank, nteams] ranking; // rankings over time
+    
+      int team1[N];                // team 1 indices for N matches
+      int team2[N];                // team 2 indices for N matches
+      matrix[N, 2] y;              // observed scores: column 1 is team1, column 2 is team2
+      real nu;                     // degrees of freedom for the Student's t-distribution
+    
+      // Priors part
+      int<lower=1, upper=4> prior_dist_num;    // 1 Gaussian, 2 Student's t, 3 Cauchy, 4 Laplace
+      int<lower=1, upper=4> prior_dist_sd_num; // 1 Gaussian, 2 Student's t, 3 Cauchy, 4 Laplace
+    
       real hyper_df;
       real hyper_location;
-
+    
       real hyper_sd_df;
       real hyper_sd_location;
       real hyper_sd_scale;
     }
+    
     transformed data {
-      vector[N] diff_y = y[,1] - y[,2];  // modeled data
+      vector[N] diff_y = y[, 1] - y[, 2]; // Difference in scores
     }
+    
     parameters {
-      real beta;            // common intercept
-      vector[nteams] alpha;    // vector of per-team weights
-      real<lower=0> sigma_a;   // common variance
-      real<lower=0> sigma_y;   // noise term in our estimate
-      real<lower=0> sigma_alpha;
+      real beta;                           // Coefficient for the ranking
+      vector[nteams] alpha;                // Team-specific abilities
+      real<lower=0> sigma_a;               // Scaling parameter for abilities
+      real<lower=0> sigma_y;               // Noise term in the model
+      real<lower=0> sigma_alpha;           // Standard deviation for alpha's prior
     }
+    
     transformed parameters {
       // mixed effects model - common intercept + random effects
-      vector[nteams] ability;
+      vector[N] ability_team1;
+      vector[N] ability_team2;
 
-      for (t in 1: nteams){
-        ability[t]= (beta*ranking[t]) + alpha[t]*sigma_a;
+      for (n in 1:N) {
+        ability_team1[n] = beta * ranking[instants_rank[n], team1[n]] + alpha[team1[n]] * sigma_a;
+        ability_team2[n] = beta * ranking[instants_rank[n], team2[n]] + alpha[team2[n]] * sigma_a;
       }
     }
+    
     model {
-      // log-priors for team-specific abilities
-      for (t in 1:(nteams)){
-        if (prior_dist_num == 1){
-          target+= normal_lpdf(alpha[t]|hyper_location, sigma_alpha);
+    // log-priors for team-specific abilities
+        for (t in 1:nteams) {
+          if (prior_dist_num == 1) {
+            alpha[t] ~ normal(hyper_location, sigma_alpha);
+          } else if (prior_dist_num == 2) {
+            alpha[t] ~ student_t(hyper_df, hyper_location, sigma_alpha);
+          } else if (prior_dist_num == 3) {
+            alpha[t] ~ cauchy(hyper_location, sigma_alpha);
+          } else if (prior_dist_num == 4) {
+            alpha[t] ~ double_exponential(hyper_location, sigma_alpha);
+          }
         }
-        else if (prior_dist_num == 2){
-          target+= student_t_lpdf(alpha[t]|hyper_df, hyper_location, sigma_alpha);
-
-        }
-        else if (prior_dist_num == 3){
-          target+= cauchy_lpdf(alpha[t]|hyper_location, sigma_alpha);
-
-        }
-        else if (prior_dist_num == 4){
-          target+= double_exponential_lpdf(alpha[t]|hyper_location, sigma_alpha);
-
-        }
-      }
 
 
       // log-hyperpriors for sd parameters
@@ -4182,66 +4579,94 @@ generated quantities{
         target+=double_exponential_lpdf(sigma_a|hyper_sd_location, hyper_sd_scale);
         target+=double_exponential_lpdf(sigma_alpha|hyper_sd_location, hyper_sd_scale);
       }
-      beta ~ normal(0, 2.5);
-      sigma_y ~ normal(0, 2.5);
+     // Priors for beta and sigma_y
+        beta ~ normal(0, 2.5);
+        sigma_y ~ normal(0, 2.5);
 
-      // likelihood
-      diff_y ~ student_t(nu, ability[team1] - ability[team2], sigma_y);
+     // Likelihood
+      for (n in 1:N) {
+        diff_y[n] ~ student_t(nu, ability_team1[n] - ability_team2[n], sigma_y);
+      }
     }
+    
     generated quantities {
       // posterior predictive check - carry along uncertainty!!!
-        // now estimate a whole season's worth of games
-  // based on the current estimate of our parameters
-  vector[N] diff_y_rep;
-  vector[N] log_lik;
-  for (n in 1:N) {
-    diff_y_rep[n] = student_t_rng(nu, ability[team1[n]] - ability[team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1[n]] - ability[team2[n]], sigma_y);
-  }
+      // now estimate a whole season's worth of games
+      // based on the current estimate of our parameters
+      vector[N] diff_y_rep; // Replicated differences for posterior predictive checks
+      vector[N] log_lik;    // Log-likelihood for each observation
+    
+      for (n in 1:N) {
+        diff_y_rep[n] = student_t_rng(nu, ability_team1[n] - ability_team2[n], sigma_y);
+        log_lik[n] = student_t_lpdf(diff_y[n] | nu, ability_team1[n] - ability_team2[n], sigma_y);
+      }
     }"
 
+
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Previsions                                                              ####
+    
     student_t_prev<-"
     data {
-      int N;   // number of matches
-      int N_prev; // number of predictedmatched
-      int nteams;   // number of teams
-      real ranking[nteams];  // per-team ranking
+      int N;                       // number of matches
+      int N_prev;                  // number of predicted matches
+      int nteams;                  // number of teams
+      int ntimes_rank;             // number of dynamic periods for rankings
+      int instants_rank[N];        // time indices for rankings for each match
+      int instants_rank_prev[N_prev]; // time indices for rankings for predicted matches
+      matrix[ntimes_rank, nteams] ranking; // rankings over time
+    
       int team1[N];
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
-      matrix[N,2] y;
+      matrix[N, 2] y;
       real nu;
-
-      // priors part
-      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
-      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
-
+    
+      // Priors part
+      int<lower=1, upper=4> prior_dist_num;    // 1 Gaussian, 2 Student's t, 3 Cauchy, 4 Laplace
+      int<lower=1, upper=4> prior_dist_sd_num; // 1 Gaussian, 2 Student's t, 3 Cauchy, 4 Laplace
+    
       real hyper_df;
       real hyper_location;
-
+    
       real hyper_sd_df;
       real hyper_sd_location;
       real hyper_sd_scale;
     }
+    
     transformed data {
-      vector[N] diff_y = y[,1] - y[,2];  // modeled data
+      vector[N] diff_y = y[, 1] - y[, 2];  // Modeled data
     }
+    
     parameters {
-      real beta;            // common intercept
-      vector[nteams] alpha;    // vector of per-team weights
-      real<lower=0> sigma_a;   // common variance
-      real<lower=0> sigma_y;   // noise term in our estimate
+      real beta;                           // Coefficient for the ranking
+      vector[nteams] alpha;                // Team-specific abilities
+      real<lower=0> sigma_a;               // Scaling parameter for abilities
+      real<lower=0> sigma_y;               // Noise term in our estimate
       real<lower=0> sigma_alpha;
     }
+    
     transformed parameters {
       // mixed effects model - common intercept + random effects
-      vector[nteams] ability;
+      vector[N] ability_team1;
+      vector[N] ability_team2;
+      vector[N_prev] ability_team1_prev;
+      vector[N_prev] ability_team2_prev;
 
-      for (t in 1: nteams){
-        ability[t]= (beta*ranking[t]) + alpha[t]*sigma_a;
+      // Compute abilities for each match at the data point level
+      for (n in 1:N) {
+        ability_team1[n] = beta * ranking[instants_rank[n], team1[n]] + alpha[team1[n]] * sigma_a;
+        ability_team2[n] = beta * ranking[instants_rank[n], team2[n]] + alpha[team2[n]] * sigma_a;
       }
-    }
+
+      // Compute abilities for predicted matches
+      for (n in 1:N_prev) {
+        ability_team1_prev[n] = beta * ranking[instants_rank[N], team1_prev[n]] + alpha[team1_prev[n]] * sigma_a;
+        ability_team2_prev[n] = beta * ranking[instants_rank[N], team2_prev[n]] + alpha[team2_prev[n]] * sigma_a;
+      }
+  }
+    
     model {
       // log-priors for team-specific abilities
       for (t in 1:(nteams)){
@@ -4283,27 +4708,29 @@ generated quantities{
 
       beta ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
-
-      // likelihood
-      diff_y ~ student_t(nu, ability[team1] - ability[team2], sigma_y);
+    
+      // Likelihood
+      for (n in 1:N) {
+        diff_y[n] ~ student_t(nu, ability_team1[n] - ability_team2[n], sigma_y);
+      }
     }
+    
     generated quantities {
-      // posterior predictive check - carry along uncertainty!!!
-        // now estimate a whole season's worth of games
-  // based on the current estimate of our parameters
-  vector[N] diff_y_rep;
-  vector[N] log_lik;
-  vector[N_prev] diff_y_prev;
-
-  for (n in 1:N) {
-    diff_y_rep[n] = student_t_rng(nu, ability[team1[n]] - ability[team2[n]], sigma_y);
-    log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1[n]] - ability[team2[n]], sigma_y);
-  }
-
-  for (n in 1:N_prev) {
-    diff_y_prev[n] = student_t_rng(nu, ability[team1_prev[n]] - ability[team2_prev[n]], sigma_y);
-  }
-
+     // posterior predictive check - carry along uncertainty!!!
+     // now estimate a whole season's worth of games
+     // based on the current estimate of our parameters
+    vector[N] diff_y_rep;
+    vector[N] log_lik;
+    vector[N_prev] diff_y_prev;
+  
+    for (n in 1:N) {
+      diff_y_rep[n] = student_t_rng(nu, ability_team1[n] - ability_team2[n], sigma_y);
+      log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1[n]] - ability[team2[n]], sigma_y);
+    }
+  
+    for (n in 1:N_prev) {
+      diff_y_prev[n] = student_t_rng(nu, ability_team1_prev[n] - ability_team2_prev[n], sigma_y);
+    }
 }"
 
     models <- list(biv_pois_dynamic_fit,
@@ -4341,9 +4768,13 @@ generated quantities{
                        iter = user_dots$iter,
                        chains = user_dots$chains,
                        thin = user_dots$thin,
-                       cores = user_dots$cores
+                       cores = user_dots$cores,
+                       control = user_dots$control
                        )
-  return(fit)
+  
+  stanFoot_output <- list(fit = fit,
+                          data = data_stan)
+  return(stanFoot_output)
 
 }
 
