@@ -240,7 +240,7 @@ foot_abilities <- function(object, data,
     yaxis_text(size=rel(1.2))+
     xaxis_text( size = rel(1.2))+
     theme(plot.title = element_text(size = 16),
-          strip.text = element_text(size = 8),
+          strip.text = element_text(size = 12),
           axis.text.x =  element_text(face="bold",
                                                    color="black",
                                                    angle=45, size =9),
@@ -280,7 +280,7 @@ foot_abilities <- function(object, data,
       yaxis_text(size=rel(1.2))+
       xaxis_text( size = rel(1.2))+
       theme(plot.title = element_text(size = 16),
-            strip.text = element_text(size = 8),
+            strip.text = element_text(size = 12),
             axis.text.x =  element_text(face="bold",
                           color="black",
                           angle=45, size =9),
@@ -321,7 +321,7 @@ foot_abilities <- function(object, data,
       yaxis_text(size=rel(1.2))+
       xaxis_text( size = rel(1.2))+
       theme(plot.title = element_text(size = 16),
-            strip.text = element_text(size = 8),
+            strip.text = element_text(size = 12),
             axis.text.x =  element_text(face="bold",
                                         color="black",
                                         angle=45, size =9),
@@ -483,7 +483,7 @@ foot_abilities <- function(object, data,
         yaxis_text(size=rel(1.2))+
         xaxis_text( size = rel(1.2))+
         theme(plot.title = element_text(size = 16),
-              strip.text = element_text(size = 8),
+              strip.text = element_text(size = 12),
               axis.text.x =  element_text(face="bold",
                                           color="black",
                                           angle=45, size =9),
