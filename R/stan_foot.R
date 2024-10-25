@@ -10,10 +10,9 @@
 #'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}, \code{"diag_infl_biv_pois"}, \code{"zero_infl_skellam"}.
 #'@param predict The number of out-of-sample matches. If missing, the function returns
 #'the fit for the training set only.
-#'@param ranking Eventual numeric ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
+#'@param ranking Eventual matrix ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
 #'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 #'dynamic parameters.
-#'@param dynamic_rank Dynamic ranking points (default is \code{FALSE})
 #'@param prior The prior distribution for the team-specific abilities.
 #'Possible choices: \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}.
 #'See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
@@ -208,7 +207,6 @@ stan_foot <- function(data,
                       model,
                       predict,
                       ranking,
-                      dynamic_rank = FALSE,
                       dynamic_type,
                       prior,
                       prior_sd,
@@ -605,9 +603,7 @@ stan_foot <- function(data,
   
   # Check if ranking is provided
   if (missing(ranking)) {
-    # If ranking is missing, set dynamic_rank to FALSE and create a default zero matrix
     warning("Ranking is missing, creating a default zero matrix.")
-    dynamic_rank <- FALSE
     ntimes_rank <- 1  
     nteams <- length(unique(data$team))
     ranking_matrix <- matrix(0, nrow = ntimes_rank, ncol = nteams)
@@ -679,7 +675,7 @@ stan_foot <- function(data,
   
   ntimes_fit <- length(unique(instants))
   
-  if (dynamic_rank) {
+  if (ntimes_rank > 1) {
     if (is.null(ranking_map)) {
       if (ntimes_fit == ntimes_rank) {
         # Assume periods correspond directly
@@ -695,7 +691,7 @@ stan_foot <- function(data,
       }
     }
   } else {
-    # If dynamic_rank is FALSE, instants_rank are all equal to 1 and repeated the length of instants
+    # If ntimes_rank = 1, instants_rank are all equal to 1 and repeated the length of instants
     instants_rank <- rep(1, length(instants))
   }
   
