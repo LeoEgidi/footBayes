@@ -1,12 +1,12 @@
 #' Bayesian Bradley-Terry-Davidson Model
 #'
-#' This function fits a Bayesian Bradley-Terry-Davidson model using Stan. It supports both static and dynamic ranking models, allowing for the estimation of team strengths over time.
+#' This function fits a Bayesian Bradley-Terry-Davidson model using Stan. It supports both static and dynamic ranking models, allowing for the estimation of team strengths over time. Teams are specified by their names (character strings), and the function internally maps these names to integer indices required by the Stan model.
 #'
 #' @param data A data frame containing the observations with columns:
 #'   \itemize{
 #'     \item \code{periods}: Time point of each observation (integer >= 1).
-#'     \item \code{team1}: Index of team 1 in each observation (integer >= 1).
-#'     \item \code{team2}: Index of team 2 in each observation (integer >= 1).
+#'     \item \code{team1}: Name of team 1 in each observation (character string).
+#'     \item \code{team2}: Name of team 2 in each observation (character string).
 #'     \item \code{match_outcome}: Outcome (\code{1} if team1 beats team2, \code{2} for tie, and \code{3} if team2 beats team1).
 #'   }
 #' @param dynamic_rank Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).
@@ -31,27 +31,24 @@
 #'     \item \code{rank}: A data frame with the rankings, including columns:
 #'       \itemize{
 #'         \item \code{periods}: The time period (for dynamic models).
-#'         \item \code{team}: The team index.
+#'         \item \code{team}: The team name.
 #'         \item \code{rank_points}: The estimated strength of the team based on the chosen \code{rank_measure}.
 #'       }
 #'     \item \code{data}: The original input data.
 #'     \item \code{stan_data}: The data prepared for Stan.
 #'     \item \code{priors}: A list of the prior values used.
 #'     \item \code{rank_measure}: The method used to compute the rankings.
+#'     \item \code{team_mapping}: A data frame mapping team indices to team names.
 #'   }
 #'
 #' @examples
 #' \dontrun{
-#' # Example data
-#' set.seed(123)
-#' N <- 100
-#' nteams <- 5
-#' ntimes_rank <- 10
+#' # Example data with team names
 #' data <- data.frame(
-#'   periods = sample(1:ntimes_rank, N, replace = TRUE),
-#'   team1 = sample(1:nteams, N, replace = TRUE),
-#'   team2 = sample(1:nteams, N, replace = TRUE),
-#'   match_outcome = sample(1:3, N, replace = TRUE)
+#'   periods = c(1, 1, 2, 2),
+#'   team1 = c("Team A", "Team B", "Team A", "Team C"),
+#'   team2 = c("Team B", "Team C", "Team C", "Team B"),
+#'   match_outcome = c(1, 3, 2, 1)
 #' )
 #'
 #' # Fit the dynamic model using the median rank measure
@@ -72,9 +69,9 @@
 #' # View the rankings
 #' print(fit_result$rank)
 #' }
-#'@import rstan
-#'@import dplyr
-#'@export
+#' @import rstan
+#' @import dplyr
+#' @export
 
 btd_foot <- function(data,
                      dynamic_rank = FALSE,
@@ -122,10 +119,22 @@ btd_foot <- function(data,
 
   N <- nrow(data)
 
-  # Define nteams (number of teams) and ntimes_rank (number of time points)
-  teams <- sort(unique(c(team1, team2)))
+  # Create teams vector and map team names to integer indices
+  teams <- unique(c(team1, team2))
   nteams <- length(teams)
   ntimes_rank <- max(instants_rank)
+
+  # Map team names to integer indices
+  team1_idx <- match(team1, teams)
+  team2_idx <- match(team2, teams)
+
+  # Check for NAs in team1_idx and team2_idx
+  if (any(is.na(team1_idx))) {
+    stop("Some values in 'team1' do not match any known teams.")
+  }
+  if (any(is.na(team2_idx))) {
+    stop("Some values in 'team2' do not match any known teams.")
+  }
 
   # NAs
   if (any(is.na(data))) {
@@ -138,20 +147,6 @@ btd_foot <- function(data,
   }
   if (any(instants_rank < 1 | instants_rank > ntimes_rank)) {
     stop(paste("Values in 'periods' must be between 1 and", ntimes_rank, "."))
-  }
-
-  # Check team1 and team2
-  if (!is.numeric(team1) || any(team1 != as.integer(team1))) {
-    stop("Column 'team1' must contain integer values.")
-  }
-  if (any(team1 < 1 | team1 > nteams)) {
-    stop(paste("Values in 'team1' must be between 1 and", nteams, "."))
-  }
-  if (!is.numeric(team2) || any(team2 != as.integer(team2))) {
-    stop("Column 'team2' must contain integer values.")
-  }
-  if (any(team2 < 1 | team2 > nteams)) {
-    stop(paste("Values in 'team2' must be between 1 and", nteams, "."))
   }
 
   # Check match_outcome
@@ -181,8 +176,8 @@ btd_foot <- function(data,
     stan_data <- list(
       N = N,
       nteams = nteams,
-      team1 = as.integer(team1),
-      team2 = as.integer(team2),
+      team1 = as.integer(team1_idx),
+      team2 = as.integer(team2_idx),
       mu_psi_init = mean_psi,
       sigma_psi = std_psi,
       mu_gamma = mean_gamma,
@@ -195,8 +190,8 @@ btd_foot <- function(data,
       nteams = nteams,
       ntimes_rank = ntimes_rank,
       t = as.integer(instants_rank),
-      team1 = as.integer(team1),
-      team2 = as.integer(team2),
+      team1 = as.integer(team1_idx),
+      team2 = as.integer(team2_idx),
       mu_psi_init = mean_psi,
       sigma_psi = std_psi,
       mu_gamma = mean_gamma,
@@ -340,7 +335,7 @@ btd_foot <- function(data,
 
       df <- data.frame(
         periods = 1,  # Set periods to 1 for static model
-        team = team,
+        team = team,  # Use team name
         rank_points = rank_point,
         stringsAsFactors = FALSE
       )
@@ -364,7 +359,7 @@ btd_foot <- function(data,
 
       df <- data.frame(
         periods = 1:ntimes_rank,
-        team = team,
+        team = team,  # Use team name
         rank_points = rank_point,
         stringsAsFactors = FALSE
       )
@@ -386,11 +381,9 @@ btd_foot <- function(data,
       mean_gamma = mean_gamma,
       std_gamma = std_gamma
     ),
-    rank_measure = rank_measure
+    rank_measure = rank_measure,
+    team_mapping = data.frame(team_index = 1:nteams, team_name = teams)
   )
   class(output) <- "footBayesBTD"
   return(output)
 }
-
-
-

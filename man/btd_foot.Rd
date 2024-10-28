@@ -16,8 +16,8 @@ btd_foot(
 \item{data}{A data frame containing the observations with columns:
 \itemize{
   \item \code{periods}: Time point of each observation (integer >= 1).
-  \item \code{team1}: Index of team 1 in each observation (integer >= 1).
-  \item \code{team2}: Index of team 2 in each observation (integer >= 1).
+  \item \code{team1}: Name of team 1 in each observation (character string).
+  \item \code{team2}: Name of team 2 in each observation (character string).
   \item \code{match_outcome}: Outcome (\code{1} if team1 beats team2, \code{2} for tie, and \code{3} if team2 beats team1).
 }}
 
@@ -47,30 +47,27 @@ A list of class \code{"footBayesBTD"} containing:
     \item \code{rank}: A data frame with the rankings, including columns:
       \itemize{
         \item \code{periods}: The time period (for dynamic models).
-        \item \code{team}: The team index.
+        \item \code{team}: The team name.
         \item \code{rank_points}: The estimated strength of the team based on the chosen \code{rank_measure}.
       }
     \item \code{data}: The original input data.
     \item \code{stan_data}: The data prepared for Stan.
     \item \code{priors}: A list of the prior values used.
     \item \code{rank_measure}: The method used to compute the rankings.
+    \item \code{team_mapping}: A data frame mapping team indices to team names.
   }
 }
 \description{
-This function fits a Bayesian Bradley-Terry-Davidson model using Stan. It supports both static and dynamic ranking models, allowing for the estimation of team strengths over time.
+This function fits a Bayesian Bradley-Terry-Davidson model using Stan. It supports both static and dynamic ranking models, allowing for the estimation of team strengths over time. Teams are specified by their names (character strings), and the function internally maps these names to integer indices required by the Stan model.
 }
 \examples{
 \dontrun{
-# Example data
-set.seed(123)
-N <- 100
-nteams <- 5
-ntimes_rank <- 10
+# Example data with team names
 data <- data.frame(
-  periods = sample(1:ntimes_rank, N, replace = TRUE),
-  team1 = sample(1:nteams, N, replace = TRUE),
-  team2 = sample(1:nteams, N, replace = TRUE),
-  match_outcome = sample(1:3, N, replace = TRUE)
+  periods = c(1, 1, 2, 2),
+  team1 = c("Team A", "Team B", "Team A", "Team C"),
+  team2 = c("Team B", "Team C", "Team C", "Team B"),
+  match_outcome = c(1, 3, 2, 1)
 )
 
 # Fit the dynamic model using the median rank measure
