@@ -19,23 +19,47 @@ stan_foot(
 )
 }
 \arguments{
-\item{data}{A data frame, or a matrix containing the following mandatory items: season, home team, away team,
-home goals, away goals.}
+\item{data}{A data frame or matrix containing the match data. It must include the following columns:
+\itemize{
+  \item \code{season}: The season identifier.
+  \item \code{home}: The home team's name.
+  \item \code{away}: The away team's name.
+  \item \code{homegoals}: Number of goals scored by the home team.
+  \item \code{awaygoals}: Number of goals scored by the away team.
+}}
 
-\item{model}{The type of Stan model used to fit the data.
-One among the following: \code{"double_pois"},
-\code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}, \code{"diag_infl_biv_pois"}, \code{"zero_infl_skellam"}.}
+\item{model}{A character string specifying the type of Stan model to fit. Options are:
+\itemize{
+  \item \code{"double_pois"}: Double Poisson model.
+  \item \code{"biv_pois"}: Bivariate Poisson model.
+  \item \code{"skellam"}: Skellam model.
+  \item \code{"student_t"}: Student's t model.
+  \item \code{"diag_infl_biv_pois"}: Diagonal-inflated bivariate Poisson model.
+  \item \code{"zero_infl_skellam"}: Zero-inflated Skellam model.
+}}
 
-\item{predict}{The number of out-of-sample matches. If missing, the function returns
-the fit for the training set only.}
+\item{predict}{An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.}
 
-\item{ranking}{Eventual matrix ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)}
+\item{ranking}{An optional data frame or matrix containing ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
+\itemize{
+  \item \code{periods}: Time periods corresponding to the rankings.
+  \item \code{team}: Team names matching those in the \code{data}.
+  \item \code{rank_points}: Ranking points for each team.
+}}
 
-\item{dynamic_type}{One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
-dynamic parameters.}
+\item{dynamic_type}{A character string specifying the type of dynamics in the model. Options are:
+\itemize{
+  \item \code{"weekly"}: Weekly dynamic parameters.
+  \item \code{"seasonal"}: Seasonal dynamic parameters.
+}}
 
-\item{prior}{The prior distribution for the team-specific abilities.
-Possible choices: \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}.
+\item{prior}{The prior distribution for the team-specific abilities.Possible choices:
+   \itemize{
+     \item \code{normal}.
+     \item \code{student_t}.
+     \item \code{cauchy}.
+     \item \code{laplace}.
+   }
 See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
   Distributions for rstanarm Models}}}
 
@@ -43,16 +67,25 @@ See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc
 
 \item{ind_home}{Home effect (default is \code{TRUE}).}
 
-\item{norm_method}{Method used to normalize team-specific ranking points.
-One among \code{"none"}, \code{"standard"}, \code{"mad"}, \code{"min_max"}.}
+\item{norm_method}{A character string specifying the method used to normalize team-specific ranking points. Options are:
+\itemize{
+  \item \code{"none"}: No normalization (default).
+  \item \code{"standard"}: Standardization (mean 0, standard deviation 1).
+  \item \code{"mad"}: Median Absolute Deviation normalization.
+  \item \code{"min_max"}: Min-max scaling to [0,1].
+}}
 
-\item{ranking_map}{An optional mapping argument to associate ranking periods with the corresponding data periods.}
-
-\item{...}{Optional parameters passed to the function
+\item{ranking_map}{An optional vector mapping ranking periods to data periods. If not provided and the number of ranking periods matches the number of data periods, a direct mapping is assumed.
+#'@param ... Optional parameters passed to the function
 in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
 }
 \value{
-An object of S4 class, \code{\link[rstan]{stanfit-class}}.
+A list of class \code{"stanFoot"} containing:
+  \itemize{
+    \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
+    \item \code{data}: The data prepared for Stan.
+    \item \code{stan_code}: The Stan code used for the model.
+  }
 }
 \description{
 Stan football modelling for the most famous models:

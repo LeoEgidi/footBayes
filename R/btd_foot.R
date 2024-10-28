@@ -9,6 +9,7 @@
 #'     \item \code{team2}: Name of team 2 in each observation (character string).
 #'     \item \code{match_outcome}: Outcome (\code{1} if team1 beats team2, \code{2} for tie, and \code{3} if team2 beats team1).
 #'   }
+#'   The data frame must not contain missing values.
 #' @param dynamic_rank Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).
 #' @param priors A list containing prior parameters with elements:
 #'   \itemize{
@@ -25,7 +26,7 @@
 #'   }
 #' @param ... Additional arguments passed to \code{\link[rstan]{stan}} (e.g., \code{iter}, \code{chains}, \code{control}).
 #'
-#' @return A list of class \code{"footBayesBTD"} containing:
+#' @return A list of class \code{"btdFoot"} containing:
 #'   \itemize{
 #'     \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
 #'     \item \code{rank}: A data frame with the rankings, including columns:
@@ -36,9 +37,9 @@
 #'       }
 #'     \item \code{data}: The original input data.
 #'     \item \code{stan_data}: The data prepared for Stan.
+#'     \item \code{stan_code}: The Stan code used for the model.
 #'     \item \code{priors}: A list of the prior values used.
 #'     \item \code{rank_measure}: The method used to compute the rankings.
-#'     \item \code{team_mapping}: A data frame mapping team indices to team names.
 #'   }
 #'
 #' @examples
@@ -375,15 +376,14 @@ btd_foot <- function(data,
     rank = BTDrank,
     data = data,
     stan_data = stan_data,
+    stan_code = stan_code,
     priors = list(
       mean_psi = mean_psi,
       std_psi = std_psi,
       mean_gamma = mean_gamma,
       std_gamma = std_gamma
     ),
-    rank_measure = rank_measure,
-    team_mapping = data.frame(team_index = 1:nteams, team_name = teams)
-  )
-  class(output) <- "footBayesBTD"
+    rank_measure = rank_measure)
+  class(output) <- "btdFoot"
   return(output)
 }

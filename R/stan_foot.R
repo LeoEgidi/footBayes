@@ -3,30 +3,63 @@
 #' Stan football modelling for the most famous models:
 #' double Poisson, bivariate Poisson, Skellam, student t, diagonal-inflated bivariate Poisson and zero-inflated Skellam.
 #'
-#'@param data A data frame, or a matrix containing the following mandatory items: season, home team, away team,
-#'home goals, away goals.
-#'@param model The type of Stan model used to fit the data.
-#'             One among the following: \code{"double_pois"},
-#'             \code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}, \code{"diag_infl_biv_pois"}, \code{"zero_infl_skellam"}.
-#'@param predict The number of out-of-sample matches. If missing, the function returns
-#'the fit for the training set only.
-#'@param ranking Eventual matrix ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
-#'@param dynamic_type One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
-#'dynamic parameters.
-#'@param prior The prior distribution for the team-specific abilities.
-#'Possible choices: \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}.
+#'@param data A data frame or matrix containing the match data. It must include the following columns:
+#'   \itemize{
+#'     \item \code{season}: The season identifier.
+#'     \item \code{home}: The home team's name.
+#'     \item \code{away}: The away team's name.
+#'     \item \code{homegoals}: Number of goals scored by the home team.
+#'     \item \code{awaygoals}: Number of goals scored by the away team.
+#'   }
+#'@param model A character string specifying the type of Stan model to fit. Options are:
+#'   \itemize{
+#'     \item \code{"double_pois"}: Double Poisson model.
+#'     \item \code{"biv_pois"}: Bivariate Poisson model.
+#'     \item \code{"skellam"}: Skellam model.
+#'     \item \code{"student_t"}: Student's t model.
+#'     \item \code{"diag_infl_biv_pois"}: Diagonal-inflated bivariate Poisson model.
+#'     \item \code{"zero_infl_skellam"}: Zero-inflated Skellam model.
+#'   }
+#'@param predict An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.
+#'@param ranking An optional data frame or matrix containing ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
+#'   \itemize{
+#'     \item \code{periods}: Time periods corresponding to the rankings.
+#'     \item \code{team}: Team names matching those in the \code{data}.
+#'     \item \code{rank_points}: Ranking points for each team.
+#'   }
+#'@param dynamic_type A character string specifying the type of dynamics in the model. Options are:
+#'   \itemize{
+#'     \item \code{"weekly"}: Weekly dynamic parameters.
+#'     \item \code{"seasonal"}: Seasonal dynamic parameters.
+#'   }
+#'@param prior The prior distribution for the team-specific abilities.Possible choices:
+#'    \itemize{
+#'      \item \code{normal}.
+#'      \item \code{student_t}.
+#'      \item \code{cauchy}.
+#'      \item \code{laplace}.
+#'    }
 #'See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
 #'   Distributions for rstanarm Models}}
 #'@param prior_sd The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.
 #'@param ind_home Home effect (default is \code{TRUE}).
-#'@param norm_method Method used to normalize team-specific ranking points.
-#'                   One among \code{"none"}, \code{"standard"}, \code{"mad"}, \code{"min_max"}.
-#'@param ranking_map An optional mapping argument to associate ranking periods with the corresponding data periods.
-#'@param ... Optional parameters passed to the function
+#'@param norm_method A character string specifying the method used to normalize team-specific ranking points. Options are:
+#'   \itemize{
+#'     \item \code{"none"}: No normalization (default).
+#'     \item \code{"standard"}: Standardization (mean 0, standard deviation 1).
+#'     \item \code{"mad"}: Median Absolute Deviation normalization.
+#'     \item \code{"min_max"}: Min-max scaling to [0,1].
+#'   }
+#' @param ranking_map An optional vector mapping ranking periods to data periods. If not provided and the number of ranking periods matches the number of data periods, a direct mapping is assumed.
+#' #'@param ... Optional parameters passed to the function
 #' in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
-#'@return
 #'
-#'An object of S4 class, \code{\link[rstan]{stanfit-class}}.
+#' @return A list of class \code{"stanFoot"} containing:
+#'   \itemize{
+#'     \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
+#'     \item \code{data}: The data prepared for Stan.
+#'     \item \code{stan_code}: The Stan code used for the model.
+#'   }
 #'
 #'@details
 #'Let \eqn{(y^{H}_{n}, y^{A}_{n})} denote the
@@ -218,7 +251,7 @@ stan_foot <- function(data,
 
 #   ____________________________________________________________________________
 #   Data Checks                                                             ####
-  
+
 
   if (!is.matrix(data) & !is.data.frame(data)){
     stop("Data are not stored in matrix/data frame
@@ -264,7 +297,7 @@ stan_foot <- function(data,
 
 #   ____________________________________________________________________________
 #   Models' Name Checks                                                     ####
-  
+
 
   good_names <- c("double_pois",
                   "biv_pois",
@@ -279,12 +312,12 @@ stan_foot <- function(data,
 
   # Default control parameters
   default_control <- list(adapt_delta = 0.8, max_treedepth = 10)
-  
+
   # Initialize user_dots with default arguments, including the control list
   user_dots <- list(
     chains = 4,
     iter = 2000,
-    # warmup = floor(iter / 2),  
+    # warmup = floor(iter / 2),
     thin = 1,
     init = "random",
     seed = sample.int(.Machine$integer.max, 1),
@@ -301,31 +334,31 @@ stan_foot <- function(data,
     eigen_lib = NULL,
     nu = 7
   )
-  
-  
+
+
 
 #   ____________________________________________________________________________
 #   Optional Arguments Checks                                               ####
-  
+
   user_dots_prel <- list(...)
-  
+
   # Handle control argument separately
   if ("control" %in% names(user_dots_prel)) {
     # Extract user-supplied control parameters
     user_control <- user_dots_prel$control
-    
+
     # Merge default control with user-supplied control
     user_dots$control <- modifyList(default_control, user_control)
-    
+
     user_dots_prel$control <- NULL
   }
-  
+
   # Update 'user_dots'
   user_dots <- modifyList(user_dots, user_dots_prel)
-  
-  
-  
-  
+
+
+
+
 
 # if (missing(...)){
 #   user_dots <- user_dots
@@ -342,7 +375,7 @@ stan_foot <- function(data,
 
 #   ____________________________________________________________________________
 #   Predict Checks                                                          ####
-  
+
 
   #predict <- round(predict)
 
@@ -382,8 +415,8 @@ stan_foot <- function(data,
 
 #   ____________________________________________________________________________
 #   Dynamic Models Checks                                                   ####
-  
-  
+
+
     # names conditions
   if (!missing(dynamic_type)){
     dynamic_names <- c("weekly", "seasonal")
@@ -438,12 +471,12 @@ stan_foot <- function(data,
       instants_prev <- season[(N+1):(N+N_prev)]
     }
 
-  
-  
+
+
 
 #   ____________________________________________________________________________
 #   Prior Checks                                                            ####
-  
+
   hyper_df <- 1           # initialization
   if (missing(prior)){    # Normal as default weakly-inf. prior
     prior_dist_num <- 1
@@ -566,7 +599,7 @@ stan_foot <- function(data,
 
   # ____________________________________________________________________________
   # Ranking Checks ####
-  
+
   # Define normalization function
   normalize_rank_points <- function(rank_points, method) {
     if (method == "none") {
@@ -597,14 +630,14 @@ stan_foot <- function(data,
       }
     }
   }
-  
-  
+
+
   norm_method <- match.arg(norm_method, choices = c("none", "standard", "mad", "min_max"))
-  
+
   # Check if ranking is provided
   if (missing(ranking)) {
     warning("Ranking is missing, creating a default zero matrix.")
-    ntimes_rank <- 1  
+    ntimes_rank <- 1
     nteams <- length(unique(data$team))
     ranking_matrix <- matrix(0, nrow = ntimes_rank, ncol = nteams)
   } else {
@@ -612,69 +645,69 @@ stan_foot <- function(data,
     if (!is.matrix(ranking) && !is.data.frame(ranking)) {
       stop("Ranking must be a matrix or a data frame with at least 5 columns: season, home team, away team, home goals, away goals.")
     }
-    
+
     # Convert ranking to data frame if it's not already
     ranking <- as.data.frame(ranking)
-    
+
     # Check if the ranking dataset has more than the expected number of columns
     if (ncol(ranking) > 3) {
       warning("Your ranking dataset seems too large! Only the first three columns will be used as: periods,
             team, rank_points")
       ranking <- ranking[, 1:3]
     }
-    
+
     # Check if the required columns are present
     required_cols <- c("periods", "team", "rank_points")
     if (!all(required_cols %in% colnames(ranking))) {
       stop(paste("Ranking data frame must contain the following columns:", paste(required_cols, collapse = ", ")))
     }
-    
+
     # Check for NAs in required columns
     if (any(is.na(ranking[, required_cols]))) {
       stop("Ranking data contains NAs in required columns. Please remove or impute NAs.")
     }
-    
+
     # Check if the rank_point variable is an integer or numeric
     if (!is.numeric(ranking$rank_points) && !is.integer(ranking$rank_points)) {
       stop("Ranking points type must be numeric or integer. Please check that the column 'rank_points' contains numerical values.")
     }
-    
+
     # Define the number of ranking periods for STAN
     ntimes_rank <- length(unique(ranking$periods))
-    
+
     # Convert rank_points to numeric
     ranking <- ranking %>%
       mutate(rank_points = as.numeric(rank_points)) %>%
       group_by(periods) %>%
       mutate(rank_points = normalize_rank_points(rank_points, norm_method)) %>%
       ungroup()
-    
+
     # Transform ranking to wide format
     ranking_transformed <- ranking %>%
       pivot_wider(
-        names_from = team,  
-        values_from = rank_points    
+        names_from = team,
+        values_from = rank_points
       ) %>%
       arrange(periods)
-    
-    # # Replace NA values with 0 
+
+    # # Replace NA values with 0
     # if (any(is.na(ranking_transformed))) {
     #   warning("Some ranking points are NAs, they will be set to zero.")
     #   ranking_transformed[is.na(ranking_transformed)] <- 0
     # }
-    
+
     # Update ranking to be the transformed version
     ranking_matrix <- as.matrix(ranking_transformed[, -1])
   }
-  
-  
+
+
 
 
 ##  ............................................................................
 ##  Ranking periods map with the data periods                               ####
-  
+
   ntimes_fit <- length(unique(instants))
-  
+
   if (ntimes_rank > 1) {
     if (is.null(ranking_map)) {
       if (ntimes_fit == ntimes_rank) {
@@ -694,11 +727,11 @@ stan_foot <- function(data,
     # If ntimes_rank = 1, instants_rank are all equal to 1 and repeated the length of instants
     instants_rank <- rep(1, length(instants))
   }
-  
-  
-  
-  
-  
+
+
+
+
+
 #   ____________________________________________________________________________
 #   Home Effect Check                                                       ####
 
@@ -720,7 +753,7 @@ stan_foot <- function(data,
 
 #   ____________________________________________________________________________
 #   STAN Data                                                               ####
-  
+
 
   data_stan <- list(y = y,
                     spi_std = rep(0, nteams),
@@ -753,10 +786,10 @@ stan_foot <- function(data,
     data_stan$instants_prev <- instants_prev
   }
 
-  
+
 #   ____________________________________________________________________________
 #   STAN Models                                                             ####
-  
+
   stanfoot_models <- function(model, dyn, type){
     right_name <- paste(model,"_", dyn, type, sep="")
     models_name <- c("biv_pois_dynamic_fit",
@@ -785,13 +818,13 @@ stan_foot <- function(data,
                      "student_t_prev"
                      )
 
-    
+
 ##  ............................................................................
 ##  Dynamic Bivariate Poisson                                               ####
-    
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Fit                                                                     ####
-    
+
     biv_pois_dynamic_fit<-
       "functions{
 
@@ -971,7 +1004,7 @@ stan_foot <- function(data,
 
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Previsions                                                              ####
-    
+
     biv_pois_dynamic_prev<-"
     functions{
 
@@ -1169,13 +1202,13 @@ stan_foot <- function(data,
       }
     }"
 
-    
+
 ##  ............................................................................
 ##  Static Bivariate Poisson                                                ####
-    
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Fit                                                                     ####
-    
+
     biv_pois_fit<-"
     functions{
 
@@ -1324,10 +1357,10 @@ stan_foot <- function(data,
       }
     }"
 
-    
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Previsions                                                              ####
-    
+
     biv_pois_prev<-"
     functions{
 
@@ -1495,11 +1528,11 @@ stan_foot <- function(data,
 ##  ............................................................................
 ##  Dynamic Diagonal Inflated Bivariate Poisson                             ####
 
-  
+
 
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Fit                                                                     ####
- 
+
 diag_infl_biv_pois_dynamic_fit <- "
   functions{
 
@@ -1555,7 +1588,7 @@ diag_infl_biv_pois_dynamic_fit <- "
       int time[ntimes];
       int instants[N];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
@@ -1778,7 +1811,7 @@ data{
   int time[ntimes];
   int instants[N];
   int instants_rank[N];
-  int ntimes_rank;                 // dynamic periods for ranking      
+  int ntimes_rank;                 // dynamic periods for ranking
   matrix[ntimes_rank,nteams] ranking;
   int instants_prev[N_prev];
   int<lower=0, upper=1> ind_home;
@@ -2018,7 +2051,7 @@ data{
   int team1[N];
   int team2[N];
   int instants_rank[N];
-  int ntimes_rank;                 // dynamic periods for ranking      
+  int ntimes_rank;                 // dynamic periods for ranking
   matrix[ntimes_rank,nteams] ranking;
   int<lower=0, upper=1> ind_home;
 
@@ -2218,7 +2251,7 @@ data{
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
@@ -2384,7 +2417,7 @@ double_pois_dynamic_fit<-"
       int time[ntimes];
       int instants[N];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
 
@@ -2532,7 +2565,7 @@ double_pois_dynamic_fit<-"
       int instants[N];
       int instants_prev[N_prev];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -2680,12 +2713,12 @@ double_pois_dynamic_fit<-"
 
 ##  ............................................................................
 ##  Static Double Poisson                                                   ####
-    
-      
+
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Fit                                                                     ####
-    
-    
+
+
     double_pois_fit<-"
     data{
       int N;                      // number of games
@@ -2694,7 +2727,7 @@ double_pois_dynamic_fit<-"
       int team1[N];               // home team index
       int team2[N];               // away team index
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -2803,10 +2836,10 @@ double_pois_dynamic_fit<-"
       }
     }"
 
-    
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Previsions                                                              ####
-    
+
 
     double_pois_prev<-"
     data{
@@ -2819,7 +2852,7 @@ double_pois_dynamic_fit<-"
       int team1_prev[N_prev];     // home team for pred.
       int team2_prev[N_prev];     // away team for pred.
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -2935,14 +2968,14 @@ double_pois_dynamic_fit<-"
       }
     }"
 
-    
+
 ##  ............................................................................
 ##  Dynamic Skellam                                                         ####
-    
-    
+
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Fit                                                                     ####
-    
+
     skellam_dynamic_fit<-"
     functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
@@ -2961,7 +2994,7 @@ double_pois_dynamic_fit<-"
       int time[ntimes];
       int instants[N];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -3088,10 +3121,10 @@ double_pois_dynamic_fit<-"
     }"
 
 
-    
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Previsions                                                              ####
-    
+
     skellam_dynamic_prev <- "
     functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
@@ -3114,7 +3147,7 @@ double_pois_dynamic_fit<-"
       int instants[N];
       int instants_prev[N_prev];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -3262,12 +3295,12 @@ double_pois_dynamic_fit<-"
 
 ##  ............................................................................
 ##  Static Skellam                                                          ####
-    
-        
+
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Fit                                                                     ####
-    
-    
+
+
     skellam_fit <- "
     functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
@@ -3283,7 +3316,7 @@ double_pois_dynamic_fit<-"
       int team1[N];
       int team2[N];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -3386,10 +3419,10 @@ double_pois_dynamic_fit<-"
       }
     }"
 
-    
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Previsions                                                              ####
-    
+
 
     skellam_prev<- "
     functions{
@@ -3409,7 +3442,7 @@ double_pois_dynamic_fit<-"
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -3528,14 +3561,14 @@ double_pois_dynamic_fit<-"
       }
     }"
 
-    
+
 ##  ............................................................................
 ##  Dynamic Zero-Inflated Skellam                                           ####
-    
+
 
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Fit                                                                     ####
-    
+
 zero_infl_skellam_dynamic_fit <- "
     functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
@@ -3575,7 +3608,7 @@ data{
       int time[ntimes];
       int instants[N];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -3752,7 +3785,7 @@ data{
       int instants[N];
       int instants_prev[N_prev];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -3945,7 +3978,7 @@ transformed parameters{
       int team1[N];
       int team2[N];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -4096,7 +4129,7 @@ transformed parameters{
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       int instants_rank[N];
-      int ntimes_rank;                 // dynamic periods for ranking      
+      int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
 
@@ -4242,7 +4275,7 @@ generated quantities{
       int instants_rank[N];        // time indices for rankings
       matrix[ntimes_rank, nteams] ranking; // rankings over time
       real nu;                     // degrees of freedom for the Student's t-distribution
-    
+
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -4271,7 +4304,7 @@ generated quantities{
       vector[N] ability_team1;
       vector[N] ability_team2;
       matrix[ntimes, nteams] mu_alpha;
-      
+
       // Compute abilities for each match at the data point level
         for (n in 1:N) {
           ability_team1[n] = beta * ranking[instants_rank[n], team1[n]] + alpha[instants[n], team1[n]] * sigma_a;
@@ -4326,7 +4359,7 @@ generated quantities{
       // Priors for beta and sigma_y
       beta ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
-    
+
       // Likelihood
       for (n in 1:N) {
         diff_y[n] ~ student_t(nu, ability_team1[n] - ability_team2[n], sigma_y);
@@ -4336,10 +4369,10 @@ generated quantities{
         // posterior predictive check - carry along uncertainty!!!
         // now estimate a whole season's worth of games
         // based on the current estimate of our parameters
-        
+
         vector[N] diff_y_rep;
         vector[N] log_lik;
-      
+
         for (n in 1:N) {
           diff_y_rep[n] = student_t_rng(nu, ability_team1[n] - ability_team2[n], sigma_y);
           log_lik[n] = student_t_lpdf(diff_y[n] | nu, ability_team1[n] - ability_team2[n], sigma_y);
@@ -4350,7 +4383,7 @@ generated quantities{
 
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Previsions                                                              ####
-    
+
     student_t_dynamic_prev<- "
     data {
       int N;                       // number of matches
@@ -4369,7 +4402,7 @@ generated quantities{
       int instants_rank[N];        // time indices for rankings for N matches
       int ntimes_rank;             // number of dynamic periods for rankings
       matrix[ntimes_rank, nteams] ranking; // rankings over time
-      
+
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
       int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -4381,11 +4414,11 @@ generated quantities{
       real hyper_sd_location;
       real hyper_sd_scale;
     }
-    
+
     transformed data {
       vector[N] diff_y = y[, 1] - y[, 2]; // Difference in scores
     }
-    
+
     parameters {
       real beta;                           // Coefficient for the ranking
       matrix[ntimes, nteams] alpha;        // Team-specific abilities over time
@@ -4393,7 +4426,7 @@ generated quantities{
       real<lower=0> sigma_y;               // Noise term in the model
       real<lower=0> sigma_alpha;           // Standard deviation for alpha's prior
     }
-    
+
     transformed parameters {
       //cov_matrix[ntimes] Sigma_alpha;
       // mixed effects model - common intercept + random effects
@@ -4402,19 +4435,19 @@ generated quantities{
         vector[N_prev] ability_team1_prev;
         vector[N_prev] ability_team2_prev;
         matrix[ntimes, nteams] mu_alpha;
-        
+
       // Compute abilities for each match in N
         for (n in 1:N) {
           ability_team1[n] = beta * ranking[instants_rank[n], team1[n]] + alpha[instants[n], team1[n]] * sigma_a;
           ability_team2[n] = beta * ranking[instants_rank[n], team2[n]] + alpha[instants[n], team2[n]] * sigma_a;
         }
-        
+
      // Compute abilities for each match in N_prev
         for (n in 1:N_prev) {
           ability_team1_prev[n] = beta * ranking[instants_rank[N], team1_prev[n]] + alpha[instants_prev[n], team1_prev[n]] * sigma_a;
           ability_team2_prev[n] = beta * ranking[instants_rank[N], team2_prev[n]] + alpha[instants_prev[n], team2_prev[n]] * sigma_a;
         }
-        
+
      // Gaussian process covariance functions
       // for (i in 1:(ntimes)){
         //   for (j in 1:(ntimes)){
@@ -4462,12 +4495,12 @@ generated quantities{
      // Priors for beta and sigma_y
       beta ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
-    
+
      // Likelihood for observed data
       for (n in 1:N) {
         diff_y[n] ~ student_t(nu, ability_team1[n] - ability_team2[n], sigma_y);
       }
-  
+
     generated quantities {
       // posterior predictive check - carry along uncertainty!!!
         // now estimate a whole season's worth of games
@@ -4488,13 +4521,13 @@ generated quantities{
 
 }"
 
-    
+
 ##  ............................................................................
 ##  Static t-Student                                                        ####
-    
+
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Fit                                                                     ####
-    
+
     student_t_fit<-"
     data {
       int N;                       // number of matches
@@ -4502,28 +4535,28 @@ generated quantities{
       int ntimes_rank;             // number of dynamic periods for rankings
       int instants_rank[N];        // time indices for rankings for each match
       matrix[ntimes_rank, nteams] ranking; // rankings over time
-    
+
       int team1[N];                // team 1 indices for N matches
       int team2[N];                // team 2 indices for N matches
       matrix[N, 2] y;              // observed scores: column 1 is team1, column 2 is team2
       real nu;                     // degrees of freedom for the Student's t-distribution
-    
+
       // Priors part
       int<lower=1, upper=4> prior_dist_num;    // 1 Gaussian, 2 Student's t, 3 Cauchy, 4 Laplace
       int<lower=1, upper=4> prior_dist_sd_num; // 1 Gaussian, 2 Student's t, 3 Cauchy, 4 Laplace
-    
+
       real hyper_df;
       real hyper_location;
-    
+
       real hyper_sd_df;
       real hyper_sd_location;
       real hyper_sd_scale;
     }
-    
+
     transformed data {
       vector[N] diff_y = y[, 1] - y[, 2]; // Difference in scores
     }
-    
+
     parameters {
       real beta;                           // Coefficient for the ranking
       vector[nteams] alpha;                // Team-specific abilities
@@ -4531,7 +4564,7 @@ generated quantities{
       real<lower=0> sigma_y;               // Noise term in the model
       real<lower=0> sigma_alpha;           // Standard deviation for alpha's prior
     }
-    
+
     transformed parameters {
       // mixed effects model - common intercept + random effects
       vector[N] ability_team1;
@@ -4542,7 +4575,7 @@ generated quantities{
         ability_team2[n] = beta * ranking[instants_rank[n], team2[n]] + alpha[team2[n]] * sigma_a;
       }
     }
-    
+
     model {
     // log-priors for team-specific abilities
         for (t in 1:nteams) {
@@ -4584,14 +4617,14 @@ generated quantities{
         diff_y[n] ~ student_t(nu, ability_team1[n] - ability_team2[n], sigma_y);
       }
     }
-    
+
     generated quantities {
       // posterior predictive check - carry along uncertainty!!!
       // now estimate a whole season's worth of games
       // based on the current estimate of our parameters
       vector[N] diff_y_rep; // Replicated differences for posterior predictive checks
       vector[N] log_lik;    // Log-likelihood for each observation
-    
+
       for (n in 1:N) {
         diff_y_rep[n] = student_t_rng(nu, ability_team1[n] - ability_team2[n], sigma_y);
         log_lik[n] = student_t_lpdf(diff_y[n] | nu, ability_team1[n] - ability_team2[n], sigma_y);
@@ -4601,7 +4634,7 @@ generated quantities{
 
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Previsions                                                              ####
-    
+
     student_t_prev<-"
     data {
       int N;                       // number of matches
@@ -4611,30 +4644,30 @@ generated quantities{
       int instants_rank[N];        // time indices for rankings for each match
       int instants_rank_prev[N_prev]; // time indices for rankings for predicted matches
       matrix[ntimes_rank, nteams] ranking; // rankings over time
-    
+
       int team1[N];
       int team2[N];
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       matrix[N, 2] y;
       real nu;
-    
+
       // Priors part
       int<lower=1, upper=4> prior_dist_num;    // 1 Gaussian, 2 Student's t, 3 Cauchy, 4 Laplace
       int<lower=1, upper=4> prior_dist_sd_num; // 1 Gaussian, 2 Student's t, 3 Cauchy, 4 Laplace
-    
+
       real hyper_df;
       real hyper_location;
-    
+
       real hyper_sd_df;
       real hyper_sd_location;
       real hyper_sd_scale;
     }
-    
+
     transformed data {
       vector[N] diff_y = y[, 1] - y[, 2];  // Modeled data
     }
-    
+
     parameters {
       real beta;                           // Coefficient for the ranking
       vector[nteams] alpha;                // Team-specific abilities
@@ -4642,7 +4675,7 @@ generated quantities{
       real<lower=0> sigma_y;               // Noise term in our estimate
       real<lower=0> sigma_alpha;
     }
-    
+
     transformed parameters {
       // mixed effects model - common intercept + random effects
       vector[N] ability_team1;
@@ -4662,7 +4695,7 @@ generated quantities{
         ability_team2_prev[n] = beta * ranking[instants_rank[N], team2_prev[n]] + alpha[team2_prev[n]] * sigma_a;
       }
   }
-    
+
     model {
       // log-priors for team-specific abilities
       for (t in 1:(nteams)){
@@ -4704,13 +4737,13 @@ generated quantities{
 
       beta ~ normal(0, 2.5);
       sigma_y ~ normal(0, 2.5);
-    
+
       // Likelihood
       for (n in 1:N) {
         diff_y[n] ~ student_t(nu, ability_team1[n] - ability_team2[n], sigma_y);
       }
     }
-    
+
     generated quantities {
      // posterior predictive check - carry along uncertainty!!!
      // now estimate a whole season's worth of games
@@ -4718,12 +4751,12 @@ generated quantities{
     vector[N] diff_y_rep;
     vector[N] log_lik;
     vector[N_prev] diff_y_prev;
-  
+
     for (n in 1:N) {
       diff_y_rep[n] = student_t_rng(nu, ability_team1[n] - ability_team2[n], sigma_y);
       log_lik[n] = student_t_lpdf(diff_y[n]| nu, ability[team1[n]] - ability[team2[n]], sigma_y);
     }
-  
+
     for (n in 1:N_prev) {
       diff_y_prev[n] = student_t_rng(nu, ability_team1_prev[n] - ability_team2_prev[n], sigma_y);
     }
@@ -4767,10 +4800,13 @@ generated quantities{
                        cores = user_dots$cores,
                        control = user_dots$control
                        )
-  
-  stanFoot_output <- list(fit = fit,
-                          data = data_stan)
-  return(stanFoot_output)
 
+  output <- list(
+    fit = fit,
+    data = data_stan,
+    stan_code = stanfoot_models(model, dyn, type)
+  )
+  class(output) <- "stanFoot"
+  return(output)
 }
 

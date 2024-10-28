@@ -19,7 +19,8 @@ btd_foot(
   \item \code{team1}: Name of team 1 in each observation (character string).
   \item \code{team2}: Name of team 2 in each observation (character string).
   \item \code{match_outcome}: Outcome (\code{1} if team1 beats team2, \code{2} for tie, and \code{3} if team2 beats team1).
-}}
+}
+The data frame must not contain missing values.}
 
 \item{dynamic_rank}{Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).}
 
@@ -41,7 +42,7 @@ btd_foot(
 \item{...}{Additional arguments passed to \code{\link[rstan]{stan}} (e.g., \code{iter}, \code{chains}, \code{control}).}
 }
 \value{
-A list of class \code{"footBayesBTD"} containing:
+A list of class \code{"btdFoot"} containing:
   \itemize{
     \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
     \item \code{rank}: A data frame with the rankings, including columns:
@@ -52,9 +53,9 @@ A list of class \code{"footBayesBTD"} containing:
       }
     \item \code{data}: The original input data.
     \item \code{stan_data}: The data prepared for Stan.
+    \item \code{stan_code}: The Stan code used for the model.
     \item \code{priors}: A list of the prior values used.
     \item \code{rank_measure}: The method used to compute the rankings.
-    \item \code{team_mapping}: A data frame mapping team indices to team names.
   }
 }
 \description{
