@@ -27,12 +27,12 @@
 #' # Example data
 #' set.seed(123)
 #' N <- 100
-#' K <- 5
+#' nteams <- 5
 #' time_points <- 10
 #' data <- data.frame(
 #'   periods = sample(1:time_points, N, replace = TRUE),
-#'   team1 = sample(1:K, N, replace = TRUE),
-#'   team2 = sample(1:K, N, replace = TRUE),
+#'   team1 = sample(1:nteams, N, replace = TRUE),
+#'   team2 = sample(1:nteams, N, replace = TRUE),
 #'   match_outcome = sample(1:3, N, replace = TRUE)
 #' )
 #' # Define your Stan model code
@@ -51,7 +51,11 @@
 btd_stan <- function(data,
                      dynamic_rank = FALSE,
                      priors = list(),
+                     rank_measure = c("median", "mean", "MAP"),
                      ...) {
+  
+  # Validate rank_measure
+  rank_measure <- match.arg(rank_measure)
   
   # Default values for priors if not provided
   default_mean_psi <- 0
@@ -90,11 +94,10 @@ btd_stan <- function(data,
   
   N <- nrow(data)
   
-  # Define nteams and time_points
-  nteams <- length(unique(c(team1, team2)))
-  time_points <- max(instants_rank)
-  ntimes_rank <- length(unique(instants_rank))
-  
+  # Define nteams (number of teams) and ntimes_rank (number of time points)
+  teams <- sort(unique(c(team1, team2)))
+  nteams <- length(teams)
+  ntimes_rank <- max(instants_rank)
   
   # NAs
   if (any(is.na(data))) {
@@ -105,8 +108,8 @@ btd_stan <- function(data,
   if (!is.numeric(instants_rank) || any(instants_rank != as.integer(instants_rank))) {
     stop("Column 'periods' must contain integer values.")
   }
-  if (any(instants_rank < 1 | instants_rank > time_points)) {
-    stop(paste("Values in 'periods' must be between 1 and", time_points, "."))
+  if (any(instants_rank < 1 | instants_rank > ntimes_rank)) {
+    stop(paste("Values in 'periods' must be between 1 and", ntimes_rank, "."))
   }
   
   # Check team1 and team2
@@ -131,22 +134,16 @@ btd_stan <- function(data,
     stop("Values in 'match_outcome' must be 1, 2, or 3.")
   }
   
-  # Check mean_psi
+  # Check priors
   if (!is.numeric(mean_psi) || length(mean_psi) != 1) {
     stop("'mean_psi' must be a numeric value.")
   }
-  
-  # Check std_psi
   if (!is.numeric(std_psi) || length(std_psi) != 1 || std_psi <= 0) {
     stop("'std_psi' must be a positive numeric value.")
   }
-  
-  # Check mean_gamma
   if (!is.numeric(mean_gamma) || length(mean_gamma) != 1) {
     stop("'mean_gamma' must be a numeric value.")
   }
-  
-  # Check std_gamma
   if (!is.numeric(std_gamma) || length(std_gamma) != 1 || std_gamma <= 0) {
     stop("'std_gamma' must be a positive numeric value.")
   }
@@ -158,33 +155,201 @@ btd_stan <- function(data,
       nteams = nteams,
       team1 = as.integer(team1),
       team2 = as.integer(team2),
-      mean_psi = mean_psi,
-      std_psi = std_psi,
-      mean_gamma = mean_gamma,
-      std_gamma = std_gamma,
-      match_outcome = as.integer(match_outcome)
+      mu_psi_init = mean_psi,
+      sigma_psi = std_psi,
+      mu_gamma = mean_gamma,
+      sigma_gamma = std_gamma,
+      y = as.integer(match_outcome)
     )
   } else {
     stan_data <- list(
       N = N,
       nteams = nteams,
       ntimes_rank = ntimes_rank,
-      instants_rank = as.integer(instants_rank),
+      t = as.integer(instants_rank),
       team1 = as.integer(team1),
       team2 = as.integer(team2),
-      mean_psi = mean_psi,
-      std_psi = std_psi,
-      mean_gamma = mean_gamma,
-      std_gamma = std_gamma,
-      match_outcome = as.integer(match_outcome)
+      mu_psi_init = mean_psi,
+      sigma_psi = std_psi,
+      mu_gamma = mean_gamma,
+      sigma_gamma = std_gamma,
+      y = as.integer(match_outcome)
     )
+  }
+  
+  # Define Stan model codes
+  statBTD <- "
+  data {
+      int<lower=1> N;          // Number of observations
+      int<lower=1> nteams;          // Number of teams
+      int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
+      int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
+      real mu_psi_init;                // Initial mean for psi
+      real<lower=0> sigma_psi;         // Standard deviation for psi
+      real mu_gamma;
+      real<lower=0> sigma_gamma;
+      int<lower=1, upper=3> y[N];      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
+    }
+    parameters {
+      vector[nteams] psi;          // Log strength parameters for each team (static)
+      real gamma;             // Log tie parameter
+    }
+    model {
+      // Priors for strengths
+      psi ~ normal(mu_psi_init, sigma_psi);
+      
+      // Prior for tie parameter
+      gamma ~ normal(mu_gamma, sigma_gamma);
+      
+      // Likelihood
+      for (n in 1:N) {
+        real delta_team1 = exp(psi[team1[n]]);
+        real delta_team2 = exp(psi[team2[n]]);
+        real nu = exp(gamma);
+        real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
+        real p_i_win = delta_team1 / denom;
+        real p_j_win = delta_team2 / denom;
+        real p_tie = (nu * sqrt(delta_team1 * delta_team2)) / denom;
+        if (y[n] == 1) {
+          target += log(p_i_win);
+        } else if (y[n] == 3) {
+          target += log(p_j_win);
+        } else if (y[n] == 2) {
+          target += log(p_tie);
+        }
+      }
+    }
+  "
+  
+  dynBTD <- "
+  data {
+      int<lower=1> N;          // Number of observations
+      int<lower=1> nteams;          // Number of teams
+      int<lower=1> ntimes_rank;      // Number of time points
+      int<lower=1, upper=ntimes_rank> t[N];  // Time point of each observation
+      int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
+      int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
+      real mu_psi_init;                // Initial mean for psi
+      real<lower=0> sigma_psi;         // Standard deviation of the AR(1) process
+      real mu_gamma;
+      real<lower=0> sigma_gamma;
+      int<lower=1, upper=3> y[N];      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
+  }
+  parameters {
+      matrix[nteams, ntimes_rank] psi;     // Log strength parameters for each team over time
+      real gamma;               // Log tie parameter
+  }
+  model {
+      // Priors for initial strengths
+      for (k in 1:nteams) {
+          psi[k, 1] ~ normal(mu_psi_init, sigma_psi);
+      }
+      
+      // Prior for tie parameter
+      gamma ~ normal(mu_gamma, sigma_gamma);
+      
+      // AR(1) process for strength parameters
+      for (t_idx in 2:ntimes_rank) {
+          for (k in 1:nteams) {
+              psi[k, t_idx] ~ normal(psi[k, t_idx - 1], sigma_psi);
+          }
+      }
+      // Likelihood
+      for (n in 1:N) {
+          real delta_team1 = exp(psi[team1[n], t[n]]);
+          real delta_team2 = exp(psi[team2[n], t[n]]);
+          real nu = exp(gamma);
+          real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
+          real p_i_win = delta_team1 / denom;
+          real p_j_win = delta_team2 / denom;
+          real p_tie = (nu * sqrt(delta_team1 * delta_team2)) / denom;
+          if (y[n] == 1) {
+              target += log(p_i_win);
+          } else if (y[n] == 3) {
+              target += log(p_j_win);
+          } else if (y[n] == 2) {
+              target += log(p_tie);
+          }
+      }
+  }
+  "
+  
+  # Select the appropriate Stan code based on dynamic_rank
+  if (!dynamic_rank) {
+    stan_code <- statBTD
+  } else {
+    stan_code <- dynBTD
   }
   
   # Fit the model using Stan
   fit <- rstan::stan(model_code = stan_code, data = stan_data, ...)
   
-  result <- list(
+  # Extract parameters
+  BTDparameters <- rstan::extract(fit)
+  
+  results_df <- data.frame()
+  
+  # Function to compute MAP estimate from samples
+  compute_MAP <- function(samples) {
+    dens <- density(samples)
+    MAP <- dens$x[which.max(dens$y)]
+    return(MAP)
+  }
+  
+  if (!dynamic_rank) {
+    # Static model
+    for (team in teams) {
+      team_index <- which(teams == team)
+      
+      # Get the samples for this team
+      psi_samples <- BTDparameters[["psi"]][, team_index]
+      
+      # Compute the summary statistic based on rank_measure
+      rank_point <- switch(rank_measure,
+                           median = median(psi_samples),
+                           mean = mean(psi_samples),
+                           MAP = compute_MAP(psi_samples))
+      
+      df <- data.frame(
+        periods = 1,  # Set periods to 1 for static model
+        team = team,
+        rank_points = rank_point,
+        stringsAsFactors = FALSE
+      )
+      
+      results_df <- rbind(results_df, df)
+    }
+    BTDrank <- results_df
+  } else {
+    # Dynamic model
+    for (team in teams) {
+      team_index <- which(teams == team)
+      
+      # Compute the summary statistic for each date
+      rank_point <- sapply(1:ntimes_rank, function(k) {
+        psi_samples <- BTDparameters[["psi"]][, team_index, k]
+        switch(rank_measure,
+               median = median(psi_samples),
+               mean = mean(psi_samples),
+               MAP = compute_MAP(psi_samples))
+      })
+      
+      df <- data.frame(
+        periods = 1:ntimes_rank,
+        team = team,
+        rank_points = rank_point,
+        stringsAsFactors = FALSE
+      )
+      
+      results_df <- rbind(results_df, df)
+    }
+    BTDrank <- results_df[, c("periods", "team", "rank_points")]
+  }
+  
+  # Output
+  output <- list(
     fit = fit,
+    rank = BTDrank,
     data = data,
     stan_data = stan_data,
     priors = list(
@@ -192,10 +357,12 @@ btd_stan <- function(data,
       std_psi = std_psi,
       mean_gamma = mean_gamma,
       std_gamma = std_gamma
-    )
+    ),
+    rank_measure = rank_measure
   )
-  class(result) <- "footBayesBTD"
-  return(result)
+  class(output) <- "footBayesBTD"
+  return(output)
 }
+
 
 
