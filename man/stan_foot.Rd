@@ -13,6 +13,8 @@ stan_foot(
   prior,
   prior_sd,
   ind_home = "TRUE",
+  norm_method = c("none", "standard", "mad", "min_max"),
+  ranking_map = NULL,
   ...
 )
 }
@@ -27,7 +29,7 @@ One among the following: \code{"double_pois"},
 \item{predict}{The number of out-of-sample matches. If missing, the function returns
 the fit for the training set only.}
 
-\item{ranking}{Eventual numeric ranking provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)}
+\item{ranking}{Eventual matrix ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)}
 
 \item{dynamic_type}{One among \code{"weekly"} or \code{"seasonal"} for weekly dynamic parameters or seasonal
 dynamic parameters.}
@@ -40,6 +42,11 @@ See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc
 \item{prior_sd}{The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.}
 
 \item{ind_home}{Home effect (default is \code{TRUE}).}
+
+\item{norm_method}{Method used to normalize team-specific ranking points.
+One among \code{"none"}, \code{"standard"}, \code{"mad"}, \code{"min_max"}.}
+
+\item{ranking_map}{An optional mapping argument to associate ranking periods with the corresponding data periods.}
 
 \item{...}{Optional parameters passed to the function
 in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
