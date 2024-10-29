@@ -63,30 +63,57 @@ This function fits a Bayesian Bradley-Terry-Davidson model using Stan. It suppor
 }
 \examples{
 \dontrun{
-# Example data with team names
+
+#   Dynamic Ranking example                                               ####
+
 data <- data.frame(
-  periods = c(1, 1, 2, 2),
-  team1 = c("Team A", "Team B", "Team A", "Team C"),
-  team2 = c("Team B", "Team C", "Team C", "Team B"),
-  match_outcome = c(1, 3, 2, 1)
+ periods = c(1, 1, 2, 2, 3, 3, 4, 4),
+ team1 = c("AC Milan", "Inter", "AC Milan", "Juventus", "Roma", "Inter", "Lecce", "Roma"),
+ team2 = c("Inter", "Juventus", "Roma", "Roma", "Juventus", "AC Milan", "Juventus", "Lecce"),
+ match_outcome = c(1, 3, 2, 3, 2, 3, 1, 2) # 1 = team1 wins, 2 = draw, 3 = team2 wins
 )
 
-# Fit the dynamic model using the median rank measure
+# Fit the dynamic model using the median as rank measure
 fit_result <- btd_foot(
+ data,
+ dynamic_rank = TRUE,
+ priors = list(
+   mean_psi = 0,
+   std_psi = 1,
+   mean_gamma = 0,
+   std_gamma = 1
+ ),
+ rank_measure = "median",
+ iter = 1000,
+ chains = 2
+)
+
+print(fit_result$rank)
+
+#   Static Ranking example                                               ####
+
+data <- data.frame(
+  periods = rep(1,6),
+  team1 = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
+  team2 = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
+  match_outcome = c(1, 2, 3, 1, 2, 1) # 1 = team1 wins, 2 = draw, 3 = team2 wins
+)
+
+# Fit the static model using the MAP as rank measure
+fit_result_static <- btd_foot(
   data,
-  dynamic_rank = TRUE,
+  dynamic_rank = FALSE,
   priors = list(
     mean_psi = 0,
     std_psi = 1,
     mean_gamma = 0,
     std_gamma = 1
   ),
-  rank_measure = "median",
+  rank_measure = "MAP",
   iter = 1000,
   chains = 2
 )
 
-# View the rankings
-print(fit_result$rank)
+print(fit_result_static$rank)
 }
 }

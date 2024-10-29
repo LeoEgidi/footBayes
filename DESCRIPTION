@@ -23,7 +23,7 @@ Encoding: UTF-8
 SystemRequirements: pandoc (>= 1.12.3), pandoc-citeproc
 Depends: R (>= 3.1.0)
 Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats, 
-         extraDistr, parallel, metRology, dplyr, numDeriv, tidyverse, magrittr
+         extraDistr, parallel, metRology, dplyr, tidyr, numDeriv, magrittr
 Suggests: testthat, knitr (>= 1.37), rmarkdown (>= 2.10), loo
 VignetteBuilder: knitr
 RoxygenNote: 7.3.2

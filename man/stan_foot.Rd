@@ -75,8 +75,9 @@ See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc
   \item \code{"min_max"}: Min-max scaling to [0,1].
 }}
 
-\item{ranking_map}{An optional vector mapping ranking periods to data periods. If not provided and the number of ranking periods matches the number of data periods, a direct mapping is assumed.
-#'@param ... Optional parameters passed to the function
+\item{ranking_map}{An optional vector mapping ranking periods to data periods. If not provided and the number of ranking periods matches the number of data periods, a direct mapping is assumed.}
+
+\item{...}{Optional parameters passed to the function
 in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
 }
 \value{
@@ -174,6 +175,52 @@ spirit of (Karlis & Ntzoufras, 2003) to better capture draw occurrences. See the
 \dontrun{
 require(tidyverse)
 require(dplyr)
+
+
+
+### Example using the ranking
+
+# Prepare training data for the model
+train_data <- data.frame(
+ season     = rep(1, 4),
+ home       = c("AC Milan", "Inter", "Juventus", "Roma"),
+ away       = c("Roma", "Juventus", "Inter", "AC Milan"),
+ homegoals  = c(2, 1, 3, 0),
+ awaygoals  = c(1, 2, 1, 0)
+)
+
+# Prepare test data (matches to predict)
+test_data <- data.frame(
+ season     = rep(1, 2),
+ home       = c("AC Milan", "Inter"),
+ away       = c("Juventus", "Roma"),
+ homegoals  = rep(NA, 2),  # Unknown goals to predict
+ awaygoals  = rep(NA, 2)
+)
+
+data_all <- rbind(train_data, test_data)
+
+# Prepare ranking data for teams
+ranking_data <- data.frame(
+ periods     = rep(1, 4),                # Single ranking period for simplicity
+ team        = c("AC Milan", "Inter", "Juventus", "Roma"),
+ rank_points = c(100, 95, 90, 85)         # Ranking points for each team
+)
+fit_with_ranking <- stan_foot(
+ data         = data_all,
+ model        = "biv_pois",
+ predict      = nrow(test_data),     # Number of matches to predict
+ ranking      = ranking_data,        # Include ranking data
+ ind_home     = "FALSE",             # Exclude home advantage
+ iter         = 1000,
+ chains       = 2,
+ cores        = 2,
+ control      = list(adapt_delta = 0.95, max_treedepth = 15)
+)
+
+# Print a summary of the model fit
+print(fit_with_ranking)
+
 
 ### Use Italian Serie A from 2000 to 2002
 

@@ -51,7 +51,7 @@
 #'     \item \code{"min_max"}: Min-max scaling to [0,1].
 #'   }
 #' @param ranking_map An optional vector mapping ranking periods to data periods. If not provided and the number of ranking periods matches the number of data periods, a direct mapping is assumed.
-#' #'@param ... Optional parameters passed to the function
+#' @param ... Optional parameters passed to the function
 #' in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
 #'
 #' @return A list of class \code{"stanFoot"} containing:
@@ -168,6 +168,55 @@
 #'require(tidyverse)
 #'require(dplyr)
 #'
+#'
+#'
+#' ### Example using the ranking
+#'
+#'# Prepare training data for the model
+#'train_data <- data.frame(
+#'  season     = rep(1, 4),
+#'  home       = c("AC Milan", "Inter", "Juventus", "Roma"),
+#'  away       = c("Roma", "Juventus", "Inter", "AC Milan"),
+#'  homegoals  = c(2, 1, 3, 0),
+#'  awaygoals  = c(1, 2, 1, 0)
+#')
+#'
+#'# Prepare test data (matches to predict)
+#'test_data <- data.frame(
+#'  season     = rep(1, 2),
+#'  home       = c("AC Milan", "Inter"),
+#'  away       = c("Juventus", "Roma"),
+#'  homegoals  = rep(NA, 2),  # Unknown goals to predict
+#'  awaygoals  = rep(NA, 2)
+#')
+#'
+# Combine training and test data
+#'data_all <- rbind(train_data, test_data)
+#'
+#'# Prepare ranking data for teams
+#'ranking_data <- data.frame(
+#'  periods     = rep(1, 4),                # Single ranking period for simplicity
+#'  team        = c("AC Milan", "Inter", "Juventus", "Roma"),
+#'  rank_points = c(100, 95, 90, 85)         # Ranking points for each team
+#')
+
+# Fit the diagonal-inflated bivariate Poisson model and predict outcomes with ranking
+#'fit_with_ranking <- stan_foot(
+#'  data         = data_all,
+#'  model        = "biv_pois",
+#'  predict      = nrow(test_data),     # Number of matches to predict
+#'  ranking      = ranking_data,        # Include ranking data
+#'  ind_home     = "FALSE",             # Exclude home advantage
+#'  iter         = 1000,
+#'  chains       = 2,
+#'  cores        = 2,
+#'  control      = list(adapt_delta = 0.95, max_treedepth = 15)
+#')
+#'
+#' # Print a summary of the model fit
+#' print(fit_with_ranking)
+#'
+#'
 #'### Use Italian Serie A from 2000 to 2002
 #'
 #'data("italy")
@@ -233,6 +282,7 @@
 #'@import reshape2
 #'@import ggplot2
 #'@import dplyr
+#'@import tidyr
 #'@export
 
 
@@ -348,13 +398,13 @@ stan_foot <- function(data,
     user_control <- user_dots_prel$control
 
     # Merge default control with user-supplied control
-    user_dots$control <- modifyList(default_control, user_control)
+    user_dots$control <- utils::modifyList(default_control, user_control)
 
     user_dots_prel$control <- NULL
   }
 
   # Update 'user_dots'
-  user_dots <- modifyList(user_dots, user_dots_prel)
+  user_dots <- utils::modifyList(user_dots, user_dots_prel)
 
 
 
@@ -605,7 +655,7 @@ stan_foot <- function(data,
     if (method == "none") {
       rank_points
     } else if (method == "standard") {
-      s <- sd(rank_points, na.rm = TRUE)
+      s <- stats::sd(rank_points, na.rm = TRUE)
       m <- mean(rank_points, na.rm = TRUE)
       if (s == 0) {
         rep(0, length(rank_points))
@@ -613,8 +663,8 @@ stan_foot <- function(data,
         (rank_points - m) / (2 * s)
       }
     } else if (method == "mad") {
-      md <- mad(rank_points, na.rm = TRUE)
-      med <- median(rank_points, na.rm = TRUE)
+      md <- stats::mad(rank_points, na.rm = TRUE)
+      med <- stats::median(rank_points, na.rm = TRUE)
       if (md == 0) {
         rep(0, length(rank_points))
       } else {
@@ -2246,8 +2296,6 @@ data{
       int nteams;
       int team1[N];
       int team2[N];
-      int instants[N];
-      int ntimes;    \\ Dynamic periods for ranking
       int team1_prev[N_prev];
       int team2_prev[N_prev];
       int instants_rank[N];
@@ -2363,9 +2411,11 @@ model{
 generated quantities{
       int y_rep[N,2];
       int y_prev[N_prev,2];
-      vector[3] theta_prev[N_prev];
       vector[N] log_lik;
       int diff_y_rep[N];
+      vector[N_prev] theta_home_prev;                    // exponentiated linear pred.
+      vector[N_prev] theta_away_prev;
+      vector[N_prev] theta_corr_prev;
 
       //in-sample replications
       for (n in 1:N){
@@ -2388,15 +2438,15 @@ generated quantities{
 
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
+        theta_home_prev[n] = exp(home*ind_home+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
-        theta_prev[n,2] = exp(att[team2_prev[n]]+
+        theta_away_prev[n] = exp(att[team2_prev[n]]+
                                 def[team1_prev[n]]-
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
-        theta_prev[n,3] = exp(rho);
-        y_prev[n,1] = poisson_rng(theta_prev[n,1]+theta_prev[n,3]);
-        y_prev[n,2] = poisson_rng(theta_prev[n,2]+theta_prev[n,3]);
+        theta_corr_prev[n] = exp(rho);
+        y_prev[n,1] = poisson_rng(theta_home_prev[n]+theta_corr_prev[n]);
+        y_prev[n,2] = poisson_rng(theta_away_prev[n]+theta_corr_prev[n]);
       }
 }"
 
