@@ -7,6 +7,7 @@
 btd_foot(
   data,
   dynamic_rank = FALSE,
+  home_effect = FALSE,
   priors = list(),
   rank_measure = c("median", "mean", "MAP"),
   ...
@@ -24,12 +25,16 @@ The data frame must not contain missing values.}
 
 \item{dynamic_rank}{Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).}
 
+\item{home_effect}{Home effect (default is \code{FALSE}).}
+
 \item{priors}{A list containing prior parameters with elements:
 \itemize{
   \item \code{mean_psi}: Initial mean for psi (numeric, default is 0).
   \item \code{std_psi}: Standard deviation for psi or the AR(1) process (positive numeric, default is 3).
   \item \code{mean_gamma}: Mean for gamma (numeric, default is 0).
   \item \code{std_gamma}: Standard deviation for gamma (positive numeric, default is 0.3).
+  \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
+  \item \code{std_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
 }}
 
 \item{rank_measure}{A character string specifying the method used to summarize the posterior distributions of the team strengths (\code{psi}). Options are:
@@ -103,11 +108,14 @@ data <- data.frame(
 fit_result_static <- btd_foot(
   data,
   dynamic_rank = FALSE,
+  home_effect = TRUE
   priors = list(
     mean_psi = 0,
     std_psi = 1,
     mean_gamma = 0,
-    std_gamma = 1
+    std_gamma = 1,
+    mean_home = 0,
+    std_home = 2
   ),
   rank_measure = "MAP",
   iter = 1000,

@@ -11,12 +11,15 @@
 #'   }
 #'   The data frame must not contain missing values.
 #' @param dynamic_rank Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).
+#' @param home_effect Home effect (default is \code{FALSE}).
 #' @param priors A list containing prior parameters with elements:
 #'   \itemize{
 #'     \item \code{mean_psi}: Initial mean for psi (numeric, default is 0).
 #'     \item \code{std_psi}: Standard deviation for psi or the AR(1) process (positive numeric, default is 3).
 #'     \item \code{mean_gamma}: Mean for gamma (numeric, default is 0).
 #'     \item \code{std_gamma}: Standard deviation for gamma (positive numeric, default is 0.3).
+#'     \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
+#'     \item \code{std_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
 #'   }
 #' @param rank_measure A character string specifying the method used to summarize the posterior distributions of the team strengths (\code{psi}). Options are:
 #'   \itemize{
@@ -84,11 +87,14 @@
 #' fit_result_static <- btd_foot(
 #'   data,
 #'   dynamic_rank = FALSE,
+#'   home_effect = TRUE
 #'   priors = list(
 #'     mean_psi = 0,
 #'     std_psi = 1,
 #'     mean_gamma = 0,
-#'     std_gamma = 1
+#'     std_gamma = 1,
+#'     mean_home = 0,
+#'     std_home = 2
 #'   ),
 #'   rank_measure = "MAP",
 #'   iter = 1000,
@@ -103,6 +109,7 @@
 
 btd_foot <- function(data,
                      dynamic_rank = FALSE,
+                     home_effect = FALSE,
                      priors = list(),
                      rank_measure = c("median", "mean", "MAP"),
                      ...) {
@@ -115,12 +122,40 @@ btd_foot <- function(data,
   default_std_psi <- 3
   default_mean_gamma <- 0
   default_std_gamma <- 0.3
+  default_mean_home <- 0
+  default_std_home <- 5
+
 
   # Extract prior parameters from the priors list or assign defaults
   mean_psi <- if (is.null(priors$mean_psi)) default_mean_psi else priors$mean_psi
   std_psi <- if (is.null(priors$std_psi)) default_std_psi else priors$std_psi
   mean_gamma <- if (is.null(priors$mean_gamma)) default_mean_gamma else priors$mean_gamma
   std_gamma <- if (is.null(priors$std_gamma)) default_std_gamma else priors$std_gamma
+
+  # Check home effect
+
+  if (home_effect) {
+    ind_home <- 1
+    mean_home <- if (is.null(priors$mean_home)) default_mean_home else priors$mean_home
+    std_home <- if (is.null(priors$std_home)) default_std_home else priors$std_home
+  } else {
+    ind_home <- 0
+    mean_home <- default_mean_home
+    std_home <- default_std_home
+  }
+
+  # Check priors' value
+
+  check_prior(mean_psi, "mean_psi")
+  check_prior(std_psi, "std_psi", positive = TRUE)
+  check_prior(mean_gamma, "mean_gamma")
+  check_prior(std_gamma, "std_gamma", positive = TRUE)
+
+  if (home_effect) {
+    check_prior(mean_home, "mean_home")
+    check_prior(std_home, "std_home", positive = TRUE)
+  }
+
 
   # Check that data is a data frame
   if (!is.data.frame(data)) {
@@ -185,19 +220,24 @@ btd_foot <- function(data,
     stop("Values in 'match_outcome' must be 1, 2, or 3.")
   }
 
-  # Check priors
-  if (!is.numeric(mean_psi) || length(mean_psi) != 1) {
-    stop("'mean_psi' must be a numeric value.")
-  }
-  if (!is.numeric(std_psi) || length(std_psi) != 1 || std_psi <= 0) {
-    stop("'std_psi' must be a positive numeric value.")
-  }
-  if (!is.numeric(mean_gamma) || length(mean_gamma) != 1) {
-    stop("'mean_gamma' must be a numeric value.")
-  }
-  if (!is.numeric(std_gamma) || length(std_gamma) != 1 || std_gamma <= 0) {
-    stop("'std_gamma' must be a positive numeric value.")
-  }
+#
+#   # Check priors
+#   if (!is.numeric(mean_psi) || length(mean_psi) != 1) {
+#     stop("'mean_psi' must be a numeric value.")
+#   }
+#   if (!is.numeric(std_psi) || length(std_psi) != 1 || std_psi <= 0) {
+#     stop("'std_psi' must be a positive numeric value.")
+#   }
+#   if (!is.numeric(mean_gamma) || length(mean_gamma) != 1) {
+#     stop("'mean_gamma' must be a numeric value.")
+#   }
+#   if (!is.numeric(std_gamma) || length(std_gamma) != 1 || std_gamma <= 0) {
+#     stop("'std_gamma' must be a positive numeric value.")
+#   }
+
+
+
+
 
   # Prepare data for Stan based on dynamic_rank
   if (!dynamic_rank) {
@@ -206,10 +246,13 @@ btd_foot <- function(data,
       nteams = nteams,
       team1 = as.integer(team1_idx),
       team2 = as.integer(team2_idx),
-      mu_psi_init = mean_psi,
-      sigma_psi = std_psi,
-      mu_gamma = mean_gamma,
-      sigma_gamma = std_gamma,
+      mean_psi = mean_psi,
+      std_psi = std_psi,
+      mean_gamma = mean_gamma,
+      std_gamma = std_gamma,
+      mean_home = mean_home,
+      std_home = std_home,
+      ind_home = ind_home,
       y = as.integer(match_outcome)
     )
   } else {
@@ -220,10 +263,13 @@ btd_foot <- function(data,
       t = as.integer(instants_rank),
       team1 = as.integer(team1_idx),
       team2 = as.integer(team2_idx),
-      mu_psi_init = mean_psi,
-      sigma_psi = std_psi,
-      mu_gamma = mean_gamma,
-      sigma_gamma = std_gamma,
+      mean_psi = mean_psi,
+      std_psi = std_psi,
+      mean_gamma = mean_gamma,
+      std_gamma = std_gamma,
+      mean_home = mean_home,
+      std_home = std_home,
+      ind_home = ind_home,
       y = as.integer(match_outcome)
     )
   }
@@ -235,26 +281,40 @@ btd_foot <- function(data,
       int<lower=1> nteams;          // Number of teams
       int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
       int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
-      real mu_psi_init;                // Initial mean for psi
-      real<lower=0> sigma_psi;         // Standard deviation for psi
-      real mu_gamma;
-      real<lower=0> sigma_gamma;
+      real mean_psi;                // Initial mean for psi
+      real<lower=0> std_psi;         // Standard deviation for psi
+      real mean_gamma;
+      real<lower=0> std_gamma;
       int<lower=1, upper=3> y[N];      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
+      int<lower=0, upper=1> ind_home;        // Home effect indicator
+      real mean_home;              // Mean for home effect
+      real<lower=0> std_home;      // Standard deviation for home effect
     }
     parameters {
       vector[nteams] psi;          // Log strength parameters for each team (static)
       real gamma;             // Log tie parameter
+      real home_effect;                  // Home team effect parameter
     }
+
+    transformed parameters {
+      real adjusted_home_effect;
+      adjusted_home_effect = home_effect * ind_home;
+    }
+
     model {
       // Priors for strengths
-      psi ~ normal(mu_psi_init, sigma_psi);
+      psi ~ normal(mean_psi, std_psi);
 
       // Prior for tie parameter
-      gamma ~ normal(mu_gamma, sigma_gamma);
+      gamma ~ normal(mean_gamma, std_gamma);
+
+      // Prior for the home effect
+
+      home_effect ~ normal(mean_home, std_home);
 
       // Likelihood
       for (n in 1:N) {
-        real delta_team1 = exp(psi[team1[n]]);
+        real delta_team1 = exp(psi[team1[n]] + adjusted_home_effect);
         real delta_team2 = exp(psi[team2[n]]);
         real nu = exp(gamma);
         real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
@@ -280,34 +340,49 @@ btd_foot <- function(data,
       int<lower=1, upper=ntimes_rank> t[N];  // Time point of each observation
       int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
       int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
-      real mu_psi_init;                // Initial mean for psi
-      real<lower=0> sigma_psi;         // Standard deviation of the AR(1) process
-      real mu_gamma;
-      real<lower=0> sigma_gamma;
+      real mean_psi;                // Initial mean for psi
+      real<lower=0> std_psi;         // Standard deviation of the AR(1) process
+      real mean_gamma;
+      real<lower=0> std_gamma;
       int<lower=1, upper=3> y[N];      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
+      int<lower=0, upper=1> ind_home;        // Home effect indicator
+      real mean_home;              // Mean for home effect
+      real<lower=0> std_home;      // Standard deviation for home effect
   }
+
   parameters {
       matrix[nteams, ntimes_rank] psi;     // Log strength parameters for each team over time
       real gamma;               // Log tie parameter
+      real home_effect;                  // Home team effect parameter
   }
+
+  transformed parameters {
+      real adjusted_home_effect;
+      adjusted_home_effect = home_effect * ind_home;
+  }
+
   model {
       // Priors for initial strengths
       for (k in 1:nteams) {
-          psi[k, 1] ~ normal(mu_psi_init, sigma_psi);
+          psi[k, 1] ~ normal(mean_psi, std_psi);
       }
 
       // Prior for tie parameter
-      gamma ~ normal(mu_gamma, sigma_gamma);
+      gamma ~ normal(mean_gamma, std_gamma);
 
       // AR(1) process for strength parameters
       for (t_idx in 2:ntimes_rank) {
           for (k in 1:nteams) {
-              psi[k, t_idx] ~ normal(psi[k, t_idx - 1], sigma_psi);
+              psi[k, t_idx] ~ normal(psi[k, t_idx - 1], std_psi);
           }
       }
+
+      // Prior for the home effect
+      home_effect ~ normal(mean_home, std_home);
+
       // Likelihood
       for (n in 1:N) {
-          real delta_team1 = exp(psi[team1[n], t[n]]);
+          real delta_team1 = exp(psi[team1[n], t[n]] + adjusted_home_effect);
           real delta_team2 = exp(psi[team2[n], t[n]]);
           real nu = exp(gamma);
           real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
@@ -340,13 +415,6 @@ btd_foot <- function(data,
 
   results_df <- data.frame()
 
-  # Function to compute MAP estimate from samples
-  compute_MAP <- function(samples) {
-    dens <- stats::density(samples)
-    MAP <- dens$x[which.max(dens$y)]
-    return(MAP)
-  }
-
   if (!dynamic_rank) {
     # Static model
     for (team in teams) {
@@ -355,15 +423,15 @@ btd_foot <- function(data,
       # Get the samples for this team
       psi_samples <- BTDparameters[["psi"]][, team_index]
 
-      # Compute the summary statistic based on rank_measure
+      # Summary statistic based on rank_measure
       rank_point <- switch(rank_measure,
-                           median = median(psi_samples),
+                           median = stats::median(psi_samples),
                            mean = mean(psi_samples),
                            MAP = compute_MAP(psi_samples))
 
       df <- data.frame(
         periods = 1,  # Set periods to 1 for static model
-        team = team,  # Use team name
+        team = team,
         rank_points = rank_point,
         stringsAsFactors = FALSE
       )
@@ -380,7 +448,7 @@ btd_foot <- function(data,
       rank_point <- sapply(1:ntimes_rank, function(k) {
         psi_samples <- BTDparameters[["psi"]][, team_index, k]
         switch(rank_measure,
-               median = median(psi_samples),
+               median = stats::median(psi_samples),
                mean = mean(psi_samples),
                MAP = compute_MAP(psi_samples))
       })
@@ -398,19 +466,33 @@ btd_foot <- function(data,
   }
 
   # Output
+
+
+  # Priors list for output
+  priors_output <- list(
+    mean_psi = mean_psi,
+    std_psi = std_psi,
+    mean_gamma = mean_gamma,
+    std_gamma = std_gamma
+  )
+
+  # Add home effect priors if home_effect is TRUE
+  if (home_effect) {
+    priors_output$mean_home <- mean_home
+    priors_output$std_home <- std_home
+  }
+
+  # Final Output
   output <- list(
     fit = fit,
     rank = BTDrank,
     data = data,
     stan_data = stan_data,
     stan_code = stan_code,
-    priors = list(
-      mean_psi = mean_psi,
-      std_psi = std_psi,
-      mean_gamma = mean_gamma,
-      std_gamma = std_gamma
-    ),
-    rank_measure = rank_measure)
+    priors = priors_output,
+    rank_measure = rank_measure
+  )
+
   class(output) <- "btdFoot"
   return(output)
 }
