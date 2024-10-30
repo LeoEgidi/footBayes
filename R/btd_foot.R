@@ -260,7 +260,7 @@ btd_foot <- function(data,
       N = N,
       nteams = nteams,
       ntimes_rank = ntimes_rank,
-      t = as.integer(instants_rank),
+      instants_rank = as.integer(instants_rank),
       team1 = as.integer(team1_idx),
       team2 = as.integer(team2_idx),
       mean_psi = mean_psi,
@@ -337,7 +337,7 @@ btd_foot <- function(data,
       int<lower=1> N;          // Number of observations
       int<lower=1> nteams;          // Number of teams
       int<lower=1> ntimes_rank;      // Number of time points
-      int<lower=1, upper=ntimes_rank> t[N];  // Time point of each observation
+      int<lower=1, upper=ntimes_rank> instants_rank[N];  // Time point of each observation
       int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
       int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
       real mean_psi;                // Initial mean for psi
@@ -382,8 +382,8 @@ btd_foot <- function(data,
 
       // Likelihood
       for (n in 1:N) {
-          real delta_team1 = exp(psi[team1[n], t[n]] + adjusted_home_effect);
-          real delta_team2 = exp(psi[team2[n], t[n]]);
+          real delta_team1 = exp(psi[team1[n], instants_rank[n]] + adjusted_home_effect);
+          real delta_team2 = exp(psi[team2[n], instants_rank[n]]);
           real nu = exp(gamma);
           real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
           real p_i_win = delta_team1 / denom;
