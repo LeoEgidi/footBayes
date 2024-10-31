@@ -32,7 +32,7 @@
 #'     \item \code{"weekly"}: Weekly dynamic parameters.
 #'     \item \code{"seasonal"}: Seasonal dynamic parameters.
 #'   }
-#'@param prior The prior distribution for the team-specific abilities.Possible choices:
+#'@param ability_prior The prior distribution for the team-specific abilities.Possible choices:
 #'    \itemize{
 #'      \item \code{normal}.
 #'      \item \code{student_t}.
@@ -41,8 +41,13 @@
 #'    }
 #'See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
 #'   Distributions for rstanarm Models}}
-#'@param prior_sd The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.
-#'@param ind_home Home effect (default is \code{TRUE}).
+#'@param ability_prior_sd The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.
+#'@param home_effect Home effect (default is \code{TRUE}).
+#' @param home_prior_par A list containing prior mean and standard deviation for the home effect parameter:
+#'   \itemize{
+#'     \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
+#'     \item \code{sd_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
+#'   }
 #'@param norm_method A character string specifying the method used to normalize team-specific ranking points. Options are:
 #'   \itemize{
 #'     \item \code{"none"}: No normalization (default).
@@ -276,13 +281,13 @@
 #' print(fit_p,  pars = c("home", "sigma_att",
 #'                     "sigma_def"))
 #' }
-#'@import rstan
 #'@import bayesplot
-#'@import matrixStats
 #'@import reshape2
 #'@import ggplot2
-#'@import dplyr
-#'@import tidyr
+#' @importFrom dplyr mutate select arrange ungroup
+#' @importFrom tidyr pivot_longer pivot_wider
+#' @importFrom rstan stan extract
+#' @import matrixStats
 #'@export
 
 
@@ -291,9 +296,10 @@ stan_foot <- function(data,
                       predict,
                       ranking,
                       dynamic_type,
-                      prior,
-                      prior_sd,
-                      ind_home = "TRUE",
+                      ability_prior,
+                      ability_prior_sd,
+                      home_effect = TRUE,
+                      home_prior_par = list(),
                       norm_method = c("none", "standard", "mad", "min_max"),
                       ranking_map = NULL, # Argument for mapping ranking periods with data periods
                       ...){
@@ -349,13 +355,13 @@ stan_foot <- function(data,
 #   Models' Name Checks                                                     ####
 
 
-  good_names <- c("double_pois",
+  allowed_model_names <- c("double_pois",
                   "biv_pois",
                   "skellam",
                   "student_t",
                   "diag_infl_biv_pois",
                   "zero_infl_skellam")
-  model <- match.arg(model, good_names)
+  model <- match.arg(model, allowed_model_names)
 
 
   nteams <- length(unique(data$home))
@@ -428,6 +434,11 @@ stan_foot <- function(data,
 
 
   #predict <- round(predict)
+
+  if (!is.numeric(predict) || predict < 0 || predict %% 1 != 0) {
+    stop("The argument 'predict' must be a non-negative integer.")
+  }
+
 
   if (missing(predict)){ # check on predict
     predict <- 0
@@ -528,16 +539,16 @@ stan_foot <- function(data,
 #   Prior Checks                                                            ####
 
   hyper_df <- 1           # initialization
-  if (missing(prior)){    # Normal as default weakly-inf. prior
+  if (missing(ability_prior)){    # Normal as default weakly-inf. prior
     prior_dist_num <- 1
-    prior <- normal(0,NULL)
+    ability_prior <- normal(0,NULL)
     hyper_location<- 0    # location
     #hyper_sd_scale <- 5  # scale
   }else{
-    prior_dist <- prior$dist
+    prior_dist <- ability_prior$dist
     #good_prior_names <- c("normal", "student_t", "cauchy", "laplace")
     #prior_dist <- match.arg(prior_dist, good_prior_names)
-    if (is.null(prior$scale)==FALSE){
+    if (is.null(ability_prior$scale)==FALSE){
       warning("Group-level standard deviations cannot be fixed to
                numerical values, rather they need to be assigned
                a reasonable prior distribution. Thus, the 'scale'
@@ -547,86 +558,86 @@ stan_foot <- function(data,
       if (prior_dist == "normal"){
         prior_dist_num <- 1
         hyper_df <- 1
-        hyper_location <- prior$location
+        hyper_location <- ability_prior$location
           # if (is.null(prior_sd$scale)){
           #   hyper_sd_scale <-1
           # }else{
           #   hyper_sd_scale <- prior_sd$scale
           # }
-      }else if (prior_dist=="t" && prior$df!=1){
+      }else if (prior_dist=="t" && ability_prior$df!=1){
         prior_dist_num <- 2   # student-t
-        hyper_df <- prior$df
-        hyper_location <- prior$location
+        hyper_df <- ability_prior$df
+        hyper_location <- ability_prior$location
         # if (is.null(prior_sd$scale)){
         #   hyper_sd_scale <-1
         # }else{
         #   hyper_sd_scale <- prior_sd$scale
         # }
-      }else if (prior_dist=="t"&& prior$df==1){
+      }else if (prior_dist=="t"&& ability_prior$df==1){
         prior_dist_num <- 3
         hyper_df <- 1     # by default of Cauchy distribution
-        hyper_location <- prior$location
-        # if (is.null(prior$scale)){
+        hyper_location <- ability_prior$location
+        # if (is.null(ability_prior$scale)){
         #   hyper_sd_scale <-1
         # }else{
-        #   hyper_sd_scale <- prior_sd$scale
+        #   hyper_sd_scale <- ability_prior_sd$scale
         # }
       } else if (prior_dist =="laplace"){
         prior_dist_num <- 4
         hyper_df <- 1
-        hyper_location <- prior$location
-        # if (is.null(prior_sd$scale)){
+        hyper_location <- ability_prior$location
+        # if (is.null(ability_prior_sd$scale)){
         #   hyper_sd_scale <-1
         # }else{
-        #   hyper_sd_scale <- prior_sd$scale
+        #   hyper_sd_scale <- ability_prior_sd$scale
         # }
         }
     }
 
 
          hyper_sd_df <- 1        # initialization
-      if (missing(prior_sd)){    # Cauchy as default weakly-inf. prior
+      if (missing(ability_prior_sd)){    # Cauchy as default weakly-inf. prior
          prior_dist_sd_num <- 3
          hyper_sd_df <- 1        # student_t with 1 df
          hyper_sd_location<- 0   # location
          hyper_sd_scale <- 5     # scale
       }else{
-        prior_dist_sd <- prior_sd$dist
+        prior_dist_sd <- ability_prior_sd$dist
        if (prior_dist_sd == "normal"){
          prior_dist_sd_num <- 1
          hyper_sd_df <- 1
-         hyper_sd_location <- prior_sd$location
-         if (is.null(prior_sd$scale)){
+         hyper_sd_location <- ability_prior_sd$location
+         if (is.null(ability_prior_sd$scale)){
            hyper_sd_scale <-1
          }else{
-           hyper_sd_scale <- prior_sd$scale
+           hyper_sd_scale <- ability_prior_sd$scale
          }
-      }else if (prior_dist_sd=="t" && prior_sd$df!=1){
+      }else if (prior_dist_sd=="t" && ability_prior_sd$df!=1){
          prior_dist_sd_num <- 2   # student-t
-         hyper_sd_df <- prior_sd$df
-         hyper_sd_location <- prior_sd$location
-         if (is.null(prior_sd$scale)){
+         hyper_sd_df <- ability_prior_sd$df
+         hyper_sd_location <- ability_prior_sd$location
+         if (is.null(ability_prior_sd$scale)){
            hyper_sd_scale <-1
          }else{
-           hyper_sd_scale <- prior_sd$scale
+           hyper_sd_scale <- ability_prior_sd$scale
          }
-      }else if (prior_dist_sd=="t"&& prior_sd$df==1){
+      }else if (prior_dist_sd=="t"&& ability_prior_sd$df==1){
          prior_dist_sd_num <- 3
          hyper_sd_df <- 1     # by default of Cauchy distribution
-         hyper_sd_location <- prior_sd$location
-         if (is.null(prior_sd$scale)){
+         hyper_sd_location <- ability_prior_sd$location
+         if (is.null(ability_prior_sd$scale)){
            hyper_sd_scale <-1
          }else{
-           hyper_sd_scale <- prior_sd$scale
+           hyper_sd_scale <- ability_prior_sd$scale
          }
       } else if (prior_dist_sd =="laplace"){
         prior_dist_sd_num <- 4
         hyper_sd_df <- 1
-        hyper_sd_location <- prior_sd$location
-        if (is.null(prior_sd$scale)){
+        hyper_sd_location <- ability_prior_sd$location
+        if (is.null(ability_prior_sd$scale)){
           hyper_sd_scale <-1
         }else{
-          hyper_sd_scale <- prior_sd$scale
+          hyper_sd_scale <- ability_prior_sd$scale
         }
       }
     }
@@ -786,16 +797,67 @@ stan_foot <- function(data,
 #   Home Effect Check                                                       ####
 
 
-  home_names <- c("TRUE", "FALSE")
-  ind_home <- match.arg(ind_home, home_names)
+  # Check that home_effect is logical
+  if (!is.logical(home_effect) || length(home_effect) != 1) {
+    stop("'home_effect' must be a single logical value (TRUE or FALSE).")
+  }
 
-   if (missing(ind_home)){
-     ind_home = "TRUE"
-   }else{
-     ind_home = ind_home
-   }
 
-  ind_home <- 0*(ind_home=="FALSE") + 1*(ind_home =="TRUE")
+  # Define allowed home_prior_par names
+  allowed_home_prior_names <- c(
+    "mean_home", "sd_home"
+  )
+
+  # Check that home_prior_par contains only allowed elements
+  if (!is.null(home_prior_par)) {
+    if (!is.list(home_prior_par)) {
+      stop("'home_prior_par' must be a list.")
+    }
+    unknown_home_prior_names <- setdiff(names(home_prior_par), allowed_home_prior_names)
+    if (length(unknown_home_prior_names) > 0) {
+      stop(
+        paste(
+          "Unknown elements in 'home_prior_par':",
+          paste(unknown_home_prior_names, collapse = ", ")
+        )
+      )
+    }
+  }
+
+
+  # Define default values for home priors if not provided
+  default_mean_home <- 0
+  default_sd_home <- 5
+
+
+  if (home_effect) {
+    ind_home <- 1
+    mean_home <- if (is.null(home_prior_par$mean_home)) default_mean_home else home_prior_par$mean_home
+    sd_home <- if (is.null(home_prior_par$sd_home)) default_sd_home else home_prior_par$sd_home
+  } else {
+    ind_home <- 0
+    mean_home <- default_mean_home
+    sd_home <- default_sd_home
+  }
+
+  #Check home_prior_par value
+  if (home_effect) {
+    check_prior(mean_home, "mean_home")
+    check_prior(sd_home, "sd_home", positive = TRUE)
+  }
+
+
+
+  # home_names <- c("TRUE", "FALSE")
+  # ind_home <- match.arg(ind_home, home_names)
+  #
+  #  if (missing(ind_home)){
+  #    ind_home = "TRUE"
+  #  }else{
+  #    ind_home = ind_home
+  #  }
+  #
+  # ind_home <- 0*(ind_home=="FALSE") + 1*(ind_home =="TRUE")
 
 
 
@@ -826,7 +888,9 @@ stan_foot <- function(data,
                     hyper_sd_scale = hyper_sd_scale,
                     ranking = ranking_matrix,
                     nu = user_dots$nu,
-                    ind_home = ind_home
+                    ind_home = ind_home,
+                    mean_home = mean_home,
+                    sd_home = sd_home
   )
 
   if (!missing(dynamic_type)){
@@ -915,6 +979,8 @@ stan_foot <- function(data,
       int instants[N];
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -931,12 +997,13 @@ stan_foot <- function(data,
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
       real rho;
-      real home;
+      real home_effect;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;         // Gaussian process attack cov. funct.
@@ -977,13 +1044,19 @@ stan_foot <- function(data,
       }
 
 
+      adj_home_effect = home_effect * ind_home;
+
+
       for (n in 1:N){
-        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta_corr[n] = exp(rho);
       }
+
+
+
     }
     model{
       // log-priors for team-specific abilities
@@ -1021,7 +1094,7 @@ stan_foot <- function(data,
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(rho|0,1);
       target+=normal_lpdf(gamma|0,1);
 

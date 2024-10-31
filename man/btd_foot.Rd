@@ -8,7 +8,7 @@ btd_foot(
   data,
   dynamic_rank = FALSE,
   home_effect = FALSE,
-  priors = list(),
+  prior_par = list(),
   rank_measure = c("median", "mean", "MAP"),
   ...
 )
@@ -27,14 +27,14 @@ The data frame must not contain missing values.}
 
 \item{home_effect}{Logical; if \code{TRUE}, includes a home effect in the model (default is \code{FALSE}).}
 
-\item{priors}{A list containing prior parameters:
+\item{prior_par}{A list containing prior mean and standard deviation for the parameters of interest:
 \itemize{
   \item \code{mean_psi}: Initial mean for psi (numeric, default is 0).
-  \item \code{std_psi}: Standard deviation for psi or the AR(1) process (positive numeric, default is 3).
+  \item \code{sd_psi}: Standard deviation for psi or the AR(1) process (positive numeric, default is 3).
   \item \code{mean_gamma}: Mean for gamma (numeric, default is 0).
-  \item \code{std_gamma}: Standard deviation for gamma (positive numeric, default is 0.3).
+  \item \code{sd_gamma}: Standard deviation for gamma (positive numeric, default is 0.3).
   \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
-  \item \code{std_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
+  \item \code{sd_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
 }}
 
 \item{rank_measure}{A character string specifying the method used to summarize the posterior distributions of the team strengths. Options are:
@@ -59,7 +59,7 @@ A list of class \code{"btdFoot"} containing:
     \item \code{data}: The original input data.
     \item \code{stan_data}: The data list for Stan.
     \item \code{stan_code}: The Stan code used for the model.
-    \item \code{priors}: A list of the prior values used.
+    \item \code{prior_par}: A list of the prior values used.
     \item \code{rank_measure}: The method used to compute the rankings.
   }
 }
@@ -82,11 +82,11 @@ data <- data.frame(
 fit_result <- btd_foot(
   data,
   dynamic_rank = TRUE,
-  priors = list(
+  prior_par = list(
     mean_psi = 0,
-    std_psi = 1,
+    sd_psi = 1,
     mean_gamma = 0,
-    std_gamma = 1
+    sd_gamma = 1
   ),
   rank_measure = "median",
   iter = 1000,
@@ -108,14 +108,14 @@ data <- data.frame(
 fit_result_static <- btd_foot(
   data,
   dynamic_rank = FALSE,
-  home_effect = TRUE,  # Added missing comma
-  priors = list(
+  home_effect = TRUE,
+  prior_par = list(
     mean_psi = 0,
-    std_psi = 1,
+    sd_psi = 1,
     mean_gamma = 0,
-    std_gamma = 1,
+    sd_gamma = 1,
     mean_home = 0,
-    std_home = 2
+    sd_home = 2
   ),
   rank_measure = "MAP",
   iter = 1000,

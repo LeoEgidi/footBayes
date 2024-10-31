@@ -12,14 +12,14 @@
 #'   The data frame must not contain missing values.
 #' @param dynamic_rank Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).
 #' @param home_effect Logical; if \code{TRUE}, includes a home effect in the model (default is \code{FALSE}).
-#' @param priors A list containing prior parameters:
+#' @param prior_par A list containing prior mean and standard deviation for the parameters of interest:
 #'   \itemize{
 #'     \item \code{mean_psi}: Initial mean for psi (numeric, default is 0).
-#'     \item \code{std_psi}: Standard deviation for psi or the AR(1) process (positive numeric, default is 3).
+#'     \item \code{sd_psi}: Standard deviation for psi or the AR(1) process (positive numeric, default is 3).
 #'     \item \code{mean_gamma}: Mean for gamma (numeric, default is 0).
-#'     \item \code{std_gamma}: Standard deviation for gamma (positive numeric, default is 0.3).
+#'     \item \code{sd_gamma}: Standard deviation for gamma (positive numeric, default is 0.3).
 #'     \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
-#'     \item \code{std_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
+#'     \item \code{sd_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
 #'   }
 #' @param rank_measure A character string specifying the method used to summarize the posterior distributions of the team strengths. Options are:
 #'   \itemize{
@@ -41,7 +41,7 @@
 #'     \item \code{data}: The original input data.
 #'     \item \code{stan_data}: The data list for Stan.
 #'     \item \code{stan_code}: The Stan code used for the model.
-#'     \item \code{priors}: A list of the prior values used.
+#'     \item \code{prior_par}: A list of the prior values used.
 #'     \item \code{rank_measure}: The method used to compute the rankings.
 #'   }
 #'
@@ -61,11 +61,11 @@
 #' fit_result <- btd_foot(
 #'   data,
 #'   dynamic_rank = TRUE,
-#'   priors = list(
+#'   prior_par = list(
 #'     mean_psi = 0,
-#'     std_psi = 1,
+#'     sd_psi = 1,
 #'     mean_gamma = 0,
-#'     std_gamma = 1
+#'     sd_gamma = 1
 #'   ),
 #'   rank_measure = "median",
 #'   iter = 1000,
@@ -87,14 +87,14 @@
 #' fit_result_static <- btd_foot(
 #'   data,
 #'   dynamic_rank = FALSE,
-#'   home_effect = TRUE,  # Added missing comma
-#'   priors = list(
+#'   home_effect = TRUE,
+#'   prior_par = list(
 #'     mean_psi = 0,
-#'     std_psi = 1,
+#'     sd_psi = 1,
 #'     mean_gamma = 0,
-#'     std_gamma = 1,
+#'     sd_gamma = 1,
 #'     mean_home = 0,
-#'     std_home = 2
+#'     sd_home = 2
 #'   ),
 #'   rank_measure = "MAP",
 #'   iter = 1000,
@@ -111,50 +111,83 @@
 btd_foot <- function(data,
                      dynamic_rank = FALSE,
                      home_effect = FALSE,
-                     priors = list(),
+                     prior_par = list(),
                      rank_measure = c("median", "mean", "MAP"),
                      ...) {
+
+
+  # Validate prior names
+  allowed_prior_names <- c(
+    "mean_psi", "sd_psi",
+    "mean_gamma", "sd_gamma",
+    "mean_home", "sd_home"
+  )
+
+  # Check that prior_par contains only allowed elements
+  if (!is.null(prior_par)) {
+    if (!is.list(prior_par)) {
+      stop("'prior_par' must be a list.")
+    }
+    unknown_prior_names <- setdiff(names(prior_par), allowed_prior_names)
+    if (length(unknown_prior_names) > 0) {
+      stop(
+        paste(
+          "Unknown elements in 'prior_par':",
+          paste(unknown_prior_names, collapse = ", ")
+        )
+      )
+    }
+  }
+
 
   # Validate rank_measure
   rank_measure <- match.arg(rank_measure)
 
   # Default values for priors if not provided
   default_mean_psi <- 0
-  default_std_psi <- 3
+  default_sd_psi <- 3
   default_mean_gamma <- 0
-  default_std_gamma <- 0.3
+  default_sd_gamma <- 0.3
   default_mean_home <- 0
-  default_std_home <- 5
+  default_sd_home <- 5
 
 
   # Extract prior parameters from the priors list or assign defaults
-  mean_psi <- if (is.null(priors$mean_psi)) default_mean_psi else priors$mean_psi
-  std_psi <- if (is.null(priors$std_psi)) default_std_psi else priors$std_psi
-  mean_gamma <- if (is.null(priors$mean_gamma)) default_mean_gamma else priors$mean_gamma
-  std_gamma <- if (is.null(priors$std_gamma)) default_std_gamma else priors$std_gamma
+  mean_psi <- if (is.null(prior_par$mean_psi)) default_mean_psi else prior_par$mean_psi
+  sd_psi <- if (is.null(prior_par$sd_psi)) default_sd_psi else prior_par$sd_psi
+  mean_gamma <- if (is.null(prior_par$mean_gamma)) default_mean_gamma else prior_par$mean_gamma
+  sd_gamma <- if (is.null(prior_par$sd_gamma)) default_sd_gamma else prior_par$sd_gamma
 
-  # Check home effect
+#   ____________________________________________________________________________
+#   Home Effect Check                                                       ####
+
+
+  # Check that home_effect is logical
+  if (!is.logical(home_effect) || length(home_effect) != 1) {
+    stop("'home_effect' must be a single logical value (TRUE or FALSE).")
+  }
+
 
   if (home_effect) {
     ind_home <- 1
-    mean_home <- if (is.null(priors$mean_home)) default_mean_home else priors$mean_home
-    std_home <- if (is.null(priors$std_home)) default_std_home else priors$std_home
+    mean_home <- if (is.null(prior_par$mean_home)) default_mean_home else prior_par$mean_home
+    sd_home <- if (is.null(prior_par$sd_home)) default_sd_home else prior_par$sd_home
   } else {
     ind_home <- 0
     mean_home <- default_mean_home
-    std_home <- default_std_home
+    sd_home <- default_sd_home
   }
 
-  # Check priors' value
+  # Check prior_par' value
 
   check_prior(mean_psi, "mean_psi")
-  check_prior(std_psi, "std_psi", positive = TRUE)
+  check_prior(sd_psi, "sd_psi", positive = TRUE)
   check_prior(mean_gamma, "mean_gamma")
-  check_prior(std_gamma, "std_gamma", positive = TRUE)
+  check_prior(sd_gamma, "sd_gamma", positive = TRUE)
 
   if (home_effect) {
     check_prior(mean_home, "mean_home")
-    check_prior(std_home, "std_home", positive = TRUE)
+    check_prior(sd_home, "sd_home", positive = TRUE)
   }
 
 
@@ -222,18 +255,18 @@ btd_foot <- function(data,
   }
 
 #
-#   # Check priors
+#   # Check prior_par
 #   if (!is.numeric(mean_psi) || length(mean_psi) != 1) {
 #     stop("'mean_psi' must be a numeric value.")
 #   }
-#   if (!is.numeric(std_psi) || length(std_psi) != 1 || std_psi <= 0) {
-#     stop("'std_psi' must be a positive numeric value.")
+#   if (!is.numeric(sd_psi) || length(sd_psi) != 1 || sd_psi <= 0) {
+#     stop("'sd_psi' must be a positive numeric value.")
 #   }
 #   if (!is.numeric(mean_gamma) || length(mean_gamma) != 1) {
 #     stop("'mean_gamma' must be a numeric value.")
 #   }
-#   if (!is.numeric(std_gamma) || length(std_gamma) != 1 || std_gamma <= 0) {
-#     stop("'std_gamma' must be a positive numeric value.")
+#   if (!is.numeric(sd_gamma) || length(sd_gamma) != 1 || sd_gamma <= 0) {
+#     stop("'sd_gamma' must be a positive numeric value.")
 #   }
 
 
@@ -248,11 +281,11 @@ btd_foot <- function(data,
       team1 = as.integer(team1_idx),
       team2 = as.integer(team2_idx),
       mean_psi = mean_psi,
-      std_psi = std_psi,
+      sd_psi = sd_psi,
       mean_gamma = mean_gamma,
-      std_gamma = std_gamma,
+      sd_gamma = sd_gamma,
       mean_home = mean_home,
-      std_home = std_home,
+      sd_home = sd_home,
       ind_home = ind_home,
       y = as.integer(match_outcome)
     )
@@ -265,11 +298,11 @@ btd_foot <- function(data,
       team1 = as.integer(team1_idx),
       team2 = as.integer(team2_idx),
       mean_psi = mean_psi,
-      std_psi = std_psi,
+      sd_psi = sd_psi,
       mean_gamma = mean_gamma,
-      std_gamma = std_gamma,
+      sd_gamma = sd_gamma,
       mean_home = mean_home,
-      std_home = std_home,
+      sd_home = sd_home,
       ind_home = ind_home,
       y = as.integer(match_outcome)
     )
@@ -285,13 +318,13 @@ btd_foot <- function(data,
   #     int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
   #     int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
   #     real mean_psi;                // Initial mean for psi
-  #     real<lower=0> std_psi;         // Standard deviation for psi
+  #     real<lower=0> sd_psi;         // Standard deviation for psi
   #     real mean_gamma;
-  #     real<lower=0> std_gamma;
+  #     real<lower=0> sd_gamma;
   #     int<lower=1, upper=3> y[N];      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
   #     int<lower=0, upper=1> ind_home;        // Home effect indicator
   #     real mean_home;              // Mean for home effect
-  #     real<lower=0> std_home;      // Standard deviation for home effect
+  #     real<lower=0> sd_home;      // Standard deviation for home effect
   #   }
   #   parameters {
   #     vector[nteams] psi;          // Log strength parameters for each team (static)
@@ -306,14 +339,14 @@ btd_foot <- function(data,
   #
   #   model {
   #     // Priors for strengths
-  #     psi ~ normal(mean_psi, std_psi);
+  #     psi ~ normal(mean_psi, sd_psi);
   #
   #     // Prior for tie parameter
-  #     gamma ~ normal(mean_gamma, std_gamma);
+  #     gamma ~ normal(mean_gamma, sd_gamma);
   #
   #     // Prior for the home effect
   #
-  #     home_effect ~ normal(mean_home, std_home);
+  #     home_effect ~ normal(mean_home, sd_home);
   #
   #     // Likelihood
   #     for (n in 1:N) {
@@ -348,13 +381,13 @@ btd_foot <- function(data,
   #     int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
   #     int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
   #     real mean_psi;                // Initial mean for psi
-  #     real<lower=0> std_psi;         // Standard deviation of the AR(1) process
+  #     real<lower=0> sd_psi;         // Standard deviation of the AR(1) process
   #     real mean_gamma;
-  #     real<lower=0> std_gamma;
+  #     real<lower=0> sd_gamma;
   #     int<lower=1, upper=3> y[N];      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
   #     int<lower=0, upper=1> ind_home;        // Home effect indicator
   #     real mean_home;              // Mean for home effect
-  #     real<lower=0> std_home;      // Standard deviation for home effect
+  #     real<lower=0> sd_home;      // Standard deviation for home effect
   # }
   #
   # parameters {
@@ -371,21 +404,21 @@ btd_foot <- function(data,
   # model {
   #     // Priors for initial strengths
   #     for (k in 1:nteams) {
-  #         psi[k, 1] ~ normal(mean_psi, std_psi);
+  #         psi[k, 1] ~ normal(mean_psi, sd_psi);
   #     }
   #
   #     // Prior for tie parameter
-  #     gamma ~ normal(mean_gamma, std_gamma);
+  #     gamma ~ normal(mean_gamma, sd_gamma);
   #
   #     // AR(1) process for strength parameters
   #     for (t_idx in 2:ntimes_rank) {
   #         for (k in 1:nteams) {
-  #             psi[k, t_idx] ~ normal(psi[k, t_idx - 1], std_psi);
+  #             psi[k, t_idx] ~ normal(psi[k, t_idx - 1], sd_psi);
   #         }
   #     }
   #
   #     // Prior for the home effect
-  #     home_effect ~ normal(mean_home, std_home);
+  #     home_effect ~ normal(mean_home, sd_home);
   #
   #     // Likelihood
   #     for (n in 1:N) {
@@ -492,15 +525,15 @@ btd_foot <- function(data,
   # Priors list for output
   priors_output <- list(
     mean_psi = mean_psi,
-    std_psi = std_psi,
+    sd_psi = sd_psi,
     mean_gamma = mean_gamma,
-    std_gamma = std_gamma
+    sd_gamma = sd_gamma
   )
 
   # Add home effect priors if home_effect is TRUE
   if (home_effect) {
     priors_output$mean_home <- mean_home
-    priors_output$std_home <- std_home
+    priors_output$sd_home <- sd_home
   }
 
   # Final Output
@@ -510,7 +543,7 @@ btd_foot <- function(data,
     data = data,
     stan_data = stan_data,
     stan_code = stan_model_path,
-    priors = priors_output,
+    prior_par = priors_output,
     rank_measure = rank_measure
   )
 

@@ -10,9 +10,10 @@ stan_foot(
   predict,
   ranking,
   dynamic_type,
-  prior,
-  prior_sd,
-  ind_home = "TRUE",
+  ability_prior,
+  ability_prior_sd,
+  home_effect = TRUE,
+  home_prior_par = list(),
   norm_method = c("none", "standard", "mad", "min_max"),
   ranking_map = NULL,
   ...
@@ -53,7 +54,7 @@ stan_foot(
   \item \code{"seasonal"}: Seasonal dynamic parameters.
 }}
 
-\item{prior}{The prior distribution for the team-specific abilities.Possible choices:
+\item{ability_prior}{The prior distribution for the team-specific abilities.Possible choices:
    \itemize{
      \item \code{normal}.
      \item \code{student_t}.
@@ -63,9 +64,15 @@ stan_foot(
 See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
   Distributions for rstanarm Models}}}
 
-\item{prior_sd}{The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.}
+\item{ability_prior_sd}{The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.}
 
-\item{ind_home}{Home effect (default is \code{TRUE}).}
+\item{home_effect}{Home effect (default is \code{TRUE}).}
+
+\item{home_prior_par}{A list containing prior mean and standard deviation for the home effect parameter:
+\itemize{
+  \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
+  \item \code{sd_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
+}}
 
 \item{norm_method}{A character string specifying the method used to normalize team-specific ranking points. Options are:
 \itemize{
