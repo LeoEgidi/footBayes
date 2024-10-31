@@ -19,15 +19,15 @@ btd_foot(
   \item \code{periods}: Time point of each observation (integer >= 1).
   \item \code{team1}: Name of team 1 in each observation (character string).
   \item \code{team2}: Name of team 2 in each observation (character string).
-  \item \code{match_outcome}: Outcome (\code{1} if team1 beats team2, \code{2} for tie, and \code{3} if team2 beats team1).
+  \item \code{match_outcome}: Outcome (1 if team1 beats team2, 2 for tie, and 3 if team2 beats team1).
 }
 The data frame must not contain missing values.}
 
 \item{dynamic_rank}{Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).}
 
-\item{home_effect}{Home effect (default is \code{FALSE}).}
+\item{home_effect}{Logical; if \code{TRUE}, includes a home effect in the model (default is \code{FALSE}).}
 
-\item{priors}{A list containing prior parameters with elements:
+\item{priors}{A list containing prior parameters:
 \itemize{
   \item \code{mean_psi}: Initial mean for psi (numeric, default is 0).
   \item \code{std_psi}: Standard deviation for psi or the AR(1) process (positive numeric, default is 3).
@@ -37,7 +37,7 @@ The data frame must not contain missing values.}
   \item \code{std_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
 }}
 
-\item{rank_measure}{A character string specifying the method used to summarize the posterior distributions of the team strengths (\code{psi}). Options are:
+\item{rank_measure}{A character string specifying the method used to summarize the posterior distributions of the team strengths. Options are:
 \itemize{
   \item \code{"median"}: Uses the median of the posterior samples (default).
   \item \code{"mean"}: Uses the mean of the posterior samples.
@@ -52,53 +52,53 @@ A list of class \code{"btdFoot"} containing:
     \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
     \item \code{rank}: A data frame with the rankings, including columns:
       \itemize{
-        \item \code{periods}: The time period (for dynamic models).
+        \item \code{periods}: The time period.
         \item \code{team}: The team name.
         \item \code{rank_points}: The estimated strength of the team based on the chosen \code{rank_measure}.
       }
     \item \code{data}: The original input data.
-    \item \code{stan_data}: The data prepared for Stan.
+    \item \code{stan_data}: The data list for Stan.
     \item \code{stan_code}: The Stan code used for the model.
     \item \code{priors}: A list of the prior values used.
     \item \code{rank_measure}: The method used to compute the rankings.
   }
 }
 \description{
-This function fits a Bayesian Bradley-Terry-Davidson model using Stan. It supports both static and dynamic ranking models, allowing for the estimation of team strengths over time. Teams are specified by their names (character strings), and the function internally maps these names to integer indices required by the Stan model.
+Fits a Bayesian Bradley-Terry-Davidson model using Stan. Supports both static and dynamic ranking models, allowing for the estimation of team strengths over time.
 }
 \examples{
 \dontrun{
 
-#   Dynamic Ranking example                                               ####
+# Dynamic Ranking example ####
 
 data <- data.frame(
- periods = c(1, 1, 2, 2, 3, 3, 4, 4),
- team1 = c("AC Milan", "Inter", "AC Milan", "Juventus", "Roma", "Inter", "Lecce", "Roma"),
- team2 = c("Inter", "Juventus", "Roma", "Roma", "Juventus", "AC Milan", "Juventus", "Lecce"),
- match_outcome = c(1, 3, 2, 3, 2, 3, 1, 2) # 1 = team1 wins, 2 = draw, 3 = team2 wins
+  periods = c(1, 1, 2, 2, 3, 3, 4, 4),
+  team1 = c("AC Milan", "Inter", "AC Milan", "Juventus", "Roma", "Inter", "Lecce", "Roma"),
+  team2 = c("Inter", "Juventus", "Roma", "Roma", "Juventus", "AC Milan", "Juventus", "Lecce"),
+  match_outcome = c(1, 3, 2, 3, 2, 3, 1, 2) # 1 = team1 wins, 2 = draw, 3 = team2 wins
 )
 
 # Fit the dynamic model using the median as rank measure
 fit_result <- btd_foot(
- data,
- dynamic_rank = TRUE,
- priors = list(
-   mean_psi = 0,
-   std_psi = 1,
-   mean_gamma = 0,
-   std_gamma = 1
- ),
- rank_measure = "median",
- iter = 1000,
- chains = 2
+  data,
+  dynamic_rank = TRUE,
+  priors = list(
+    mean_psi = 0,
+    std_psi = 1,
+    mean_gamma = 0,
+    std_gamma = 1
+  ),
+  rank_measure = "median",
+  iter = 1000,
+  chains = 2
 )
 
 print(fit_result$rank)
 
-#   Static Ranking example                                               ####
+# Static Ranking example ####
 
 data <- data.frame(
-  periods = rep(1,6),
+  periods = rep(1, 6),
   team1 = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
   team2 = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
   match_outcome = c(1, 2, 3, 1, 2, 1) # 1 = team1 wins, 2 = draw, 3 = team2 wins
@@ -108,7 +108,7 @@ data <- data.frame(
 fit_result_static <- btd_foot(
   data,
   dynamic_rank = FALSE,
-  home_effect = TRUE
+  home_effect = TRUE,  # Added missing comma
   priors = list(
     mean_psi = 0,
     std_psi = 1,
