@@ -7,14 +7,14 @@
 stan_foot(
   data,
   model,
-  predict,
+  predict = 0,
   ranking,
   dynamic_type,
   ability_prior,
   ability_prior_sd,
   home_effect = TRUE,
   home_prior_par = list(),
-  norm_method = c("none", "standard", "mad", "min_max"),
+  norm_method = "none",
   ranking_map = NULL,
   ...
 )
@@ -187,46 +187,44 @@ require(dplyr)
 
 ### Example using the ranking
 
-# Prepare training data for the model
-train_data <- data.frame(
- season     = rep(1, 4),
- home       = c("AC Milan", "Inter", "Juventus", "Roma"),
- away       = c("Roma", "Juventus", "Inter", "AC Milan"),
- homegoals  = c(2, 1, 3, 0),
- awaygoals  = c(1, 2, 1, 0)
+data("italy")
+italy <- as_tibble(italy)
+italy_2021<- italy \%>\%
+ dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
+ dplyr::filter(Season=="2021")
+
+teams <- unique(italy_2021$home)
+
+n_rows <- 20
+
+# Create the fake ranking
+ranking <- data.frame(
+ periods = rep(1, n_rows),
+ team = sample(teams, n_rows, replace = FALSE),
+ rank_points = sample(0:60, n_rows, replace = FALSE)
 )
 
-# Prepare test data (matches to predict)
-test_data <- data.frame(
- season     = rep(1, 2),
- home       = c("AC Milan", "Inter"),
- away       = c("Juventus", "Roma"),
- homegoals  = rep(NA, 2),  # Unknown goals to predict
- awaygoals  = rep(NA, 2)
-)
+ranking <- ranking \%>\%
+ arrange(periods, desc(rank_points))
 
-data_all <- rbind(train_data, test_data)
 
-# Prepare ranking data for teams
-ranking_data <- data.frame(
- periods     = rep(1, 4),                # Single ranking period for simplicity
- team        = c("AC Milan", "Inter", "Juventus", "Roma"),
- rank_points = c(100, 95, 90, 85)         # Ranking points for each team
-)
+
 fit_with_ranking <- stan_foot(
- data         = data_all,
- model        = "biv_pois",
- predict      = nrow(test_data),     # Number of matches to predict
- ranking      = ranking_data,        # Include ranking data
- ind_home     = "FALSE",             # Exclude home advantage
- iter         = 1000,
- chains       = 2,
- cores        = 2,
- control      = list(adapt_delta = 0.95, max_treedepth = 15)
+ data           = italy_2021,
+ model          = "diag_infl_biv_pois",
+ ranking        = ranking,
+ home_effect    = TRUE,
+ home_prior_par = list(mean_home = 1,
+                       sd_home = 10),
+ iter           = 1000,
+ chains         = 2,
+ cores          = 2,
+ control        = list(adapt_delta = 0.95, max_treedepth = 15)
 )
 
 # Print a summary of the model fit
-print(fit_with_ranking)
+print(fit_with_ranking$fit)
+
 
 
 ### Use Italian Serie A from 2000 to 2002

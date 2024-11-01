@@ -177,49 +177,44 @@
 #'
 #' ### Example using the ranking
 #'
-#'# Prepare training data for the model
-#'train_data <- data.frame(
-#'  season     = rep(1, 4),
-#'  home       = c("AC Milan", "Inter", "Juventus", "Roma"),
-#'  away       = c("Roma", "Juventus", "Inter", "AC Milan"),
-#'  homegoals  = c(2, 1, 3, 0),
-#'  awaygoals  = c(1, 2, 1, 0)
+#'data("italy")
+#'italy <- as_tibble(italy)
+#'italy_2021<- italy %>%
+#'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+#'  dplyr::filter(Season=="2021")
+#'
+#'teams <- unique(italy_2021$home)
+#'
+#'n_rows <- 20
+#'
+#'# Create the fake ranking
+#'ranking <- data.frame(
+#'  periods = rep(1, n_rows),
+#'  team = sample(teams, n_rows, replace = FALSE),
+#'  rank_points = sample(0:60, n_rows, replace = FALSE)
 #')
 #'
-#'# Prepare test data (matches to predict)
-#'test_data <- data.frame(
-#'  season     = rep(1, 2),
-#'  home       = c("AC Milan", "Inter"),
-#'  away       = c("Juventus", "Roma"),
-#'  homegoals  = rep(NA, 2),  # Unknown goals to predict
-#'  awaygoals  = rep(NA, 2)
-#')
+#'ranking <- ranking %>%
+#'  arrange(periods, desc(rank_points))
 #'
-# Combine training and test data
-#'data_all <- rbind(train_data, test_data)
 #'
-#'# Prepare ranking data for teams
-#'ranking_data <- data.frame(
-#'  periods     = rep(1, 4),                # Single ranking period for simplicity
-#'  team        = c("AC Milan", "Inter", "Juventus", "Roma"),
-#'  rank_points = c(100, 95, 90, 85)         # Ranking points for each team
-#')
-
-# Fit the diagonal-inflated bivariate Poisson model and predict outcomes with ranking
+#'
 #'fit_with_ranking <- stan_foot(
-#'  data         = data_all,
-#'  model        = "biv_pois",
-#'  predict      = nrow(test_data),     # Number of matches to predict
-#'  ranking      = ranking_data,        # Include ranking data
-#'  ind_home     = "FALSE",             # Exclude home advantage
-#'  iter         = 1000,
-#'  chains       = 2,
-#'  cores        = 2,
-#'  control      = list(adapt_delta = 0.95, max_treedepth = 15)
+#'  data           = italy_2021,
+#'  model          = "diag_infl_biv_pois",
+#'  ranking        = ranking,
+#'  home_effect    = TRUE,
+#'  home_prior_par = list(mean_home = 1,
+#'                        sd_home = 10),
+#'  iter           = 1000,
+#'  chains         = 2,
+#'  cores          = 2,
+#'  control        = list(adapt_delta = 0.95, max_treedepth = 15)
 #')
 #'
-#' # Print a summary of the model fit
-#' print(fit_with_ranking)
+#'# Print a summary of the model fit
+#'print(fit_with_ranking$fit)
+#'
 #'
 #'
 #'### Use Italian Serie A from 2000 to 2002
@@ -293,14 +288,14 @@
 
 stan_foot <- function(data,
                       model,
-                      predict,
+                      predict = 0,
                       ranking,
                       dynamic_type,
                       ability_prior,
                       ability_prior_sd,
                       home_effect = TRUE,
                       home_prior_par = list(),
-                      norm_method = c("none", "standard", "mad", "min_max"),
+                      norm_method = "none",
                       ranking_map = NULL, # Argument for mapping ranking periods with data periods
                       ...){
 
@@ -699,7 +694,7 @@ stan_foot <- function(data,
   if (missing(ranking)) {
     warning("Ranking is missing, creating a default zero matrix.")
     ntimes_rank <- 1
-    nteams <- length(unique(data$team))
+    nteams <- length(unique(data$home))
     ranking_matrix <- matrix(0, nrow = ntimes_rank, ncol = nteams)
   } else {
     # Ensure ranking is either a matrix or a data frame
@@ -1172,6 +1167,8 @@ stan_foot <- function(data,
       int instants_prev[N_prev];
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1188,12 +1185,13 @@ stan_foot <- function(data,
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
       real rho;
-      real home;
+      real home_effect;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       //cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -1233,9 +1231,11 @@ stan_foot <- function(data,
 
       }
 
+      adj_home_effect = home_effect * ind_home;
+
 
       for (n in 1:N){
-        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
@@ -1278,7 +1278,7 @@ stan_foot <- function(data,
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(rho|0,1);
       target+=normal_lpdf(gamma|0,1);
 
@@ -1313,7 +1313,7 @@ stan_foot <- function(data,
       }
 
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
+        theta_home_prev[n] = exp(adj_home_effect+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N], team1_prev[n]]-ranking[instants_rank[N], team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
@@ -1370,6 +1370,8 @@ stan_foot <- function(data,
       int team2[N];
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1389,10 +1391,11 @@ stan_foot <- function(data,
       real<lower=0> sigma_def;
       real beta;
       real rho;
-      real home;
+      real home_effect;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
       vector[3] theta[N];
@@ -1402,8 +1405,10 @@ stan_foot <- function(data,
         def[t] = def_raw[t]-mean(def_raw);
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
@@ -1452,7 +1457,7 @@ stan_foot <- function(data,
 
       // log-priors fixed effects
       target+=normal_lpdf(rho|0,1);
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
       // likelihood
@@ -1525,6 +1530,8 @@ stan_foot <- function(data,
       int team2_prev[N_prev];
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1542,11 +1549,12 @@ stan_foot <- function(data,
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
-      real home;
+      real home_effect;
       real rho;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
       vector[3] theta[N];
@@ -1556,8 +1564,10 @@ stan_foot <- function(data,
         def[t] = def_raw[t]-mean(def_raw);
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
@@ -1605,7 +1615,7 @@ stan_foot <- function(data,
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(rho|0,1);
       target+=normal_lpdf(gamma|0,1);
 
@@ -1636,7 +1646,7 @@ stan_foot <- function(data,
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
+        theta_prev[n,1] = exp(adj_home_effect+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
@@ -1714,6 +1724,8 @@ diag_infl_biv_pois_dynamic_fit <- "
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1730,7 +1742,7 @@ diag_infl_biv_pois_dynamic_fit <- "
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
       real rho;
-      real home;
+      real home_effect;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
@@ -1738,6 +1750,7 @@ diag_infl_biv_pois_dynamic_fit <- "
 
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;         // Gaussian process attack cov. funct.
@@ -1777,9 +1790,10 @@ diag_infl_biv_pois_dynamic_fit <- "
 
       }
 
+      adj_home_effect = home_effect * ind_home;
 
       for (n in 1:N){
-        theta_home[n] = exp(home*ind_home + att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_effect + att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -1822,7 +1836,7 @@ diag_infl_biv_pois_dynamic_fit <- "
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(rho|0,1);
       target+=normal_lpdf(gamma|0,1);
       target+=uniform_lpdf(prob_of_draws|0,1);
@@ -1938,6 +1952,8 @@ data{
   matrix[ntimes_rank,nteams] ranking;
   int instants_prev[N_prev];
   int<lower=0, upper=1> ind_home;
+  real mean_home;              // Mean for home effect
+  real<lower=0> sd_home;      // Standard deviation for home effect
 
   // priors part
   int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -1954,7 +1970,7 @@ parameters{
   matrix[ntimes, nteams] att_raw;        // raw attack ability
   matrix[ntimes, nteams] def_raw;        // raw defense ability
   real rho;
-  real home;
+  real home_effect;
   real<lower=0> sigma_att;
   real<lower=0> sigma_def;
   real gamma;
@@ -1962,6 +1978,7 @@ parameters{
 
 }
 transformed parameters{
+  real adj_home_effect;                   // Adjusted home effect
   matrix[ntimes, nteams] att;            // attack abilities
   matrix[ntimes, nteams] def;            // defense abilities
   //cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -2001,9 +2018,10 @@ transformed parameters{
 
   }
 
+  adj_home_effect = home_effect * ind_home;
 
   for (n in 1:N){
-    theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+    theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                           (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
     theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                           (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
@@ -2046,7 +2064,7 @@ model{
   }
 
   // log-priors fixed effects
-  target+=normal_lpdf(home|0,5);
+  target+=normal_lpdf(home_effect|mean_home,sd_home);
   target+=normal_lpdf(rho|0,1);
   target+=normal_lpdf(gamma|0,1);
   target+=uniform_lpdf(prob_of_draws|0,1);
@@ -2099,7 +2117,7 @@ generated quantities{
   }
   // out-of-sample predictions
   for (n in 1:N_prev){
-    theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
+    theta_home_prev[n] = exp(adj_home_effect+att[instants_prev[n], team1_prev[n]]+
                                def[instants_prev[n], team2_prev[n]]+
                                (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
     theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
@@ -2177,6 +2195,8 @@ data{
   int ntimes_rank;                 // dynamic periods for ranking
   matrix[ntimes_rank,nteams] ranking;
   int<lower=0, upper=1> ind_home;
+  real mean_home;              // Mean for home effect
+  real<lower=0> sd_home;      // Standard deviation for home effect
 
   // priors part
   int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2196,12 +2216,13 @@ parameters{
   real<lower=0> sigma_def;
   real beta;
   real rho;
-  real home;
+  real home_effect;
   real gamma;
   real <lower=0,upper=1> prob_of_draws;// excessive probability of draws
 
 }
 transformed parameters{
+  real adj_home_effect;                   // Adjusted home effect
   vector[nteams] att;
   vector[nteams] def;
   vector[3] theta[N];
@@ -2211,8 +2232,10 @@ transformed parameters{
     def[t] = def_raw[t]-mean(def_raw);
   }
 
+  adj_home_effect = home_effect * ind_home;
+
   for (n in 1:N){
-    theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
+    theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
                        (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
     theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                        (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -2261,7 +2284,7 @@ model{
 
   // log-priors fixed effects
   target+=normal_lpdf(rho|0,1);
-  target+=normal_lpdf(home|0,5);
+  target+=normal_lpdf(home_effect|mean_home,sd_home);
   target+=normal_lpdf(gamma|0,1);
   target+=uniform_lpdf(prob_of_draws|0,1);
 
@@ -2375,6 +2398,8 @@ data{
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2392,13 +2417,14 @@ data{
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
-      real home;
+      real home_effect;
       real rho;
       real gamma;
       real <lower=0,upper=1> prob_of_draws;// excessive probability of draws
 
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
       vector[3] theta[N];
@@ -2408,8 +2434,10 @@ data{
         def[t] = def_raw[t]-mean(def_raw);
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -2457,7 +2485,7 @@ model{
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(rho|0,1);
       target+=normal_lpdf(gamma|0,1);
       target+=uniform_lpdf(prob_of_draws|0,1);
@@ -2511,7 +2539,7 @@ generated quantities{
 
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(home*ind_home+att[team1_prev[n]]+
+        theta_home_prev[n] = exp(adj_home_effect+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_away_prev[n] = exp(att[team2_prev[n]]+
@@ -2543,6 +2571,8 @@ double_pois_dynamic_fit<-"
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2558,12 +2588,13 @@ double_pois_dynamic_fit<-"
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real home;
+      real home_effect;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -2602,8 +2633,10 @@ double_pois_dynamic_fit<-"
 
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -2645,7 +2678,7 @@ double_pois_dynamic_fit<-"
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
       // likelihood
@@ -2691,6 +2724,8 @@ double_pois_dynamic_fit<-"
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2706,12 +2741,13 @@ double_pois_dynamic_fit<-"
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real home;
+      real home_effect;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -2750,8 +2786,10 @@ double_pois_dynamic_fit<-"
 
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -2793,7 +2831,7 @@ double_pois_dynamic_fit<-"
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
 
@@ -2821,7 +2859,7 @@ double_pois_dynamic_fit<-"
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n],team1_prev[n]]+
+        theta_home_prev[n] = exp(adj_home_effect+att[instants_prev[n],team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n],team2_prev[n]]+
@@ -2853,6 +2891,8 @@ double_pois_dynamic_fit<-"
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2871,10 +2911,11 @@ double_pois_dynamic_fit<-"
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       //real mu;
-      real home;
+      real home_effect;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       vector[nteams] att;        // attack parameters
       vector[nteams] def;        // defence parameters
       vector[2] theta[N];        // exponentiated linear pred.
@@ -2885,8 +2926,10 @@ double_pois_dynamic_fit<-"
         def[t] = def_raw[t]-mean(def_raw);
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta[n,1] = exp( home*ind_home+att[team1[n]]+def[team2[n]] +
+        theta[n,1] = exp( adj_home_effect+att[team1[n]]+def[team2[n]] +
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp( att[team2[n]]+def[team1[n]] -
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -2934,7 +2977,7 @@ double_pois_dynamic_fit<-"
 
       // log-priors fixed effects
       //target+=normal_lpdf(mu|0,5);
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
 
@@ -2978,6 +3021,8 @@ double_pois_dynamic_fit<-"
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -2995,10 +3040,11 @@ double_pois_dynamic_fit<-"
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
-      real home;
+      real home_effect;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       vector[nteams] att;        // attack parameters
       vector[nteams] def;        // defence parameters
       vector[2] theta[N];        // exponentiated linear pred.
@@ -3008,8 +3054,10 @@ double_pois_dynamic_fit<-"
         def[t] = def_raw[t]-mean(def_raw);
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -3056,7 +3104,7 @@ double_pois_dynamic_fit<-"
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
       // likelihood
@@ -3082,7 +3130,7 @@ double_pois_dynamic_fit<-"
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+def[team2_prev[n]]+
+        theta_prev[n,1] = exp(adj_home_effect+att[team1_prev[n]]+def[team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+def[team1_prev[n]]-
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
@@ -3120,6 +3168,8 @@ double_pois_dynamic_fit<-"
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3135,12 +3185,13 @@ double_pois_dynamic_fit<-"
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real home;
+      real home_effect;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -3178,8 +3229,10 @@ double_pois_dynamic_fit<-"
 
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -3221,7 +3274,7 @@ double_pois_dynamic_fit<-"
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
       // likelihood
@@ -3273,6 +3326,8 @@ double_pois_dynamic_fit<-"
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3288,12 +3343,13 @@ double_pois_dynamic_fit<-"
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real home;
+      real home_effect;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -3331,8 +3387,10 @@ double_pois_dynamic_fit<-"
 
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -3374,7 +3432,7 @@ double_pois_dynamic_fit<-"
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
 
@@ -3403,7 +3461,7 @@ double_pois_dynamic_fit<-"
       //out-of-sample predictions
 
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
+        theta_home_prev[n] = exp(adj_home_effect+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
@@ -3442,6 +3500,8 @@ double_pois_dynamic_fit<-"
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3459,10 +3519,11 @@ double_pois_dynamic_fit<-"
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
-      real home;
+      real home_effect;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
       real theta[N,2];
@@ -3472,8 +3533,10 @@ double_pois_dynamic_fit<-"
         def[t] = def_raw[t]-mean(def_raw);
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -3520,7 +3583,7 @@ double_pois_dynamic_fit<-"
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
       // likelihood
@@ -3568,6 +3631,8 @@ double_pois_dynamic_fit<-"
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3585,10 +3650,11 @@ double_pois_dynamic_fit<-"
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
-      real home;
+      real home_effect;
       real gamma;
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
       real theta[N,2];
@@ -3598,8 +3664,10 @@ double_pois_dynamic_fit<-"
         def[t] = def_raw[t]-mean(def_raw);
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -3646,7 +3714,7 @@ double_pois_dynamic_fit<-"
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
 
@@ -3672,7 +3740,7 @@ double_pois_dynamic_fit<-"
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
+        theta_prev[n,1] = exp(adj_home_effect+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
@@ -3734,6 +3802,8 @@ data{
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3749,7 +3819,7 @@ data{
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real home;
+      real home_effect;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
@@ -3757,6 +3827,7 @@ data{
 
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -3794,8 +3865,10 @@ data{
 
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -3837,7 +3910,7 @@ data{
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
       target+=uniform_lpdf(prob_of_draws|0,1);
 
@@ -3911,6 +3984,8 @@ data{
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -3926,7 +4001,7 @@ data{
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real home;
+      real home_effect;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
@@ -3935,6 +4010,7 @@ data{
 }
 
 transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -3972,8 +4048,10 @@ transformed parameters{
 
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta_home[n] = exp(home*ind_home+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -4015,7 +4093,7 @@ transformed parameters{
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
       target+=uniform_lpdf(prob_of_draws|0,1);
 
@@ -4047,7 +4125,7 @@ transformed parameters{
       //out-of-sample predictions
 
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(home*ind_home+att[instants_prev[n], team1_prev[n]]+
+        theta_home_prev[n] = exp(adj_home_effect+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
@@ -4104,6 +4182,8 @@ transformed parameters{
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -4121,12 +4201,13 @@ transformed parameters{
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
-      real home;
+      real home_effect;
       real gamma;
       real <lower=0,upper=1> prob_of_draws;// excessive probability of draws
 
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
       real theta[N,2];
@@ -4136,8 +4217,10 @@ transformed parameters{
         def[t] = def_raw[t]-mean(def_raw);
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -4184,7 +4267,7 @@ transformed parameters{
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
       target+=uniform_lpdf(prob_of_draws|0,1);
 
@@ -4255,6 +4338,8 @@ transformed parameters{
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
+      real mean_home;              // Mean for home effect
+      real<lower=0> sd_home;      // Standard deviation for home effect
 
       // priors part
       int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
@@ -4272,12 +4357,13 @@ transformed parameters{
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
-      real home;
+      real home_effect;
       real gamma;
       real <lower=0,upper=1> prob_of_draws;// excessive probability of draws
 
     }
     transformed parameters{
+      real adj_home_effect;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
       real theta[N,2];
@@ -4287,8 +4373,10 @@ transformed parameters{
         def[t] = def_raw[t]-mean(def_raw);
       }
 
+      adj_home_effect = home_effect * ind_home;
+
       for (n in 1:N){
-        theta[n,1] = exp(home*ind_home+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -4335,7 +4423,7 @@ model{
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home|0,5);
+      target+=normal_lpdf(home_effect|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
       target+=uniform_lpdf(prob_of_draws|0,1);
 
@@ -4365,7 +4453,7 @@ generated quantities{
       }
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(home*ind_home+att[team1_prev[n]]+
+        theta_prev[n,1] = exp(adj_home_effect+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_prev[n,2] = exp(att[team2_prev[n]]+
