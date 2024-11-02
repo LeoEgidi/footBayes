@@ -8,8 +8,8 @@ btd_foot(
   data,
   dynamic_rank = FALSE,
   home_effect = FALSE,
-  prior_par = list(),
-  rank_measure = c("median", "mean", "MAP"),
+  prior_par = list(psi = normal(0, 3), gamma = normal(0, 0.3), home = normal(0, 5)),
+  rank_measure = "median",
   ...
 )
 }
@@ -27,15 +27,13 @@ The data frame must not contain missing values.}
 
 \item{home_effect}{Logical; if \code{TRUE}, includes a home effect in the model (default is \code{FALSE}).}
 
-\item{prior_par}{A list containing prior mean and standard deviation for the parameters of interest:
+\item{prior_par}{A list specifying the prior distributions for the parameters of interest, using the \code{normal} function:
 \itemize{
-  \item \code{mean_psi}: Initial mean for psi (numeric, default is 0).
-  \item \code{sd_psi}: Standard deviation for psi or the AR(1) process (positive numeric, default is 3).
-  \item \code{mean_gamma}: Mean for gamma (numeric, default is 0).
-  \item \code{sd_gamma}: Standard deviation for gamma (positive numeric, default is 0.3).
-  \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
-  \item \code{sd_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
-}}
+  \item \code{psi}: Prior for the team strengths (\code{psi}). Default is \code{normal(0, 3)}.
+  \item \code{gamma}: Prior for the tie parameter (\code{gamma}). Default is \code{normal(0, 0.3)}.
+  \item \code{home}: Prior for the home effect (\code{home}). Applicable only if \code{home_effect = TRUE}. Default is \code{normal(0, 5)}.
+}
+Only normal priors are allowed for this model.}
 
 \item{rank_measure}{A character string specifying the method used to summarize the posterior distributions of the team strengths. Options are:
 \itemize{
@@ -57,9 +55,9 @@ A list of class \code{"btdFoot"} containing:
         \item \code{rank_points}: The estimated strength of the team based on the chosen \code{rank_measure}.
       }
     \item \code{data}: The original input data.
-    \item \code{stan_data}: The data list for Stan.
-    \item \code{stan_code}: The Stan code used for the model.
-    \item \code{prior_par}: A list of the prior values used.
+    \item \code{stan_data}: The data list prepared for Stan.
+    \item \code{stan_code}: The path to the Stan model code used.
+    \item \code{prior_par}: A list of the prior distributions used.
     \item \code{rank_measure}: The method used to compute the rankings.
   }
 }
@@ -80,13 +78,11 @@ data <- data.frame(
 
 # Fit the dynamic model using the median as rank measure
 fit_result <- btd_foot(
-  data,
+  data = data,
   dynamic_rank = TRUE,
   prior_par = list(
-    mean_psi = 0,
-    sd_psi = 1,
-    mean_gamma = 0,
-    sd_gamma = 1
+    psi = normal(0, 10),
+    gamma = normal(0, 5)
   ),
   rank_measure = "median",
   iter = 1000,
@@ -97,7 +93,7 @@ print(fit_result$rank)
 
 # Static Ranking example ####
 
-data <- data.frame(
+data_static <- data.frame(
   periods = rep(1, 6),
   team1 = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
   team2 = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
@@ -106,16 +102,13 @@ data <- data.frame(
 
 # Fit the static model using the MAP as rank measure
 fit_result_static <- btd_foot(
-  data,
+  data = data_static,
   dynamic_rank = FALSE,
   home_effect = TRUE,
   prior_par = list(
-    mean_psi = 0,
-    sd_psi = 1,
-    mean_gamma = 0,
-    sd_gamma = 1,
-    mean_home = 0,
-    sd_home = 2
+    psi = normal(0, 1),
+    gamma = normal(0, 1),
+    home = normal(0, 2)
   ),
   rank_measure = "MAP",
   iter = 1000,

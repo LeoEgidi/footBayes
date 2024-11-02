@@ -10,26 +10,25 @@ stan_foot(
   predict = 0,
   ranking,
   dynamic_type,
-  ability_prior,
-  ability_prior_sd,
+  prior_par = list(ability = normal(0, NULL), ability_sd = cauchy(0, 5), home = normal(0,
+    5)),
   home_effect = TRUE,
-  home_prior_par = list(),
   norm_method = "none",
   ranking_map = NULL,
   ...
 )
 }
 \arguments{
-\item{data}{A data frame or matrix containing the match data. It must include the following columns:
+\item{data}{A data frame containing match data with columns:
 \itemize{
-  \item \code{season}: The season identifier.
-  \item \code{home}: The home team's name.
-  \item \code{away}: The away team's name.
-  \item \code{homegoals}: Number of goals scored by the home team.
-  \item \code{awaygoals}: Number of goals scored by the away team.
+  \item \code{season}: Season identifier.
+  \item \code{home}: Home team's name.
+  \item \code{away}: Away team's name.
+  \item \code{homegoals}: Goals scored by the home team.
+  \item \code{awaygoals}: Goals scored by the away team.
 }}
 
-\item{model}{A character string specifying the type of Stan model to fit. Options are:
+\item{model}{A character string specifying the Stan model to fit. Options are:
 \itemize{
   \item \code{"double_pois"}: Double Poisson model.
   \item \code{"biv_pois"}: Bivariate Poisson model.
@@ -41,10 +40,10 @@ stan_foot(
 
 \item{predict}{An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.}
 
-\item{ranking}{An optional data frame or matrix containing ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
+\item{ranking}{An optional data frame containing ranking points for teams:
 \itemize{
   \item \code{periods}: Time periods corresponding to the rankings.
-  \item \code{team}: Team names matching those in the \code{data}.
+  \item \code{team}: Team names matching those in \code{data}.
   \item \code{rank_points}: Ranking points for each team.
 }}
 
@@ -54,25 +53,16 @@ stan_foot(
   \item \code{"seasonal"}: Seasonal dynamic parameters.
 }}
 
-\item{ability_prior}{The prior distribution for the team-specific abilities.Possible choices:
-   \itemize{
-     \item \code{normal}.
-     \item \code{student_t}.
-     \item \code{cauchy}.
-     \item \code{laplace}.
-   }
-See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
-  Distributions for rstanarm Models}}}
+\item{prior_par}{A list specifying the prior distributions for the parameters of interest:
+  \itemize{
+    \item \code{ability}: Prior distribution for team-specific abilities. Possible distributions are \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}. Default is \code{normal(0, NULL)}.
+    \item \code{ability_sd}:  Prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details. Default is \code{cauchy(0, 5)}.
+    \item \code{home}: Prior distribution for the home effect (\code{home}). Applicable only if \code{home_effect = TRUE}. Only normal priors are allowed. Default is \code{normal(0, 5)}.
+  }
 
-\item{ability_prior_sd}{The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.}
+  See the \pkg{rstanarm} package for more details on specifying priors.}
 
-\item{home_effect}{Home effect (default is \code{TRUE}).}
-
-\item{home_prior_par}{A list containing prior mean and standard deviation for the home effect parameter:
-\itemize{
-  \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
-  \item \code{sd_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
-}}
+\item{home_effect}{Logical indicating whether to include a home effect (default is \code{TRUE}).}
 
 \item{norm_method}{A character string specifying the method used to normalize team-specific ranking points. Options are:
 \itemize{
@@ -84,8 +74,7 @@ See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc
 
 \item{ranking_map}{An optional vector mapping ranking periods to data periods. If not provided and the number of ranking periods matches the number of data periods, a direct mapping is assumed.}
 
-\item{...}{Optional parameters passed to the function
-in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.}
+\item{...}{Optional parameters passed to \code{\link[rstan]{stan}} (e.g., \code{iter}, \code{chains}, \code{cores}, \code{control}).}
 }
 \value{
 A list of class \code{"stanFoot"} containing:
@@ -185,41 +174,41 @@ require(dplyr)
 
 
 
-### Example using the ranking
-
+# Example usage with ranking
 data("italy")
 italy <- as_tibble(italy)
-italy_2021<- italy \%>\%
- dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
- dplyr::filter(Season=="2021")
+italy_2021 <- italy \%>\%
+  select(Season, home, visitor, hgoal, vgoal) \%>\%
+  filter(Season == "2021")
 
 teams <- unique(italy_2021$home)
-
 n_rows <- 20
 
-# Create the fake ranking
+# Create fake ranking
 ranking <- data.frame(
- periods = rep(1, n_rows),
- team = sample(teams, n_rows, replace = FALSE),
- rank_points = sample(0:60, n_rows, replace = FALSE)
+  periods = rep(1, n_rows),
+  team = sample(teams, n_rows, replace = FALSE),
+  rank_points = sample(0:60, n_rows, replace = FALSE)
 )
 
 ranking <- ranking \%>\%
- arrange(periods, desc(rank_points))
-
-
+  arrange(periods, desc(rank_points))
 
 fit_with_ranking <- stan_foot(
- data           = italy_2021,
- model          = "diag_infl_biv_pois",
- ranking        = ranking,
- home_effect    = TRUE,
- home_prior_par = list(mean_home = 1,
-                       sd_home = 10),
- iter           = 1000,
- chains         = 2,
- cores          = 2,
- control        = list(adapt_delta = 0.95, max_treedepth = 15)
+  data = italy_2021,
+  model = "diag_infl_biv_pois",
+  ranking = ranking,
+  home_effect = TRUE,
+  prior_par = list(
+    ability = student_t(4, 0, NULL),
+    ability_sd = cauchy(0, 3),
+    home = normal(1, 10)
+  ),
+  norm_method = "mad",
+  iter = 1000,
+  chains = 2,
+  cores = 2,
+  control = list(adapt_delta = 0.95, max_treedepth = 15)
 )
 
 # Print a summary of the model fit

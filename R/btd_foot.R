@@ -12,15 +12,13 @@
 #'   The data frame must not contain missing values.
 #' @param dynamic_rank Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).
 #' @param home_effect Logical; if \code{TRUE}, includes a home effect in the model (default is \code{FALSE}).
-#' @param prior_par A list containing prior mean and standard deviation for the parameters of interest:
+#' @param prior_par A list specifying the prior distributions for the parameters of interest, using the \code{normal} function:
 #'   \itemize{
-#'     \item \code{mean_psi}: Initial mean for psi (numeric, default is 0).
-#'     \item \code{sd_psi}: Standard deviation for psi or the AR(1) process (positive numeric, default is 3).
-#'     \item \code{mean_gamma}: Mean for gamma (numeric, default is 0).
-#'     \item \code{sd_gamma}: Standard deviation for gamma (positive numeric, default is 0.3).
-#'     \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
-#'     \item \code{sd_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
+#'     \item \code{psi}: Prior for the team strengths (\code{psi}). Default is \code{normal(0, 3)}.
+#'     \item \code{gamma}: Prior for the tie parameter (\code{gamma}). Default is \code{normal(0, 0.3)}.
+#'     \item \code{home}: Prior for the home effect (\code{home}). Applicable only if \code{home_effect = TRUE}. Default is \code{normal(0, 5)}.
 #'   }
+#'   Only normal priors are allowed for this model.
 #' @param rank_measure A character string specifying the method used to summarize the posterior distributions of the team strengths. Options are:
 #'   \itemize{
 #'     \item \code{"median"}: Uses the median of the posterior samples (default).
@@ -39,9 +37,9 @@
 #'         \item \code{rank_points}: The estimated strength of the team based on the chosen \code{rank_measure}.
 #'       }
 #'     \item \code{data}: The original input data.
-#'     \item \code{stan_data}: The data list for Stan.
-#'     \item \code{stan_code}: The Stan code used for the model.
-#'     \item \code{prior_par}: A list of the prior values used.
+#'     \item \code{stan_data}: The data list prepared for Stan.
+#'     \item \code{stan_code}: The path to the Stan model code used.
+#'     \item \code{prior_par}: A list of the prior distributions used.
 #'     \item \code{rank_measure}: The method used to compute the rankings.
 #'   }
 #'
@@ -59,13 +57,11 @@
 #'
 #' # Fit the dynamic model using the median as rank measure
 #' fit_result <- btd_foot(
-#'   data,
+#'   data = data,
 #'   dynamic_rank = TRUE,
 #'   prior_par = list(
-#'     mean_psi = 0,
-#'     sd_psi = 1,
-#'     mean_gamma = 0,
-#'     sd_gamma = 1
+#'     psi = normal(0, 10),
+#'     gamma = normal(0, 5)
 #'   ),
 #'   rank_measure = "median",
 #'   iter = 1000,
@@ -76,7 +72,7 @@
 #'
 #' # Static Ranking example ####
 #'
-#' data <- data.frame(
+#' data_static <- data.frame(
 #'   periods = rep(1, 6),
 #'   team1 = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
 #'   team2 = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
@@ -85,16 +81,13 @@
 #'
 #' # Fit the static model using the MAP as rank measure
 #' fit_result_static <- btd_foot(
-#'   data,
+#'   data = data_static,
 #'   dynamic_rank = FALSE,
 #'   home_effect = TRUE,
 #'   prior_par = list(
-#'     mean_psi = 0,
-#'     sd_psi = 1,
-#'     mean_gamma = 0,
-#'     sd_gamma = 1,
-#'     mean_home = 0,
-#'     sd_home = 2
+#'     psi = normal(0, 1),
+#'     gamma = normal(0, 1),
+#'     home = normal(0, 2)
 #'   ),
 #'   rank_measure = "MAP",
 #'   iter = 1000,
@@ -111,17 +104,17 @@
 btd_foot <- function(data,
                      dynamic_rank = FALSE,
                      home_effect = FALSE,
-                     prior_par = list(),
-                     rank_measure = c("median", "mean", "MAP"),
+                     prior_par = list(
+                        psi = normal(0, 3),
+                        gamma = normal(0, 0.3),
+                        home = normal(0, 5)
+                     ),
+                     rank_measure = "median",
                      ...) {
 
 
   # Validate prior names
-  allowed_prior_names <- c(
-    "mean_psi", "sd_psi",
-    "mean_gamma", "sd_gamma",
-    "mean_home", "sd_home"
-  )
+  allowed_prior_names <- c("psi", "gamma", "home")
 
   # Check that prior_par contains only allowed elements
   if (!is.null(prior_par)) {
@@ -141,22 +134,27 @@ btd_foot <- function(data,
 
 
   # Validate rank_measure
-  rank_measure <- match.arg(rank_measure)
+  allowed_rank_measures <- c("median", "mean", "MAP")
 
-  # Default values for priors if not provided
-  default_mean_psi <- 0
-  default_sd_psi <- 3
-  default_mean_gamma <- 0
-  default_sd_gamma <- 0.3
-  default_mean_home <- 0
-  default_sd_home <- 5
+  rank_measure <- match.arg(rank_measure, allowed_rank_measures)
+
+  # Extract prior parameters from the priors list
+  psi_prior <- prior_par$psi
+  gamma_prior <- prior_par$gamma
+  home_prior <- prior_par$home
+
+  # Only normal prior
+
+  if (psi_prior$dist != "normal" || gamma_prior$dist != "normal" ||
+      (home_effect && home_prior$dist != "normal")) {
+    stop("Prior distributions must be 'normal'.")
+  }
 
 
-  # Extract prior parameters from the priors list or assign defaults
-  mean_psi <- if (is.null(prior_par$mean_psi)) default_mean_psi else prior_par$mean_psi
-  sd_psi <- if (is.null(prior_par$sd_psi)) default_sd_psi else prior_par$sd_psi
-  mean_gamma <- if (is.null(prior_par$mean_gamma)) default_mean_gamma else prior_par$mean_gamma
-  sd_gamma <- if (is.null(prior_par$sd_gamma)) default_sd_gamma else prior_par$sd_gamma
+  mean_psi <- psi_prior$location
+  sd_psi <- psi_prior$scale
+  mean_gamma <- gamma_prior$location
+  sd_gamma <- gamma_prior$scale
 
 #   ____________________________________________________________________________
 #   Home Effect Check                                                       ####
@@ -170,25 +168,26 @@ btd_foot <- function(data,
 
   if (home_effect) {
     ind_home <- 1
-    mean_home <- if (is.null(prior_par$mean_home)) default_mean_home else prior_par$mean_home
-    sd_home <- if (is.null(prior_par$sd_home)) default_sd_home else prior_par$sd_home
+    mean_home <- home_prior$location
+    sd_home <- home_prior$scale
   } else {
     ind_home <- 0
-    mean_home <- default_mean_home
-    sd_home <- default_sd_home
+    mean_home <- 0
+    sd_home <- 1  # Default value (can be adjusted)
   }
 
-  # Check prior_par' value
 
-  check_prior(mean_psi, "mean_psi")
-  check_prior(sd_psi, "sd_psi", positive = TRUE)
-  check_prior(mean_gamma, "mean_gamma")
-  check_prior(sd_gamma, "sd_gamma", positive = TRUE)
-
-  if (home_effect) {
-    check_prior(mean_home, "mean_home")
-    check_prior(sd_home, "sd_home", positive = TRUE)
-  }
+  # # Check prior_par' value
+  #
+  # check_prior(mean_psi, "mean_psi")
+  # check_prior(sd_psi, "sd_psi", positive = TRUE)
+  # check_prior(mean_gamma, "mean_gamma")
+  # check_prior(sd_gamma, "sd_gamma", positive = TRUE)
+  #
+  # if (home_effect) {
+  #   check_prior(mean_home, "mean_home")
+  #   check_prior(sd_home, "sd_home", positive = TRUE)
+  # }
 
 
   # Check that data is a data frame

@@ -3,15 +3,15 @@
 #' Stan football modelling for the most famous models:
 #' double Poisson, bivariate Poisson, Skellam, student t, diagonal-inflated bivariate Poisson and zero-inflated Skellam.
 #'
-#'@param data A data frame or matrix containing the match data. It must include the following columns:
+#' @param data A data frame containing match data with columns:
 #'   \itemize{
-#'     \item \code{season}: The season identifier.
-#'     \item \code{home}: The home team's name.
-#'     \item \code{away}: The away team's name.
-#'     \item \code{homegoals}: Number of goals scored by the home team.
-#'     \item \code{awaygoals}: Number of goals scored by the away team.
+#'     \item \code{season}: Season identifier.
+#'     \item \code{home}: Home team's name.
+#'     \item \code{away}: Away team's name.
+#'     \item \code{homegoals}: Goals scored by the home team.
+#'     \item \code{awaygoals}: Goals scored by the away team.
 #'   }
-#'@param model A character string specifying the type of Stan model to fit. Options are:
+#' @param model A character string specifying the Stan model to fit. Options are:
 #'   \itemize{
 #'     \item \code{"double_pois"}: Double Poisson model.
 #'     \item \code{"biv_pois"}: Bivariate Poisson model.
@@ -20,35 +20,28 @@
 #'     \item \code{"diag_infl_biv_pois"}: Diagonal-inflated bivariate Poisson model.
 #'     \item \code{"zero_infl_skellam"}: Zero-inflated Skellam model.
 #'   }
-#'@param predict An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.
-#'@param ranking An optional data frame or matrix containing ranking points (relative strengths) provided for the teams in the dataset (e.g., the Coca-Cola Fifa ranking)
+#' @param predict An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.
+#' @param ranking An optional data frame containing ranking points for teams:
 #'   \itemize{
 #'     \item \code{periods}: Time periods corresponding to the rankings.
-#'     \item \code{team}: Team names matching those in the \code{data}.
+#'     \item \code{team}: Team names matching those in \code{data}.
 #'     \item \code{rank_points}: Ranking points for each team.
 #'   }
-#'@param dynamic_type A character string specifying the type of dynamics in the model. Options are:
+#' @param dynamic_type A character string specifying the type of dynamics in the model. Options are:
 #'   \itemize{
 #'     \item \code{"weekly"}: Weekly dynamic parameters.
 #'     \item \code{"seasonal"}: Seasonal dynamic parameters.
 #'   }
-#'@param ability_prior The prior distribution for the team-specific abilities.Possible choices:
-#'    \itemize{
-#'      \item \code{normal}.
-#'      \item \code{student_t}.
-#'      \item \code{cauchy}.
-#'      \item \code{laplace}.
-#'    }
-#'See the \pkg{rstanarm} for a deep overview and read the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
-#'   Distributions for rstanarm Models}}
-#'@param ability_prior_sd The prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details.
-#'@param home_effect Home effect (default is \code{TRUE}).
-#' @param home_prior_par A list containing prior mean and standard deviation for the home effect parameter:
+#' @param prior_par A list specifying the prior distributions for the parameters of interest:
 #'   \itemize{
-#'     \item \code{mean_home}: Mean for home effect (numeric, default is 0; applicable only if \code{home_effect = TRUE}).
-#'     \item \code{sd_home}: Standard deviation for home effect (positive numeric, default is 5; applicable only if \code{home_effect = TRUE}).
+#'     \item \code{ability}: Prior distribution for team-specific abilities. Possible distributions are \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}. Default is \code{normal(0, NULL)}.
+#'     \item \code{ability_sd}:  Prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details. Default is \code{cauchy(0, 5)}.
+#'     \item \code{home}: Prior distribution for the home effect (\code{home}). Applicable only if \code{home_effect = TRUE}. Only normal priors are allowed. Default is \code{normal(0, 5)}.
 #'   }
-#'@param norm_method A character string specifying the method used to normalize team-specific ranking points. Options are:
+#'
+#'   See the \pkg{rstanarm} package for more details on specifying priors.
+#' @param home_effect Logical indicating whether to include a home effect (default is \code{TRUE}).
+#' @param norm_method A character string specifying the method used to normalize team-specific ranking points. Options are:
 #'   \itemize{
 #'     \item \code{"none"}: No normalization (default).
 #'     \item \code{"standard"}: Standardization (mean 0, standard deviation 1).
@@ -56,8 +49,7 @@
 #'     \item \code{"min_max"}: Min-max scaling to [0,1].
 #'   }
 #' @param ranking_map An optional vector mapping ranking periods to data periods. If not provided and the number of ranking periods matches the number of data periods, a direct mapping is assumed.
-#' @param ... Optional parameters passed to the function
-#' in the \bold{rstan} package. It is possibly to specify \code{iter}, \code{chains}, \code{cores}, \code{refresh}, etc.
+#' @param ... Optional parameters passed to \code{\link[rstan]{stan}} (e.g., \code{iter}, \code{chains}, \code{cores}, \code{control}).
 #'
 #' @return A list of class \code{"stanFoot"} containing:
 #'   \itemize{
@@ -65,6 +57,7 @@
 #'     \item \code{data}: The data prepared for Stan.
 #'     \item \code{stan_code}: The Stan code used for the model.
 #'   }
+#'
 #'
 #'@details
 #'Let \eqn{(y^{H}_{n}, y^{A}_{n})} denote the
@@ -175,45 +168,45 @@
 #'
 #'
 #'
-#' ### Example using the ranking
+#' # Example usage with ranking
+#' data("italy")
+#' italy <- as_tibble(italy)
+#' italy_2021 <- italy %>%
+#'   select(Season, home, visitor, hgoal, vgoal) %>%
+#'   filter(Season == "2021")
 #'
-#'data("italy")
-#'italy <- as_tibble(italy)
-#'italy_2021<- italy %>%
-#'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-#'  dplyr::filter(Season=="2021")
+#' teams <- unique(italy_2021$home)
+#' n_rows <- 20
 #'
-#'teams <- unique(italy_2021$home)
+#' # Create fake ranking
+#' ranking <- data.frame(
+#'   periods = rep(1, n_rows),
+#'   team = sample(teams, n_rows, replace = FALSE),
+#'   rank_points = sample(0:60, n_rows, replace = FALSE)
+#' )
 #'
-#'n_rows <- 20
+#' ranking <- ranking %>%
+#'   arrange(periods, desc(rank_points))
 #'
-#'# Create the fake ranking
-#'ranking <- data.frame(
-#'  periods = rep(1, n_rows),
-#'  team = sample(teams, n_rows, replace = FALSE),
-#'  rank_points = sample(0:60, n_rows, replace = FALSE)
-#')
+#' fit_with_ranking <- stan_foot(
+#'   data = italy_2021,
+#'   model = "diag_infl_biv_pois",
+#'   ranking = ranking,
+#'   home_effect = TRUE,
+#'   prior_par = list(
+#'     ability = student_t(4, 0, NULL),
+#'     ability_sd = cauchy(0, 3),
+#'     home = normal(1, 10)
+#'   ),
+#'   norm_method = "mad",
+#'   iter = 1000,
+#'   chains = 2,
+#'   cores = 2,
+#'   control = list(adapt_delta = 0.95, max_treedepth = 15)
+#' )
 #'
-#'ranking <- ranking %>%
-#'  arrange(periods, desc(rank_points))
-#'
-#'
-#'
-#'fit_with_ranking <- stan_foot(
-#'  data           = italy_2021,
-#'  model          = "diag_infl_biv_pois",
-#'  ranking        = ranking,
-#'  home_effect    = TRUE,
-#'  home_prior_par = list(mean_home = 1,
-#'                        sd_home = 10),
-#'  iter           = 1000,
-#'  chains         = 2,
-#'  cores          = 2,
-#'  control        = list(adapt_delta = 0.95, max_treedepth = 15)
-#')
-#'
-#'# Print a summary of the model fit
-#'print(fit_with_ranking$fit)
+#' # Print a summary of the model fit
+#' print(fit_with_ranking$fit)
 #'
 #'
 #'
@@ -291,12 +284,14 @@ stan_foot <- function(data,
                       predict = 0,
                       ranking,
                       dynamic_type,
-                      ability_prior,
-                      ability_prior_sd,
+                      prior_par = list(
+                        ability = normal(0, NULL),
+                        ability_sd = cauchy(0, 5),
+                        home = normal(0, 5)
+                      ),
                       home_effect = TRUE,
-                      home_prior_par = list(),
                       norm_method = "none",
-                      ranking_map = NULL, # Argument for mapping ranking periods with data periods
+                      ranking_map = NULL,
                       ...){
 
 
@@ -350,12 +345,13 @@ stan_foot <- function(data,
 #   Models' Name Checks                                                     ####
 
 
-  allowed_model_names <- c("double_pois",
-                  "biv_pois",
-                  "skellam",
-                  "student_t",
-                  "diag_infl_biv_pois",
-                  "zero_infl_skellam")
+  allowed_model_names <- c( "double_pois",
+                            "biv_pois",
+                            "skellam",
+                            "student_t",
+                            "diag_infl_biv_pois",
+                            "zero_infl_skellam")
+
   model <- match.arg(model, allowed_model_names)
 
 
@@ -435,23 +431,24 @@ stan_foot <- function(data,
   }
 
 
-  if (missing(predict)){ # check on predict
-    predict <- 0
-    N <- dim(data)[1]# rows of the dataset
-    N_prev <- 0
-    type <- "fit"
-  }else if(predict ==0){
+  # if (missing(predict)){ # check on predict
+  #   predict <- 0
+  #   N <- dim(data)[1]# rows of the dataset
+  #   N_prev <- 0
+  #   type <- "fit"
+  # }
+  if(predict == 0){
     predict <- 0
     N <- dim(data)[1]
     N_prev <- 0
     type <- "fit"
   }else if (is.numeric(predict)){
-    if (predict%%1 !=0){
+    if (predict %% 1 != 0){
       warning("Please, use integer numbers for the argument 'predict'!
               The input has been rounded to the closes integer number.")
       predict <- round(predict)
     }
-    N <- dim(data)[1]-predict
+    N <- dim(data)[1] - predict
     N_prev <- predict
     type <- "prev"
 
@@ -533,11 +530,37 @@ stan_foot <- function(data,
 #   ____________________________________________________________________________
 #   Prior Checks                                                            ####
 
+  # Validate prior_par names
+  allowed_prior_names <- c("ability", "ability_sd", "home")
+
+  # Check that prior_par contains only allowed elements
+  if (!is.null(prior_par)) {
+    if (!is.list(prior_par)) {
+      stop("'prior_par' must be a list.")
+    }
+    unknown_prior_names <- setdiff(names(prior_par), allowed_prior_names)
+    if (length(unknown_prior_names) > 0) {
+      stop(
+        paste(
+          "Unknown elements in 'prior_par':",
+          paste(unknown_prior_names, collapse = ", ")
+        )
+      )
+    }
+  }
+
+  # Extract prior parameters from the priors list
+  ability_prior <- prior_par$ability
+  ability_prior_sd <- prior_par$ability_sd
+  home_prior <- prior_par$home
+
+
+  prior_dist <- ability_prior$dist
   hyper_df <- 1           # initialization
   if (missing(ability_prior)){    # Normal as default weakly-inf. prior
     prior_dist_num <- 1
     ability_prior <- normal(0,NULL)
-    hyper_location<- 0    # location
+    hyper_location <- 0    # location
     #hyper_sd_scale <- 5  # scale
   }else{
     prior_dist <- ability_prior$dist
@@ -550,7 +573,7 @@ stan_foot <- function(data,
                argument in the 'prior' argument will be omitted
                (by default, prior$scale=NULL).")
     }
-      if (prior_dist == "normal"){
+    if (prior_dist == "normal"){
         prior_dist_num <- 1
         hyper_df <- 1
         hyper_location <- ability_prior$location
@@ -798,28 +821,6 @@ stan_foot <- function(data,
   }
 
 
-  # Define allowed home_prior_par names
-  allowed_home_prior_names <- c(
-    "mean_home", "sd_home"
-  )
-
-  # Check that home_prior_par contains only allowed elements
-  if (!is.null(home_prior_par)) {
-    if (!is.list(home_prior_par)) {
-      stop("'home_prior_par' must be a list.")
-    }
-    unknown_home_prior_names <- setdiff(names(home_prior_par), allowed_home_prior_names)
-    if (length(unknown_home_prior_names) > 0) {
-      stop(
-        paste(
-          "Unknown elements in 'home_prior_par':",
-          paste(unknown_home_prior_names, collapse = ", ")
-        )
-      )
-    }
-  }
-
-
   # Define default values for home priors if not provided
   default_mean_home <- 0
   default_sd_home <- 5
@@ -827,19 +828,22 @@ stan_foot <- function(data,
 
   if (home_effect) {
     ind_home <- 1
-    mean_home <- if (is.null(home_prior_par$mean_home)) default_mean_home else home_prior_par$mean_home
-    sd_home <- if (is.null(home_prior_par$sd_home)) default_sd_home else home_prior_par$sd_home
+    if (home_prior$dist != "normal") {
+      stop("Home effect prior must be 'normal'.")
+    }
+    mean_home <- home_prior$location
+    sd_home <- home_prior$scale
   } else {
     ind_home <- 0
     mean_home <- default_mean_home
     sd_home <- default_sd_home
   }
 
-  #Check home_prior_par value
-  if (home_effect) {
-    check_prior(mean_home, "mean_home")
-    check_prior(sd_home, "sd_home", positive = TRUE)
-  }
+  # #Check home_prior_par value
+  # if (home_effect) {
+  #   check_prior(mean_home, "mean_home")
+  #   check_prior(sd_home, "sd_home", positive = TRUE)
+  # }
 
 
 
