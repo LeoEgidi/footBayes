@@ -5,9 +5,9 @@
 #' @param data A data frame containing the observations with columns:
 #'   \itemize{
 #'     \item \code{periods}: Time point of each observation (integer >= 1).
-#'     \item \code{team1}: Name of team 1 in each observation (character string).
-#'     \item \code{team2}: Name of team 2 in each observation (character string).
-#'     \item \code{match_outcome}: Outcome (1 if team1 beats team2, 2 for tie, and 3 if team2 beats team1).
+#'     \item \code{home_team}: Home team's name (character string).
+#'     \item \code{away_team}: Away team's name (character string).
+#'     \item \code{match_outcome}: Outcome (1 if home team beats away team, 2 for tie, and 3 if away team beats home team).
 #'   }
 #'   The data frame must not contain missing values.
 #' @param dynamic_rank Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).
@@ -50,9 +50,9 @@
 #'
 #' data <- data.frame(
 #'   periods = c(1, 1, 2, 2, 3, 3, 4, 4),
-#'   team1 = c("AC Milan", "Inter", "AC Milan", "Juventus", "Roma", "Inter", "Lecce", "Roma"),
-#'   team2 = c("Inter", "Juventus", "Roma", "Roma", "Juventus", "AC Milan", "Juventus", "Lecce"),
-#'   match_outcome = c(1, 3, 2, 3, 2, 3, 1, 2) # 1 = team1 wins, 2 = draw, 3 = team2 wins
+#'   home_team = c("AC Milan", "Inter", "AC Milan", "Juventus", "Roma", "Inter", "Lecce", "Roma"),
+#'   away_team = c("Inter", "Juventus", "Roma", "Roma", "Juventus", "AC Milan", "Juventus", "Lecce"),
+#'   match_outcome = c(1, 3, 2, 3, 2, 3, 1, 2) # 1 = home team wins, 2 = draw, 3 = away team wins
 #' )
 #'
 #' # Fit the dynamic model using the median as rank measure
@@ -74,9 +74,9 @@
 #'
 #' data_static <- data.frame(
 #'   periods = rep(1, 6),
-#'   team1 = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
-#'   team2 = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
-#'   match_outcome = c(1, 2, 3, 1, 2, 1) # 1 = team1 wins, 2 = draw, 3 = team2 wins
+#'   home_team = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
+#'   away_team = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
+#'   match_outcome = c(1, 2, 3, 1, 2, 1) # 1 = home team wins, 2 = draw, 3 = away team wins
 #' )
 #'
 #' # Fit the static model using the MAP as rank measure
@@ -196,7 +196,7 @@ btd_foot <- function(data,
   }
 
   # Check that required columns are present
-  required_cols <- c("periods", "team1", "team2", "match_outcome")
+  required_cols <- c("periods", "home", "away_team", "match_outcome")
   missing_cols <- setdiff(required_cols, names(data))
   if (length(missing_cols) > 0) {
     stop(
@@ -209,27 +209,27 @@ btd_foot <- function(data,
 
   # Extract variables
   instants_rank <- data$periods
-  team1 <- data$team1
-  team2 <- data$team2
+  home_team <- data$home_team
+  away_team <- data$away_team
   match_outcome <- data$match_outcome
 
   N <- nrow(data)
 
   # Create teams vector and map team names to integer indices
-  teams <- unique(c(team1, team2))
+  teams <- unique(c(home_team, away_team))
   nteams <- length(teams)
   ntimes_rank <- max(instants_rank)
 
   # Map team names to integer indices
-  team1_idx <- match(team1, teams)
-  team2_idx <- match(team2, teams)
+  home_team_idx <- match(home_team, teams)
+  away_team_idx <- match(away_team, teams)
 
-  # Check for NAs in team1_idx and team2_idx
-  if (any(is.na(team1_idx))) {
-    stop("Some values in 'team1' do not match any known teams.")
+  # Check for NAs in home_team_idx and away_team_idx
+  if (any(is.na(home_team_idx))) {
+    stop("Some values in 'home_team' do not match any known teams.")
   }
-  if (any(is.na(team2_idx))) {
-    stop("Some values in 'team2' do not match any known teams.")
+  if (any(is.na(away_team_idx))) {
+    stop("Some values in 'away_team' do not match any known teams.")
   }
 
   # NAs
@@ -277,8 +277,8 @@ btd_foot <- function(data,
     stan_data <- list(
       N = N,
       nteams = nteams,
-      team1 = as.integer(team1_idx),
-      team2 = as.integer(team2_idx),
+      team1 = as.integer(home_team_idx),
+      team2 = as.integer(away_team_idx),
       mean_psi = mean_psi,
       sd_psi = sd_psi,
       mean_gamma = mean_gamma,
@@ -294,8 +294,8 @@ btd_foot <- function(data,
       nteams = nteams,
       ntimes_rank = ntimes_rank,
       instants_rank = as.integer(instants_rank),
-      team1 = as.integer(team1_idx),
-      team2 = as.integer(team2_idx),
+      team1 = as.integer(home_team_idx),
+      team2 = as.integer(away_team_idx),
       mean_psi = mean_psi,
       sd_psi = sd_psi,
       mean_gamma = mean_gamma,
@@ -314,13 +314,13 @@ btd_foot <- function(data,
   # data {
   #     int<lower=1> N;          // Number of observations
   #     int<lower=1> nteams;          // Number of teams
-  #     int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
-  #     int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
+  #     int<lower=1, upper=nteams> home_team[N];  // Index of home_team in each observation
+  #     int<lower=1, upper=nteams> away_team[N];  // Index of away_team in each observation
   #     real mean_psi;                // Initial mean for psi
   #     real<lower=0> sd_psi;         // Standard deviation for psi
   #     real mean_gamma;
   #     real<lower=0> sd_gamma;
-  #     int<lower=1, upper=3> y[N];      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
+  #     int<lower=1, upper=3> y[N];      // Outcome: 1 if home_team beats away_team, 3 if away_team beats home_team, 2 for tie
   #     int<lower=0, upper=1> ind_home;        // Home effect indicator
   #     real mean_home;              // Mean for home effect
   #     real<lower=0> sd_home;      // Standard deviation for home effect
@@ -349,13 +349,13 @@ btd_foot <- function(data,
   #
   #     // Likelihood
   #     for (n in 1:N) {
-  #       real delta_team1 = exp(psi[team1[n]] + adjusted_home_effect);
-  #       real delta_team2 = exp(psi[team2[n]]);
+  #       real delta_home_team = exp(psi[home_team[n]] + adjusted_home_effect);
+  #       real delta_away_team = exp(psi[away_team[n]]);
   #       real nu = exp(gamma);
-  #       real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
-  #       real p_i_win = delta_team1 / denom;
-  #       real p_j_win = delta_team2 / denom;
-  #       real p_tie = (nu * sqrt(delta_team1 * delta_team2)) / denom;
+  #       real denom = delta_home_team + delta_away_team + (nu * sqrt(delta_home_team * delta_away_team));
+  #       real p_i_win = delta_home_team / denom;
+  #       real p_j_win = delta_away_team / denom;
+  #       real p_tie = (nu * sqrt(delta_home_team * delta_away_team)) / denom;
   #       if (y[n] == 1) {
   #         target += log(p_i_win);
   #       } else if (y[n] == 3) {
@@ -377,13 +377,13 @@ btd_foot <- function(data,
   #     int<lower=1> nteams;          // Number of teams
   #     int<lower=1> ntimes_rank;      // Number of time points
   #     int<lower=1, upper=ntimes_rank> instants_rank[N];  // Time point of each observation
-  #     int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
-  #     int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
+  #     int<lower=1, upper=nteams> home_team[N];  // Index of home_team in each observation
+  #     int<lower=1, upper=nteams> away_team[N];  // Index of away_team in each observation
   #     real mean_psi;                // Initial mean for psi
   #     real<lower=0> sd_psi;         // Standard deviation of the AR(1) process
   #     real mean_gamma;
   #     real<lower=0> sd_gamma;
-  #     int<lower=1, upper=3> y[N];      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
+  #     int<lower=1, upper=3> y[N];      // Outcome: 1 if home_team beats away_team, 3 if away_team beats home_team, 2 for tie
   #     int<lower=0, upper=1> ind_home;        // Home effect indicator
   #     real mean_home;              // Mean for home effect
   #     real<lower=0> sd_home;      // Standard deviation for home effect
@@ -421,13 +421,13 @@ btd_foot <- function(data,
   #
   #     // Likelihood
   #     for (n in 1:N) {
-  #         real delta_team1 = exp(psi[team1[n], instants_rank[n]] + adjusted_home_effect);
-  #         real delta_team2 = exp(psi[team2[n], instants_rank[n]]);
+  #         real delta_home_team = exp(psi[home_team[n], instants_rank[n]] + adjusted_home_effect);
+  #         real delta_away_team = exp(psi[away_team[n], instants_rank[n]]);
   #         real nu = exp(gamma);
-  #         real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
-  #         real p_i_win = delta_team1 / denom;
-  #         real p_j_win = delta_team2 / denom;
-  #         real p_tie = (nu * sqrt(delta_team1 * delta_team2)) / denom;
+  #         real denom = delta_home_team + delta_away_team + (nu * sqrt(delta_home_team * delta_away_team));
+  #         real p_i_win = delta_home_team / denom;
+  #         real p_j_win = delta_away_team / denom;
+  #         real p_tie = (nu * sqrt(delta_home_team * delta_away_team)) / denom;
   #         if (y[n] == 1) {
   #             target += log(p_i_win);
   #         } else if (y[n] == 3) {

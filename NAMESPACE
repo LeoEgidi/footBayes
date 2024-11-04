@@ -2,6 +2,7 @@
 
 export(btd_foot)
 export(cauchy)
+export(compare_foot)
 export(foot_abilities)
 export(foot_prob)
 export(foot_rank)

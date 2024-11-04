@@ -21,11 +21,11 @@ stan_foot(
 \arguments{
 \item{data}{A data frame containing match data with columns:
 \itemize{
-  \item \code{season}: Season identifier.
-  \item \code{home}: Home team's name.
-  \item \code{away}: Away team's name.
-  \item \code{homegoals}: Goals scored by the home team.
-  \item \code{awaygoals}: Goals scored by the away team.
+  \item \code{season}: Season identifier (integer >= 1).
+  \item \code{home_team}: Home team's name (character string).
+  \item \code{away_team}: Away team's name (character string).
+  \item \code{homegoals}: Goals scored by the home team (integer >= 0).
+  \item \code{awaygoals}: Goals scored by the away team (integer >= 0).
 }}
 
 \item{model}{A character string specifying the Stan model to fit. Options are:
@@ -42,9 +42,9 @@ stan_foot(
 
 \item{ranking}{An optional data frame containing ranking points for teams:
 \itemize{
-  \item \code{periods}: Time periods corresponding to the rankings.
-  \item \code{team}: Team names matching those in \code{data}.
-  \item \code{rank_points}: Ranking points for each team.
+  \item \code{periods}: Time periods corresponding to the rankings (integer >= 1).
+  \item \code{team}: Team names matching those in \code{data} (character string).
+  \item \code{rank_points}: Ranking points for each team (numeric).
 }}
 
 \item{dynamic_type}{A character string specifying the type of dynamics in the model. Options are:
@@ -81,7 +81,6 @@ A list of class \code{"stanFoot"} containing:
   \itemize{
     \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
     \item \code{data}: The data prepared for Stan.
-    \item \code{stan_code}: The Stan code used for the model.
   }
 }
 \description{

@@ -17,9 +17,9 @@ btd_foot(
 \item{data}{A data frame containing the observations with columns:
 \itemize{
   \item \code{periods}: Time point of each observation (integer >= 1).
-  \item \code{team1}: Name of team 1 in each observation (character string).
-  \item \code{team2}: Name of team 2 in each observation (character string).
-  \item \code{match_outcome}: Outcome (1 if team1 beats team2, 2 for tie, and 3 if team2 beats team1).
+  \item \code{home_team}: Home team's name (character string).
+  \item \code{away_team}: Away team's name (character string).
+  \item \code{match_outcome}: Outcome (1 if home team beats away team, 2 for tie, and 3 if away team beats home team).
 }
 The data frame must not contain missing values.}
 
@@ -71,9 +71,9 @@ Fits a Bayesian Bradley-Terry-Davidson model using Stan. Supports both static an
 
 data <- data.frame(
   periods = c(1, 1, 2, 2, 3, 3, 4, 4),
-  team1 = c("AC Milan", "Inter", "AC Milan", "Juventus", "Roma", "Inter", "Lecce", "Roma"),
-  team2 = c("Inter", "Juventus", "Roma", "Roma", "Juventus", "AC Milan", "Juventus", "Lecce"),
-  match_outcome = c(1, 3, 2, 3, 2, 3, 1, 2) # 1 = team1 wins, 2 = draw, 3 = team2 wins
+  home_team = c("AC Milan", "Inter", "AC Milan", "Juventus", "Roma", "Inter", "Lecce", "Roma"),
+  away_team = c("Inter", "Juventus", "Roma", "Roma", "Juventus", "AC Milan", "Juventus", "Lecce"),
+  match_outcome = c(1, 3, 2, 3, 2, 3, 1, 2) # 1 = home team wins, 2 = draw, 3 = away team wins
 )
 
 # Fit the dynamic model using the median as rank measure
@@ -95,9 +95,9 @@ print(fit_result$rank)
 
 data_static <- data.frame(
   periods = rep(1, 6),
-  team1 = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
-  team2 = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
-  match_outcome = c(1, 2, 3, 1, 2, 1) # 1 = team1 wins, 2 = draw, 3 = team2 wins
+  home_team = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
+  away_team = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
+  match_outcome = c(1, 2, 3, 1, 2, 1) # 1 = home team wins, 2 = draw, 3 = away team wins
 )
 
 # Fit the static model using the MAP as rank measure
