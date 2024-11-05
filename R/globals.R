@@ -11,7 +11,7 @@ utils::globalVariables(c('median', 'quantile', 'group_by', 'summarise',
                        'filter', 'Home_prob', '.','dpois', 'optim', 'pchisq',
                        'as_nlist', 'valori', 'mutate', 'times', '%>%',
                        'day', 'distinct', 'matches', 'favorite', 'underdog',
-                       'periods', 'rank_points', 'team'))
+                       'periods', 'rank_points', 'team', 'period', 'log_strength'))
 
 #LinkingTo: StanHeaders (>= 2.18.0), rstan (>= 2.18.1), BH (>= 1.66.0),
 #Rcpp (>= 0.12.0), RcppEigen (>= 0.3.3.3.0)

@@ -67,7 +67,7 @@ ranking <- data.frame(
 ranking <- ranking \%>\%
   arrange(periods, desc(rank_points))
 
-# Fit a model using `stan_foot`
+# Fit a model using stan_foot
 fit_with_ranking <- stan_foot(
   data = italy_2021,
   model = "diag_infl_biv_pois",

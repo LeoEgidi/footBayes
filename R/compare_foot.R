@@ -55,7 +55,7 @@
 #' ranking <- ranking %>%
 #'   arrange(periods, desc(rank_points))
 #'
-#' # Fit a model using `stan_foot`
+#' # Fit a model using stan_foot
 #' fit_with_ranking <- stan_foot(
 #'   data = italy_2021,
 #'   model = "diag_infl_biv_pois",
@@ -151,7 +151,6 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "pse
 
   if ("pseudoR2" %in% metric) {
     p_k <- prop.table(table(test_data$outcome))
-    # Ensure p_k is numeric vector of length 3
     p_k_vector <- numeric(3)
     for (k in 1:3) {
       p_k_vector[k] <- p_k[as.character(k)]
@@ -167,10 +166,8 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "pse
     log_lik_0 <- sum(log(prob_observed_null))
   }
 
-  # Initialize results list
   results <- list()
 
-  # Loop over models
   for (model_name in names(models)) {
     model <- models[[model_name]]
 
@@ -187,7 +184,7 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "pse
       sims <- rstan::extract(model)
     }
 
-    # Check if 'y_prev' is in the samples
+    # Check 'y_prev' is in the samples
     if (!"y_prev" %in% names(sims)) {
       warning(paste("Model", model_name, "does not contain 'y_prev' in its samples. Ensure the model was fitted with 'predict' set appropriately. Skipping."))
       next
@@ -201,7 +198,7 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "pse
       next
     }
 
-    # Initialize predicted probabilities matrix
+    # Predicted probabilities matrix
     prob_q_model <- matrix(NA, N_prev, 3)
 
     for (n in 1:N_prev) {
@@ -251,7 +248,6 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "pse
     cbind(Model = model_name, as.data.frame(results[[model_name]]))
   }))
 
-  # Reset row names
   rownames(results_df) <- NULL
 
   return(results_df)

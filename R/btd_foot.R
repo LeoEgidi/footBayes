@@ -196,7 +196,7 @@ btd_foot <- function(data,
   }
 
   # Check that required columns are present
-  required_cols <- c("periods", "home", "away_team", "match_outcome")
+  required_cols <- c("periods", "home_team", "away_team", "match_outcome")
   missing_cols <- setdiff(required_cols, names(data))
   if (length(missing_cols) > 0) {
     stop(
