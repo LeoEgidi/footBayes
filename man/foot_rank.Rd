@@ -10,7 +10,7 @@ foot_rank(data, object, team_sel, visualize = c("aggregated", "individual"))
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
 home goals, away goals.}
 
-\item{object}{An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.}
+\item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
 
 \item{team_sel}{Selected team(s). By default, all the teams are selected.}
 

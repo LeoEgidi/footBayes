@@ -29,7 +29,9 @@
 #'
 #' @return A ggplot object representing the posterior distributions plot.
 #'
+#' @author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
 #'
+#' @import ggplot2
 #' @export
 
 plot_btdPosterior <- function(x, teams_of_interest = NULL, ncol = NULL, scales = NULL, ...) {
@@ -113,36 +115,36 @@ plot_btdPosterior <- function(x, teams_of_interest = NULL, ncol = NULL, scales =
 
   if (is_dynamic) {
     # Dynamic Posterior Boxplot: Faceted by team and period
-    p <- ggplot2::ggplot(boxplot_df, ggplot2::aes(x = as.factor(period), y = log_strength)) +
-      ggplot2::geom_boxplot(aes(fill = as.factor(period)), ...) +
-      ggplot2::facet_wrap(~ team, scales = scales, ncol = ncol) +
-      ggplot2::labs(
+    p <- ggplot(boxplot_df, aes(x = as.factor(period), y = log_strength)) +
+      geom_boxplot(aes(fill = as.factor(period)), ...) +
+      facet_wrap(~ team, scales = scales, ncol = ncol) +
+      labs(
         x = "Period",
         y = "Log-Strength Values",
         fill = "Period"
       ) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
-        strip.text = ggplot2::element_text(size = 15),
+      theme_bw() +
+      theme(
+        strip.text = element_text(size = 8, color = "black"),
         legend.position = "none",
-        axis.text.x = ggplot2::element_text(angle = 0, hjust = 0)
+        axis.text.x = element_text(angle = 0, hjust = 0)
       )
   } else {
     # Static Posterior Boxplot: Boxplot for each team
-    p <- ggplot2::ggplot(boxplot_df, ggplot2::aes(x = "", y = log_strength)) +
-      ggplot2::geom_boxplot(aes(fill = team), ...) +
-      ggplot2::facet_wrap(~ team, scales = scales, ncol = ncol) +
-      ggplot2::labs(
+    p <- ggplot(boxplot_df, aes(x = "", y = log_strength)) +
+      geom_boxplot(aes(fill = team), ...) +
+      facet_wrap(~ team, scales = scales, ncol = ncol) +
+      labs(
         x = "",
         y = "Log-Strength Values",
         fill = "Team"
       ) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
-        strip.text = ggplot2::element_text(size = 15),
+      theme_bw() +
+      theme(
+        strip.text = element_text(size = 8, color = "black"),
         legend.position = "none",
-        axis.text.x = ggplot2::element_blank(),
-        axis.ticks.x = ggplot2::element_blank()
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()
       )
   }
 

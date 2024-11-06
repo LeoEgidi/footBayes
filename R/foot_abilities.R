@@ -4,7 +4,7 @@
 #' or from MLE models fitted via the \code{mle_foot} function.
 #'
 #'
-#' @param object An object either of class \code{stanfit} as given by \code{stan_foot} function or class
+#' @param object An object either of class \code{stanfit} or \code{stanFoot} as given by \code{stan_foot} function, or class
 #'               \code{\link{list}} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
 #'                with \code{mle_foot}.
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
@@ -59,11 +59,12 @@
 #' foot_abilities(fit5, italy_2000_2002)
 #'
 #' }
-#'@importFrom arm coefplot
-#'@importFrom rstan traceplot
-#'@importFrom graphics par
-#'@importFrom stats dpois filter median optim pchisq quantile rpois sd
-#'@export
+#' @import ggplot2
+#' @importFrom arm coefplot
+#' @importFrom rstan traceplot
+#' @importFrom graphics par
+#' @importFrom stats dpois filter median optim pchisq quantile rpois sd
+#' @export
 
 
 
@@ -111,20 +112,16 @@ foot_abilities <- function(object, data,
   oldpar <- par(no.readonly = TRUE)    # code line i
   on.exit(par(oldpar))                 # code line i + 1
 
-  if (inherits(object, "stanfit")){
-    sims <- rstan::extract(object)
-    # if (is.null(sims$y_prev)){
-    #   teams <- unique(c(data$home, data$away))
-    # }else{
-    #   teams <- unique(c(data$home[(dim(sims$y_rep)[2]+1):
-    #                                 (dim(sims$y_rep)[2] +
-    #                                    dim(sims$y_prev)[2])],
-    #                     data$away[(dim(sims$y_rep)[2]+1):
-    #                                 (dim(sims$y_rep)[2] +
-    #                                    dim(sims$y_prev)[2])]))
-    # }
+  if (inherits(object, c("stanfit", "stanFoot"))) {
+    # Extract stanfit object if it's a stanFoot
+    if (inherits(object, "stanFoot")) {
+      stan_fit <- object$fit
+    } else {
+      stan_fit <- object
+    }
 
-    # check on selected team
+    # Extract posterior samples
+    sims <- rstan::extract(stan_fit)
 
     if (missing(team)){
       sel_teams <- teams
@@ -240,14 +237,15 @@ foot_abilities <- function(object, data,
     yaxis_text(size=rel(1.2))+
     xaxis_text( size = rel(1.2))+
     theme(plot.title = element_text(size = 16),
-          strip.text = element_text(size = 8),
+          strip.text = element_text(size = 8, color = "black"),
           axis.text.x =  element_text(face="bold",
                                                    color="black",
                                                    angle=45, size =9),
           axis.text.y = element_text(size=11),
           plot.subtitle=element_text(size=12),
       legend.position = "bottom",
-      legend.text = element_text(size = 15))
+      legend.text = element_text(size = 15)) +
+    theme_bw()
   }else if (type =="attack"){
     position_lookup <-
       att_data %>%
@@ -280,14 +278,15 @@ foot_abilities <- function(object, data,
       yaxis_text(size=rel(1.2))+
       xaxis_text( size = rel(1.2))+
       theme(plot.title = element_text(size = 16),
-            strip.text = element_text(size = 8),
+            strip.text = element_text(size = 8, color = "black"),
             axis.text.x =  element_text(face="bold",
                           color="black",
                           angle=45, size =9),
             axis.text.y = element_text(size=11),
             plot.subtitle=element_text(size=12),
             legend.position = "bottom",
-            legend.text = element_text(size = 15))
+            legend.text = element_text(size = 15)) +
+      theme_bw()
 
   }else if (type =="defense"){
     position_lookup <-
@@ -321,14 +320,16 @@ foot_abilities <- function(object, data,
       yaxis_text(size=rel(1.2))+
       xaxis_text( size = rel(1.2))+
       theme(plot.title = element_text(size = 16),
-            strip.text = element_text(size = 8),
+            strip.text = element_text(size = 8, color = "black"),
             axis.text.x =  element_text(face="bold",
                                         color="black",
                                         angle=45, size =9),
             axis.text.y = element_text(size=11),
             plot.subtitle=element_text(size=12),
         legend.position = "bottom",
-        legend.text = element_text(size = 15))
+        legend.text = element_text(size = 15)) +
+      theme_bw()
+
   }
 
 
@@ -483,14 +484,15 @@ foot_abilities <- function(object, data,
         yaxis_text(size=rel(1.2))+
         xaxis_text( size = rel(1.2))+
         theme(plot.title = element_text(size = 16),
-              strip.text = element_text(size = 8),
+              strip.text = element_text(size = 8, color = "black"),
               axis.text.x =  element_text(face="bold",
                                           color="black",
                                           angle=45, size =9),
               axis.text.y = element_text(size=11),
               plot.subtitle=element_text(size=12),
           legend.position = "bottom",
-          legend.text = element_text(size = 15))
+          legend.text = element_text(size = 15)) +
+        theme_bw()
 
 
     }else if (length(dim(ability))==2){

@@ -102,7 +102,7 @@ mle_foot <- function(data, model, predict, ...){
                     hessian = FALSE,
                     n.iter = 200,
                     sigma_y = 1 # for student-t
-                    )
+  )
 
   if (missing(...)){
     user_dots <- user_dots
@@ -122,13 +122,13 @@ mle_foot <- function(data, model, predict, ...){
 
 
   good_names <- c("double_pois",
-                "biv_pois",
-                "skellam",
-                "student_t")
+                  "biv_pois",
+                  "skellam",
+                  "student_t")
   model <- match.arg(model, good_names)
 
   colnames(data) <- c("season", "home", "away",
-                    "homegoals", "awaygoals")
+                      "homegoals", "awaygoals")
 
   # checks sui formati
   if ( !is.numeric(data$homegoals) |!is.numeric(data$awaygoals)){
@@ -217,14 +217,14 @@ mle_foot <- function(data, model, predict, ...){
       #   `names<-`(teams),
       # sigma_y = student_t sd
       sigma_y = parameters["sigma_y"]
-  )
+    )
 
-  return(parameter_list)
-}
+    return(parameter_list)
+  }
 
-######################
-# Likelihood functions
-######################
+  ######################
+  # Likelihood functions
+  ######################
 
   # double poisson
   double_pois_lik <- function(parameters, y1, y2, team1, team2){
@@ -242,7 +242,7 @@ mle_foot <- function(data, model, predict, ...){
       home_log_lik[n] <- dpois(y1[n], lambda = theta[n,1], log = TRUE)
       away_log_lik[n] <- dpois(y2[n], lambda = theta[n,2], log = TRUE )
     }
-  return(-sum(home_log_lik + away_log_lik))
+    return(-sum(home_log_lik + away_log_lik))
   }
 
   # bivariate poisson
@@ -261,8 +261,8 @@ mle_foot <- function(data, model, predict, ...){
       theta[n,2] <- exp(att[team2[n]] + def[team1[n]])
       theta[n,3] <- exp(const)
       log_lik[n] <- dbvpois(y1[n], y2[n], a = theta[n,1],
-                          b=theta[n,2], c = theta[n,3],
-                          log = TRUE)
+                            b=theta[n,2], c = theta[n,3],
+                            log = TRUE)
 
     }
     return(-sum(log_lik))
@@ -282,8 +282,8 @@ mle_foot <- function(data, model, predict, ...){
       theta[n,1] <- exp(home + att[team1[n]] + def[team2[n]])
       theta[n,2] <- exp(att[team2[n]] + def[team1[n]])
       log_lik[n] <- dskellam(y1[n]- y2[n],
-                            mu1 = theta[n,1],
-                            mu2 = theta[n,2], log = TRUE)
+                             mu1 = theta[n,1],
+                             mu2 = theta[n,2], log = TRUE)
     }
     return(-sum(log_lik))
   }
@@ -299,9 +299,9 @@ mle_foot <- function(data, model, predict, ...){
 
     for (n in 1:N){
       log_lik[n] <- dt.scaled(x = y1[n]- y2[n], df = 7,
-                       mean = home + ability[team1[n]] - ability[team2[n]],
-                       sd = sigma_y,
-                       log = TRUE)
+                              mean = home + ability[team1[n]] - ability[team2[n]],
+                              sd = sigma_y,
+                              log = TRUE)
     }
     return(-sum(log_lik))
   }
@@ -314,86 +314,86 @@ mle_foot <- function(data, model, predict, ...){
     home = 2,
     const = 1, # for bivariate poisson
     sigma_y = user_dots$sigma_y # for student_t
-    )
+  )
 
 
   ## mle fit
   mle_fit <- optim(par = unlist(equal_parameters),
-                     fn = eval(parse(text=paste(model, "_lik", sep=""))),
-                     team1 = team1, team2=team2,
-                     y1=y1, y2=y2,
-                     method = user_dots$method,
-                     hessian = user_dots$hessian,
-                     control = list(maxit = user_dots$maxit))
+                   fn = eval(parse(text=paste(model, "_lik", sep=""))),
+                   team1 = team1, team2=team2,
+                   y1=y1, y2=y2,
+                   method = user_dots$method,
+                   hessian = user_dots$hessian,
+                   control = list(maxit = user_dots$maxit))
 
   # compute likelihood confidence intervals
 
 
-    fn <- eval(parse(text=paste(model, "_lik", sep="")))
-    mle_value <- -fn(mle_fit$par, team1 = team1,
-                     team2=team2,
-                     y1=y1, y2=y2)
+  fn <- eval(parse(text=paste(model, "_lik", sep="")))
+  mle_value <- -fn(mle_fit$par, team1 = team1,
+                   team2=team2,
+                   y1=y1, y2=y2)
 
-    ci <- matrix(NA,(2*nteams),2)
-    # profile likelihood intervals (default)
-    if (user_dots$interval == "profile"){
+  ci <- matrix(NA,(2*nteams),2)
+  # profile likelihood intervals (default)
+  if (user_dots$interval == "profile"){
 
-      index <- function(j){
-        profile <- function(x){
+    index <- function(j){
+      profile <- function(x){
         parameters <- mle_fit$par
         parameters[j] <- x
         return(-fn(parameters, team1 = team1,
                    team2=team2,
                    y1=y1, y2=y2))
       }
-    # defining likelihood inverse for the profile likelihood ci's
-    profile <- Vectorize(profile, "x")
-    h <- mle_value - pchisq(0.95, 1)/2
-    #curve(profile(x), -1,1)
-    #abline(h = h , col="red")
-    x <- seq(-5,5, 0.01)
-    f_v <- profile(x)
-    return(c(min(x[f_v>=h]), max(x[f_v>=h])))
-      }
+      # defining likelihood inverse for the profile likelihood ci's
+      profile <- Vectorize(profile, "x")
+      h <- mle_value - pchisq(0.95, 1)/2
+      #curve(profile(x), -1,1)
+      #abline(h = h , col="red")
+      x <- seq(-5,5, 0.01)
+      f_v <- profile(x)
+      return(c(min(x[f_v>=h]), max(x[f_v>=h])))
+    }
 
-      ci_out <- sapply(c(1:(2*nteams)), index)
-      ci <- t(ci_out)
+    ci_out <- sapply(c(1:(2*nteams)), index)
+    ci <- t(ci_out)
 
     # Wald-type intervals (only if hessian = TRUE)
-    }else if(user_dots$interval == "Wald"){
+  }else if(user_dots$interval == "Wald"){
 
-      ci[1:(2*nteams-2),1] <- round(mle_fit$par[1:(2*nteams-2)] -1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
-      ci[1:(2*nteams-2),2] <- round(mle_fit$par[1:(2*nteams-2)] +1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
-      ci[2*nteams-1, 1] <- round(mle_fit$par[2*nteams-1]-1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
-      ci[2*nteams-1, 2] <- round(mle_fit$par[2*nteams-1]+1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
-      if (model == "biv_pois"){
-        hessian <-  hessian(func = fn, x  = unlist(equal_parameters), team1 = team1, team2=team2,
-                            y1=y1, y2=y2)
+    ci[1:(2*nteams-2),1] <- round(mle_fit$par[1:(2*nteams-2)] -1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
+    ci[1:(2*nteams-2),2] <- round(mle_fit$par[1:(2*nteams-2)] +1.96*sqrt( diag(solve(mle_fit$hessian[1:(2*nteams-2), 1:(2*nteams-2)])) ),2)
+    ci[2*nteams-1, 1] <- round(mle_fit$par[2*nteams-1]-1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
+    ci[2*nteams-1, 2] <- round(mle_fit$par[2*nteams-1]+1.96*sqrt(solve(mle_fit$hessian[2*nteams-1, 2*nteams-1 ])),2)
+    if (model == "biv_pois"){
+      hessian <-  hessian(func = fn, x  = unlist(equal_parameters), team1 = team1, team2=team2,
+                          y1=y1, y2=y2)
       #ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
       #ci[2*nteams, 2] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
       ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(hessian[2*nteams, 2*nteams]))
       ci[2*nteams, 2] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(hessian[2*nteams, 2*nteams]))
-      }
-      }
+    }
+  }
 
   # extract parameters and reparametrization for
   #    the first team
   att <- c(- sum(as.vector(mle_fit$par%>%
-                          .[grepl("att", names(.))])),
-             as.vector(mle_fit$par%>%
-              .[grepl("att", names(.))]))
+                             .[grepl("att", names(.))])),
+           as.vector(mle_fit$par%>%
+                       .[grepl("att", names(.))]))
   def <- c(-sum(as.vector(mle_fit$par%>%
-                          .[grepl("def", names(.))])),
-            as.vector(mle_fit$par%>%
-                     .[grepl("def", names(.))]))
+                            .[grepl("def", names(.))])),
+           as.vector(mle_fit$par%>%
+                       .[grepl("def", names(.))]))
   home <- as.numeric(mle_fit$par%>%
-                     .[grepl("home", names(.))])
+                       .[grepl("home", names(.))])
   corr_par <- round(exp(as.numeric(mle_fit$par%>%
-                            .[grepl("const", names(.))])),2)
+                                     .[grepl("const", names(.))])),2)
   abilities <- c(- sum(as.vector(mle_fit$par%>%
-                                 .[grepl("att", names(.))])+
+                                   .[grepl("att", names(.))])+
                          as.vector(mle_fit$par%>%
-                                   .[grepl("def", names(.))])),
+                                     .[grepl("def", names(.))])),
                  as.vector(mle_fit$par%>%
                              .[grepl("att", names(.))])+
                    as.vector(mle_fit$par%>%
@@ -441,7 +441,7 @@ mle_foot <- function(data, model, predict, ...){
 
   if (model=="student_t"){
     return(list(abilities = abilities_est,
-                home = home_est,
+                home_effect = home_est,
                 model = model,
                 predict = predict,
                 n.iter = user_dots$n.iter,
@@ -452,7 +452,7 @@ mle_foot <- function(data, model, predict, ...){
   }else if (model=="biv_pois"){
     return(list(att = att_est,
                 def = def_est,
-                home = home_est,
+                home_effect = home_est,
                 corr = corr_est,
                 model = model,
                 predict = predict,
@@ -463,7 +463,7 @@ mle_foot <- function(data, model, predict, ...){
   }else{
     return(list(att = att_est,
                 def = def_est,
-                home = home_est,
+                home_effect = home_est,
                 model = model,
                 predict = predict,
                 n.iter = user_dots$n.iter,
@@ -474,4 +474,3 @@ mle_foot <- function(data, model, predict, ...){
 
 
 }
-

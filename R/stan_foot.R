@@ -55,6 +55,7 @@
 #'   \itemize{
 #'     \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
 #'     \item \code{data}: The data prepared for Stan.
+#'     \item \code{stan_code}: The Stan code of the underline model.
 #'   }
 #'
 #'
@@ -929,7 +930,8 @@ stan_foot <- function(data,
 
   output <- list(
     fit = fit,
-    data = data_stan
+    data = data_stan,
+    stan_code = fit@stanmodel
   )
   class(output) <- "stanFoot"
   return(output)

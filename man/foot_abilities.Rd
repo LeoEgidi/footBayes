@@ -7,7 +7,7 @@
 foot_abilities(object, data, type = c("attack", "defense", "both"), team, ...)
 }
 \arguments{
-\item{object}{An object either of class \code{stanfit} as given by \code{stan_foot} function or class
+\item{object}{An object either of class \code{stanfit} or \code{stanFoot} as given by \code{stan_foot} function, or class
 \code{\link{list}} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
  with \code{mle_foot}.}
 

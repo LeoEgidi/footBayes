@@ -118,3 +118,6 @@ fit_result_static <- btd_foot(
 print(fit_result_static$rank)
 }
 }
+\author{
+Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
+}

@@ -7,7 +7,7 @@
 foot_prob(object, data, home_team, away_team)
 }
 \arguments{
-\item{object}{An object either of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function or
+\item{object}{An object either of class \code{\link[rstan]{stanfit}} and \code{stanFoot} as given by \code{stan_foot} function or
 \code{\link{list}} as given by \code{mle_foot}.}
 
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,

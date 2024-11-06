@@ -10,7 +10,7 @@ pp_foot(data, object, type = c("aggregated", "matches"), coverage = 0.95)
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
 home goals, away goals.}
 
-\item{object}{An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.}
+\item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
 
 \item{type}{Type of plots, one among \code{"aggregated"} or \code{"matches"}.}
 
@@ -48,7 +48,6 @@ fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 pp_foot(italy_2000, fit)
 
 }
-
 }
 \references{
 Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., & Rubin, D. B. (2013). Bayesian data analysis. CRC press.

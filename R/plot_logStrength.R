@@ -12,6 +12,9 @@
 #'
 #' @return A ggplot object representing the rankings plot.
 #'
+#' @author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
+#'
+#' @import ggplot2
 #' @export
 plot_logStrength <- function(x, teams_of_interest = NULL, ncol = 8, ...) {
   # Check if the object is of class 'btdFoot'
@@ -41,44 +44,44 @@ plot_logStrength <- function(x, teams_of_interest = NULL, ncol = 8, ...) {
 
   if (is_dynamic) {
     # Dynamic Ranking Plot: Rank Points over Periods for each team
-    p <- ggplot2::ggplot(x$rank, ggplot2::aes(x = periods, y = rank_points, color = team)) +
-      ggplot2::geom_line(...) +
-      ggplot2::geom_point(...) +
-      ggplot2::labs(
+    p <- ggplot(x$rank, aes(x = periods, y = rank_points, color = team)) +
+      geom_line(...) +
+      geom_point(...) +
+      labs(
         x = "Periods",
         y = "Log-Strength Values"
       ) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
+      theme_bw() +
+      theme(
         legend.position = "right",
-        legend.title = ggplot2::element_text(size = 10),
-        plot.title = ggplot2::element_text(hjust = 0.5)
+        legend.title = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5)
       ) +
-      ggplot2::guides(
-        color = ggplot2::guide_legend(title = "Team")
+      guides(
+        color = guide_legend(title = "Team")
       )
   } else {
     # Static Ranking Plot: Horizontal lines from x=0 to x=rank_points for each team, with a dot at the end
-    p <- ggplot2::ggplot(x$rank, ggplot2::aes(y = stats::reorder(team, rank_points), x = rank_points)) +
-      ggplot2::geom_segment(
-        ggplot2::aes(x = 0, xend = rank_points, yend = team),
+    p <- ggplot(x$rank, aes(y = stats::reorder(team, rank_points), x = rank_points)) +
+      geom_segment(
+        aes(x = 0, xend = rank_points, yend = team),
         color = "deepskyblue4",
         size = 1,
         ...
       ) +
-      ggplot2::geom_point(
+      geom_point(
         color = "firebrick4",
         size = 3,
         ...
       ) +
-      ggplot2::labs(
+      labs(
         x = "Log-Strength Values",
         y = "Teams"
       ) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
+      theme_bw() +
+      theme(
         legend.position = "none",
-        plot.title = ggplot2::element_text(hjust = 0.5)
+        plot.title = element_text(hjust = 0.5)
       )
   }
 

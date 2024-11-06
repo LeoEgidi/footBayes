@@ -82,7 +82,7 @@ data{
 
     }
     transformed parameters{
-      real adj_home_effect;                   // Adjusted home effect
+      real adj_home_eff;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
       vector[3] theta[N];
@@ -92,10 +92,10 @@ data{
         def[t] = def_raw[t]-mean(def_raw);
       }
 
-      adj_home_effect = home_effect * ind_home;
+      adj_home_eff = home_effect * ind_home;
 
       for (n in 1:N){
-        theta[n,1] = exp(adj_home_effect+att[team1[n]]+def[team2[n]]+
+        theta[n,1] = exp(adj_home_eff+att[team1[n]]+def[team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -197,7 +197,7 @@ generated quantities{
 
       //out-of-sample predictions
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(adj_home_effect+att[team1_prev[n]]+
+        theta_home_prev[n] = exp(adj_home_eff+att[team1_prev[n]]+
                                 def[team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_away_prev[n] = exp(att[team2_prev[n]]+

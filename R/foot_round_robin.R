@@ -2,7 +2,7 @@
 #'
 #' Posterior predictive probabilities for a football season in a round-robin format
 #'
-#' @param object An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.
+#' @param object An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'home goals, away goals.
 #' @param team_sel Selected team(s). By default, all the teams are selected.
@@ -36,8 +36,8 @@
 #'foot_round_robin(italy_1999_2000, fit, c("Parma AC", "AS Roma"))
 #'
 #'}
-#'
-#'@importFrom dplyr as_tibble
+#' @import ggplot2
+#' @importFrom dplyr as_tibble
 #' @export
 
 
@@ -46,7 +46,15 @@ foot_round_robin <- function(data, object, team_sel){
   colnames(data) <- c("season", "home", "away",
                       "homegoals", "awaygoals")
 
-  sims <- rstan::extract(object)
+  if (inherits(object, "stanFoot")) {
+    stan_fit <- object$fit
+  } else if (inherits(object, "stanfit")) {
+    stan_fit <- object
+  } else {
+    stop("Please provide an object of class 'stanfit' or 'stanFoot'.")
+  }
+
+  sims <- rstan::extract(stan_fit)
   y <- as.matrix(data[,4:5])
   teams <- unique(data$home)
   team_home <- match(data$home, teams)

@@ -43,3 +43,6 @@ Visualizes posterior distributions of team strengths with customizable facets.
 
 }
 }
+\author{
+Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
+}

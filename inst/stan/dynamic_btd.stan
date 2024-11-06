@@ -22,8 +22,8 @@ data {
   }
 
   transformed parameters {
-      real adj_home_effect;
-      adj_home_effect = home_effect * ind_home;
+      real adj_home_eff;
+      adj_home_eff = home_effect * ind_home;
   }
 
   model {
@@ -47,7 +47,7 @@ data {
 
       // Likelihood
       for (n in 1:N) {
-          real delta_team1 = exp(psi[team1[n], instants_rank[n]] + adj_home_effect);
+          real delta_team1 = exp(psi[team1[n], instants_rank[n]] + adj_home_eff);
           real delta_team2 = exp(psi[team2[n], instants_rank[n]]);
           real nu = exp(gamma);
           real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
@@ -73,7 +73,7 @@ data {
 
     for (n in 1:N) {
         // Delta values
-        real delta_team1 = exp(psi[team1[n], instants_rank[n]] + adj_home_effect);
+        real delta_team1 = exp(psi[team1[n], instants_rank[n]] + adj_home_eff);
         real delta_team2 = exp(psi[team2[n], instants_rank[n]]);
         real nu = exp(gamma);
         real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));

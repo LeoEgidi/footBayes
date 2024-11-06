@@ -43,6 +43,8 @@
 #'     \item \code{rank_measure}: The method used to compute the rankings.
 #'   }
 #'
+#'@author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
+#'
 #' @examples
 #' \dontrun{
 #'

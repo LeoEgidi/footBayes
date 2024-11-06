@@ -65,7 +65,7 @@ functions{
       real gamma;
     }
     transformed parameters{
-      real adj_home_effect;                   // Adjusted home effect
+      real adj_home_eff;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       //cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -105,11 +105,11 @@ functions{
 
       }
 
-      adj_home_effect = home_effect * ind_home;
+      adj_home_eff = home_effect * ind_home;
 
 
       for (n in 1:N){
-        theta_home[n] = exp(adj_home_effect+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_home_eff+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
@@ -187,7 +187,7 @@ functions{
       }
 
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(adj_home_effect+att[instants_prev[n], team1_prev[n]]+
+        theta_home_prev[n] = exp(adj_home_eff+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N], team1_prev[n]]-ranking[instants_rank[N], team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+

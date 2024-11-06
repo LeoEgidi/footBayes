@@ -32,7 +32,7 @@ data{
       real gamma;
     }
     transformed parameters{
-      real adj_home_effect;                   // Adjusted home effect
+      real adj_home_eff;                   // Adjusted home effect
       vector[nteams] att;        // attack parameters
       vector[nteams] def;        // defence parameters
       vector[2] theta[N];        // exponentiated linear pred.
@@ -43,10 +43,10 @@ data{
         def[t] = def_raw[t]-mean(def_raw);
       }
 
-      adj_home_effect = home_effect * ind_home;
+      adj_home_eff = home_effect * ind_home;
 
       for (n in 1:N){
-        theta[n,1] = exp( adj_home_effect+att[team1[n]]+def[team2[n]] +
+        theta[n,1] = exp( adj_home_eff+att[team1[n]]+def[team2[n]] +
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp( att[team2[n]]+def[team1[n]] -
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));

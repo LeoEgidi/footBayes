@@ -81,6 +81,7 @@ A list of class \code{"stanFoot"} containing:
   \itemize{
     \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
     \item \code{data}: The data prepared for Stan.
+    \item \code{stan_code}: The Stan code of the underline model.
   }
 }
 \description{

@@ -3,7 +3,7 @@
 #' The function provides posterior predictive plots to check the adequacy of the Bayesian models as
 #' returned by the \code{stan_foot} function.
 #'
-#' @param object An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.
+#' @param object An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.
 #' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
 #'home goals, away goals.
 #' @param type  Type of plots, one among \code{"aggregated"} or \code{"matches"}.
@@ -45,7 +45,7 @@
 #'pp_foot(italy_2000, fit)
 #'
 #' }
-#'
+#' @import ggplot2
 #' @importFrom bayesplot yaxis_text
 #' @importFrom bayesplot xaxis_text
 #' @importFrom matrixStats colMedians
@@ -59,11 +59,16 @@ pp_foot <- function(data, object,
                     type = c("aggregated", "matches"),
                     coverage = 0.95){
 
-  if (inherits(object, "stanfit") == FALSE){
-    stop("Please consider a 'stanfit' class model.")
+  # Check if object is of class "stanFoot" or "stanfit"
+  if (inherits(object, "stanFoot")) {
+    stan_fit <- object$fit
+  } else if (inherits(object, "stanfit")) {
+    stan_fit <- object
+  } else {
+    stop("Please provide an object of class 'stanfit' or 'stanFoot'.")
   }
 
-  sims <- rstan::extract(object)
+  sims <- rstan::extract(stan_fit)
   y <- as.matrix(data[,4:5])
   diff_gol <- as.vector(y[,1] - y[,2])
   diff_gol_rep <- sims$diff_y_rep
@@ -116,25 +121,25 @@ pp_foot <- function(data, object,
 
   frame <- data.frame(valori=esiti_short, rel=freq_rel_frame_add[,2] )
 
-  p<- ggplot(frame, aes(x=valori, y=rel))+
+  p <- ggplot(frame, aes(x=valori, y=rel))+
     geom_point(position = "jitter", alpha = 0.2, aes( colour="simulated")) +
     geom_segment(mapping=aes( x=-3-0.5, y=freq_rel_obs[1],
                               xend=-3+0.5, yend=freq_rel_obs[1], colour ="observed") , size=2)+
     geom_segment(mapping=aes( x=-2-0.5, y=freq_rel_obs[2],
-                              xend=-2+0.5, yend=freq_rel_obs[2]) , size=2, color = "blue")+
+                              xend=-2+0.5, yend=freq_rel_obs[2]) , size=2, color = "#1E90FF")+
     geom_segment(mapping=aes( x=-1-0.5, y=freq_rel_obs[3],
-                              xend=-1+0.5, yend=freq_rel_obs[3]) , size=2, color = "blue")+
+                              xend=-1+0.5, yend=freq_rel_obs[3]) , size=2, color = "#1E90FF")+
     geom_segment(mapping=aes( x=0-0.5, y=freq_rel_obs[4],
-                              xend=0+0.5, yend=freq_rel_obs[4]) , size=2, color = "blue")+
+                              xend=0+0.5, yend=freq_rel_obs[4]) , size=2, color = "#1E90FF")+
     geom_segment(mapping=aes( x=1-0.5, y=freq_rel_obs[5],
-                              xend=1+0.5, yend=freq_rel_obs[5]) , size=2, color = "blue")+
+                              xend=1+0.5, yend=freq_rel_obs[5]) , size=2, color = "#1E90FF")+
     geom_segment(mapping=aes( x=2-0.5, y=freq_rel_obs[6],
-                              xend=2+0.5, yend=freq_rel_obs[6]) , size=2, color = "blue")+
+                              xend=2+0.5, yend=freq_rel_obs[6]) , size=2, color = "#1E90FF")+
     geom_segment(mapping=aes( x=3-0.5, y=freq_rel_obs[7],
-                              xend=3+0.5, yend=freq_rel_obs[7]) , size=2, color = "blue")+
+                              xend=3+0.5, yend=freq_rel_obs[7]) , size=2, color = "#1E90FF")+
     labs(x="Goal difference", y="Posterior pred. distrib.")+
     scale_colour_manual(name="",
-                        values=c(observed="blue", simulated ="#F0E442"))+
+                        values=c(observed="#1E90FF", simulated ="#FFA500"))+
     yaxis_text(size=rel(1.2))+
     xaxis_text( size = rel(1.2))+
     scale_x_discrete(limits = esiti_short,
@@ -143,7 +148,8 @@ pp_foot <- function(data, object,
           axis.text.x = element_text(size=15),
           axis.text.y = element_text(size=15),
           legend.position = "bottom",
-          legend.text = element_text(size = 15))
+          legend.text = element_text(size = 15)) +
+    theme_bw()
 
    p_value <- c()
      for (j in 1:length(esiti_short))
@@ -187,12 +193,12 @@ pp_foot <- function(data, object,
 
 p <- ggplot(df, aes(x = c(1:ngames_train))) +
       geom_ribbon(aes(ymin = scd_lb, ymax = scd_ub),
-                  fill = "#F0E442") +
+                  fill = "#FFA500") +
       #geom_ribbon(aes(ymin = scd_lb2, ymax = scd_ub2),
       #            fill="khaki3") +
       geom_line(aes(y=scd_hat, colour="simulated")) +
       #geom_point(aes(y=scd_hat),colour="darkred",shape=4) +
-      geom_point(aes(y=scd, colour ="observed"), fill="blue", size = 0.5) +
+      geom_point(aes(y=scd, colour ="observed"), fill="#1E90FF", size = 0.5) +
       scale_x_continuous(name="games") +
       #scale_y_discrete(name="score difference", limits=seq(-8,8)) +
       scale_y_continuous(name="Goal difference",
@@ -201,12 +207,13 @@ p <- ggplot(df, aes(x = c(1:ngames_train))) +
       yaxis_text(size=rel(1.4))+
       xaxis_text( size = rel(1.4))+
       scale_colour_manual(name="",
-                      values=c(observed="blue", simulated ="#F0E442"))+
+                      values=c(observed="#1E90FF", simulated ="#FFA500"))+
       theme(axis.title=element_text(size=19),
       axis.text.x = element_text(size=15),
       axis.text.y = element_text(size=15),
       legend.position = "bottom",
-      legend.text = element_text(size = 15))
+      legend.text = element_text(size = 15)) +
+      theme_bw()
 
       tbl = data.frame(alpha = coverage, coverage = round(ci_alpha,3))
       colnames(tbl) <- c("1-alpha", "emp. coverage")

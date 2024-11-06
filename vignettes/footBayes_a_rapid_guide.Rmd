@@ -270,7 +270,6 @@ library(bayesplot)
 library(loo)
 library(ggplot2)
 library(dplyr)
-library(tidyverse)
 ```
 
 # Model fit
@@ -298,11 +297,11 @@ At this stage, we are currently ignoring any time-dependence in our parameters, 
 #  dplyr::filter(Season=="2000")
 #italy_2000
 
-## alternatively, you can use the basic 'subsetting' code, 
-## not using the 'tidyverse' environment: 
+## alternatively, you can use the basic 'subsetting' code,
+## not using the 'tidyverse' environment:
 data("italy")
 italy <- as.data.frame(italy)
-italy_2000 <- subset(italy[, c(2,3,4,6,7)], 
+italy_2000 <- subset(italy[, c(2,3,4,6,7)],
                      Season =="2000")
 head(italy_2000)
 
@@ -320,7 +319,7 @@ fit1_stan <- stan_foot(data = italy_2000,
 ## print of model summary for parameters:
 ## home, sigma_att, sigma_def
 
-print(fit1_stan, pars =c("home", "rho", "sigma_att",
+print(fit1_stan, pars =c("home_effect", "rho", "sigma_att",
                          "sigma_def"))
 ```
 
@@ -344,9 +343,10 @@ We can also depict the marginal posterior distributions for $\rho$ (and eventual
 ```{r static_fit_corr, echo =TRUE, eval = NOT_CRAN}
 ## Marginal posterior with bayesplot
 
-posterior1 <- as.matrix(fit1_stan)
-mcmc_areas(posterior1, regex_pars=c("home", "rho",
-  "sigma_att", "sigma_def"))
+posterior1 <- as.matrix(fit1_stan$fit)
+mcmc_areas(posterior1, regex_pars=c("home_effect", "rho",
+  "sigma_att", "sigma_def")) +
+  theme_bw()
 ```
 
 We can also access the original BP Stan code by typing:
@@ -354,7 +354,7 @@ We can also access the original BP Stan code by typing:
 ```{r stan_extract, echo =TRUE, eval = NOT_CRAN}
 ### Model's code extraction
 
-fit1_stan@stanmodel
+fit1_stan$stan_code
 ```
 
 We fit now the same model under the MLE approach with Wald-type confidence intervals. We can then print the MLE estimates, e.g for the parameters $\rho$ and $\text{home}$:
@@ -367,7 +367,7 @@ We fit now the same model under the MLE approach with Wald-type confidence inter
 fit1_mle <- mle_foot(data = italy_2000,
                      model="biv_pois",
                      interval = "Wald") # mle biv poisson
-fit1_mle$home
+fit1_mle$home_effect
 ```
 
 We got a very similar estimate to the Bayesian model for the home-effect.
@@ -399,9 +399,11 @@ where $t(\text{df}, \mu, \sigma)$ denotes a student-$t$ distribution with df deg
 
 fit1_stan_t <- stan_foot(data = italy_2000,
                          model="biv_pois",
-                         chains = 4, 
-                         prior = student_t(4,0,NULL),
-                         prior_sd = laplace(0,1),
+                         chains = 4,
+                         prior_par = list(
+                           ability = student_t(4,0,NULL),
+                           ability_sd = laplace(0,1),
+                           home = normal(0, 10)),
                          #cores = 4,
                          iter = n_iter) # biv poisson
 
@@ -412,7 +414,7 @@ Then, we can compare the marginal posteriors from the two models, the one with G
 ```{r comparing_priors, eval = NOT_CRAN}
 ## comparing posteriors
 
-posterior1_t <- as.matrix(fit1_stan_t)
+posterior1_t <- as.matrix(fit1_stan_t$fit)
 model_names <- c("Default", "Stud+Laplace")
 color_scheme_set(scheme = "gray")
 gl_posterior <- cbind(posterior1[,"sigma_att"], 
@@ -474,10 +476,10 @@ with hyperparameters $\mu_{\text{att}}, \mu_{\text{def}}, \sigma_{\text{att}}, \
 
 fit2_stan <- stan_foot(data = italy_2000,
                        model="biv_pois",
-                       dynamic_type ="weekly", 
+                       dynamic_type ="weekly",
                        #cores = 4,
                        iter = n_iter) # biv poisson
-print(fit2_stan, pars =c("home", "rho", "sigma_att",
+print(fit2_stan, pars =c("home_effect", "rho", "sigma_att",
                         "sigma_def"))
 ```
 
@@ -495,7 +497,7 @@ fit3_stan <- stan_foot(data = italy_2000,
                        dynamic_type = "weekly",
                        #cores = 4,
                        iter = n_iter)  # double poisson
-print(fit3_stan, pars =c("home", "sigma_att",
+print(fit3_stan, pars =c("home_effect", "sigma_att",
                         "sigma_def"))
 ```
 
@@ -515,12 +517,14 @@ The fitting problems mentioned above remain also for the double Poisson model...
 
 fit3_stan_t <- stan_foot(data = italy_2000,
                 model="double_pois",
-                prior = student_t(4,0, NULL), # 4 df
-                prior_sd = cauchy(0,25),
+                prior_par = list(
+                  ability = student_t(4,0,NULL),
+                  ability_sd = cauchy(0,25),
+                  home = normal(0, 5)),
                 dynamic_type = "weekly",
                 #cores = 4,
                 iter = n_iter)  # double poisson
-print(fit3_stan_t, pars =c("home", "sigma_att",
+print(fit3_stan_t, pars =c("home_effect", "sigma_att",
                            "sigma_def"))
 ```
 
@@ -598,7 +602,7 @@ Other useful PP checks, such as the overlap between data density and replicated 
 
 # extracting the replications
 
-sims <-rstan::extract(fit1_stan)
+sims <-rstan::extract(fit1_stan$fit)
 goal_diff <- italy_2000$hgoal-italy_2000$vgoal
 
 # plotting data density vs replications densities
@@ -635,7 +639,7 @@ We may then predict test set matches by using the argument ```predict``` of the 
 ## 4 chains 'n_iter' iterations each
 
 fit4_stan <- stan_foot(data = italy_2000,
-                       model="biv_pois", 
+                       model="biv_pois",
                        predict = 36,
                        dynamic_type = "weekly",
                        #cores = 4,
@@ -745,11 +749,11 @@ We can perform Bayesian model comparisons by using the ```loo``` and ```waic``` 
 
 # extract pointwise log-likelihood
 
-log_lik_1 <- extract_log_lik(fit1_stan)
-log_lik_1_t <- extract_log_lik(fit1_stan_t)
-log_lik_2 <- extract_log_lik(fit2_stan)
-log_lik_3 <- extract_log_lik(fit3_stan)
-log_lik_3_t <- extract_log_lik(fit3_stan_t)
+log_lik_1 <- extract_log_lik(fit1_stan$fit)
+log_lik_1_t <- extract_log_lik(fit1_stan_t$fit)
+log_lik_2 <- extract_log_lik(fit2_stan$fit)
+log_lik_3 <- extract_log_lik(fit3_stan$fit)
+log_lik_3_t <- extract_log_lik(fit3_stan_t$fit)
 
 # compute loo
 

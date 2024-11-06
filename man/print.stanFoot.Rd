@@ -9,8 +9,11 @@
 \arguments{
 \item{x}{An object of class \code{stanFoot}.}
 
-\item{...}{Additional arguments passed to or from other methods.}
+\item{...}{Additional arguments passed to or from other methods, including \code{pars} to specify parameters.}
 }
 \description{
 Displays a summary of the Stan football model fit, including posterior summaries of parameters.
+}
+\author{
+Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
 }

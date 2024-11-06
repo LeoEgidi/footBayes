@@ -23,7 +23,6 @@ library(bayesplot)
 library(loo)
 library(ggplot2)
 library(dplyr)
-library(tidyverse)
 
 ## ----static_fit, echo =TRUE, eval = TRUE--------------------------------------
 
@@ -54,26 +53,27 @@ n_iter <- 200    # number of MCMC iterations
 fit1_stan <- stan_foot(data = italy_2000,
                        model="biv_pois",
                        chains = 4,
-                       #cores = 4,
+                       cores = 4,
                        iter = n_iter) # biv poisson
 
 ## print of model summary for parameters:
 ## home, sigma_att, sigma_def
 
-print(fit1_stan, pars =c("home", "rho", "sigma_att",
+print(fit1_stan, pars =c("home_effect", "rho", "sigma_att",
                          "sigma_def"))
 
 ## ----static_fit_corr, echo =TRUE, eval = TRUE---------------------------------
 ## Marginal posterior with bayesplot
 
-posterior1 <- as.matrix(fit1_stan)
-mcmc_areas(posterior1, regex_pars=c("home", "rho",
-  "sigma_att", "sigma_def"))
+posterior1 <- as.matrix(fit1_stan$fit)
+mcmc_areas(posterior1, regex_pars=c("home_effect", "rho",
+  "sigma_att", "sigma_def")) +
+  theme_bw()
 
 ## ----stan_extract, echo =TRUE, eval = TRUE------------------------------------
 ### Model's code extraction
 
-fit1_stan@stanmodel
+fit1_stan$stan_code
 
 ## ----static_fit2, echo = TRUE, eval = TRUE------------------------------------
 ### Fit MLE models
@@ -83,7 +83,7 @@ fit1_stan@stanmodel
 fit1_mle <- mle_foot(data = italy_2000,
                      model="biv_pois",
                      interval = "Wald") # mle biv poisson
-fit1_mle$home
+fit1_mle$home_effect
 
 ## ----static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = TRUE----
 ### Fit Stan models
@@ -93,9 +93,11 @@ fit1_mle$home
 fit1_stan_t <- stan_foot(data = italy_2000,
                          model="biv_pois",
                          chains = 4,
-                         prior = student_t(4,0,NULL),
-                         prior_sd = laplace(0,1),
-                         #cores = 4,
+                         prior_par = list(
+                           ability = student_t(4,0,NULL),
+                           ability_sd = laplace(0,1),
+                           home = normal(0, 10)),
+                         cores = 4,
                          iter = n_iter) # biv poisson
 
 
@@ -123,9 +125,9 @@ fit1_stan_t <- stan_foot(data = italy_2000,
 fit2_stan <- stan_foot(data = italy_2000,
                        model="biv_pois",
                        dynamic_type ="weekly",
-                       #cores = 4,
+                       cores = 4,
                        iter = n_iter) # biv poisson
-print(fit2_stan, pars =c("home", "rho", "sigma_att",
+print(fit2_stan, pars =c("home_effect", "rho", "sigma_att",
                         "sigma_def"))
 
 ## ----weekly_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE----
@@ -138,7 +140,7 @@ fit3_stan <- stan_foot(data = italy_2000,
                        dynamic_type = "weekly",
                        #cores = 4,
                        iter = n_iter)  # double poisson
-print(fit3_stan, pars =c("home", "sigma_att",
+print(fit3_stan, pars =c("home_effect", "sigma_att",
                         "sigma_def"))
 
 ## ----weekly_fit_t, message = FALSE, results='hide', echo = TRUE, eval = TRUE----
@@ -148,12 +150,14 @@ print(fit3_stan, pars =c("home", "sigma_att",
 
 fit3_stan_t <- stan_foot(data = italy_2000,
                 model="double_pois",
-                prior = student_t(4,0, NULL), # 4 df
-                prior_sd = cauchy(0,25),
+                prior_par = list(
+                  ability = student_t(4,0,NULL),
+                  ability_sd = cauchy(0,25),
+                  home = normal(0, 5)),
                 dynamic_type = "weekly",
-                #cores = 4,
+                cores = 4,
                 iter = n_iter)  # double poisson
-print(fit3_stan_t, pars =c("home", "sigma_att",
+print(fit3_stan_t, pars =c("home_effect", "sigma_att",
                            "sigma_def"))
 
 ## ----abilities, echo = TRUE, eval = TRUE, fig.show="hold"---------------------
@@ -170,10 +174,10 @@ foot_abilities(fit2_stan, italy_2000)
 ## ----pp_foot, echo = TRUE, eval = TRUE----------------------------------------
 ## PP checks: aggregated goal's differences and ordered goal differences
 
-pp_foot(data = italy_2000, object = fit1_stan,
+pp_foot(data = italy_2000, object = fit1_stan$fit,
         type = "aggregated")
 
-pp_foot(data = italy_2000, object = fit1_stan,
+pp_foot(data = italy_2000, object = fit1_stan$fit,
         type = "matches")
 
 
@@ -182,7 +186,7 @@ pp_foot(data = italy_2000, object = fit1_stan,
 
 # extracting the replications
 
-sims <-rstan::extract(fit1_stan)
+sims <-rstan::extract(fit1_stan$fit)
 goal_diff <- italy_2000$hgoal-italy_2000$vgoal
 
 # plotting data density vs replications densities
@@ -198,7 +202,7 @@ fit4_stan <- stan_foot(data = italy_2000,
                        model="biv_pois",
                        predict = 36,
                        dynamic_type = "weekly",
-                       #cores = 4,
+                       cores = 4,
                        iter = n_iter)  # biv poisson
 foot_prob(object = fit4_stan, data = italy_2000,
           home_team = "Reggina Calcio",

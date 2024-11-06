@@ -10,7 +10,7 @@ foot_round_robin(data, object, team_sel)
 \item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
 home goals, away goals.}
 
-\item{object}{An object of class \code{\link[rstan]{stanfit}} as given by \code{stan_foot} function.}
+\item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
 
 \item{team_sel}{Selected team(s). By default, all the teams are selected.}
 }
@@ -41,7 +41,6 @@ foot_round_robin(italy_1999_2000, fit)
 foot_round_robin(italy_1999_2000, fit, c("Parma AC", "AS Roma"))
 
 }
-
 }
 \author{
 Leonardo Egidi \email{legidi@units.it}
