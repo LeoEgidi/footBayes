@@ -5,13 +5,17 @@
 \title{Compare Football Models using Various Metrics}
 \usage{
 compare_foot(
-  models,
+  source,
   test_data,
-  metric = c("accuracy", "brier", "mcFaddenR2", "coxSnellR2", "ACP")
+  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS")
 )
 }
 \arguments{
-\item{models}{A named list of fitted model objects (of class \code{stanFoot} or \code{stanfit}), each representing a football model.}
+\item{source}{A named list containing either:
+\itemize{
+  \item Fitted model objects (of class \code{stanFoot} or \code{stanfit}), each representing a football model.
+  \item Matrices where each matrix contains the estimated probabilities for "Home Win," "Draw," and "Away Win" in its columns.
+}}
 
 \item{test_data}{A data frame containing the test dataset, with columns:
 \itemize{
@@ -25,19 +29,20 @@ compare_foot(
 \itemize{
   \item \code{"accuracy"}: Computes the accuracy of each model.
   \item \code{"brier"}: Computes the Brier score of each model.
+  \item \code{"RPS"}: Computes the Ranked Probability Score (RPS) for each model.
   \item \code{"ACP"}: Computes the Average Coverage Probability (ACP) for each model.
   \item \code{"pseudoR2"}: Computes the Pseudo $R^2$, defined as the geometric mean of the probabilities assigned to the actual results.
 }
-Default is \code{c("accuracy", "brier", "ACP", "pseudoR2")}, computing the specified metrics.}
+Default is \code{c("accuracy", "brier", "ACP", "pseudoR2", "RPS")}, computing the specified metrics.}
 }
 \value{
-A data frame containing the metric values for each model.
+A data frame containing the metric values for each model or probability matrix.
 }
 \description{
-Compares multiple football models based on specified metrics (accuracy, Brier score, Cox-Snell Pseudo $R^2$, Average Coverage Probability, and/or McFadden's Pseudo $R^2$), using a test dataset.
+Compares multiple football models or directly provided probability matrices based on specified metrics (accuracy, Brier score, Ranked Probability Score (RPS), Cox-Snell Pseudo $R^2$, Average Coverage Probability, and/or McFadden's Pseudo $R^2$), using a test dataset.
 }
 \details{
-The function extracts predictions from each model and computes the chosen metrics on the test dataset.
+The function extracts predictions from each model or directly uses the provided probability matrices and computes the chosen metrics on the test dataset.
 }
 \examples{
 \dontrun{
@@ -46,22 +51,37 @@ require(dplyr)
 
 data("italy")
 italy_2000 <- italy \%>\%
- dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
- dplyr::filter(Season=="2000")
+ dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+ dplyr::filter(Season == "2000")
 
+# Example with a fitted model
 fit <- stan_foot(data = italy_2000,
-                 model="double_pois", predict =18)  # double pois
+                 model = "double_pois", predict = 18)  # double poisson model
 
-italy_2000_test <- italy_2000[289:306,]
+italy_2000_test <- italy_2000[289:306, ]
 
-colnames(italy_2000_test) <- c("season", "home_team",  "away_team", "homegoals", "awaygoals")
+colnames(italy_2000_test) <- c("season", "home_team", "away_team", "homegoals", "awaygoals")
 
-compare_results <- compare_foot(
-  models = list(model_1 = fit),
+# Example with probability matrices
+# Assume prob_matrix1 and prob_matrix2 are precomputed probability matrices
+prob_matrix1 <- matrix(runif(33, 0, 1), ncol = 3)
+prob_matrix1 <- prob_matrix1 / rowSums(prob_matrix1)  # Normalize to sum to 1
+prob_matrix2 <- matrix(runif(33, 0, 1), ncol = 3)
+prob_matrix2 <- prob_matrix2 / rowSums(prob_matrix2)
+
+compare_results_models <- compare_foot(
+  source = list(model_1 = fit),
   test_data = italy_2000_test,
-  metric = c("accuracy", "brier", "mcFaddenR2", "coxSnellR2", "ACP")
+  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS")
 )
 
-print(compare_results)
+compare_results_matrices <- compare_foot(
+  source = list(matrix_1 = prob_matrix1, matrix_2 = prob_matrix2),
+  test_data = italy_2000_test,
+  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS")
+)
+
+print(compare_results_models)
+print(compare_results_matrices)
 }
 }

@@ -14,7 +14,7 @@ summary.btdFoot <- function(object, ...) {
   cat("Summary of Bayesian Bradley-Terry-Davidson Model\n")
   cat("Rank Measure:", object$rank_measure, "\n\n")
 
-  print(utils::head(x$rank, 10))
+  print(utils::head(object$rank, 10))
 
 
   cat("Posterior Summaries for Model Parameters:\n")
