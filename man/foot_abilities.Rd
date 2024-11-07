@@ -43,16 +43,16 @@ italy_2000_2002<- italy \%>\%
  dplyr::filter(Season=="2000" |  Season=="2001" | Season =="2002")
 
 fit1 <- stan_foot(data = italy_2000_2002,
-                model="double_pois") # double poisson
+                  model="double_pois") # double poisson
 
 fit2 <- stan_foot(data = italy_2000_2002,
-                model="biv_pois")    # bivariate poisson
+                  model="biv_pois")    # bivariate poisson
 
 fit3 <- stan_foot(data = italy_2000_2002,
-                model="skellam")     # skellam
+                  model="skellam")     # skellam
 
 fit4 <- stan_foot(data = italy_2000_2002,
-                model="student_t")   # student_t
+                  model="student_t")   # student_t
 
 foot_abilities(fit1, italy_2000_2002)
 foot_abilities(fit2, italy_2000_2002)
@@ -62,8 +62,9 @@ foot_abilities(fit4, italy_2000_2002)
 ### seasonal dynamics, predict the last season
 
 fit5 <-stan_foot(data = italy_2000_2002,
-                       model="biv_pois", predict =306,
-                       dynamic_type = "seasonal")   # bivariate poisson
+                 model = "biv_pois",
+                 predict = 306,
+                 dynamic_type = "seasonal")   # bivariate poisson
 foot_abilities(fit5, italy_2000_2002)
 
 }

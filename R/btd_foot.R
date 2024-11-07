@@ -99,7 +99,6 @@
 #' print(fit_result_static$rank)
 #' }
 #' @importFrom rstan stan extract
-#' @importFrom dplyr filter count
 #' @export
 
 

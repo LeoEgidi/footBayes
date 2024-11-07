@@ -27,12 +27,23 @@
 #' @examples
 #' \dontrun{
 #'
-#' # (The existing examples remain unchanged)
+#' require(dplyr)
 #'
-#' # Compare the two models with all metrics including Cox-Snell R² and ACP
+#' data("italy")
+#' italy_2000 <- italy %>%
+#'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
+#'  dplyr::filter(Season=="2000")
+#'
+#' fit <- stan_foot(data = italy_2000,
+#'                  model="double_pois", predict =18)  # double pois
+#'
+#' italy_2000_test <- italy_2000[289:306,]
+#'
+#' colnames(italy_2000_test) <- c("season", "home_team",  "away_team", "homegoals", "awaygoals")
+#'
 #' compare_results <- compare_foot(
-#'   models = compare_models,
-#'   test_data = italy_2021_test,
+#'   models = list(model_1 = fit),
+#'   test_data = italy_2000_test,
 #'   metric = c("accuracy", "brier", "mcFaddenR2", "coxSnellR2", "ACP")
 #' )
 #'
@@ -178,7 +189,7 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "mcF
       model_results$ACP <- ACP
     }
 
-    results[[model_name]] <- model_results
+    results[[model_name]] <- round(model_results,4)
   }
 
   # Convert results to data frame

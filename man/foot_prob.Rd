@@ -44,7 +44,8 @@ italy_2000<- italy \%>\%
  dplyr::filter(Season=="2000")
 
 fit <- stan_foot(data = italy_2000,
-                 model="double_pois", predict =18)  # double pois
+                 model="double_pois",
+                 predict = 18)  # double pois
 
 foot_prob(fit, italy_2000, "Inter",
           "Bologna FC")
