@@ -142,7 +142,7 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "mcF
     if ("accuracy" %in% metric) {
       predicted_outcomes <- apply(prob_q_model, 1, which.max)
       accuracy <- mean(predicted_outcomes == as.numeric(test_data$outcome))
-      model_results$accuracy <- accuracy
+      model_results$accuracy <- round(accuracy, 4)
     }
 
     if ("brier" %in% metric) {
@@ -151,7 +151,7 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "mcF
         brier_res[n, as.numeric(test_data$outcome[n])] <- 1
       }
       brier <- mean(rowSums((brier_res - prob_q_model)^2))
-      model_results$brier <- brier
+      model_results$brier <- round(brier, 4)
     }
 
     if (any(c("mcFaddenR2", "coxSnellR2") %in% metric)) {
@@ -168,13 +168,13 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "mcF
     if ("mcFaddenR2" %in% metric) {
       # Compute McFadden's Pseudo R^2
       mcFaddenR2 <- 1 - (log_lik_model / log_lik_0)
-      model_results$mcFaddenR2 <- mcFaddenR2
+      model_results$mcFaddenR2 <- round(mcFaddenR2, 4)
     }
 
     if ("coxSnellR2" %in% metric) {
       # Compute Cox-Snell Pseudo R^2
       coxSnellR2 <- 1 - exp((log_lik_0 - log_lik_model) / N_prev)
-      model_results$coxSnellR2 <- coxSnellR2
+      model_results$coxSnellR2 <- round(coxSnellR2, 4)
     }
 
     if ("ACP" %in% metric) {
@@ -186,10 +186,10 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "mcF
         true_probs[n] <- prob_q_model[n, true_class]
       }
       ACP <- mean(true_probs)
-      model_results$ACP <- ACP
+      model_results$ACP <- round(ACP, 4)
     }
 
-    results[[model_name]] <- round(model_results,4)
+    results[[model_name]] <- model_results
   }
 
   # Convert results to data frame
