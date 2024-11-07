@@ -25,11 +25,10 @@ compare_foot(
 \itemize{
   \item \code{"accuracy"}: Computes the accuracy of each model.
   \item \code{"brier"}: Computes the Brier score of each model.
-  \item \code{"mcFaddenR2"}: Computes McFadden's Pseudo $R^2$ for each model.
-  \item \code{"coxSnellR2"}: Computes the Cox-Snell Pseudo $R^2$ for each model.
   \item \code{"ACP"}: Computes the Average Coverage Probability (ACP) for each model.
+  \item \code{"pseudoR2"}: Computes the Pseudo $R^2$, defined as the geometric mean of the probabilities assigned to the actual results.
 }
-Default is \code{c("accuracy", "brier", "mcFaddenR2", "coxSnellR2", "ACP")}, computing the specified metrics.}
+Default is \code{c("accuracy", "brier", "ACP", "pseudoR2")}, computing the specified metrics.}
 }
 \value{
 A data frame containing the metric values for each model.

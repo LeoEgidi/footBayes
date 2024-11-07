@@ -14,11 +14,10 @@
 #'   \itemize{
 #'     \item \code{"accuracy"}: Computes the accuracy of each model.
 #'     \item \code{"brier"}: Computes the Brier score of each model.
-#'     \item \code{"mcFaddenR2"}: Computes McFadden's Pseudo $R^2$ for each model.
-#'     \item \code{"coxSnellR2"}: Computes the Cox-Snell Pseudo $R^2$ for each model.
 #'     \item \code{"ACP"}: Computes the Average Coverage Probability (ACP) for each model.
+#'     \item \code{"pseudoR2"}: Computes the Pseudo $R^2$, defined as the geometric mean of the probabilities assigned to the actual results.
 #'   }
-#'   Default is \code{c("accuracy", "brier", "mcFaddenR2", "coxSnellR2", "ACP")}, computing the specified metrics.
+#'   Default is \code{c("accuracy", "brier", "ACP", "pseudoR2")}, computing the specified metrics.
 #'
 #' @return A data frame containing the metric values for each model.
 #'
@@ -44,7 +43,7 @@
 #' compare_results <- compare_foot(
 #'   models = list(model_1 = fit),
 #'   test_data = italy_2000_test,
-#'   metric = c("accuracy", "brier", "mcFaddenR2", "coxSnellR2", "ACP")
+#'   metric = c("accuracy", "brier", "ACP", "pseudoR2")
 #' )
 #'
 #' print(compare_results)
@@ -52,10 +51,10 @@
 #' @export
 
 
-compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "mcFaddenR2", "coxSnellR2", "ACP")) {
+compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "ACP", "pseudoR2")) {
 
   # Validate metric
-  allowed_metrics <- c("accuracy", "brier", "mcFaddenR2", "coxSnellR2", "ACP")
+  allowed_metrics <- c("accuracy", "brier", "ACP", "pseudoR2")
   metric <- match.arg(metric, choices = allowed_metrics, several.ok = TRUE)
 
   # Validate data
@@ -71,27 +70,6 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "mcF
   test_data$outcome <- factor(test_data$outcome, levels = 1:3, labels = c("Home Win", "Draw", "Away Win"))
 
   N_prev <- nrow(test_data)
-
-  # Pre-compute log_lik_0 for mcFaddenR2 and Cox-Snell R2
-  # The null model assumes that all matches have the same probabilities for each
-  # outcome (home win, draw, away win) based only on their empirical frequencies in the test data.
-
-  if (any(c("mcFaddenR2", "coxSnellR2") %in% metric)) {
-    p_k <- prop.table(table(test_data$outcome))
-    p_k_vector <- numeric(3)
-    for (k in 1:3) {
-      p_k_vector[k] <- ifelse(!is.na(p_k[as.character(k)]), p_k[as.character(k)], 1e-10)
-    }
-
-    prob_observed_null <- numeric(N_prev)
-    for (n in 1:N_prev) {
-      k <- as.numeric(test_data$outcome[n])
-      prob_n <- p_k_vector[k]
-      prob_n <- max(prob_n, .Machine$double.eps)
-      prob_observed_null[n] <- prob_n
-    }
-    log_lik_0 <- sum(log(prob_observed_null))
-  }
 
   results <- list()
 
@@ -154,27 +132,15 @@ compare_foot <- function(models, test_data, metric = c("accuracy", "brier", "mcF
       model_results$brier <- round(brier, 4)
     }
 
-    if (any(c("mcFaddenR2", "coxSnellR2") %in% metric)) {
-      # Compute log_lik_model
-      prob_observed <- numeric(N_prev)
+    if ("pseudoR2" %in% metric) {
+      log_prob_sum <- 0
       for (n in 1:N_prev) {
         prob_n <- prob_q_model[n, as.numeric(test_data$outcome[n])]
         prob_n <- max(prob_n, .Machine$double.eps)  # Avoid log(0)
-        prob_observed[n] <- prob_n
+        log_prob_sum <- log_prob_sum + log(prob_n)
       }
-      log_lik_model <- sum(log(prob_observed))
-    }
-
-    if ("mcFaddenR2" %in% metric) {
-      # Compute McFadden's Pseudo R^2
-      mcFaddenR2 <- 1 - (log_lik_model / log_lik_0)
-      model_results$mcFaddenR2 <- round(mcFaddenR2, 4)
-    }
-
-    if ("coxSnellR2" %in% metric) {
-      # Compute Cox-Snell Pseudo R^2
-      coxSnellR2 <- 1 - exp((log_lik_0 - log_lik_model) / N_prev)
-      model_results$coxSnellR2 <- round(coxSnellR2, 4)
+      pseudoR2 <- exp(log_prob_sum / N_prev)
+      model_results$pseudoR2 <- round(pseudoR2, 4)
     }
 
     if ("ACP" %in% metric) {

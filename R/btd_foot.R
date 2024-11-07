@@ -48,55 +48,60 @@
 #' @examples
 #' \dontrun{
 #'
-#' # Dynamic Ranking example ####
+#' require(dplyr)
 #'
-#' data <- data.frame(
-#'   periods = c(1, 1, 2, 2, 3, 3, 4, 4),
-#'   home_team = c("AC Milan", "Inter", "AC Milan", "Juventus", "Roma", "Inter", "Lecce", "Roma"),
-#'   away_team = c("Inter", "Juventus", "Roma", "Roma", "Juventus", "AC Milan", "Juventus", "Lecce"),
-#'   match_outcome = c(1, 3, 2, 3, 2, 3, 1, 2) # 1 = home team wins, 2 = draw, 3 = away team wins
-#' )
+#' data("italy")
 #'
-#' # Fit the dynamic model using the median as rank measure
-#' fit_result <- btd_foot(
-#'   data = data,
+#' italy_2020_2021 <- italy %>%
+#'   dplyr::select(Season, home, visitor, hgoal, vgoal)
+#'   dplyr::filter(Season == "2020" | Season == "2021")
+#'   dplyr::mutate(match_outcome = dplyr::case_when(
+#'     hgoal > vgoal ~ 1,        # Home team wins
+#'     hgoal == vgoal ~ 2,       # Draw
+#'     hgoal < vgoal ~ 3         # Away team wins
+#'   )) %>%
+#'   dplyr::mutate(periods = dplyr::case_when(
+#'     dplyr::row_number() <= 190 ~ 1,
+#'     dplyr::row_number() <= 380 ~ 2,
+#'     dplyr::row_number() <= 570 ~ 3,
+#'     TRUE ~ 4
+#'   )) %>%  # Assign periods based on match number
+#'   dplyr::select(periods, home_team = home,
+#'    away_team = visitor, match_outcome)
+#'
+#' # Dynamic Ranking Example with Median Rank Measure
+#' fit_result_dyn <- btd_foot(
+#'   data = italy_2020_2021,
 #'   dynamic_rank = TRUE,
+#'   home_effect = TRUE,
 #'   prior_par = list(
 #'     psi = normal(0, 10),
-#'     gamma = normal(0, 5)
+#'     gamma = normal(0, 5),
+#'     home = normal(0, 5)
 #'   ),
 #'   rank_measure = "median",
 #'   iter = 1000,
+#'   cores = 2
 #'   chains = 2
 #' )
 #'
-#' print(fit_result$rank)
+#' summary(fit_result_dyn)
 #'
-#' # Static Ranking example ####
-#'
-#' data_static <- data.frame(
-#'   periods = rep(1, 6),
-#'   home_team = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
-#'   away_team = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
-#'   match_outcome = c(1, 2, 3, 1, 2, 1) # 1 = home team wins, 2 = draw, 3 = away team wins
-#' )
-#'
-#' # Fit the static model using the MAP as rank measure
-#' fit_result_static <- btd_foot(
-#'   data = data_static,
+#' # Static Ranking Example with MAP Rank Measure
+#' fit_result_stat <- btd_foot(
+#'   data = italy_2020_2021,
 #'   dynamic_rank = FALSE,
-#'   home_effect = TRUE,
 #'   prior_par = list(
-#'     psi = normal(0, 1),
-#'     gamma = normal(0, 1),
-#'     home = normal(0, 2)
+#'     psi = normal(0, 10),
+#'     gamma = normal(0, 5),
+#'     home = normal(0, 5)
 #'   ),
 #'   rank_measure = "MAP",
 #'   iter = 1000,
 #'   chains = 2
 #' )
 #'
-#' print(fit_result_static$rank)
+#' summary(fit_result_stat)
 #' }
 #' @importFrom rstan stan extract
 #' @export
@@ -308,148 +313,7 @@ btd_foot <- function(data,
     )
   }
 
-#   ____________________________________________________________________________
-#   Static Bradley-Terry-Davidson model                                     ####
-
-  # statBTD <- "
-  # data {
-  #     int<lower=1> N;          // Number of observations
-  #     int<lower=1> nteams;          // Number of teams
-  #     int<lower=1, upper=nteams> home_team[N];  // Index of home_team in each observation
-  #     int<lower=1, upper=nteams> away_team[N];  // Index of away_team in each observation
-  #     real mean_psi;                // Initial mean for psi
-  #     real<lower=0> sd_psi;         // Standard deviation for psi
-  #     real mean_gamma;
-  #     real<lower=0> sd_gamma;
-  #     int<lower=1, upper=3> y[N];      // Outcome: 1 if home_team beats away_team, 3 if away_team beats home_team, 2 for tie
-  #     int<lower=0, upper=1> ind_home;        // Home effect indicator
-  #     real mean_home;              // Mean for home effect
-  #     real<lower=0> sd_home;      // Standard deviation for home effect
-  #   }
-  #   parameters {
-  #     vector[nteams] psi;          // Log strength parameters for each team (static)
-  #     real gamma;             // Log tie parameter
-  #     real home_effect;                  // Home team effect parameter
-  #   }
-  #
-  #   transformed parameters {
-  #     real adjusted_home_effect;
-  #     adjusted_home_effect = home_effect * ind_home;
-  #   }
-  #
-  #   model {
-  #     // Priors for strengths
-  #     psi ~ normal(mean_psi, sd_psi);
-  #
-  #     // Prior for tie parameter
-  #     gamma ~ normal(mean_gamma, sd_gamma);
-  #
-  #     // Prior for the home effect
-  #
-  #     home_effect ~ normal(mean_home, sd_home);
-  #
-  #     // Likelihood
-  #     for (n in 1:N) {
-  #       real delta_home_team = exp(psi[home_team[n]] + adjusted_home_effect);
-  #       real delta_away_team = exp(psi[away_team[n]]);
-  #       real nu = exp(gamma);
-  #       real denom = delta_home_team + delta_away_team + (nu * sqrt(delta_home_team * delta_away_team));
-  #       real p_i_win = delta_home_team / denom;
-  #       real p_j_win = delta_away_team / denom;
-  #       real p_tie = (nu * sqrt(delta_home_team * delta_away_team)) / denom;
-  #       if (y[n] == 1) {
-  #         target += log(p_i_win);
-  #       } else if (y[n] == 3) {
-  #         target += log(p_j_win);
-  #       } else if (y[n] == 2) {
-  #         target += log(p_tie);
-  #       }
-  #     }
-  #   }
-  # "
-
-
-#   ____________________________________________________________________________
-#   Dynamic Bradley-Terry-Davidson Model                                    ####
-
-  # dynBTD <- "
-  # data {
-  #     int<lower=1> N;          // Number of observations
-  #     int<lower=1> nteams;          // Number of teams
-  #     int<lower=1> ntimes_rank;      // Number of time points
-  #     int<lower=1, upper=ntimes_rank> instants_rank[N];  // Time point of each observation
-  #     int<lower=1, upper=nteams> home_team[N];  // Index of home_team in each observation
-  #     int<lower=1, upper=nteams> away_team[N];  // Index of away_team in each observation
-  #     real mean_psi;                // Initial mean for psi
-  #     real<lower=0> sd_psi;         // Standard deviation of the AR(1) process
-  #     real mean_gamma;
-  #     real<lower=0> sd_gamma;
-  #     int<lower=1, upper=3> y[N];      // Outcome: 1 if home_team beats away_team, 3 if away_team beats home_team, 2 for tie
-  #     int<lower=0, upper=1> ind_home;        // Home effect indicator
-  #     real mean_home;              // Mean for home effect
-  #     real<lower=0> sd_home;      // Standard deviation for home effect
-  # }
-  #
-  # parameters {
-  #     matrix[nteams, ntimes_rank] psi;     // Log strength parameters for each team over time
-  #     real gamma;               // Log tie parameter
-  #     real home_effect;                  // Home team effect parameter
-  # }
-  #
-  # transformed parameters {
-  #     real adjusted_home_effect;
-  #     adjusted_home_effect = home_effect * ind_home;
-  # }
-  #
-  # model {
-  #     // Priors for initial strengths
-  #     for (k in 1:nteams) {
-  #         psi[k, 1] ~ normal(mean_psi, sd_psi);
-  #     }
-  #
-  #     // Prior for tie parameter
-  #     gamma ~ normal(mean_gamma, sd_gamma);
-  #
-  #     // AR(1) process for strength parameters
-  #     for (t_idx in 2:ntimes_rank) {
-  #         for (k in 1:nteams) {
-  #             psi[k, t_idx] ~ normal(psi[k, t_idx - 1], sd_psi);
-  #         }
-  #     }
-  #
-  #     // Prior for the home effect
-  #     home_effect ~ normal(mean_home, sd_home);
-  #
-  #     // Likelihood
-  #     for (n in 1:N) {
-  #         real delta_home_team = exp(psi[home_team[n], instants_rank[n]] + adjusted_home_effect);
-  #         real delta_away_team = exp(psi[away_team[n], instants_rank[n]]);
-  #         real nu = exp(gamma);
-  #         real denom = delta_home_team + delta_away_team + (nu * sqrt(delta_home_team * delta_away_team));
-  #         real p_i_win = delta_home_team / denom;
-  #         real p_j_win = delta_away_team / denom;
-  #         real p_tie = (nu * sqrt(delta_home_team * delta_away_team)) / denom;
-  #         if (y[n] == 1) {
-  #             target += log(p_i_win);
-  #         } else if (y[n] == 3) {
-  #             target += log(p_j_win);
-  #         } else if (y[n] == 2) {
-  #             target += log(p_tie);
-  #         }
-  #     }
-  # }
-  # "
-
-  # The Stan code based on dynamic_rank
-  # if (!dynamic_rank) {
-  #   stan_code <- statBTD
-  # } else {
-  #   stan_code <- dynBTD
-  # }
-
-  #
-  # # Fit the model
-  # fit <- rstan::stan(model_code = stan_code, data = stan_data, ...)
+  # Prepare data for Stan based on dynamic_rank
 
   stan_model_path <- if (!dynamic_rank) {
     system.file("stan", "static_btd.stan", package = "footBayes")
@@ -542,7 +406,7 @@ btd_foot <- function(data,
     rank = BTDrank,
     data = data,
     stan_data = stan_data,
-    stan_code = stan_model_path,
+    stan_code = fit@stanmodel,
     prior_par = priors_output,
     rank_measure = rank_measure
   )

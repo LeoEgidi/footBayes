@@ -923,18 +923,21 @@ stan_foot <- function(data,
     stop("The Stan model file does not exist: ", stan_model_path)
   }
 
-  fit <- stan(file = stan_model_path,
-              data= data_stan,
-              iter = user_dots$iter,
-              chains = user_dots$chains,
-              thin = user_dots$thin,
-              cores = user_dots$cores,
-              control = user_dots$control)
+  # Prepare all arguments for stan
+  stan_args <- within(user_dots, rm(nu))
+  stan_call_args <- c(
+    list(file = stan_model_path, data = data_stan),
+    stan_args
+  )
+
+  # Call stan
+  fit <- do.call(rstan::stan, stan_call_args)
 
   output <- list(
     fit = fit,
     data = data_stan,
-    stan_code = fit@stanmodel
+    stan_code = fit@stanmodel,
+    stan_args = stan_args
   )
   class(output) <- "stanFoot"
   return(output)

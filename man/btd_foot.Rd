@@ -67,55 +67,60 @@ Fits a Bayesian Bradley-Terry-Davidson model using Stan. Supports both static an
 \examples{
 \dontrun{
 
-# Dynamic Ranking example ####
+require(dplyr)
 
-data <- data.frame(
-  periods = c(1, 1, 2, 2, 3, 3, 4, 4),
-  home_team = c("AC Milan", "Inter", "AC Milan", "Juventus", "Roma", "Inter", "Lecce", "Roma"),
-  away_team = c("Inter", "Juventus", "Roma", "Roma", "Juventus", "AC Milan", "Juventus", "Lecce"),
-  match_outcome = c(1, 3, 2, 3, 2, 3, 1, 2) # 1 = home team wins, 2 = draw, 3 = away team wins
-)
+data("italy")
 
-# Fit the dynamic model using the median as rank measure
-fit_result <- btd_foot(
-  data = data,
+italy_2020_2021 <- italy \%>\%
+  dplyr::select(Season, home, visitor, hgoal, vgoal)
+  dplyr::filter(Season == "2020" | Season == "2021")
+  dplyr::mutate(match_outcome = dplyr::case_when(
+    hgoal > vgoal ~ 1,        # Home team wins
+    hgoal == vgoal ~ 2,       # Draw
+    hgoal < vgoal ~ 3         # Away team wins
+  )) \%>\%
+  dplyr::mutate(periods = dplyr::case_when(
+    dplyr::row_number() <= 190 ~ 1,
+    dplyr::row_number() <= 380 ~ 2,
+    dplyr::row_number() <= 570 ~ 3,
+    TRUE ~ 4
+  )) \%>\%  # Assign periods based on match number
+  dplyr::select(periods, home_team = home,
+   away_team = visitor, match_outcome)
+
+# Dynamic Ranking Example with Median Rank Measure
+fit_result_dyn <- btd_foot(
+  data = italy_2020_2021,
   dynamic_rank = TRUE,
+  home_effect = TRUE,
   prior_par = list(
     psi = normal(0, 10),
-    gamma = normal(0, 5)
+    gamma = normal(0, 5),
+    home = normal(0, 5)
   ),
   rank_measure = "median",
   iter = 1000,
+  cores = 2
   chains = 2
 )
 
-print(fit_result$rank)
+summary(fit_result_dyn)
 
-# Static Ranking example ####
-
-data_static <- data.frame(
-  periods = rep(1, 6),
-  home_team = c("AC Milan", "Roma", "Juventus", "Inter", "Roma", "AC Milan"),
-  away_team = c("Juventus", "Inter", "AC Milan", "Roma", "AC Milan", "Juventus"),
-  match_outcome = c(1, 2, 3, 1, 2, 1) # 1 = home team wins, 2 = draw, 3 = away team wins
-)
-
-# Fit the static model using the MAP as rank measure
-fit_result_static <- btd_foot(
-  data = data_static,
+# Static Ranking Example with MAP Rank Measure
+fit_result_stat <- btd_foot(
+  data = italy_2020_2021,
   dynamic_rank = FALSE,
-  home_effect = TRUE,
   prior_par = list(
-    psi = normal(0, 1),
-    gamma = normal(0, 1),
-    home = normal(0, 2)
+    psi = normal(0, 10),
+    gamma = normal(0, 5),
+    home = normal(0, 5)
   ),
   rank_measure = "MAP",
   iter = 1000,
   chains = 2
 )
 
-print(fit_result_static$rank)
+summary(fit_result_stat)
 }
 }
 \author{
