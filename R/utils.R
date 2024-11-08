@@ -48,8 +48,44 @@ compute_MAP <- function(samples) {
 
 
 
-compute_MAP <- function(samples) {
-  dens <- stats::density(samples)
-  MAP <- dens$x[which.max(dens$y)]
-  return(MAP)
+
+#' Replace Indices with Team Names (Internal Function)
+#'
+#' Substitutes numeric indices in parameter names with corresponding team names based on a predefined mapping.
+#'
+#' This function takes a character vector of parameter names and replaces any numeric indices (e.g., `[1]`, `[2,1]`) with team names provided in the `index_map`. Parameters specified in `exclude_params` are excluded from renaming to prevent unintended modifications.
+#'
+#' @param param_names A character vector of parameter names that may contain numeric indices to be replaced.
+#' @param exclude_params A character vector of parameter name prefixes that should be excluded from renaming. Parameters starting with any of these prefixes will remain unchanged.
+#' @param index_map A named character vector where names correspond to numeric indices and values correspond to the team names they should be replaced with.
+#'
+#' @return A character vector with numeric indices replaced by their corresponding team names where applicable.
+#'
+#' @noRd
+rep_ind_with_team_names <- function(param_names, exclude_params, team_map) {
+  sapply(param_names, function(name) {
+    # Skip parameters that should not have their names changed
+    if (any(startsWith(name, exclude_params))) {
+      return(name)
+    }
+
+    # Match patterns like 'logStrength[1]', 'logStrength[1,1]', etc.
+    pattern <- "\\[(\\d+)(?:,(\\d+))*\\]"
+    if (grepl(pattern, name)) {
+      matches <- regmatches(name, regexec(pattern, name))
+      index1 <- matches[[1]][2]
+      index2 <- matches[[1]][3]  # May be NULL if there's no second index
+      new_name <- name
+      if (!is.na(index1) && index1 %in% names(team_map)) {
+        team_name <- team_map[[index1]]
+        if (!is.na(index2)) {
+          new_name <- sub(pattern, paste0("[", team_name, ",", index2, "]"), name)
+        } else {
+          new_name <- sub(pattern, paste0("[", team_name, "]"), name)
+        }
+      }
+      return(new_name)
+    }
+    return(name)
+  })
 }

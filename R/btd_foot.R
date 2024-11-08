@@ -422,7 +422,8 @@ btd_foot <- function(data,
     stan_data = stan_data,
     stan_code = fit@stanmodel,
     prior_par = priors_output,
-    rank_measure = rank_measure
+    rank_measure = rank_measure,
+    team_names = teams
   )
 
   class(output) <- "btdFoot"

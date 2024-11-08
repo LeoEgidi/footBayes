@@ -50,7 +50,7 @@ With the ```footBayes``` package we want to fill the gap and to give the possibi
 
 - <span style="color:green">Diagonal-Inflated Bivariate Poisson</span>: <span style="color:red">@karlis2003analysis </span>.
 
-While these models offer robust frameworks for modeling football match outcomes, their predictive performance can be further improved by incorporating additional historical information about team strengths. To this aim, the **Bradley-Terry-Davidson (BTD) model** [<span style="color:red">@davidson1970 </span>] is an interesting method for deriving historical team strengths based on match outcomes. The ```footBayes``` package implements a Bayesian version of the Bradley-Terry-Davidson model, as detailed in <span style="color:red">@demartino2024alternative</span>. The resulting relative log-strengths can then be used as an additional covariate in the goal-based models.
+While these models offer robust frameworks for modeling football match outcomes, their predictive performance can be further improved by incorporating additional historical information about team strengths. To this aim, the **Bradley-Terry-Davidson (BTD) model** <span style="color:red">[@davidson1970] </span> is an interesting method for deriving historical team strengths based on match outcomes. The ```footBayes``` package implements a Bayesian version of the Bradley-Terry-Davidson model, as detailed in <span style="color:red">@demartino2024alternative</span>. The resulting relative log-strengths can then be used as an additional covariate in the goal-based models.
 
 Precisely, we'll learn how to:
 - Fit a Bayesian Bradley-Terry-Davidson model both **dynamic** and **static**;
@@ -83,7 +83,7 @@ In my opinion building packages is like an art's work, likely to be *never-endin
 
 ## Bradley-Terry-Davidson model
 
-The Bradley-Terry model [<span style="color:red">@bradley_Terry1952 </span>] is one of the most popular modelling techniques in a pairwise comparison context for ranking players or teams. The model assumes that each team $T_k$, with $k = 1, \dots, N_T $,
+The Bradley-Terry model <span style="color:red">[@bradley_Terry1952] </span> is one of the most popular modelling techniques in a pairwise comparison context for ranking players or teams. The model assumes that each team $T_k$, with $k = 1, \dots, N_T $,
 is characterized by a latent parameter, $\alpha_k > 0$, representing its intrinsic strength. The odds of winning a match are then determined by
 the ratio of these parameters. Specifically, for a match between team $T_i$ and team $T_j$, with $i\neq j = 1, \dots, N_T $ , the probability that $T_i$ defeats $T_j$ in the \textit{n}-th match, with $n = 1, \dots, N$, is 
 \begin{align}

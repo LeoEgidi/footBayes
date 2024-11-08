@@ -4,16 +4,18 @@
 \alias{summary.btdFoot}
 \title{Summary Method for btdFoot Objects}
 \usage{
-\method{summary}{btdFoot}(object, pars = NULL, digits = 2, ...)
+\method{summary}{btdFoot}(object, pars = NULL, digits = 2, true_names = TRUE, ...)
 }
 \arguments{
 \item{object}{An object of class \code{btdFoot}.}
 
-\item{pars}{Optional character vector specifying parameters to include in the summary. If \code{NULL}, all parameters are included.}
+\item{pars}{Optional character vector specifying parameters to include in the summary. This can be specific parameter names or macro parameter groups (e.g., \code{"logStrength"}, \code{"logTie"}, \code{"home"}, \code{"log_lik"}, and \code{"y_rep"}). If \code{NULL}, all parameters are included.}
 
 \item{digits}{Number of significant digits to use when printing numeric values.}
 
-\item{...}{Additional arguments.}
+\item{true_names}{Logical value indicating whether to display team names in parameter summaries. Default is \code{TRUE}.}
+
+\item{...}{Additional arguments passed.}
 }
 \description{
 Provides detailed posterior summaries for the Bayesian Bradley-Terry-Davidson model parameters.

@@ -163,7 +163,6 @@
 #'
 #'@examples
 #'\dontrun{
-#'require(tidyverse)
 #'require(dplyr)
 #'
 #'
