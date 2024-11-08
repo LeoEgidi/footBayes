@@ -73,8 +73,8 @@ require(dplyr)
 data("italy")
 
 italy_2020_2021 <- italy \%>\%
-  dplyr::select(Season, home, visitor, hgoal, vgoal)
-  dplyr::filter(Season == "2020" | Season == "2021")
+  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+  dplyr::filter(Season == "2020" | Season == "2021") \%>\%
   dplyr::mutate(match_outcome = dplyr::case_when(
     hgoal > vgoal ~ 1,        # Home team wins
     hgoal == vgoal ~ 2,       # Draw

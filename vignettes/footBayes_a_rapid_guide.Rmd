@@ -306,6 +306,7 @@ library(bayesplot)
 library(loo)
 library(ggplot2)
 library(dplyr)
+library(tidyverse)
 ```
 
 # Bradley-Terry-Davidson model fit

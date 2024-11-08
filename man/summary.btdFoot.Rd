@@ -4,10 +4,14 @@
 \alias{summary.btdFoot}
 \title{Summary Method for btdFoot Objects}
 \usage{
-\method{summary}{btdFoot}(object, ...)
+\method{summary}{btdFoot}(object, pars = NULL, digits = 2, ...)
 }
 \arguments{
 \item{object}{An object of class \code{btdFoot}.}
+
+\item{pars}{Optional character vector specifying parameters to include in the summary. If \code{NULL}, all parameters are included.}
+
+\item{digits}{Number of significant digits to use when printing numeric values.}
 
 \item{...}{Additional arguments.}
 }

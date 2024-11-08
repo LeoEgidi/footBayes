@@ -114,12 +114,11 @@ compare_foot <- function(source, test_data, metric = c("accuracy", "brier", "ACP
     # cum_pred: matrix of cumulative predicted probabilities
     # actual: vector of actual outcomes as factors
 
-
     # Cumulative observed probabilities
-    acum <- matrix(0, nrow = N_prev, ncol = 3)
-    acum[test_data$outcome == "Home Win", ] <- matrix(rep(c(1, 1, 1), sum(test_data$outcome == "Home Win")), ncol = 3, byrow = TRUE)
-    acum[test_data$outcome == "Draw", ]      <- matrix(rep(c(0, 1, 1), sum(test_data$outcome == "Draw")), ncol = 3, byrow = TRUE)
-    acum[test_data$outcome == "Away Win", ] <- matrix(rep(c(0, 0, 1), sum(test_data$outcome == "Away Win")), ncol = 3, byrow = TRUE)
+    acum <- matrix(0, nrow = length(actual), ncol = 3)
+    acum[actual == "Home Win", ] <- matrix(rep(c(1, 1, 1), sum(actual == "Home Win")), ncol = 3, byrow = TRUE)
+    acum[actual == "Draw", ]      <- matrix(rep(c(0, 1, 1), sum(actual == "Draw")), ncol = 3, byrow = TRUE)
+    acum[actual == "Away Win", ] <- matrix(rep(c(0, 0, 1), sum(actual == "Away Win")), ncol = 3, byrow = TRUE)
 
     # Squared differences for m=1 and m=2
     squared_diff <- (cum_pred[, 1:2] - acum[, 1:2])^2
@@ -193,6 +192,26 @@ compare_foot <- function(source, test_data, metric = c("accuracy", "brier", "ACP
         next
       }
 
+      # Check for NAs
+      na_rows <- apply(prob_q_model, 1, function(x) any(is.na(x)))
+      if (any(na_rows)) {
+        num_na <- sum(na_rows)
+        warning(paste("Probability matrix", item_name, "contains", num_na, "rows with NAs. These rows will be removed from evaluation."))
+        prob_q_model <- prob_q_model[!na_rows, , drop = FALSE]
+        test_data_subset <- test_data[!na_rows, , drop = FALSE]
+        current_N_prev <- nrow(prob_q_model)
+
+        if (current_N_prev == 0) {
+          warning(paste("After removing NA rows, no data remains for matrix", item_name, ". Skipping."))
+          next
+        }
+
+        # Update outcome for remaining data
+        actual_outcomes <- test_data_subset$outcome
+      } else {
+        actual_outcomes <- test_data$outcome
+      }
+
       # Ensure probabilities sum to 1
       row_sums <- rowSums(prob_q_model)
       if (any(abs(row_sums - 1) > 1e-6)) {
@@ -205,50 +224,52 @@ compare_foot <- function(source, test_data, metric = c("accuracy", "brier", "ACP
       next
     }
 
+    # If item is a matrix and rows were removed, use 'test_data_subset'
+    if (is.matrix(item) && exists("test_data_subset")) {
+      outcomes <- actual_outcomes
+    } else {
+      outcomes <- test_data$outcome
+    }
 
     # Compute cumulative predicted probabilities for RPS
     cum_pred <- t(apply(prob_q_model, 1, cumsum))  # N_prev x 3
 
-    # Compute RPS if requested
+    # Compute Metrics
     if ("RPS" %in% metric) {
-      RPS <- compute_RPS(cum_pred, test_data$outcome)
+      RPS <- compute_RPS(cum_pred, outcomes)
       model_results$RPS <- round(RPS, 4)
     }
 
-    # Compute Accuracy if requested
     if ("accuracy" %in% metric) {
       predicted_outcomes <- apply(prob_q_model, 1, which.max)
-      accuracy <- mean(predicted_outcomes == as.numeric(test_data$outcome))
+      accuracy <- mean(predicted_outcomes == as.numeric(outcomes))
       model_results$accuracy <- round(accuracy, 4)
     }
 
-    # Compute Brier Score if requested
     if ("brier" %in% metric) {
-      brier_res <- matrix(0, N_prev, 3)
-      for (n in 1:N_prev) {
-        brier_res[n, as.numeric(test_data$outcome[n])] <- 1
+      brier_res <- matrix(0, nrow = nrow(prob_q_model), ncol = 3)
+      for (n in 1:nrow(prob_q_model)) {
+        brier_res[n, as.numeric(outcomes[n])] <- 1
       }
       brier <- mean(rowSums((brier_res - prob_q_model)^2))
       model_results$brier <- round(brier, 4)
     }
 
-    # Compute Pseudo R2 if requested
     if ("pseudoR2" %in% metric) {
       log_prob_sum <- 0
-      for (n in 1:N_prev) {
-        prob_n <- prob_q_model[n, as.numeric(test_data$outcome[n])]
+      for (n in 1:nrow(prob_q_model)) {
+        prob_n <- prob_q_model[n, as.numeric(outcomes[n])]
         prob_n <- max(prob_n, .Machine$double.eps)  # Avoid log(0)
         log_prob_sum <- log_prob_sum + log(prob_n)
       }
-      pseudoR2 <- exp(log_prob_sum / N_prev)
+      pseudoR2 <- exp(log_prob_sum / nrow(prob_q_model))
       model_results$pseudoR2 <- round(pseudoR2, 4)
     }
 
-    # Compute Average Coverage Probability if requested
     if ("ACP" %in% metric) {
-      true_probs <- numeric(N_prev)
-      for (n in 1:N_prev) {
-        true_class <- as.numeric(test_data$outcome[n])
+      true_probs <- numeric(nrow(prob_q_model))
+      for (n in 1:nrow(prob_q_model)) {
+        true_class <- as.numeric(outcomes[n])
         true_probs[n] <- prob_q_model[n, true_class]
       }
       ACP <- mean(true_probs)
