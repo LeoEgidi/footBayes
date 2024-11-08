@@ -8,7 +8,8 @@ btd_foot(
   data,
   dynamic_rank = FALSE,
   home_effect = FALSE,
-  prior_par = list(psi = normal(0, 3), gamma = normal(0, 0.3), home = normal(0, 5)),
+  prior_par = list(logStrength = normal(0, 3), logTie = normal(0, 0.3), home = normal(0,
+    5)),
   rank_measure = "median",
   ...
 )
@@ -29,8 +30,8 @@ The data frame must not contain missing values.}
 
 \item{prior_par}{A list specifying the prior distributions for the parameters of interest, using the \code{normal} function:
 \itemize{
-  \item \code{psi}: Prior for the team strengths (\code{psi}). Default is \code{normal(0, 3)}.
-  \item \code{gamma}: Prior for the tie parameter (\code{gamma}). Default is \code{normal(0, 0.3)}.
+  \item \code{logStrength}: Prior for the team log-strengths. Default is \code{normal(0, 3)}.
+  \item \code{logTie}: Prior for the tie parameter. Default is \code{normal(0, 0.3)}.
   \item \code{home}: Prior for the home effect (\code{home}). Applicable only if \code{home_effect = TRUE}. Default is \code{normal(0, 5)}.
 }
 Only normal priors are allowed for this model.}
@@ -94,13 +95,13 @@ fit_result_dyn <- btd_foot(
   dynamic_rank = TRUE,
   home_effect = TRUE,
   prior_par = list(
-    psi = normal(0, 10),
-    gamma = normal(0, 5),
+    logStrength = normal(0, 10),
+    logTie = normal(0, 5),
     home = normal(0, 5)
   ),
   rank_measure = "median",
   iter = 1000,
-  cores = 2
+  cores = 2,
   chains = 2
 )
 
@@ -111,8 +112,8 @@ fit_result_stat <- btd_foot(
   data = italy_2020_2021,
   dynamic_rank = FALSE,
   prior_par = list(
-    psi = normal(0, 10),
-    gamma = normal(0, 5),
+    logStrength = normal(0, 10),
+    logTie = normal(0, 5),
     home = normal(0, 5)
   ),
   rank_measure = "MAP",

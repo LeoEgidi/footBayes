@@ -28,11 +28,11 @@ data{
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       //real mu;
-      real home_effect;
+      real home;
       real gamma;
     }
     transformed parameters{
-      real adj_home_eff;                   // Adjusted home effect
+      real adj_h_eff;                   // Adjusted home effect
       vector[nteams] att;        // attack parameters
       vector[nteams] def;        // defence parameters
       vector[2] theta[N];        // exponentiated linear pred.
@@ -43,10 +43,10 @@ data{
         def[t] = def_raw[t]-mean(def_raw);
       }
 
-      adj_home_eff = home_effect * ind_home;
+      adj_h_eff = home * ind_home;
 
       for (n in 1:N){
-        theta[n,1] = exp( adj_home_eff+att[team1[n]]+def[team2[n]] +
+        theta[n,1] = exp( adj_h_eff+att[team1[n]]+def[team2[n]] +
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta[n,2] = exp( att[team2[n]]+def[team1[n]] -
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -94,7 +94,7 @@ data{
 
       // log-priors fixed effects
       //target+=normal_lpdf(mu|0,5);
-      target+=normal_lpdf(home_effect|mean_home,sd_home);
+      target+=normal_lpdf(home|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
 

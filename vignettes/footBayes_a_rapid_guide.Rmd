@@ -1,6 +1,6 @@
 ---
 title: "Fitting football models and visualizing predictions with the ```footBayes``` package"
-author: "Leonardo Egidi, Vasilis Palaskas"
+author: "Leonardo Egidi, Roberto Macrì Demartino, and Vasilis Palaskas"
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
@@ -36,7 +36,7 @@ knitr::opts_chunk$set(fig.align = 'center',
 
 Modeling football outcomes became incredibly popular over the last years. However, an **encompassing computational tool** able to fit in one step many alternative football models is missing yet.
 
-With the ```footBayes``` package we want to fill the gap and to give the possibility to **fit, interpret and graphically explore** the following goal-based Bayesian football models using the underlying Stan (<span style="color:red"> @rstan2020</span>) environment:
+With the ```footBayes``` package we want to fill the gap and to give the possibility to **fit, interpret and graphically explore** the following goal-based Bayesian football models using the underlying Stan [<span style="color:red"> @rstan2020</span>] environment:
 
 - <span style="color:green">Double Poisson</span>: <span style="color:red"> @baio2010bayesian, @groll2015prediction, @egidi2018combining </span>
 
@@ -50,26 +50,28 @@ With the ```footBayes``` package we want to fill the gap and to give the possibi
 
 - <span style="color:green">Diagonal-Inflated Bivariate Poisson</span>: <span style="color:red">@karlis2003analysis </span>.
 
+While these models offer robust frameworks for modeling football match outcomes, their predictive performance can be further improved by incorporating additional historical information about team strengths. To this aim, the **Bradley-Terry-Davidson (BTD) model** [<span style="color:red">@davidson1970 </span>] is an interesting method for deriving historical team strengths based on match outcomes. The ```footBayes``` package implements a Bayesian version of the Bradley-Terry-Davidson model, as detailed in <span style="color:red">@demartino2024alternative</span>. The resulting relative log-strengths can then be used as an additional covariate in the goal-based models.
 
 Precisely, we'll learn how to:
+- Fit a Bayesian Bradley-Terry-Davidson model both **dynamic** and **static**;
 
-- fit **static** maximum likelihood and Bayesian models;
+- Fit **static** maximum likelihood and Bayesian models;
 
-- fit **dynamic** Bayesian models;
+- Fit **dynamic** Bayesian models;
 
-- change the prior distributions and perform some **sensitivity tests**;
+- Change the prior distributions and perform some **sensitivity tests**;
 
-- interpret **parameters' estimates**;
+- Interpret **parameters' estimates**;
 
-- retrieve predictive intervals for team-specific **football abilities**;
+- Retrieve predictive intervals for team-specific **football abilities**;
 
-- check the models through graphical **posterior predictive checks**; 
+- Check the models through graphical **posterior predictive checks**; 
 
-- obtain out-of-sample **predictions**;
+- Obtain out-of-sample **predictions**;
 
-- reconstruct the final **rank's league**;
+- Reconstruct the final **rank's league**;
 
-- compare models.
+- Compare models.
 
 The package is also available at the following link:
 
@@ -79,7 +81,41 @@ In my opinion building packages is like an art's work, likely to be *never-endin
 
 >"A (software) designer knows that he has reached perfection not when there is nothing more to add, but when there is nothing left to take away!"
 
+## Bradley-Terry-Davidson model
 
+The Bradley-Terry model [<span style="color:red">@bradley_Terry1952 </span>] is one of the most popular modelling techniques in a pairwise comparison context for ranking players or teams. The model assumes that each team $T_k$, with $k = 1, \dots, N_T $,
+is characterized by a latent parameter, $\alpha_k > 0$, representing its intrinsic strength. The odds of winning a match are then determined by
+the ratio of these parameters. Specifically, for a match between team $T_i$ and team $T_j$, with $i\neq j = 1, \dots, N_T $ , the probability that $T_i$ defeats $T_j$ in the \textit{n}-th match, with $n = 1, \dots, N$, is 
+\begin{align}
+    p_{ij}^W = \mathbb{P}(T_{i}\; \text{defeats} \; T_{j}) = \dfrac{\alpha_i}{\alpha_i+\alpha_j}, 
+\label{basic_BT}
+\end{align}
+where $\alpha_{i}$ and $\alpha_{j}$ are the strength parameters of the teams involved in the match. Parameter identifiability is obtained by imposing a constraint such as $\sum_{k=1}^{N_T} \alpha_k=1$. 
+
+The model is commonly reparameterized by the logarithm of the strength parameters 
+\begin{align}
+   p_{ij}^W = \dfrac{\exp(\psi_i)}{\exp(\psi_i)+\exp(\psi_j)},
+\end{align}
+where $\psi_i = \log(\alpha_i)$ and $\psi_j = \log(\alpha_j)$. Consequently, the parameters are identifiable if $\sum_{k=1}^{N_T} \psi_k=0$.
+
+
+The standard Bradley-Terry model does not account for draws. To address this limitation, several alternatives have been proposed. <span style="color:red">@davidson1970 </span> introduced an additional parameter, \zeta, that balances the probability of ties against the probability of not having ties, thereby computing two distinct probabilities. The log-parametrization of the BTD model is 
+\begin{align}
+    p_{ij}^W &= \dfrac{\exp(\psi_i)}{\exp(\psi_i)+\exp(\psi_j)+\exp(\nu+ (\psi_i+\psi_j)/2)},\\  
+    p_{ij}^D &=  \dfrac{\exp(\nu+(\psi_i+\psi_j)/2)}{\exp(\psi_i)+\exp(\psi_j)+\exp(\nu+ (\psi_i+\psi_j)/2)},\\
+    p_{ij}^L &= \dfrac{\exp(\psi_j)}{\exp(\psi_i)+\exp(\psi_j)+\exp(\nu+ (\psi_i+\psi_j)/2)},
+\end{align}
+where $\nu = \log(\zeta)$. Since the three-way process events are mutually exclusive, the following constraint is imposed $p_{ij}^W + p_{ij}^D + p_{ij}^L = 1.$
+
+The Bayesian BTD model requires specifying prior distributions for both the team log-strength parameters and the tie parameter. Specifically, the prior placed on $\nu$ reflects our initial belief about the impact of teams' strengths on tie outcomes <span style="color:red">@IssaMattos2022 </span>.
+Let $w_{ij}$ represent the binary outcome where team $T_i$ defeats team $T_j$, and let $d_{ij}$ indicate the binary outcome of a draw between teams $T_i$ and $T_j$. Then, the hierarchical Bayesian BTD model is
+\begin{align}
+    w_{ij} \mid p_{ij}^W &\sim \mathrm{Bernoulli}(p_{ij}^W),\\ 
+    d_{ij} \mid p_{ij}^D &\sim \mathrm{Bernoulli}(p_{ij}^D),\\ 
+    \psi &\sim \mathrm{N}(\mu_\psi,\sigma^2_\psi),\\        
+    \nu &\sim \mathrm{N}(\mu_\nu,\sigma^2_\nu),
+\end{align}
+where $\mu_\psi$ and $\mu_\nu$ are the mean for the team log-strength and log-tie parameters, and $\sigma^2_\psi$ and $\sigma^2_\nu$ denote the corresponding variances. Specifically, identical independent Gaussian distributions for each log-strength parameter and for the log-tie parameter, satisfies all the four conditions specifically suited for ranking system proposed by <span style="color:red">@whelan2017prior </span>.
 
 ## Bivariate-Poisson model
 
@@ -194,7 +230,7 @@ Now it's time to fit and interpret the models, and we'll mainly focus on the biv
 
  <!-- \begin{align} -->
  <!-- y^{H}_{n}- y^{A}_{n} & \sim t(7, \text{ab}_{h_{n}}-\text{ab}_{a_n}, \sigma_y)\\ -->
- <!-- \text{ab}_T &\sim \mathcal{N}(\mu + b \times \text{prior_score}_T, \sigma_{\text{ab}}), -->
+ <!-- \text{ab}_T &\sim \mathrm{N}(\mu + b \times \text{prior_score}_T, \sigma_{\text{ab}}), -->
  <!-- \end{align} -->
 
  <!-- where $\text{ab}_T$ is the overall ability for -->
@@ -245,8 +281,8 @@ where $\pi(\boldsymbol{\theta})= \pi(\text{att}) \pi(\text{def})\pi(\mu)\pi(\tex
 The standard approach is to assign some **weakly-informative** prior distributions to the team-specific abilities. These parameters are considered  **exchangeable** from two common (prior) distributions:
 
  \begin{align}
- \text{att}_t &\sim \mathcal{N}(\mu_{\text{att}}, \sigma_{\text{att}})\\
- \text{def}_t &\sim \mathcal{N}(\mu_{\text{def}}, \sigma_{\text{def}}), \ \  t= \ 1,\ldots,T,
+ \text{att}_t &\sim \mathrm{N}(\mu_{\text{att}}, \sigma_{\text{att}})\\
+ \text{def}_t &\sim \mathrm{N}(\mu_{\text{def}}, \sigma_{\text{def}}), \ \  t= \ 1,\ldots,T,
  \end{align}
 
 with **hyperparameters** $\mu_{\text{att}}, \sigma_{\text{att}}, \mu_{\text{def}}, \sigma_{\text{def}}$. The model formulation is completed by assigning some weakly-informative priors to the remaining parameters. In what follows, some priors' options will be handled directly by the user.
@@ -270,18 +306,163 @@ library(bayesplot)
 library(loo)
 library(ggplot2)
 library(dplyr)
-library(tidyverse)
 ```
 
-# Model fit
+# Bradley-Terry-Davidson model fit
+
+The ```btd_foot``` function fits a Bayesian Bradley-Terry-Davidson (BTD) model by generating posterior samples using Hamiltonian Monte Carlo within the underlying ```rstan``` ecosystem. It supports both static and dynamic ranking models, allowing for the estimation of team strengths over time. 
+
+## Using ```btd_foot```
+In this section, we will walk through the steps to use the ```btd_foot``` function effectively, including preparing the data, choosing model options, and interpreting the results. Specifically the data must be in a specific format required by the ```btd_foot``` function. It should be a data frame with the following columns:
+
+- **periods**: An integer representing the time point of each observation (e.g., season, week).
+- **home_team**: The name of the home team (character string).
+- **away_team**: The name of the away team (character string).
+- **match_outcome**: The outcome of the match, coded as:
+  - `1` if the home team wins.
+  - `2` for a tie/draw.
+  - `3` if the away team wins.
+
+To this aim, we will use data from the Italian football league for the seasons 2020 and 2021.
+```{r BTD_data, echo = TRUE, eval = NOT_CRAN}
+library(dplyr)
+library(footBayes) 
+
+data("italy")
+
+ italy_2020_2021 <- italy %>%
+   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%  
+   dplyr::filter(Season == "2020" | Season == "2021") %>% 
+   dplyr::mutate(match_outcome = dplyr::case_when(
+     hgoal > vgoal ~ 1,        # Home team wins
+     hgoal == vgoal ~ 2,       # Draw
+     hgoal < vgoal ~ 3         # Away team wins
+   )) %>%
+   dplyr::mutate(periods = dplyr::case_when(
+     dplyr::row_number() <= 190 ~ 1,
+     dplyr::row_number() <= 380 ~ 2,
+     dplyr::row_number() <= 570 ~ 3,
+     TRUE ~ 4
+   )) %>%  # Assign periods based on match number
+   dplyr::select(periods, home_team = home,
+    away_team = visitor, match_outcome)
+```
+
+
+One of the most important features implemented in the ```btd_foot``` function is the possibility to choose between assuming that team strengths are constant over time or allowing team strengths to change across different time periods. Specifically, following the approach proposed by  <span style="color:red"> @owen2011dynamic </span>, <span style="color:red"> @egidi2018combining</span>, and <span style="color:red"> @demartino2024alternative</span> for the attack and defense abilities in goal-based models, we can assume that the log-strength parameters vary across a given number of weeks or seasons $1, \ldots, \mathcal{T}$. To capture these dynamics, we assign the priors for the log-strength parameters to be auto-regressive of order 1 for each time period $ \tau=2,\ldots, \mathcal{T}:$ 
+\begin{align}
+\psi_{t,\tau} &\sim \mathrm{N}(\mu_\psi_{t,\tau},\sigma_\psi),        
+\end{align}
+whereas for $\tau = 1$: 
+\begin{align}
+\psi_{t,1} &\sim \mathrm{N}(\mu_\psi,\sigma_\psi),       
+\end{align}
+with $\mu_\psi$ being the initial mean of the log-strength parameter and $\sigma_\psi$ the standard deviation for the log-strength parameter, assumed to be constant across time and teams.
+Accordingly, the user can use the ```dynamic_rank``` argument:
+- ```dynamic_rank = FALSE``` for static Bayesian BTD model.
+- ```dynamic_rank = TRUE``` for dynamic Bayesian BTD model.
+
+The Bayesian BTD model provides posterior distributions for the log-tie and log-strength parameters, reflecting the inherent uncertainty in the ranking system. To develop the final ranking of teams, it is essential to summarize these posterior distributions. The ```rank_measure``` argument determines how the team strengths are summarized:
+- ```median```: Uses the posterior median (default).
+- ```mean```:  Uses the posterior mean.
+- ```MAP```: Uses the maximum a posteriori estimate.
+
+```{r BTD_model_1, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+# Dynamic Ranking Example with Median Rank Measure
+ fit_result_dyn <- btd_foot(
+   data = italy_2020_2021,
+   dynamic_rank = TRUE,
+   rank_measure = "median",
+   iter = 1000,
+   #cores = 2,
+   chains = 2,
+   control = list(adapt_delta = 0.9,
+                  max_treedepth = 12)
+ )
+
+ summary(fit_result_dyn)
+
+ # Static Ranking Example with MAP Rank Measure
+ fit_result_stat <- btd_foot(
+   data = italy_2020_2021,
+   dynamic_rank = FALSE,
+   rank_measure = "MAP",
+   iter = 1000,
+   chains = 2
+ )
+
+ summary(fit_result_stat)
+```
+
+Another significant feature implemented in the ```btd_foot``` function is the ability to account for the **home-field effect**. This effect represents the psychological or logistical benefits that the home team may have over the visiting team. This is modeled as a multiplicative order effect <span style="color:red"> @davidson_beaver_1977</span> in the Bayesian BTD framework. This multiplicative parameter becomes in the
+log-scale an additive term as show 
+\begin{align}
+    p_{ij}^W &= \dfrac{\exp(\psi_i + \text{home})}{\exp(\psi_i + \text{home})+\exp(\psi_j)+\exp(\nu+ (\psi_i+ \text{home} + \psi_j)/2)},\\  
+    p_{ij}^D &=  \dfrac{\exp(\nu+(\psi_i + \text{home} + \psi_j)/2)}{\exp(\psi_i+ \text{home})+\exp(\psi_j)+\exp(\nu+ (\psi_i + \text{home} + \psi_j)/2)},\\
+    p_{ij}^L &= \dfrac{\exp(\psi_j)}{\exp(\psi_i + \text{home})+\exp(\psi_j)+\exp(\nu+ (\psi_i + \text{home} + \psi_j)/2)},
+\end{align}
+where $\text{home}$ is the home effect parameter. The argument ```home_effect``` permits to consider this extension of the Bayesian BTD where an additional parameter representing the home effect is considered:
+- ```home_effect = TRUE```: includes a home effect in the model.
+- ```home_effect = FALSE```:  excludes a home effect in the model.
+
+The ```prior_par``` argument allows the user to specify a list of prior distributions for the model parameters. The priors must be normal distributions. The default priors are the following one 
+\begin{align}
+    \psi &\sim \mathrm{N}(0,3),\\        
+    \nu &\sim \mathrm{N}(0,0.3), \\
+    \text{home} & \sim \mathrm{N}(0,5)
+\end{align}
+ 
+Below is an example of how to incorporate the home-field effect into the ```btd_foot``` function by modifying the priors and enabling the home_effect parameter.
+
+```{r BTD_model_2, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+# Dynamic Ranking Example with Median Rank Measure
+ fit_result_dyn_2 <- btd_foot(
+   data = italy_2020_2021,
+   home_effect = TRUE,
+   dynamic_rank = TRUE,
+   prior_par = list(
+    logStrength = normal(2, 10),
+    logTie = normal(-1.5, 5),
+    home = normal(0, 5)
+  ),
+   rank_measure = "median",
+   iter = 1000,
+   #cores = 2,
+   chains = 2,
+   control = list(adapt_delta = 0.9,
+                  max_treedepth = 12)
+ )
+
+ summary(fit_result_dyn_2)
+
+ # Static Ranking Example with MAP Rank Measure
+ fit_result_stat_2 <- btd_foot(
+   data = italy_2020_2021,
+   dynamic_rank = FALSE,
+   prior_par = list(
+    logStrength = normal(2, 10),
+    logTie = normal(0, 2.5),
+    home = normal(5, 3)
+  ),
+   rank_measure = "MAP",
+   iter = 1000,
+   #cores = 2,
+   chains = 2
+ )
+
+ summary(fit_result_stat_2)
+```
+
+
+# Goal-based models fit
 
 ## Static fit
 
 To start with some analysis, let's now ```italy```  data about the Italian Serie A, specifically season 2000/2001: the season consists of $T=18$ teams, we start fitting a static bivariate Poisson model using:
 
-- the likelihood approach: the ```mle_foot``` function returns the MLE estimates along with 95\% profile-likelihood deviance confidence intervals (by default) and Wald-type confidence intervals. The user can specify the desired confidence interval with the optional argument ```interval = c("profile", "Wald")```.
+- The likelihood approach: the ```mle_foot``` function returns the MLE estimates along with 95\% profile-likelihood deviance confidence intervals (by default) and Wald-type confidence intervals. The user can specify the desired confidence interval with the optional argument ```interval = c("profile", "Wald")```.
 
-- the Bayesian approach: the ```stan_foot``` function produces an Hamiltonian Monte Carlo posterior sampling by using the underlying ```rstan``` ecosystem. The user can choose the number of iterations (```iter```), the number of Markov chains (```chains```), and other optional arguments values. With the ```print``` function, the usual Bayesian model summaries can be obtained: posterior means, medians, standard deviations, percentiles at 2.5\%, 25\%, 75\%, 97.5\% level, effective sample size (```n_eff```) and Gelman-Rubin statistic (```Rhat```).
+- The Bayesian approach: the ```stan_foot``` function produces an Hamiltonian Monte Carlo posterior sampling by using the underlying ```rstan``` ecosystem. The user can choose the number of iterations (```iter```), the number of Markov chains (```chains```), and other optional arguments values. With the ```print``` function, the usual Bayesian model summaries can be obtained: posterior means, medians, standard deviations, percentiles at 2.5\%, 25\%, 75\%, 97.5\% level, effective sample size (```n_eff```) and Gelman-Rubin statistic (```Rhat```).
 
 At this stage, we are currently ignoring any time-dependence in our parameters, considering them to be **static** across distinct match-times.  
 
@@ -333,7 +514,7 @@ In the model above, we are assuming that the covariance $\lambda_{3n}$ is consta
 
 \begin{align}
 \lambda_{3n} =&\ \exp\{\rho\}\\
-\rho \sim & \ \mathcal{N}^+(0,1),\\
+\rho \sim & \ \mathrm{N}^+(0,1),\\
 \end{align}
 
 where $\rho$ is assigned an half-Gaussian distribution with standard deviation equal to 1. According to the fit above, this means that in the model above we get an estimate of $\lambda_{3n}= \exp\{-4.25\} \approx 0.014$, suggesting a low, despite non-null, amount of goals-correlation existing in the 2000/2001 Italian Serie A. Of course, in the next package's version, the user will be allowed to specify a more general linear predictor for $\log(\lambda_{3n})$, as outlined in the BP presentation above, along with some prior distributions for the  parameters involved in the covariance formulation.
@@ -378,8 +559,8 @@ We got a very similar estimate to the Bayesian model for the home-effect.
 One of the common practices in Bayesian statistics is to change the priors and perform some **sensitivity tests**. The default priors for the team-specific abilities and their related team-level standard deviations are:
 
 \begin{align}
- \text{att}_t &\sim \mathcal{N}(\mu_{\text{att}}, \sigma_{\text{att}}),\\
- \text{def}_t &\sim \mathcal{N}(\mu_{\text{def}}, \sigma_{\text{def}}),\\
+ \text{att}_t &\sim \mathrm{N}(\mu_{\text{att}}, \sigma_{\text{att}}),\\
+ \text{def}_t &\sim \mathrm{N}(\mu_{\text{def}}, \sigma_{\text{def}}),\\
  \sigma_{\text{att}},  \sigma_{\text{def}} &\sim \mathsf{Cauchy}^+(0,5),
  \end{align}
  
@@ -446,22 +627,22 @@ A structural limitation in the previous models is the assumption of static team-
 
 (iv) some teams could improve/worsen their attitudes due to the so-called turnover; 
 
-and many others. Perhaps, we could assume **dynamics** in the attach/defence
- abilities as in <span style="color:red"> @owen2011dynamic </span> and <span style="color:red"> @egidi2018combining</span> in terms of weeks or seasons. In such framework, for a given
+and many others. Again, we could assume **dynamics** in the attach/defence
+ abilities as in <span style="color:red"> @owen2011dynamic </span>, <span style="color:red"> @egidi2018combining</span> and <span style="color:red"> @demartino2024alternative</span> in terms of weeks or seasons. In such framework, for a given
  number of times $1, \ldots, \mathcal{T}$, the models
  above would be unchanged, but the priors for the abilities
  parameters at each time $\tau, \tau=2,\ldots, \mathcal{T},$ would be **auto-regressive** of order 1:
 
  \begin{align}
- \text{att}_{t, \tau} & \sim \mathcal{N}({\text{att}}_{t, \tau-1}, \sigma_{\text{att}})\\
- \text{def}_{t, \tau} &\sim \mathcal{N}({\text{def}}_{t, \tau-1}, \sigma_{\text{def}}),
+ \text{att}_{t, \tau} & \sim \mathrm{N}({\text{att}}_{t, \tau-1}, \sigma_{\text{att}})\\
+ \text{def}_{t, \tau} &\sim \mathrm{N}({\text{def}}_{t, \tau-1}, \sigma_{\text{def}}),
  \end{align}
 
  whereas for $\tau=1$ we have:
 
  \begin{align}
- \text{att}_{t, 1} & \sim \mathcal{N}(\mu_{\text{att}}, \sigma_{\text{att}})\\
- \text{def}_{t, 1} &\sim \mathcal{N}(\mu_{\text{def}}, \sigma_{\text{def}}),
+ \text{att}_{t, 1} & \sim \mathrm{N}(\mu_{\text{att}}, \sigma_{\text{att}})\\
+ \text{def}_{t, 1} &\sim \mathrm{N}(\mu_{\text{def}}, \sigma_{\text{def}}),
  \end{align}
 
 with hyperparameters $\mu_{\text{att}}, \mu_{\text{def}}, \sigma_{\text{att}}, \sigma_{\text{def}}$ and with the standard deviations capturing the time's/evolution's variation of both the teams' skills (here assumed to be constant across time and teams).

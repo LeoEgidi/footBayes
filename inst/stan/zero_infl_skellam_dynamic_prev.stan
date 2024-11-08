@@ -59,7 +59,7 @@ data{
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real home_effect;
+      real home;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
@@ -68,7 +68,7 @@ data{
 }
 
 transformed parameters{
-      real adj_home_eff;                   // Adjusted home effect
+      real adj_h_eff;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -106,10 +106,10 @@ transformed parameters{
 
       }
 
-      adj_home_eff = home_effect * ind_home;
+      adj_h_eff = home * ind_home;
 
       for (n in 1:N){
-        theta_home[n] = exp(adj_home_eff+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_h_eff+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -151,7 +151,7 @@ transformed parameters{
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home_effect|mean_home,sd_home);
+      target+=normal_lpdf(home|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
       target+=uniform_lpdf(prob_of_draws|0,1);
 
@@ -183,7 +183,7 @@ transformed parameters{
       //out-of-sample predictions
 
       for (n in 1:N_prev){
-        theta_home_prev[n] = exp(adj_home_eff+att[instants_prev[n], team1_prev[n]]+
+        theta_home_prev[n] = exp(adj_h_eff+att[instants_prev[n], team1_prev[n]]+
                                    def[instants_prev[n], team2_prev[n]]+
                          (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
         theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+

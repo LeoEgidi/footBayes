@@ -62,26 +62,46 @@ italy_2000_test <- italy_2000[289:306, ]
 
 colnames(italy_2000_test) <- c("season", "home_team", "away_team", "homegoals", "awaygoals")
 
-# Example with probability matrices
-# Assume prob_matrix1 and prob_matrix2 are precomputed probability matrices
-prob_matrix1 <- matrix(runif(33, 0, 1), ncol = 3)
-prob_matrix1 <- prob_matrix1 / rowSums(prob_matrix1)  # Normalize to sum to 1
-prob_matrix2 <- matrix(runif(33, 0, 1), ncol = 3)
-prob_matrix2 <- prob_matrix2 / rowSums(prob_matrix2)
-
 compare_results_models <- compare_foot(
   source = list(model_1 = fit),
   test_data = italy_2000_test,
   metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS")
 )
 
+print(compare_results_models)
+
+# Example with probability matrices
+
+home_team <- c("AC Milan", "Inter", "Juventus", "AS Roma", "Napoli",
+               "Lazio", "Atalanta", "Fiorentina", "Torino", "Sassuolo", "Udinese")
+
+away_team <- c("Juventus", "Napoli", "Inter", "Atalanta", "Lazio",
+               "AC Milan", "Sassuolo", "Torino", "Fiorentina", "Udinese", "AS Roma")
+
+# Home and Away goals based on given data
+homegoals <- c(2, 0, 2, 2, 3, 1, 4, 2, 1, 1, 2)
+awaygoals <- c(1, 0, 1, 3, 2, 1, 1, 2, 1, 1, 2)
+
+# Combine into a data frame
+test_data <- data.frame(home_team, away_team, homegoals, awaygoals)
+
+# Define the data for each column
+pW <- c(0.51, 0.45, 0.48, 0.53, 0.56, 0.39, 0.52, 0.55, 0.61, 0.37, 0.35)
+pD <- c(0.27, 0.25, 0.31, 0.18, 0.23, 0.30, 0.24, 0.26, 0.18, 0.19, 0.22)
+pL <- c(0.22, 0.30, 0.21, 0.29, 0.21, 0.31, 0.24, 0.19, 0.21, 0.44, 0.43)
+
+# Create the data frame table_prob
+table_prob <- data.frame(pW, pD, pL)
+matrix_prob <- as.matrix(table_prob)
+
+# Use compare_foot function
 compare_results_matrices <- compare_foot(
-  source = list(matrix_1 = prob_matrix1, matrix_2 = prob_matrix2),
-  test_data = italy_2000_test,
-  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS")
+  source = list(matrix_1 = matrix_prob),
+  test_data = test_data,
+  metric = c("accuracy", "brier", "pseudoR2", "ACP", "RPS")
 )
 
-print(compare_results_models)
+# Print the results
 print(compare_results_matrices)
 }
 }

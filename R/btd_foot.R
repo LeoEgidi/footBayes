@@ -14,8 +14,8 @@
 #' @param home_effect Logical; if \code{TRUE}, includes a home effect in the model (default is \code{FALSE}).
 #' @param prior_par A list specifying the prior distributions for the parameters of interest, using the \code{normal} function:
 #'   \itemize{
-#'     \item \code{psi}: Prior for the team strengths (\code{psi}). Default is \code{normal(0, 3)}.
-#'     \item \code{gamma}: Prior for the tie parameter (\code{gamma}). Default is \code{normal(0, 0.3)}.
+#'     \item \code{logStrength}: Prior for the team log-strengths. Default is \code{normal(0, 3)}.
+#'     \item \code{logTie}: Prior for the tie parameter. Default is \code{normal(0, 0.3)}.
 #'     \item \code{home}: Prior for the home effect (\code{home}). Applicable only if \code{home_effect = TRUE}. Default is \code{normal(0, 5)}.
 #'   }
 #'   Only normal priors are allowed for this model.
@@ -53,8 +53,8 @@
 #' data("italy")
 #'
 #' italy_2020_2021 <- italy %>%
-#'   dplyr::select(Season, home, visitor, hgoal, vgoal)
-#'   dplyr::filter(Season == "2020" | Season == "2021")
+#'   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
+#'   dplyr::filter(Season == "2020" | Season == "2021") %>%
 #'   dplyr::mutate(match_outcome = dplyr::case_when(
 #'     hgoal > vgoal ~ 1,        # Home team wins
 #'     hgoal == vgoal ~ 2,       # Draw
@@ -75,13 +75,13 @@
 #'   dynamic_rank = TRUE,
 #'   home_effect = TRUE,
 #'   prior_par = list(
-#'     psi = normal(0, 10),
-#'     gamma = normal(0, 5),
+#'     logStrength = normal(0, 10),
+#'     logTie = normal(0, 5),
 #'     home = normal(0, 5)
 #'   ),
 #'   rank_measure = "median",
 #'   iter = 1000,
-#'   cores = 2
+#'   cores = 2,
 #'   chains = 2
 #' )
 #'
@@ -92,8 +92,8 @@
 #'   data = italy_2020_2021,
 #'   dynamic_rank = FALSE,
 #'   prior_par = list(
-#'     psi = normal(0, 10),
-#'     gamma = normal(0, 5),
+#'     logStrength = normal(0, 10),
+#'     logTie = normal(0, 5),
 #'     home = normal(0, 5)
 #'   ),
 #'   rank_measure = "MAP",
@@ -111,16 +111,30 @@ btd_foot <- function(data,
                      dynamic_rank = FALSE,
                      home_effect = FALSE,
                      prior_par = list(
-                        psi = normal(0, 3),
-                        gamma = normal(0, 0.3),
+                        logStrength = normal(0, 3),
+                        logTie = normal(0, 0.3),
                         home = normal(0, 5)
                      ),
                      rank_measure = "median",
                      ...) {
 
+  # Set default priors
+  default_priors <- list(
+    logStrength = normal(0, 3),
+    logTie = normal(0, 0.3),
+    home = normal(0, 5)
+  )
+
+  # If prior_par is NULL, set it to an empty list
+  if (is.null(prior_par)) {
+    prior_par <- list()
+  }
+
+  # Merge prior_par with defaults
+  prior_par <- utils::modifyList(default_priors, prior_par)
 
   # Validate prior names
-  allowed_prior_names <- c("psi", "gamma", "home")
+  allowed_prior_names <- c("logStrength", "logTie", "home")
 
   # Check that prior_par contains only allowed elements
   if (!is.null(prior_par)) {
@@ -145,22 +159,22 @@ btd_foot <- function(data,
   rank_measure <- match.arg(rank_measure, allowed_rank_measures)
 
   # Extract prior parameters from the priors list
-  psi_prior <- prior_par$psi
-  gamma_prior <- prior_par$gamma
+  logStrength_prior <- prior_par$logStrength
+  logTie_prior <- prior_par$logTie
   home_prior <- prior_par$home
 
   # Only normal prior
 
-  if (psi_prior$dist != "normal" || gamma_prior$dist != "normal" ||
+  if (logStrength_prior$dist != "normal" || logTie_prior$dist != "normal" ||
       (home_effect && home_prior$dist != "normal")) {
     stop("Prior distributions must be 'normal'.")
   }
 
 
-  mean_psi <- psi_prior$location
-  sd_psi <- psi_prior$scale
-  mean_gamma <- gamma_prior$location
-  sd_gamma <- gamma_prior$scale
+  mean_logStrength <- logStrength_prior$location
+  sd_logStrength <- logStrength_prior$scale
+  mean_logTie <- logTie_prior$location
+  sd_logTie <- logTie_prior$scale
 
 #   ____________________________________________________________________________
 #   Home Effect Check                                                       ####
@@ -185,10 +199,10 @@ btd_foot <- function(data,
 
   # # Check prior_par' value
   #
-  # check_prior(mean_psi, "mean_psi")
-  # check_prior(sd_psi, "sd_psi", positive = TRUE)
-  # check_prior(mean_gamma, "mean_gamma")
-  # check_prior(sd_gamma, "sd_gamma", positive = TRUE)
+  # check_prior(mean_logStrength, "mean_logStrength")
+  # check_prior(sd_logStrength, "sd_logStrength", positive = TRUE)
+  # check_prior(mean_logTie, "mean_logTie")
+  # check_prior(sd_logTie, "sd_logTie", positive = TRUE)
   #
   # if (home_effect) {
   #   check_prior(mean_home, "mean_home")
@@ -261,17 +275,17 @@ btd_foot <- function(data,
 
 #
 #   # Check prior_par
-#   if (!is.numeric(mean_psi) || length(mean_psi) != 1) {
-#     stop("'mean_psi' must be a numeric value.")
+#   if (!is.numeric(mean_logStrength) || length(mean_logStrength) != 1) {
+#     stop("'mean_logStrength' must be a numeric value.")
 #   }
-#   if (!is.numeric(sd_psi) || length(sd_psi) != 1 || sd_psi <= 0) {
-#     stop("'sd_psi' must be a positive numeric value.")
+#   if (!is.numeric(sd_logStrength) || length(sd_logStrength) != 1 || sd_logStrength <= 0) {
+#     stop("'sd_logStrength' must be a positive numeric value.")
 #   }
-#   if (!is.numeric(mean_gamma) || length(mean_gamma) != 1) {
-#     stop("'mean_gamma' must be a numeric value.")
+#   if (!is.numeric(mean_logTie) || length(mean_logTie) != 1) {
+#     stop("'mean_logTie' must be a numeric value.")
 #   }
-#   if (!is.numeric(sd_gamma) || length(sd_gamma) != 1 || sd_gamma <= 0) {
-#     stop("'sd_gamma' must be a positive numeric value.")
+#   if (!is.numeric(sd_logTie) || length(sd_logTie) != 1 || sd_logTie <= 0) {
+#     stop("'sd_logTie' must be a positive numeric value.")
 #   }
 
 
@@ -285,10 +299,10 @@ btd_foot <- function(data,
       nteams = nteams,
       team1 = as.integer(home_team_idx),
       team2 = as.integer(away_team_idx),
-      mean_psi = mean_psi,
-      sd_psi = sd_psi,
-      mean_gamma = mean_gamma,
-      sd_gamma = sd_gamma,
+      mean_logStrength = mean_logStrength,
+      sd_logStrength = sd_logStrength,
+      mean_logTie = mean_logTie,
+      sd_logTie = sd_logTie,
       mean_home = mean_home,
       sd_home = sd_home,
       ind_home = ind_home,
@@ -302,10 +316,10 @@ btd_foot <- function(data,
       instants_rank = as.integer(instants_rank),
       team1 = as.integer(home_team_idx),
       team2 = as.integer(away_team_idx),
-      mean_psi = mean_psi,
-      sd_psi = sd_psi,
-      mean_gamma = mean_gamma,
-      sd_gamma = sd_gamma,
+      mean_logStrength = mean_logStrength,
+      sd_logStrength = sd_logStrength,
+      mean_logTie = mean_logTie,
+      sd_logTie = sd_logTie,
       mean_home = mean_home,
       sd_home = sd_home,
       ind_home = ind_home,
@@ -339,13 +353,13 @@ btd_foot <- function(data,
       team_index <- which(teams == team)
 
       # Get the samples for this team
-      psi_samples <- BTDparameters[["psi"]][, team_index]
+      logStrength_samples <- BTDparameters[["logStrength"]][, team_index]
 
       # Summary statistic based on rank_measure
       rank_point <- switch(rank_measure,
-                           median = stats::median(psi_samples),
-                           mean = mean(psi_samples),
-                           MAP = compute_MAP(psi_samples))
+                           median = stats::median(logStrength_samples),
+                           mean = mean(logStrength_samples),
+                           MAP = compute_MAP(logStrength_samples))
 
       df <- data.frame(
         periods = 1,  # Set periods to 1 for static model
@@ -364,11 +378,11 @@ btd_foot <- function(data,
 
       # Compute the summary statistic for each date
       rank_point <- sapply(1:ntimes_rank, function(k) {
-        psi_samples <- BTDparameters[["psi"]][, team_index, k]
+        logStrength_samples <- BTDparameters[["logStrength"]][, team_index, k]
         switch(rank_measure,
-               median = stats::median(psi_samples),
-               mean = mean(psi_samples),
-               MAP = compute_MAP(psi_samples))
+               median = stats::median(logStrength_samples),
+               mean = mean(logStrength_samples),
+               MAP = compute_MAP(logStrength_samples))
       })
 
       df <- data.frame(
@@ -388,10 +402,10 @@ btd_foot <- function(data,
 
   # Priors list for output
   priors_output <- list(
-    mean_psi = mean_psi,
-    sd_psi = sd_psi,
-    mean_gamma = mean_gamma,
-    sd_gamma = sd_gamma
+    mean_logStrength = mean_logStrength,
+    sd_logStrength = sd_logStrength,
+    mean_logTie = mean_logTie,
+    sd_logTie = sd_logTie
   )
 
   # Add home effect priors if home_effect is TRUE

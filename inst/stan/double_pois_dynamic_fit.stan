@@ -28,13 +28,13 @@ data{
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real home_effect;
+      real home;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
     }
     transformed parameters{
-      real adj_home_eff;                   // Adjusted home effect
+      real adj_h_eff;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
       // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
@@ -73,10 +73,10 @@ data{
 
       }
 
-      adj_home_eff = home_effect * ind_home;
+      adj_h_eff = home * ind_home;
 
       for (n in 1:N){
-        theta_home[n] = exp(adj_home_eff+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
+        theta_home[n] = exp(adj_h_eff+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
         theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
                          (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -118,7 +118,7 @@ data{
       }
 
       // log-priors fixed effects
-      target+=normal_lpdf(home_effect|mean_home,sd_home);
+      target+=normal_lpdf(home|mean_home,sd_home);
       target+=normal_lpdf(gamma|0,1);
 
       // likelihood

@@ -533,6 +533,23 @@ stan_foot <- function(data,
 #   ____________________________________________________________________________
 #   Prior Checks                                                            ####
 
+
+  # Set default priors
+  default_priors <- list(
+    ability = normal(0, NULL),
+    ability_sd = cauchy(0, 5),
+    home = normal(0, 5)
+  )
+
+  # If prior_par is NULL, set it to an empty list
+  if (is.null(prior_par)) {
+    prior_par <- list()
+  }
+
+  # Merge prior_par with defaults
+  prior_par <- utils::modifyList(default_priors, prior_par)
+
+
   # Validate prior_par names
   allowed_prior_names <- c("ability", "ability_sd", "home")
 
@@ -841,27 +858,6 @@ stan_foot <- function(data,
     mean_home <- default_mean_home
     sd_home <- default_sd_home
   }
-
-  # #Check home_prior_par value
-  # if (home_effect) {
-  #   check_prior(mean_home, "mean_home")
-  #   check_prior(sd_home, "sd_home", positive = TRUE)
-  # }
-
-
-
-  # home_names <- c("TRUE", "FALSE")
-  # ind_home <- match.arg(ind_home, home_names)
-  #
-  #  if (missing(ind_home)){
-  #    ind_home = "TRUE"
-  #  }else{
-  #    ind_home = ind_home
-  #  }
-  #
-  # ind_home <- 0*(ind_home=="FALSE") + 1*(ind_home =="TRUE")
-
-
 
 
 

@@ -74,13 +74,13 @@ parameters{
   real<lower=0> sigma_def;
   real beta;
   real rho;
-  real home_effect;
+  real home;
   real gamma;
   real <lower=0,upper=1> prob_of_draws;// excessive probability of draws
 
 }
 transformed parameters{
-  real adj_home_eff;                   // Adjusted home effect
+  real adj_h_eff;                   // Adjusted home effect
   vector[nteams] att;
   vector[nteams] def;
   vector[3] theta[N];
@@ -90,10 +90,10 @@ transformed parameters{
     def[t] = def_raw[t]-mean(def_raw);
   }
 
-  adj_home_eff = home_effect * ind_home;
+  adj_h_eff = home * ind_home;
 
   for (n in 1:N){
-    theta[n,1] = exp(adj_home_eff+att[team1[n]]+def[team2[n]]+
+    theta[n,1] = exp(adj_h_eff+att[team1[n]]+def[team2[n]]+
                        (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
     theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
                        (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
@@ -142,7 +142,7 @@ model{
 
   // log-priors fixed effects
   target+=normal_lpdf(rho|0,1);
-  target+=normal_lpdf(home_effect|mean_home,sd_home);
+  target+=normal_lpdf(home|mean_home,sd_home);
   target+=normal_lpdf(gamma|0,1);
   target+=uniform_lpdf(prob_of_draws|0,1);
 
