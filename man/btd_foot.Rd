@@ -40,7 +40,7 @@ Only normal priors are allowed for this model.}
 \itemize{
   \item \code{"median"}: Uses the median of the posterior samples (default).
   \item \code{"mean"}: Uses the mean of the posterior samples.
-  \item \code{"MAP"}: Uses the Maximum A Posteriori estimate, calculated as the mode of the posterior distribution.
+  \item \code{"map"}: Uses the Maximum A Posteriori estimate, calculated as the mode of the posterior distribution.
 }}
 
 \item{...}{Additional arguments passed to \code{\link[rstan]{stan}} (e.g., \code{iter}, \code{chains}, \code{control}).}
@@ -55,10 +55,10 @@ A list of class \code{"btdFoot"} containing:
         \item \code{team}: The team name.
         \item \code{rank_points}: The estimated strength of the team based on the chosen \code{rank_measure}.
       }
-    \item \code{data}: The original input data.
+    \item \code{data}: The input data.
     \item \code{stan_data}: The data list prepared for Stan.
     \item \code{stan_code}: The path to the Stan model code used.
-    \item \code{prior_par}: A list of the prior distributions used.
+    \item \code{stan_args}: The optional parameters passed to (\code{...}).
     \item \code{rank_measure}: The method used to compute the rankings.
   }
 }
@@ -116,7 +116,7 @@ fit_result_stat <- btd_foot(
     logTie = normal(0, 5),
     home = normal(0, 5)
   ),
-  rank_measure = "MAP",
+  rank_measure = "map",
   iter = 1000,
   chains = 2
 )

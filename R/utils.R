@@ -48,12 +48,74 @@ compute_MAP <- function(samples) {
 
 
 
+#' Normalize Rank Points (Internal Function)
+#'
+#' Normalizes a vector of rank points using the specified method.
+#'
+#' This function applies one of several normalization methods to a numeric vector of rank points.
+#' Available methods are:
+#' \itemize{
+#'   \item \code{"none"}: No normalization is applied.
+#'   \item \code{"standard"}: Standardizes the data to have mean 0 and standard deviation 0.5.
+#'   \item \code{"mad"}: Normalizes using the median absolute deviation.
+#'   \item \code{"min_max"}: Scales the data to be between 0 and 1.
+#' }
+#'
+#' @param rank_points A numeric vector of rank points to normalize.
+#' @param method A string specifying the normalization method. Options are \code{"none"}, \code{"standard"}, \code{"mad"}, or \code{"min_max"}.
+#'
+#' @return A numeric vector of normalized rank points.
+#'
+#' @noRd
+normalize_rank_points <- function(rank_points, method) {
+  if (method == "none") {
+    rank_points
+  } else if (method == "standard") {
+    s <- stats::sd(rank_points, na.rm = TRUE)
+    m <- mean(rank_points, na.rm = TRUE)
+    if (s == 0) {
+      rep(0, length(rank_points))
+    } else {
+      (rank_points - m) / (2 * s)
+    }
+  } else if (method == "mad") {
+    md <- stats::mad(rank_points, na.rm = TRUE)
+    med <- stats::median(rank_points, na.rm = TRUE)
+    if (md == 0) {
+      rep(0, length(rank_points))
+    } else {
+      (rank_points - med) / md
+    }
+  } else if (method == "min_max") {
+    min_rp <- min(rank_points, na.rm = TRUE)
+    max_rp <- max(rank_points, na.rm = TRUE)
+    if (max_rp == min_rp) {
+      rep(0, length(rank_points))
+    } else {
+      (rank_points - min_rp) / (max_rp - min_rp)
+    }
+  } else {
+    stop("Invalid normalization method specified.")
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #' Replace Indices with Team Names (Internal Function)
 #'
 #' Substitutes numeric indices in parameter names with corresponding team names based on a predefined mapping.
 #'
-#' This function takes a character vector of parameter names and replaces any numeric indices (e.g., `[1]`, `[2,1]`) with team names provided in the `index_map`. Parameters specified in `exclude_params` are excluded from renaming to prevent unintended modifications.
 #'
 #' @param param_names A character vector of parameter names that may contain numeric indices to be replaced.
 #' @param exclude_params A character vector of parameter name prefixes that should be excluded from renaming. Parameters starting with any of these prefixes will remain unchanged.
@@ -62,7 +124,7 @@ compute_MAP <- function(samples) {
 #' @return A character vector with numeric indices replaced by their corresponding team names where applicable.
 #'
 #' @noRd
-rep_ind_with_team_names <- function(param_names, exclude_params, team_map) {
+team_names <- function(param_names, exclude_params, team_map) {
   sapply(param_names, function(name) {
     # Skip parameters that should not have their names changed
     if (any(startsWith(name, exclude_params))) {

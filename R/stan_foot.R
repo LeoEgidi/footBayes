@@ -54,8 +54,10 @@
 #' @return A list of class \code{"stanFoot"} containing:
 #'   \itemize{
 #'     \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
-#'     \item \code{data}: The data prepared for Stan.
+#'     \item \code{data}: The input data.
+#'     \item \code{stan_data}: The data list for Stan.
 #'     \item \code{stan_code}: The Stan code of the underline model.
+#'     \item \code{stan_args}: The optional parameters passed to (\code{...}).
 #'   }
 #'
 #'
@@ -138,7 +140,7 @@
 #' diagonal-inflated bivariate Poisson and a zero-inflated Skellam model in the
 #' spirit of (Karlis & Ntzoufras, 2003) to better capture draw occurrences. See the vignette for further details.
 #'
-#'@author Leonardo Egidi \email{legidi@units.it}, Vasilis Palaskas \email{vasilis.palaskas94@gmail.com}.
+#'@author Leonardo Egidi \email{legidi@units.it}, Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}, and Vasilis Palaskas \email{vasilis.palaskas94@gmail.com}.
 #'
 #'@references
 #' Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
@@ -358,6 +360,11 @@ stan_foot <- function(data,
 
 
   nteams <- length(unique(data$home_team))
+
+
+#   ____________________________________________________________________________
+#   Additional Stan Parameters                                              ####
+
 
   # Default control parameters
   default_control <- list(adapt_delta = 0.8, max_treedepth = 10)
@@ -698,37 +705,6 @@ stan_foot <- function(data,
   # ____________________________________________________________________________
   # Ranking Checks ####
 
-  # Define normalization function
-  normalize_rank_points <- function(rank_points, method) {
-    if (method == "none") {
-      rank_points
-    } else if (method == "standard") {
-      s <- stats::sd(rank_points, na.rm = TRUE)
-      m <- mean(rank_points, na.rm = TRUE)
-      if (s == 0) {
-        rep(0, length(rank_points))
-      } else {
-        (rank_points - m) / (2 * s)
-      }
-    } else if (method == "mad") {
-      md <- stats::mad(rank_points, na.rm = TRUE)
-      med <- stats::median(rank_points, na.rm = TRUE)
-      if (md == 0) {
-        rep(0, length(rank_points))
-      } else {
-        (rank_points - med) / md
-      }
-    } else if (method == "min_max") {
-      min_rp <- min(rank_points, na.rm = TRUE)
-      max_rp <- max(rank_points, na.rm = TRUE)
-      if (max_rp == min_rp) {
-        rep(0, length(rank_points))
-      } else {
-        (rank_points - min_rp) / (max_rp - min_rp)
-      }
-    }
-  }
-
 
   norm_method <- match.arg(norm_method, choices = c("none", "standard", "mad", "min_max"))
 
@@ -930,7 +906,8 @@ stan_foot <- function(data,
 
   output <- list(
     fit = fit,
-    data = data_stan,
+    data = data,
+    stan_data = data_stan,
     stan_code = fit@stanmodel,
     stan_args = stan_args
   )

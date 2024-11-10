@@ -80,8 +80,10 @@ stan_foot(
 A list of class \code{"stanFoot"} containing:
   \itemize{
     \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
-    \item \code{data}: The data prepared for Stan.
+    \item \code{data}: The input data.
+    \item \code{stan_data}: The data list for Stan.
     \item \code{stan_code}: The Stan code of the underline model.
+    \item \code{stan_args}: The optional parameters passed to (\code{...}).
   }
 }
 \description{
@@ -169,7 +171,6 @@ spirit of (Karlis & Ntzoufras, 2003) to better capture draw occurrences. See the
 }
 \examples{
 \dontrun{
-require(tidyverse)
 require(dplyr)
 
 
@@ -301,5 +302,5 @@ of football match outcomes with estimation of the
 evolution variance parameter. IMA Journal of Management Mathematics, 22(2), 99-113.
 }
 \author{
-Leonardo Egidi \email{legidi@units.it}, Vasilis Palaskas \email{vasilis.palaskas94@gmail.com}.
+Leonardo Egidi \email{legidi@units.it}, Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}, and Vasilis Palaskas \email{vasilis.palaskas94@gmail.com}.
 }

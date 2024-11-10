@@ -23,7 +23,7 @@
 #'   \itemize{
 #'     \item \code{"median"}: Uses the median of the posterior samples (default).
 #'     \item \code{"mean"}: Uses the mean of the posterior samples.
-#'     \item \code{"MAP"}: Uses the Maximum A Posteriori estimate, calculated as the mode of the posterior distribution.
+#'     \item \code{"map"}: Uses the Maximum A Posteriori estimate, calculated as the mode of the posterior distribution.
 #'   }
 #' @param ... Additional arguments passed to \code{\link[rstan]{stan}} (e.g., \code{iter}, \code{chains}, \code{control}).
 #'
@@ -36,10 +36,10 @@
 #'         \item \code{team}: The team name.
 #'         \item \code{rank_points}: The estimated strength of the team based on the chosen \code{rank_measure}.
 #'       }
-#'     \item \code{data}: The original input data.
+#'     \item \code{data}: The input data.
 #'     \item \code{stan_data}: The data list prepared for Stan.
 #'     \item \code{stan_code}: The path to the Stan model code used.
-#'     \item \code{prior_par}: A list of the prior distributions used.
+#'     \item \code{stan_args}: The optional parameters passed to (\code{...}).
 #'     \item \code{rank_measure}: The method used to compute the rankings.
 #'   }
 #'
@@ -96,7 +96,7 @@
 #'     logTie = normal(0, 5),
 #'     home = normal(0, 5)
 #'   ),
-#'   rank_measure = "MAP",
+#'   rank_measure = "map",
 #'   iter = 1000,
 #'   chains = 2
 #' )
@@ -117,6 +117,63 @@ btd_foot <- function(data,
                      ),
                      rank_measure = "median",
                      ...) {
+#   ____________________________________________________________________________
+#   Additional Stan Parameters                                              ####
+
+  # Default control parameters
+  default_control <- list(adapt_delta = 0.8, max_treedepth = 10)
+
+  # Initialize user_dots with default arguments, including the control list
+  user_dots <- list(
+    chains = 4,
+    iter = 2000,
+    warmup = NULL,  # will be set to floor(iter / 2) if not provided
+    thin = 1,
+    init = "random",
+    seed = sample.int(.Machine$integer.max, 1),
+    algorithm = "NUTS",
+    control = default_control,  # Default control parameters
+    sample_file = NULL,
+    diagnostic_file = NULL,
+    save_dso = TRUE,
+    verbose = FALSE,
+    include = TRUE,
+    cores = getOption("mc.cores", 1L),
+    open_progress = interactive() && !isatty(stdout()) && !identical(Sys.getenv("RSTUDIO"), "1"),
+    boost_lib = NULL,
+    eigen_lib = NULL
+  )
+
+
+#   ____________________________________________________________________________
+#   Optional Arguments Checks                                               ####
+
+  # Process optional arguments
+  user_dots_prel <- list(...)
+
+  # Handle control argument separately
+  if ("control" %in% names(user_dots_prel)) {
+    # Extract user-supplied control parameters
+    user_control <- user_dots_prel$control
+
+    # Merge default control with user-supplied control
+    user_dots$control <- utils::modifyList(default_control, user_control)
+
+    user_dots_prel$control <- NULL
+  }
+
+  # Update 'user_dots' with any other provided arguments
+  user_dots <- utils::modifyList(user_dots, user_dots_prel)
+
+  # Set warmup if not provided
+  if (is.null(user_dots$warmup)) {
+    user_dots$warmup <- floor(user_dots$iter / 2)
+  }
+
+
+
+#   ____________________________________________________________________________
+#   Setting priors                                                          ####
 
   # Set default priors
   default_priors <- list(
@@ -153,8 +210,12 @@ btd_foot <- function(data,
   }
 
 
+
+#   ____________________________________________________________________________
+#   Rank measure validation                                                 ####
+
   # Validate rank_measure
-  allowed_rank_measures <- c("median", "mean", "MAP")
+  allowed_rank_measures <- c("median", "mean", "map")
 
   rank_measure <- match.arg(rank_measure, allowed_rank_measures)
 
@@ -335,8 +396,18 @@ btd_foot <- function(data,
     system.file("stan", "dynamic_btd.stan", package = "footBayes")
   }
 
-  fit <- rstan::stan(file = stan_model_path,
-                     data = stan_data, ...)
+
+  # Prepare stan_args
+  stan_args <- user_dots
+
+  # Prepare the arguments for the call to stan
+  stan_call_args <- c(
+    list(file = stan_model_path, data = stan_data),
+    stan_args
+  )
+
+
+  fit <- do.call(rstan::stan, stan_call_args)
 
 
 
@@ -359,7 +430,7 @@ btd_foot <- function(data,
       rank_point <- switch(rank_measure,
                            median = stats::median(logStrength_samples),
                            mean = mean(logStrength_samples),
-                           MAP = compute_MAP(logStrength_samples))
+                           map = compute_MAP(logStrength_samples))
 
       df <- data.frame(
         periods = 1,  # Set periods to 1 for static model
@@ -382,7 +453,7 @@ btd_foot <- function(data,
         switch(rank_measure,
                median = stats::median(logStrength_samples),
                mean = mean(logStrength_samples),
-               MAP = compute_MAP(logStrength_samples))
+               map = compute_MAP(logStrength_samples))
       })
 
       df <- data.frame(
@@ -421,9 +492,9 @@ btd_foot <- function(data,
     data = data,
     stan_data = stan_data,
     stan_code = fit@stanmodel,
-    prior_par = priors_output,
-    rank_measure = rank_measure,
-    team_names = teams
+    #prior_par = priors_output,
+    stan_args = stan_args,
+    rank_measure = rank_measure
   )
 
   class(output) <- "btdFoot"
