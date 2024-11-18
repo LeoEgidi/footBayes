@@ -8,8 +8,8 @@
 #'     \item \code{season}: Season identifier (integer >= 1).
 #'     \item \code{home_team}: Home team's name (character string).
 #'     \item \code{away_team}: Away team's name (character string).
-#'     \item \code{homegoals}: Goals scored by the home team (integer >= 0).
-#'     \item \code{awaygoals}: Goals scored by the away team (integer >= 0).
+#'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
+#'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 #'   }
 #' @param model A character string specifying the Stan model to fit. Options are:
 #'   \itemize{
@@ -165,7 +165,7 @@
 #'
 #'@examples
 #'\dontrun{
-#'require(dplyr)
+#'library(dplyr)
 #'
 #'
 #'
@@ -175,6 +175,7 @@
 #' italy_2021 <- italy %>%
 #'   select(Season, home, visitor, hgoal, vgoal) %>%
 #'   filter(Season == "2021")
+#'
 #'
 #' teams <- unique(italy_2021$home)
 #' n_rows <- 20
@@ -188,6 +189,9 @@
 #'
 #' ranking <- ranking %>%
 #'   arrange(periods, desc(rank_points))
+#'
+#'
+#' colnames(italy_2021) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
 #'
 #' fit_with_ranking <- stan_foot(
 #'   data = italy_2021,
@@ -207,7 +211,7 @@
 #' )
 #'
 #' # Print a summary of the model fit
-#' print(fit_with_ranking)
+#' print(fit_with_ranking, pars = c("att","def"))
 #'
 #'
 #'
@@ -219,45 +223,46 @@
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #'  dplyr::filter(Season=="2000" |  Season=="2001"| Season=="2002")
 #'
+#'colnames(italy_2000_2002) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
 #'
 #' ### Fit Stan models
 #' ## no dynamics, no predictions
 #'
-#' fit1 <- stan_foot(data = italy_2000_2002,
-#'                   model="double_pois") # double poisson
-#' print(fit1, pars =c("home", "sigma_att",
+#' fit_1 <- stan_foot(data = italy_2000_2002,
+#'                   model = "double_pois") # double poisson
+#' print(fit_1, pars = c("home", "sigma_att",
 #'                     "sigma_def"))
 #'
-#' fit2 <- stan_foot(data = italy_2000_2002,
-#'                   model="biv_pois")    # bivariate poisson
-#' print(fit2, pars =c("home", "rho",
+#' fit_2 <- stan_foot(data = italy_2000_2002,
+#'                   model = "biv_pois")    # bivariate poisson
+#' print(fit_2, pars = c("home", "rho",
 #'                     "sigma_att", "sigma_def"))
 #'
-#' fit3 <- stan_foot(data = italy_2000_2002,
-#'                   model="skellam")     # skellam
-#' print(fit3, pars =c("home", "sigma_att",
+#' fit_3 <- stan_foot(data = italy_2000_2002,
+#'                   mode ="skellam")     # skellam
+#' print(fit_3, pars = c("home", "sigma_att",
 #'                     "sigma_def"))
 #'
-#' fit4 <- stan_foot(data = italy_2000_2002,
-#'                   model="student_t")   # student_t
-#' print(fit4, pars =c("home", "beta"))
+#' fit_4 <- stan_foot(data = italy_2000_2002,
+#'                   model = "student_t")   # student_t
+#' print(fit_4, pars = c("beta"))
 #'
 #' ## seasonal dynamics, no prediction
 #'
-#' fit5 <- stan_foot(data = italy_2000_2002,
-#'                   model="double_pois",
-#'                   dynamic_type ="seasonal") # double poisson
-#' print(fit5, pars =c("home", "Sigma_att",
-#'                     "Sigma_def"))
+#' fit_5 <- stan_foot(data = italy_2000_2002,
+#'                   model = "double_pois",
+#'                   dynamic_type = "seasonal") # double poisson
+#' print(fit_5, pars = c("home", "sigma_att",
+#'                     "sigma_def"))
 #'
 #' ## seasonal dynamics, prediction for the last season
 #'
-#' fit6 <- stan_foot(data = italy_2000_2002,
-#'                   model="double_pois",
-#'                   dynamic_type ="seasonal",
+#' fit_6 <- stan_foot(data = italy_2000_2002,
+#'                   model = "double_pois",
+#'                   dynamic_type = "seasonal",
 #'                   predict = 306) # double poisson
-#' print(fit6, pars =c("home", "Sigma_att",
-#'                     "Sigma_def"))
+#' print(fit_6, pars = c("home", "sigma_att",
+#'                     "sigma_def"))
 #'
 #' ## other priors' options
 #' # double poisson with
@@ -265,7 +270,7 @@
 #' # and laplace prior for the hyper sds
 #'
 #' fit_p <- stan_foot(data = italy_2000_2002,
-#'                    model="double_pois",
+#'                    model = "double_pois",
 #'                    prior_par = list(ability = student_t(4, 0, NULL),
 #'                                     ability_sd = laplace(0,1),
 #'                                     home = normal(1, 10)
@@ -319,13 +324,19 @@ stan_foot <- function(data,
   }
 
 
+  required_cols <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+  missing_cols <- setdiff(required_cols, names(data))
+  if (length(missing_cols) > 0) {
+    stop(paste("data is missing required columns:", paste(missing_cols, collapse = ", ")))
+  }
+
   #if (dim(data)[2]==5){
   colnames(data) <- c("season", "home_team", "away_team",
-                      "homegoals", "awaygoals")
+                      "home_goals", "away_goals")
   #}
 
   # checks about formats
-  if ( !is.numeric(data$homegoals) |!is.numeric(data$awaygoals)){
+  if ( !is.numeric(data$home_goals) |!is.numeric(data$away_goals)){
     stop("Goals are not numeric! Please, provide
          numeric values for the goals")
   }
@@ -696,8 +707,8 @@ stan_foot <- function(data,
   team1_prev <- team_home[(N+1):(N+N_prev)]
   team2_prev <- team_away[(N+1):(N+N_prev)]
   y <- matrix(NA, N, 2)
-  y[,1] <- as.numeric(as.vector(data$homegoals)[1:N])
-  y[,2] <- as.numeric(as.vector(data$awaygoals)[1:N])
+  y[,1] <- as.numeric(as.vector(data$home_goals)[1:N])
+  y[,2] <- as.numeric(as.vector(data$away_goals)[1:N])
   diff_y <- y[,1]-y[,2]
 
 
@@ -710,7 +721,7 @@ stan_foot <- function(data,
 
   # Check if ranking is provided
   if (missing(ranking)) {
-    warning("Ranking is missing, creating a default zero matrix.")
+    # warning("Ranking is missing, creating a default zero matrix.")
     ntimes_rank <- 1
     nteams <- length(unique(data$home_team))
     ranking_matrix <- matrix(0, nrow = ntimes_rank, ncol = nteams)

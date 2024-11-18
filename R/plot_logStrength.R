@@ -2,8 +2,10 @@
 #'
 #' Visualizes team rankings based on whether the ranking is dynamic or static.
 #'
-#' - **Dynamic Ranking**: Plots Rank Points over Periods for each team with lines and points.
-#' - **Static Ranking**: Plots Rank Points on the x-axis against Team Names on the y-axis with horizontal lines and points.
+#'\itemize{
+#' \item Dynamic Ranking: Plots Rank Points over Periods for each team with lines and points.
+#' \item Static Ranking: Plots Rank Points on the x-axis against Team Names on the y-axis with horizontal lines and points.
+#'}
 #'
 #' @param x An object of class \code{btdFoot}.
 #' @param teams_of_interest Optional. A character vector of team names to include in the rankings plot. If \code{NULL}, all teams are included.

@@ -22,8 +22,10 @@ A ggplot object representing the rankings plot.
 Visualizes team rankings based on whether the ranking is dynamic or static.
 }
 \details{
-- **Dynamic Ranking**: Plots Rank Points over Periods for each team with lines and points.
-- **Static Ranking**: Plots Rank Points on the x-axis against Team Names on the y-axis with horizontal lines and points.
+\itemize{
+\item Dynamic Ranking: Plots Rank Points over Periods for each team with lines and points.
+\item Static Ranking: Plots Rank Points on the x-axis against Team Names on the y-axis with horizontal lines and points.
+}
 }
 \author{
 Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.

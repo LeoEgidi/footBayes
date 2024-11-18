@@ -7,7 +7,8 @@
 compare_foot(
   source,
   test_data,
-  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS")
+  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS"),
+  conf_matrix = FALSE
 )
 }
 \arguments{
@@ -21,87 +22,64 @@ compare_foot(
 \itemize{
   \item \code{home_team}: Home team's name (character string).
   \item \code{away_team}: Away team's name (character string).
-  \item \code{homegoals}: Goals scored by the home team (integer >= 0).
-  \item \code{awaygoals}: Goals scored by the away team (integer >= 0).
+  \item \code{home_goals}: Goals scored by the home team (integer >= 0).
+  \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 }}
 
 \item{metric}{A character vector specifying the metrics to use for comparison. Options are:
 \itemize{
   \item \code{"accuracy"}: Computes the accuracy of each model.
   \item \code{"brier"}: Computes the Brier score of each model.
-  \item \code{"RPS"}: Computes the Ranked Probability Score (RPS) for each model.
-  \item \code{"ACP"}: Computes the Average Coverage Probability (ACP) for each model.
-  \item \code{"pseudoR2"}: Computes the Pseudo $R^2$, defined as the geometric mean of the probabilities assigned to the actual results.
+  \item \code{"RPS"}: Computes the ranked probability score (RPS) for each model.
+  \item \code{"ACP"}: Computes the average coverage probability (ACP) for each model.
+  \item \code{"pseudoR2"}: Computes the Pseudo \eqn{R^2}, defined as the geometric mean of the probabilities assigned to the actual results.
 }
 Default is \code{c("accuracy", "brier", "ACP", "pseudoR2", "RPS")}, computing the specified metrics.}
+
+\item{conf_matrix}{Logical indicating whether to generate a confusion matrix comparing predicted outcomes against actual outcomes for each model or probability matrix. Default is \code{FALSE}.}
 }
 \value{
-A data frame containing the metric values for each model or probability matrix.
+An object of class \code{compare_foot_output}, which is a list containing:
+  \itemize{
+    \item \code{metrics}: A data frame containing the metric values for each model or probability matrix.
+    \item \code{confusion_matrix}: (Optional) A list of confusion matrices for each model or probability matrix, included if \code{conf_matrix = TRUE}.
+  }
+  The object has a custom print method for formatted output.
 }
 \description{
-Compares multiple football models or directly provided probability matrices based on specified metrics (accuracy, Brier score, Ranked Probability Score (RPS), Cox-Snell Pseudo $R^2$, Average Coverage Probability, and/or McFadden's Pseudo $R^2$), using a test dataset.
+Compares multiple football models or directly provided probability matrices based on specified metrics (accuracy, Brier score, ranked probability score, Pseudo \eqn{R^2}, average coverage probability), using a test dataset. Additionally, computes the confusion matrices. The function returns an object of class \code{compareFoot}.
 }
 \details{
-The function extracts predictions from each model or directly uses the provided probability matrices and computes the chosen metrics on the test dataset.
+The function extracts predictions from each model or directly uses the provided probability matrices and computes the chosen metrics on the test dataset. It also possible to compute confusion matrices.
 }
 \examples{
 \dontrun{
-
-require(dplyr)
+library(dplyr)
 
 data("italy")
 italy_2000 <- italy \%>\%
- dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
- dplyr::filter(Season == "2000")
+  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+  dplyr::filter(Season == "2000")
 
-# Example with a fitted model
-fit <- stan_foot(data = italy_2000,
-                 model = "double_pois", predict = 18)  # double poisson model
+colnames(italy_2000) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+
+# Example with fitted models
+fit_1 <- stan_foot(data = italy_2000,
+                   model = "double_pois", predict = 18)  # Double Poisson model
+fit_2 <- stan_foot(data = italy_2000,
+                   model = "biv_pois", predict = 18)     # Bivariate Poisson model
 
 italy_2000_test <- italy_2000[289:306, ]
 
-colnames(italy_2000_test) <- c("season", "home_team", "away_team", "homegoals", "awaygoals")
 
 compare_results_models <- compare_foot(
-  source = list(model_1 = fit),
+  source = list(double_poisson = fit_1,
+                bivariate_poisson = fit_2),
   test_data = italy_2000_test,
-  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS")
+  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS"),
+  conf_matrix = TRUE
 )
 
 print(compare_results_models)
-
-# Example with probability matrices
-
-home_team <- c("AC Milan", "Inter", "Juventus", "AS Roma", "Napoli",
-               "Lazio", "Atalanta", "Fiorentina", "Torino", "Sassuolo", "Udinese")
-
-away_team <- c("Juventus", "Napoli", "Inter", "Atalanta", "Lazio",
-               "AC Milan", "Sassuolo", "Torino", "Fiorentina", "Udinese", "AS Roma")
-
-# Home and Away goals based on given data
-homegoals <- c(2, 0, 2, 2, 3, 1, 4, 2, 1, 1, 2)
-awaygoals <- c(1, 0, 1, 3, 2, 1, 1, 2, 1, 1, 2)
-
-# Combine into a data frame
-test_data <- data.frame(home_team, away_team, homegoals, awaygoals)
-
-# Define the data for each column
-pW <- c(0.51, 0.45, 0.48, 0.53, 0.56, 0.39, 0.52, 0.55, 0.61, 0.37, 0.35)
-pD <- c(0.27, 0.25, 0.31, 0.18, 0.23, 0.30, 0.24, 0.26, 0.18, 0.19, 0.22)
-pL <- c(0.22, 0.30, 0.21, 0.29, 0.21, 0.31, 0.24, 0.19, 0.21, 0.44, 0.43)
-
-# Create the data frame table_prob
-table_prob <- data.frame(pW, pD, pL)
-matrix_prob <- as.matrix(table_prob)
-
-# Use compare_foot function
-compare_results_matrices <- compare_foot(
-  source = list(matrix_1 = matrix_prob),
-  test_data = test_data,
-  metric = c("accuracy", "brier", "pseudoR2", "ACP", "RPS")
-)
-
-# Print the results
-print(compare_results_matrices)
 }
 }

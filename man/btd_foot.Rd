@@ -68,7 +68,7 @@ Fits a Bayesian Bradley-Terry-Davidson model using Stan. Supports both static an
 \examples{
 \dontrun{
 
-require(dplyr)
+library(dplyr)
 
 data("italy")
 
@@ -105,7 +105,7 @@ fit_result_dyn <- btd_foot(
   chains = 2
 )
 
-summary(fit_result_dyn)
+print(fit_result_dyn)
 
 # Static Ranking Example with MAP Rank Measure
 fit_result_stat <- btd_foot(
@@ -121,7 +121,7 @@ fit_result_stat <- btd_foot(
   chains = 2
 )
 
-summary(fit_result_stat)
+print(fit_result_stat)
 }
 }
 \author{
