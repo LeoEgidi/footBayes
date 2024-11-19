@@ -4,13 +4,13 @@
 #'
 #' @param x An object of class \code{stanFoot}.
 #' @param pars Optional character vector specifying parameters to include in the summary. This can be specific parameter names or macro parameter groups (e.g., \code{"att"}, \code{"def"}, \code{"att_raw"}, \code{"def_raw"}, \code{"home"}, \code{"sigma_att"}, \code{"sigma_def"}, \code{"Sigma_att"}, \code{"Sigma_def"}, \code{"rho"}, \code{"beta"}, and \code{"sigma_y"}). If \code{NULL}, all parameters are included.
+#' @param teams Optional character vector specifying team names whose \code{"att"}, \code{"def"}, \code{"att_raw"}, \code{"def_raw"} parameters should be displayed.
 #' @param digits Number of significant digits to use when printing numeric values.
 #' @param true_names Logical value indicating whether to display team names in parameter summaries. Default is \code{TRUE}.
 #' @param ... Additional arguments passed.
 #' @method print stanFoot
 #' @export
-print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names = TRUE,
-                           display = c("parameters", "both"), ...) {
+print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names = TRUE, ...) {
   # Check if the object is of class 'stanFoot'
   if (!inherits(x, "stanFoot")) {
     stop("The object must be of class 'stanFoot'.")
@@ -20,9 +20,6 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
   if (!is.numeric(digits) || digits <= 0) {
     stop("'digits' must be a positive numeric value.")
   }
-
-  # Match the 'display' argument
-  display <- match.arg(display)
 
   cat("Summary of Stan football model\n")
   cat("------------------------------\n\n")
@@ -88,18 +85,38 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
     stan_summary <- rstan::summary(x$fit, pars = unique(final_pars), ...)$summary
   }
 
+  is_dynamic <- x$stan_data$ntimes > 1
+
   # If 'teams' is specified, filter parameters related to these teams
   if (!is.null(teams)) {
-    # Generate regex patterns for the specified teams and relevant parameters
-    patterns <- unlist(lapply(teams, function(team) {
-      idx <- team_map[[team]]
-      c(
-        paste0("^att_raw\\[", idx, "\\]$"),
-        paste0("^def_raw\\[", idx, "\\]$"),
-        paste0("^att\\[", idx, "\\]$"),
-        paste0("^def\\[", idx, "\\]$")
-      )
-    }))
+
+    if (is_dynamic) {
+      # Dynamic model
+      # Generate regex patterns for the specified teams and relevant parameters
+      patterns <- unlist(lapply(teams, function(team) {
+        idx <- team_map[[team]]
+        c(
+          paste0("^att_raw\\[", idx, ",\\d+\\]$"),
+          paste0("^def_raw\\[", idx, ",\\d+\\]$"),
+          paste0("^att\\[", idx, ",\\d+\\]$"),
+          paste0("^def\\[", idx, ",\\d+\\]$")
+        )
+      }))
+
+    } else {
+      # Static model
+      # Generate regex patterns for the specified teams and relevant parameters
+      patterns <- unlist(lapply(teams, function(team) {
+        idx <- team_map[[team]]
+        c(
+          paste0("^att_raw\\[", idx, "\\]$"),
+          paste0("^def_raw\\[", idx, "\\]$"),
+          paste0("^att\\[", idx, "\\]$"),
+          paste0("^def\\[", idx, "\\]$")
+        )
+      }))
+    }
+
     # Filter 'stan_summary' to include only the specified teams' parameters
     stan_summary <- stan_summary[grep(paste(patterns, collapse = "|"), rownames(stan_summary)), , drop = FALSE]
   }
@@ -109,11 +126,14 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
     # Create reverse mapping from index to team names
     team_map_rev <- setNames(teams_all, as.character(seq_along(teams_all)))
 
-    # Apply the provided 'team_names_2' function
     stan_summary_names <- team_names(rownames(stan_summary), exclude_params, team_map_rev)
 
-    # Remove trailing commas before the closing bracket
-    stan_summary_names <- gsub(",\\]", "]", stan_summary_names)
+
+    if (!is_dynamic) {
+      # Remove trailing commas before the closing bracket
+      stan_summary_names <- gsub(",\\]", "]", stan_summary_names)
+    }
+
 
     # Assign the cleaned names back to the summary
     rownames(stan_summary) <- stan_summary_names
@@ -129,7 +149,6 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
 
   invisible(x)
 }
-
 
 
 
