@@ -4,16 +4,28 @@
 \alias{print.btdFoot}
 \title{Print Method for btdFoot Objects}
 \usage{
-\method{print}{btdFoot}(x, pars = NULL, digits = 3, true_names = TRUE, ...)
+\method{print}{btdFoot}(
+  x,
+  pars = NULL,
+  teams = NULL,
+  digits = 3,
+  true_names = TRUE,
+  display = c("both", "rankings", "parameters"),
+  ...
+)
 }
 \arguments{
 \item{x}{An object of class \code{btdFoot}.}
 
-\item{pars}{Optional character vector specifying parameters to include in the summary. This can be specific parameter names or macro parameter groups (e.g., \code{"logStrength"}, \code{"logTie"}, \code{"home"}, \code{"log_lik"}, and \code{"y_rep"}). If \code{NULL}, all parameters are included.}
+\item{pars}{Optional character vector specifying parameters to include in the summary (e.g., \code{"logStrength"}, \code{"logTie"}, \code{"home"}, \code{"log_lik"}, and \code{"y_rep"}).}
+
+\item{teams}{Optional character vector specifying team names whose \code{logStrength} parameters should be displayed.}
 
 \item{digits}{Number of significant digits to use when printing numeric values.}
 
 \item{true_names}{Logical value indicating whether to display team names in parameter summaries. Default is \code{TRUE}.}
+
+\item{display}{Character string specifying which parts of the output to display. Options are \code{"both"}, \code{"rankings"}, or \code{"parameters"}. Default is \code{"both"}.}
 
 \item{...}{Additional arguments passed.}
 }

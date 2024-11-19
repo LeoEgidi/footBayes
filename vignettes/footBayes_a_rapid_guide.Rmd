@@ -152,9 +152,9 @@ allowing for goals' correlation, as in <span style="color:red">@karlis2003analys
 
 \begin{align}
 X_n, Y_n| \lambda_{1n}, \lambda_{2n}, \lambda_{3n} & \sim \mathsf{BivPoisson}(\lambda_{1n}, \lambda_{2n}, \lambda_{3n})\\
-\log(\lambda_{1n})  & = \mu+\text{home}+ \text{att}_{h_n}+\text{def}_{a_n}\\
-\log(\lambda_{2n})  & = \mu +\text{att}_{a_n}+\text{def}_{h_n}\\
-\log(\lambda_{3n})  &=\beta_0 + \gamma_1 \beta^{\text{home}}_{h_n}+\gamma_2\beta^{\text{away}}_{a_n} + \gamma_3\boldsymbol{\beta} w_n,
+\log(\lambda_{1n})  & = \mu+\text{home}+ \text{att}_{h_n}+\text{def}_{a_n} + \frac{\gamma}{2}\omega_n\\
+\log(\lambda_{2n})  & = \mu +\text{att}_{a_n}+\text{def}_{h_n} - \frac{\gamma}{2}\omega_n \\
+\log(\lambda_{3n})  &=\beta_0 + \phi_1 \beta^{\text{home}}_{h_n}+\phi_2\beta^{\text{away}}_{a_n} + \phi_3\boldsymbol{\beta} w_n,
 \end{align}
 
 where  $\lambda_{1n}, \lambda_{2n}$ represent the
@@ -167,8 +167,8 @@ where  $\lambda_{1n}, \lambda_{2n}$ represent the
  denote the home and the away team playing in the $n$-th game,
  respectively; $\beta_0$ is a constant parameter; $\beta^{\text{home}}_{h_n}$ and $\beta^{\text{away}}_{a_n}$ are parameters that depend on the
 home and away team respectively, $w_{n}$ is a vector of covariates for the $n$-th match used to model the covariance term and $\boldsymbol{\beta}$ is the corresponding vector of 
-regression coefficients. The parameters $\gamma_1, \gamma_2$ and $\gamma_3$ are dummy binary indicators taking values 0 or 1 which may activate distinct sources of the linear 
-predictor. Hence when $\gamma_1=\gamma_2=\gamma_3=0$ we consider constant covariance as in <span style="color:red">@Egidi_Torelli_2020 </span>, whereas when $(\gamma_1, \gamma_2, \gamma_3)=(1,1,0)$ we 
+regression coefficients. Furthermore, $\omega_n = (rank\_points_{h_n}-rank\_points_{a_n})$ captures the **difference in relative strengths** (ranking points) between the home and away teams in the  \textit{n}-th match. Finally, the parameter $\gamma$ tries to correct for the ranking points difference occurring between two competing teams. The parameters $\phi_1, \phi_2$ and $\phi_3$ are dummy binary indicators taking values 0 or 1 which may activate distinct sources of the linear 
+predictor. Hence when $\phi_1=\phi_2=\phi_3=0$ we consider constant covariance as in <span style="color:red">@Egidi_Torelli_2020 </span>, whereas when $(\phi_1, \phi_2, \phi_3)=(1,1,0)$ we 
 assume that the covariance depends on the teams' parameters only but not on further match covariates, and so on.
 
  The case $\lambda_{3n}=0$ (the scores' correlation parameter equals zero) reduces to
@@ -276,7 +276,7 @@ In terms of inferential conclusions, we are usually interested in summaries from
 
 $$\pi(\boldsymbol{\theta}|\mathcal{D}) \propto \pi(\boldsymbol{\theta}) \prod_{n=1}^N \mathsf{BivPoisson}(\lambda_{1n}, \lambda_{2n}, \lambda_{3n}),$$ 
 
-where $\pi(\boldsymbol{\theta})= \pi(\text{att}) \pi(\text{def})\pi(\mu)\pi(\text{home}) \pi(\beta^{\text{home}}_{h_n})\pi( \beta^{\text{away}}_{a_n})\pi(\beta_0)\pi(\boldsymbol{\beta})$ is the joint ptior distribution under the assumption of a-priori independent parameters' components.
+where $\pi(\boldsymbol{\theta})= \pi(\text{att}) \pi(\text{def})\pi(\mu)\pi(\text{home}) \pi(\beta^{\text{home}}_{h_n})\pi( \beta^{\text{away}}_{a_n})\pi(\beta_0)\pi(\boldsymbol{\beta}) \pi(\phi)$ is the joint ptior distribution under the assumption of a-priori independent parameters' components.
 
 The standard approach is to assign some **weakly-informative** prior distributions to the team-specific abilities. These parameters are considered  **exchangeable** from two common (prior) distributions:
 
@@ -366,7 +366,7 @@ Accordingly, the user can use the ```dynamic_rank``` argument:
 The Bayesian BTD model provides posterior distributions for the log-tie and log-strength parameters, reflecting the inherent uncertainty in the ranking system. To develop the final ranking of teams, it is essential to summarize these posterior distributions. The ```rank_measure``` argument determines how the team strengths are summarized:
 - ```median```: Uses the posterior median (default).
 - ```mean```:  Uses the posterior mean.
-- ```MAP```: Uses the maximum a posteriori estimate.
+- ```map```: Uses the maximum a posteriori estimate.
 
 ```{r BTD_model_1, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
 # Dynamic Ranking Example with Median Rank Measure
@@ -381,18 +381,23 @@ The Bayesian BTD model provides posterior distributions for the log-tie and log-
                   max_treedepth = 12)
  )
 
- summary(fit_result_dyn)
+print(fit_result_dyn, 
+      display = "parameters", 
+      pars = c("logStrength","logTie"),
+      teams = c("AC Milan", "AS Roma", "FC Crotone"))
 
  # Static Ranking Example with MAP Rank Measure
  fit_result_stat <- btd_foot(
    data = italy_2020_2021,
    dynamic_rank = FALSE,
-   rank_measure = "MAP",
+   rank_measure = "map",
    iter = 1000,
    chains = 2
  )
 
- summary(fit_result_stat)
+print(fit_result_stat, 
+      pars = c("logStrength","logTie"),
+      teams = c("AC Milan", "AS Roma", "FC Crotone"))
 ```
 
 Another significant feature implemented in the ```btd_foot``` function is the ability to account for the **home-field effect**. This effect represents the psychological or logistical benefits that the home team may have over the visiting team. This is modeled as a multiplicative order effect <span style="color:red"> @davidson_beaver_1977</span> in the Bayesian BTD framework. This multiplicative parameter becomes in the
@@ -434,7 +439,10 @@ Below is an example of how to incorporate the home-field effect into the ```btd_
                   max_treedepth = 12)
  )
 
- summary(fit_result_dyn_2)
+print(fit_result_dyn_2, 
+      display = "parameters", 
+      pars = c("logStrength","logTie", "home"),
+      teams = c("AC Milan", "AS Roma", "FC Crotone"))
 
  # Static Ranking Example with MAP Rank Measure
  fit_result_stat_2 <- btd_foot(
@@ -445,13 +453,15 @@ Below is an example of how to incorporate the home-field effect into the ```btd_
     logTie = normal(0, 2.5),
     home = normal(5, 3)
   ),
-   rank_measure = "MAP",
+   rank_measure = "map",
    iter = 1000,
    #cores = 2,
    chains = 2
  )
 
- summary(fit_result_stat_2)
+print(fit_result_stat_2, 
+      pars = c("logStrength","logTie", "home"),
+      teams = c("AC Milan", "AS Roma", "FC Crotone"))
 ```
 
 
@@ -486,6 +496,10 @@ data("italy")
 italy <- as.data.frame(italy)
 italy_2000 <- subset(italy[, c(2,3,4,6,7)],
                      Season =="2000")
+
+colnames(italy_2000) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+
+
 head(italy_2000)
 
 ### Fit Stan models

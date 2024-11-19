@@ -149,5 +149,5 @@ team_names <- function(param_names, exclude_params, team_map) {
       return(new_name)
     }
     return(name)
-  })
+  }, USE.NAMES = FALSE)
 }

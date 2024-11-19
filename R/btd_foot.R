@@ -435,7 +435,7 @@ btd_foot <- function(data,
       df <- data.frame(
         periods = 1,  # Set periods to 1 for static model
         team = team,
-        rank_points = rank_point,
+        log_strengths = rank_point,
         stringsAsFactors = FALSE
       )
 
@@ -459,13 +459,13 @@ btd_foot <- function(data,
       df <- data.frame(
         periods = 1:ntimes_rank,
         team = team,  # Use team name
-        rank_points = rank_point,
+        log_strengths = rank_point,
         stringsAsFactors = FALSE
       )
 
       results_df <- rbind(results_df, df)
     }
-    BTDrank <- results_df[, c("periods", "team", "rank_points")]
+    BTDrank <- results_df[, c("periods", "team", "log_strengths")]
   }
 
   # Output
