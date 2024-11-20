@@ -13,7 +13,7 @@
 #' @export
 print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names = TRUE, ...) {
 
-    if (!inherits(x, "stanFoot")) {
+  if (!inherits(x, "stanFoot")) {
     stop("The object must be of class 'stanFoot'.")
   }
 
@@ -32,28 +32,24 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
   all_param_names <- x$fit@sim$pars_oi
 
   # Initialize 'final_pars' based on 'pars' argument
-  if (is.null(pars)) {
-    final_pars <- NULL
-  } else {
-    final_pars <- c()
-    for (p in pars) {
-      if (p %in% all_param_names) {
-        # Include all parameters matching the pattern
-        matched_pars <- grep(paste0("^", p, "(\\[|$)"), all_param_names, value = TRUE)
-        if (length(matched_pars) == 0) {
-          warning("No parameters found for group '", p, "'.")
-        }
-        final_pars <- c(final_pars, matched_pars)
-      } else {
-        warning("Parameter '", p, "' not found among valid parameters.")
+  if (!is.null(pars)) {
+    matched_pars_list <- lapply(pars, function(p) {
+      matched <- grep(paste0("^", p, "(\\[|$)"), all_param_names, value = TRUE)
+      if (length(matched) == 0) {
+        warning(sprintf("No parameters found for group '%s'.", p))
       }
-    }
-    # Remove duplicates
-    final_pars <- unique(final_pars)
+      matched
+    })
+    final_pars <- unique(unlist(matched_pars_list))
+
+    # Check for non-empty 'final_pars'
     if (length(final_pars) == 0) {
       stop("No valid parameters specified in 'pars'.")
     }
+  } else {
+    final_pars <- NULL
   }
+
 
   # Extract unique team names from data
   teams_all <- unique(c(as.character(x$data$home_team), as.character(x$data$away_team)))
@@ -72,7 +68,7 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
   }
 
   # Parameters to exclude from name replacement
-  exclude_params <- all_param_names[!all_param_names %in% c("att_raw", "def_raw", "att", "def")]
+  exclude_params <- setdiff(all_param_names, c("att_raw", "def_raw", "att", "def"))
 
   # Extract posterior summaries
   cat("Posterior summaries for model parameters:\n")
@@ -197,27 +193,22 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
     all_param_names <- x$fit@sim$pars_oi
 
     # Initialize 'final_pars' based on 'pars' argument
-    if (is.null(pars)) {
-      final_pars <- NULL
-    } else {
-      final_pars <- c()
-      for (p in pars) {
-        if (p %in% all_param_names) {
-          # Include all parameters matching the pattern (e.g., att_raw[1], att_raw[2], etc.)
-          matched_pars <- grep(paste0("^", p, "(\\[|$)"), all_param_names, value = TRUE)
-          if (length(matched_pars) == 0) {
-            warning("No parameters found for group '", p, "'.")
-          }
-          final_pars <- c(final_pars, matched_pars)
-        } else {
-          warning("Parameter '", p, "' not found among valid parameters.")
+    if (!is.null(pars)) {
+      matched_pars_list <- lapply(pars, function(p) {
+        matched <- grep(paste0("^", p, "(\\[|$)"), all_param_names, value = TRUE)
+        if (length(matched) == 0) {
+          warning(sprintf("No parameters found for group '%s'.", p))
         }
-      }
-      # Remove duplicates
-      final_pars <- unique(final_pars)
+        matched
+      })
+      final_pars <- unique(unlist(matched_pars_list))
+
+      # Check for non-empty 'final_pars'
       if (length(final_pars) == 0) {
         stop("No valid parameters specified in 'pars'.")
       }
+    } else {
+      final_pars <- NULL
     }
 
     # Extract unique team names from data
