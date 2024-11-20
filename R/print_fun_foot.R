@@ -9,14 +9,14 @@
 #' @param true_names Logical value indicating whether to display team names in parameter summaries. Default is \code{TRUE}.
 #' @param ... Additional arguments passed.
 #' @method print stanFoot
+#' @importFrom stats setNames
 #' @export
 print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names = TRUE, ...) {
-  # Check if the object is of class 'stanFoot'
-  if (!inherits(x, "stanFoot")) {
+
+    if (!inherits(x, "stanFoot")) {
     stop("The object must be of class 'stanFoot'.")
   }
 
-  # Validate 'digits' argument
   if (!is.numeric(digits) || digits <= 0) {
     stop("'digits' must be a positive numeric value.")
   }
@@ -24,7 +24,6 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
   cat("Summary of Stan football model\n")
   cat("------------------------------\n\n")
 
-  # Ensure 'x$fit' is a 'stanfit' object
   if (!inherits(x$fit, "stanfit")) {
     stop("The 'fit' component must be a 'stanfit' object.")
   }
@@ -39,7 +38,7 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
     final_pars <- c()
     for (p in pars) {
       if (p %in% all_param_names) {
-        # Include all parameters matching the pattern (e.g., att[1], att[2], etc.)
+        # Include all parameters matching the pattern
         matched_pars <- grep(paste0("^", p, "(\\[|$)"), all_param_names, value = TRUE)
         if (length(matched_pars) == 0) {
           warning("No parameters found for group '", p, "'.")
@@ -57,7 +56,7 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
   }
 
   # Extract unique team names from data
-  teams_all <- sort(unique(c(as.character(x$data$home_team), as.character(x$data$away_team))))
+  teams_all <- unique(c(as.character(x$data$home_team), as.character(x$data$away_team)))
 
   # If 'teams' is specified, validate and filter them
   if (!is.null(teams)) {
@@ -69,7 +68,6 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
     if (length(teams) == 0) {
       stop("No valid teams specified in 'teams'.")
     }
-    # Create a mapping from team names to indices
     team_map <- setNames(seq_along(teams_all), teams_all)
   }
 
@@ -92,20 +90,20 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
 
     if (is_dynamic) {
       # Dynamic model
-      # Generate regex patterns for the specified teams and relevant parameters
+      # Generate regex patterns
       patterns <- unlist(lapply(teams, function(team) {
         idx <- team_map[[team]]
         c(
-          paste0("^att_raw\\[", idx, ",\\d+\\]$"),
-          paste0("^def_raw\\[", idx, ",\\d+\\]$"),
-          paste0("^att\\[", idx, ",\\d+\\]$"),
-          paste0("^def\\[", idx, ",\\d+\\]$")
+          paste0("^att_raw\\[\\d+,", idx, "\\]$"),
+          paste0("^def_raw\\[\\d+,", idx, "\\]$"),
+          paste0("^att\\[\\d+,", idx, "\\]$"),
+          paste0("^def\\[\\d+,", idx, "\\]$")
         )
       }))
 
     } else {
       # Static model
-      # Generate regex patterns for the specified teams and relevant parameters
+      # Generate regex patterns
       patterns <- unlist(lapply(teams, function(team) {
         idx <- team_map[[team]]
         c(
@@ -123,8 +121,9 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
 
   # Replace parameter names with team names if 'true_names' is TRUE
   if (true_names && !is.null(stan_summary) && nrow(stan_summary) > 0) {
-    # Create reverse mapping from index to team names
+
     team_map_rev <- setNames(teams_all, as.character(seq_along(teams_all)))
+
 
     stan_summary_names <- team_names(rownames(stan_summary), exclude_params, team_map_rev)
 
@@ -134,14 +133,11 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
       stan_summary_names <- gsub(",\\]", "]", stan_summary_names)
     }
 
-
-    # Assign the cleaned names back to the summary
     rownames(stan_summary) <- stan_summary_names
   }
 
   # Check if there are parameters to display
   if (!is.null(stan_summary) && nrow(stan_summary) > 0) {
-    # Round the summary to the specified number of digits and print
     print(round(stan_summary, digits = digits))
   } else {
     cat("No parameters to display.\n")
@@ -149,8 +145,6 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
 
   invisible(x)
 }
-
-
 
 
 #' Print Method for btdFoot Objects
@@ -165,10 +159,12 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
 #' @param display Character string specifying which parts of the output to display. Options are \code{"both"}, \code{"rankings"}, or \code{"parameters"}. Default is \code{"both"}.
 #' @param ... Additional arguments passed.
 #' @method print btdFoot
+#' @importFrom stats setNames
 #' @export
 
 print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names = TRUE,
                           display = c("both", "rankings", "parameters"), ...) {
+
   if (!inherits(x, "btdFoot")) {
     stop("The object must be of class 'btdFoot'.")
   }
@@ -192,30 +188,68 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
   }
 
   if (display %in% c("both", "parameters")) {
-    # Ensure 'x$fit' is a 'stanfit' object
-    if (!inherits(x$fit, "stanfit")) {
+
+        if (!inherits(x$fit, "stanfit")) {
       stop("The 'fit' component must be a 'stanfit' object.")
     }
 
+    # Extract all parameter names from the 'stanfit' object
+    all_param_names <- x$fit@sim$pars_oi
+
+    # Initialize 'final_pars' based on 'pars' argument
+    if (is.null(pars)) {
+      final_pars <- NULL
+    } else {
+      final_pars <- c()
+      for (p in pars) {
+        if (p %in% all_param_names) {
+          # Include all parameters matching the pattern (e.g., att_raw[1], att_raw[2], etc.)
+          matched_pars <- grep(paste0("^", p, "(\\[|$)"), all_param_names, value = TRUE)
+          if (length(matched_pars) == 0) {
+            warning("No parameters found for group '", p, "'.")
+          }
+          final_pars <- c(final_pars, matched_pars)
+        } else {
+          warning("Parameter '", p, "' not found among valid parameters.")
+        }
+      }
+      # Remove duplicates
+      final_pars <- unique(final_pars)
+      if (length(final_pars) == 0) {
+        stop("No valid parameters specified in 'pars'.")
+      }
+    }
+
     # Extract unique team names from data
-    teams_all <- sort(unique(c(as.character(x$data$home_team), as.character(x$data$away_team))))
-    team_map <- stats::setNames(seq_along(teams_all), teams_all)  # Names: team names, Values: indices
-    team_map_rev <- stats::setNames(teams_all, seq_along(teams_all))  # Names: indices, Values: team names
+    teams_all <- unique(c(as.character(x$data$home_team), as.character(x$data$away_team)))
+
+    # If 'teams' is specified, validate and filter them
+    if (!is.null(teams)) {
+      invalid_teams <- setdiff(teams, teams_all)
+      if (length(invalid_teams) > 0) {
+        warning("The following teams are not in the data: ", paste(invalid_teams, collapse = ", "))
+        teams <- setdiff(teams, invalid_teams)
+      }
+      if (length(teams) == 0) {
+        stop("No valid teams specified in 'teams'.")
+      }
+
+      team_map <- setNames(seq_along(teams_all), teams_all)
+    }
+
+    team_map_rev <- setNames(teams_all, as.character(seq_along(teams_all)))
 
     # Parameters to exclude from name replacement
     exclude_params <- c("log_lik", "y_rep")
 
     # Extract posterior summaries
     cat("Posterior summaries for model parameters:\n")
-    stan_summary <- rstan::summary(x$fit, ...)$summary
-
-    # Filter by 'pars' if provided
-    if (!is.null(pars)) {
-      pattern <- paste0("^", pars, collapse = "|")
-      stan_summary <- stan_summary[grep(pattern, rownames(stan_summary)), , drop = FALSE]
+    if (is.null(final_pars)) {
+      stan_summary <- rstan::summary(x$fit, ...)$summary
+    } else {
+      stan_summary <- rstan::summary(x$fit, pars = unique(final_pars), ...)$summary
     }
 
-    # Split stan_summary into logStrength_params and other_params
     param_names <- rownames(stan_summary)
     logStrength_pattern <- "^logStrength"
 
@@ -228,12 +262,6 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
 
     # Filter logStrength_params by 'teams' if provided
     if (!is.null(teams) && nrow(logStrength_params) > 0) {
-      # Ensure teams are valid
-      invalid_teams <- setdiff(teams, teams_all)
-      if (length(invalid_teams) > 0) {
-        warning("The following teams are not in the data: ", paste(invalid_teams, collapse = ", "))
-        teams <- setdiff(teams, invalid_teams)
-      }
 
       if (length(teams) > 0) {
         # Map team names to indices
@@ -241,14 +269,14 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
         # Create patterns to match logStrength parameters for the specified teams
         if (is_dynamic) {
           # Dynamic model
-          patterns <- paste0("logStrength\\[", team_indices, ",\\d+\\]")
+          patterns <- paste0("logStrength\\[\\d+,", team_indices, "\\]")
         } else {
           # Static model
           patterns <- paste0("logStrength\\[", team_indices, "\\]")
         }
 
         # Combine patterns
-        pattern <- paste0("^", patterns, collapse = "|")
+        pattern <- paste0("^", patterns, "$", collapse = "|")
 
         # Filter logStrength_params
         logStrength_param_names <- rownames(logStrength_params)
@@ -271,7 +299,7 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
 
     # Replace parameter names with team names if true_names is TRUE
     if (true_names && !is.null(stan_summary) && nrow(stan_summary) > 0) {
-      # Apply the function to row names
+
       new_param_names <- team_names(rownames(stan_summary), exclude_params, team_map_rev)
 
       # Remove trailing commas in static model parameter names

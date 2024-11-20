@@ -16,7 +16,7 @@ data {
   }
 
   parameters {
-      matrix[nteams, ntimes_rank] logStrength;     // Log strength parameters for each team over time
+      matrix[ntimes_rank, nteams] logStrength;     // Log strength parameters for each team over time
       real logTie;               // Log tie parameter
       real home;                  // Home team effect parameter
   }
@@ -29,7 +29,7 @@ data {
   model {
       // Priors for initial strengths
       for (k in 1:nteams) {
-          logStrength[k, 1] ~ normal(mean_logStrength, sd_logStrength);
+          logStrength[1, k] ~ normal(mean_logStrength, sd_logStrength);
       }
 
       // Prior for tie parameter
@@ -38,7 +38,7 @@ data {
       // AR(1) process for strength parameters
       for (t_idx in 2:ntimes_rank) {
           for (k in 1:nteams) {
-              logStrength[k, t_idx] ~ normal(logStrength[k, t_idx - 1], sd_logStrength);
+              logStrength[t_idx, k] ~ normal(logStrength[t_idx - 1, k], sd_logStrength);
           }
       }
 
@@ -47,8 +47,8 @@ data {
 
       // Likelihood
       for (n in 1:N) {
-          real delta_team1 = exp(logStrength[team1[n], instants_rank[n]] + adj_h_eff);
-          real delta_team2 = exp(logStrength[team2[n], instants_rank[n]]);
+          real delta_team1 = exp(logStrength[instants_rank[n], team1[n]] + adj_h_eff);
+          real delta_team2 = exp(logStrength[instants_rank[n], team2[n]]);
           real nu = exp(logTie);
           real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
           real p_i_win = delta_team1 / denom;
@@ -73,8 +73,8 @@ data {
 
     for (n in 1:N) {
         // Delta values
-        real delta_team1 = exp(logStrength[team1[n], instants_rank[n]] + adj_h_eff);
-        real delta_team2 = exp(logStrength[team2[n], instants_rank[n]]);
+        real delta_team1 = exp(logStrength[instants_rank[n], team1[n]] + adj_h_eff);
+        real delta_team2 = exp(logStrength[instants_rank[n], team2[n]]);
         real nu = exp(logTie);
         real denom = delta_team1 + delta_team2 + (nu * sqrt(delta_team1 * delta_team2));
 

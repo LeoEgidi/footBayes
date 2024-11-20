@@ -124,30 +124,52 @@ normalize_rank_points <- function(rank_points, method) {
 #' @return A character vector with numeric indices replaced by their corresponding team names where applicable.
 #'
 #' @noRd
-team_names <- function(param_names, exclude_params, team_map) {
+team_names <- function(param_names, exclude_params, team_map_rev) {
   sapply(param_names, function(name) {
     # Skip parameters that should not have their names changed
     if (any(startsWith(name, exclude_params))) {
       return(name)
     }
 
-    # Match patterns like 'logStrength[1]', 'logStrength[1,1]', etc.
-    pattern <- "\\[(\\d+)(?:,(\\d+))*\\]"
-    if (grepl(pattern, name)) {
-      matches <- regmatches(name, regexec(pattern, name))
-      index1 <- matches[[1]][2]
-      index2 <- matches[[1]][3]  # May be NULL if there's no second index
-      new_name <- name
-      if (!is.na(index1) && index1 %in% names(team_map)) {
-        team_name <- team_map[[index1]]
-        if (!is.na(index2)) {
-          new_name <- sub(pattern, paste0("[", team_name, ",", index2, "]"), name)
-        } else {
-          new_name <- sub(pattern, paste0("[", team_name, "]"), name)
+    # Attempt to match two indices: [time, team]
+    pattern_two <- "\\[(\\d+),(\\d+)\\]"
+    if (grepl(pattern_two, name)) {
+      matches <- regmatches(name, regexec(pattern_two, name))
+
+
+      if (length(matches[[1]]) >= 3) {
+        time_index <- matches[[1]][2]   # First index (time)
+        team_index <- matches[[1]][3]   # Second index (team)
+
+        # Check if the second index corresponds to a team
+        if (team_index %in% names(team_map_rev)) {
+          team_name <- team_map_rev[[team_index]]
+          # Replace the second index with the team name
+
+          new_name <- sub(paste0(",", team_index, "\\]"), paste0(", ", team_name, "]"), name)
+          return(new_name)
         }
       }
-      return(new_name)
     }
+
+    # If not matched with two indices, attempt to match single index: [team]
+    pattern_one <- "\\[(\\d+)\\]"
+    if (grepl(pattern_one, name)) {
+      matches <- regmatches(name, regexec(pattern_one, name))
+      # Ensure that the single index is captured
+      if (length(matches[[1]]) >= 2) {
+        team_index <- matches[[1]][2]   # Single index (team)
+
+        # Check if the index corresponds to a team
+        if (team_index %in% names(team_map_rev)) {
+          team_name <- team_map_rev[[team_index]]
+          # Replace the index with the team name
+          new_name <- sub(paste0("\\[", team_index, "\\]"), paste0("[", team_name, "]"), name)
+          return(new_name)
+        }
+      }
+    }
+
     return(name)
   }, USE.NAMES = FALSE)
 }

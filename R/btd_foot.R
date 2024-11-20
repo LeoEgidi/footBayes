@@ -424,7 +424,7 @@ btd_foot <- function(data,
       team_index <- which(teams == team)
 
       # Get the samples for this team
-      logStrength_samples <- BTDparameters[["logStrength"]][, team_index]
+      logStrength_samples <- BTDparameters[["logStrength"]][,team_index]
 
       # Summary statistic based on rank_measure
       rank_point <- switch(rank_measure,
@@ -449,7 +449,7 @@ btd_foot <- function(data,
 
       # Compute the summary statistic for each date
       rank_point <- sapply(1:ntimes_rank, function(k) {
-        logStrength_samples <- BTDparameters[["logStrength"]][, team_index, k]
+        logStrength_samples <- BTDparameters[["logStrength"]][, k, team_index]
         switch(rank_measure,
                median = stats::median(logStrength_samples),
                mean = mean(logStrength_samples),
