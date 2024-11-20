@@ -5,8 +5,14 @@
 #'
 #' @param object An object either of class \code{\link[rstan]{stanfit}} and \code{stanFoot} as given by \code{stan_foot} function or
 #' \code{\link{list}} as given by \code{mle_foot}.
-#' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
-#'home goals, away goals.
+#' @param data A data frame containing match data with columns:
+#'   \itemize{
+#'     \item \code{periods}:  Time point of each observation (integer >= 1).
+#'     \item \code{home_team}: Home team's name (character string).
+#'     \item \code{away_team}: Away team's name (character string).
+#'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
+#'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
+#'   }
 #' @param home_team The home team(s) for the predicted matches.
 #' @param away_team The away team(s) for the predicted matches.
 #'
@@ -37,6 +43,8 @@
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #'  dplyr::filter(Season=="2000")
 #'
+#' colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+#'
 #' fit <- stan_foot(data = italy_2000,
 #'                  model="double_pois",
 #'                  predict = 18)  # double pois
@@ -51,13 +59,21 @@
 
 foot_prob <- function(object, data, home_team, away_team){
 
+
+  required_cols <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+  missing_cols <- setdiff(required_cols, names(data))
+  if (length(missing_cols) > 0) {
+    stop(paste("data is missing required columns:", paste(missing_cols, collapse = ", ")))
+  }
+
+
   # rename
 
-  colnames(data) <- c("season", "home", "away",
-                      "homegoals", "awaygoals")
-  teams <- unique(data$home)
+  # colnames(data) <- c("season", "home", "away",
+  #                     "home_goals", "away_goals")
+  teams <- unique(data$home_team)
 
-  # predict check: se 0 o nullo, no probabilities
+  # predict check: if 0 or null, no probabilities
 
   if (inherits(object, "stanfit")){
     sims <- rstan::extract(object)
@@ -84,8 +100,8 @@ foot_prob <- function(object, data, home_team, away_team){
   # checks su home_team/away_team
 
   if (missing(home_team) & missing(away_team)){
-    home_team <- data_prev$home
-    away_team <- data_prev$away
+    home_team <- data_prev$home_team
+    away_team <- data_prev$away_team
   }
 
   if (length(home_team)!= length(away_team)){
@@ -94,18 +110,18 @@ foot_prob <- function(object, data, home_team, away_team){
 
   find_match <- c()
   for (i in 1:length(home_team))
-    find_match[i] <- which( data_prev$home %in% home_team[i] & data_prev$away %in% away_team[i])
+    find_match[i] <- which( data_prev$home_team %in% home_team[i] & data_prev$away %in% away_team[i])
 
 
-  true_gol_home <- data_prev$homegoals[find_match]
-  true_gol_away <- data_prev$awaygoals[find_match]
+  true_gol_home <- data_prev$home_goals[find_match]
+  true_gol_away <- data_prev$away_goals[find_match]
 
   if (length(find_match)==0){
     stop(paste("There is not any out-of-sample match:",
                home_team,"-", away_team, sep=""))
   }
 
-  # calcola probabilità con stan/mle
+  # compute probabilities with stan/mle
 
   if (inherits(object, "stanfit") || inherits(object, "stanFoot")){
 

@@ -31,6 +31,9 @@
 #'   }
 #'   The object has a custom print method for formatted output.
 #' @details The function extracts predictions from each model or directly uses the provided probability matrices and computes the chosen metrics on the test dataset. It also possible to compute confusion matrices.
+#'
+#' @author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
+#'
 #' @examples
 #' \dontrun{
 #' library(dplyr)
@@ -40,7 +43,7 @@
 #'   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
 #'   dplyr::filter(Season == "2000")
 #'
-#' colnames(italy_2000) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+#' colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 #'
 #' # Example with fitted models
 #' fit_1 <- stan_foot(data = italy_2000,

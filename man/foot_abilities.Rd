@@ -11,8 +11,14 @@ foot_abilities(object, data, type = c("attack", "defense", "both"), team, ...)
 \code{\link{list}} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
  with \code{mle_foot}.}
 
-\item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
-home goals, away goals.}
+\item{data}{A data frame containing match data with columns:
+\itemize{
+  \item \code{periods}:  Time point of each observation (integer >= 1).
+  \item \code{home_team}: Home team's name (character string).
+  \item \code{away_team}: Away team's name (character string).
+  \item \code{home_goals}: Goals scored by the home team (integer >= 0).
+  \item \code{away_goals}: Goals scored by the away team (integer >= 0).
+}}
 
 \item{type}{Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}.}
 
@@ -38,9 +44,11 @@ italy <- as_tibble(italy)
 
 ### no dynamics, no prediction
 
-italy_2000_2002<- italy \%>\%
+italy_2000_2002 <- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
  dplyr::filter(Season=="2000" |  Season=="2001" | Season =="2002")
+
+colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 fit1 <- stan_foot(data = italy_2000_2002,
                   model="double_pois") # double poisson

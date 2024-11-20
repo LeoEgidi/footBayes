@@ -14,3 +14,6 @@
 \description{
 Provides a formatted output when printing objects of class \code{compareFoot}, displaying the predictive performance metrics and, if available, the confusion matrices for each model or probability matrix.
 }
+\author{
+Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
+}

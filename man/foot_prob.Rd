@@ -10,8 +10,14 @@ foot_prob(object, data, home_team, away_team)
 \item{object}{An object either of class \code{\link[rstan]{stanfit}} and \code{stanFoot} as given by \code{stan_foot} function or
 \code{\link{list}} as given by \code{mle_foot}.}
 
-\item{data}{A data frame, or a matrix containing the following mandatory items: home team, away team,
-home goals, away goals.}
+\item{data}{A data frame containing match data with columns:
+\itemize{
+  \item \code{periods}:  Time point of each observation (integer >= 1).
+  \item \code{home_team}: Home team's name (character string).
+  \item \code{away_team}: Away team's name (character string).
+  \item \code{home_goals}: Goals scored by the home team (integer >= 0).
+  \item \code{away_goals}: Goals scored by the away team (integer >= 0).
+}}
 
 \item{home_team}{The home team(s) for the predicted matches.}
 
@@ -42,6 +48,8 @@ data("italy")
 italy_2000<- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
  dplyr::filter(Season=="2000")
+
+colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 fit <- stan_foot(data = italy_2000,
                  model="double_pois",

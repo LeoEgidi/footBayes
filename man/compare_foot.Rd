@@ -61,7 +61,7 @@ italy_2000 <- italy \%>\%
   dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
   dplyr::filter(Season == "2000")
 
-colnames(italy_2000) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 # Example with fitted models
 fit_1 <- stan_foot(data = italy_2000,
@@ -82,4 +82,7 @@ compare_results_models <- compare_foot(
 
 print(compare_results_models)
 }
+}
+\author{
+Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
 }

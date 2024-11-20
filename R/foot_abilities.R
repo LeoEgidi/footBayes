@@ -7,8 +7,14 @@
 #' @param object An object either of class \code{stanfit} or \code{stanFoot} as given by \code{stan_foot} function, or class
 #'               \code{\link{list}} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
 #'                with \code{mle_foot}.
-#' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
-#'            home goals, away goals.
+#' @param data A data frame containing match data with columns:
+#'   \itemize{
+#'     \item \code{periods}:  Time point of each observation (integer >= 1).
+#'     \item \code{home_team}: Home team's name (character string).
+#'     \item \code{away_team}: Away team's name (character string).
+#'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
+#'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
+#'   }
 #' @param type Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}.
 #' @param team  Valid team names.
 #' @param ... Optional graphical parameters.
@@ -30,9 +36,11 @@
 #'
 #' ### no dynamics, no prediction
 #'
-#' italy_2000_2002<- italy %>%
+#' italy_2000_2002 <- italy %>%
 #'  dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
 #'  dplyr::filter(Season=="2000" |  Season=="2001" | Season =="2002")
+#'
+#' colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 #'
 #' fit1 <- stan_foot(data = italy_2000_2002,
 #'                   model="double_pois") # double poisson
@@ -101,8 +109,15 @@ foot_abilities <- function(object, data,
     }
   }
 
-  colnames(data) <- c("season", "home", "away",
-                      "homegoals", "awaygoals")
+
+  required_cols <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+  missing_cols <- setdiff(required_cols, names(data))
+  if (length(missing_cols) > 0) {
+    stop(paste("data is missing required columns:", paste(missing_cols, collapse = ", ")))
+  }
+
+  # colnames(data) <- c("periods", "home", "away",
+  #                     "homegoals", "awaygoals")
 
   teams <- unique(c(data$home, data$away))
 
@@ -187,12 +202,12 @@ foot_abilities <- function(object, data,
     hi=mt_def_75$value
   )
 
-  if (length(unique(data$season))==1){
+  if (length(unique(data$periods))==1){
     timings <- 1:dim(sims$att)[2]
     sp <- length(timings)%/%5
     timings_breaks <- timings[sp*c(1:5)]
   }else{
-    timings <- unique(data$season)
+    timings <- unique(data$periods)
     timings_breaks <- timings
   }
   if (type =="both"){
@@ -442,13 +457,13 @@ foot_abilities <- function(object, data,
         hi=mt_ability_75$value
       )
 
-      if (length(unique(data$season))==1){
+      if (length(unique(data$periods))==1){
         timings <- 1:dim(sims$ability)[2]
         sp <- length(timings)%/%5
         timings_breaks <- timings[sp*c(1:5)]
 
       }else{
-        timings <- unique(data$season)
+        timings <- unique(data$periods)
         timings_breaks <-timings
       }
 

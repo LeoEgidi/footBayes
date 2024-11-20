@@ -392,6 +392,7 @@ print(fit_result_dyn,
    dynamic_rank = FALSE,
    rank_measure = "map",
    iter = 1000,
+   #cores = 2,
    chains = 2
  )
 
@@ -514,10 +515,11 @@ fit1_stan <- stan_foot(data = italy_2000,
                        iter = n_iter) # biv poisson
 
 ## print of model summary for parameters:
-## home, sigma_att, sigma_def
 
-print(fit1_stan, pars =c("home_effect", "rho", "sigma_att",
-                         "sigma_def"))
+print(fit1_stan, 
+      pars = c("home", "rho", "sigma_att",
+               "sigma_def", "att", "def"),
+      teams = c("AC Milan", "AS Roma"))
 ```
 
 
@@ -617,12 +619,13 @@ color_scheme_set(scheme = "gray")
 gl_posterior <- cbind(posterior1[,"sigma_att"], 
                       posterior1_t[,"sigma_att"])
 colnames(gl_posterior)<-c("sigma_att", "sigma_att_t")
-mcmc_areas(gl_posterior, pars=c("sigma_att", "sigma_att_t"))+
-  xaxis_text(on =TRUE, size=ggplot2::rel(2.9))+
-  yaxis_text(on =TRUE, size=ggplot2::rel(2.9))+
-  scale_y_discrete(labels = ((parse(text= model_names))))+
-  ggtitle("Att/def sds")+
-  theme(plot.title = element_text(hjust = 0.5, size =rel(2.6)))
+mcmc_areas(gl_posterior, pars=c("sigma_att", "sigma_att_t")) +
+  xaxis_text(on =TRUE, size=ggplot2::rel(2.9)) +
+  yaxis_text(on =TRUE, size=ggplot2::rel(2.9)) +
+  scale_y_discrete(labels = ((parse(text= model_names)))) +
+  ggtitle("Att/def sds") +
+  theme(plot.title = element_text(hjust = 0.5, size =rel(2.6))) +
+  theme_bw()
 ```
 
 The student+laplace prior induces a lower amount of group-variability in the $\sigma_{\text{att}}$ marginal posterior distribution (then, a larger shrinkage towards the grand mean $\mu_{\text{att}}$).

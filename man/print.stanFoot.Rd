@@ -22,3 +22,6 @@
 \description{
 Provides detailed posterior summaries for the Stan football model parameters.
 }
+\author{
+Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
+}

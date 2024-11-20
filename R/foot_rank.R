@@ -3,8 +3,14 @@
 #' Posterior predictive plots and final rank table for football seasons.
 #'
 #' @param object An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.
-#' @param data A data frame, or a matrix containing the following mandatory items: home team, away team,
-#'home goals, away goals.
+#' @param data A data frame containing match data with columns:
+#'   \itemize{
+#'     \item \code{periods}:  Time point of each observation (integer >= 1).
+#'     \item \code{home_team}: Home team's name (character string).
+#'     \item \code{away_team}: Away team's name (character string).
+#'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
+#'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
+#'   }
 #' @param team_sel Selected team(s). By default, all the teams are selected.
 #' @param visualize Type of plot, default is \code{"aggregated"}.
 #'
@@ -34,6 +40,8 @@
 #' dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #' dplyr::filter(Season == "1999"|Season=="2000")
 #'
+#' colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+#'
 #' fit <- stan_foot(italy_1999_2000, "double_pois", iter = 200)
 #' foot_rank(italy_1999_2000, fit)
 #' foot_rank(italy_1999_2000, fit, visualize =  "individual")
@@ -56,21 +64,28 @@ foot_rank <- function(data, object,
     stop("Please provide an object of class 'stanfit' or 'stanFoot'.")
   }
 
+  required_cols <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+  missing_cols <- setdiff(required_cols, names(data))
+  if (length(missing_cols) > 0) {
+    stop(paste("data is missing required columns:", paste(missing_cols, collapse = ", ")))
+  }
+
+
   good_names <- c("aggregated","individual")
   check_vis <- match.arg(visualize, good_names)
-  colnames(data) <- c("season", "home", "away",
-                      "homegoals", "awaygoals")
-  nteams<- length(unique(data$home))
+  # colnames(data) <- c("season", "home", "away",
+  #                     "homegoals", "awaygoals")
+  nteams<- length(unique(data$home_team))
   sims <- rstan::extract(stan_fit)
   y <- as.matrix(data[,4:5])
-  teams <- unique(data$home)
-  team_home <- match(data$home, teams)
-  team_away <- match(data$away, teams)
-  seasons_levels <-unique(data$season)
+  teams <- unique(data$home_team)
+  team_home <- match(data$home_team, teams)
+  team_away <- match(data$away_team, teams)
+  seasons_levels <- unique(data$periods)
   team_seasons <- list()
   for (j in 1:length(seasons_levels))
     team_seasons[[j]] <-
-    unique(team_home[data$season == seasons_levels[j]])
+    unique(team_home[data$periods == seasons_levels[j]])
 
   # caso in-sample
   if (is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
@@ -125,12 +140,12 @@ foot_rank <- function(data, object,
   }
 
   # identifica la stagione all'interno del quale prevedere
-  season_prev <- unique(data$season[(N+1):(N+N_prev)])
+  season_prev <- unique(data$periods[(N+1):(N+N_prev)])
   season_prev <- season_prev[!is.na(season_prev)]
 
   # condizione per far si che non si possano prevedere
   # dati di stagioni diverse
-  if (length(unique(data$season[(N+1):(N+N_prev)][!is.na(data$season[(N+1):(N+N_prev)])])) !=1){
+  if (length(unique(data$periods[(N+1):(N+N_prev)][!is.na(data$periods[(N+1):(N+N_prev)])])) !=1){
     stop("Please, to use this function,
           do not provide out-of-sample
           matches belonging to different seasons, provide
@@ -142,9 +157,9 @@ foot_rank <- function(data, object,
   #     only matches from one season.")
   #
   #   prev_indexes <- (N+1):(N+N_prev)
-  #   prev_values <- unique(data$season[prev_indexes])
+  #   prev_values <- unique(data$periods[prev_indexes])
   #   useful_indexes <- prev_indexes[
-  #           data$season[prev_indexes]== prev_values[1]]
+  #           data$periods[prev_indexes]== prev_values[1]]
   #   N_prev <- length(useful_indexes)
   #   season_prev <- prev_values[1]
   #
@@ -239,7 +254,7 @@ foot_rank <- function(data, object,
   in_sample_cond <- is.null(sims$diff_y_prev) & is.null(sims$y_prev)
 
   if (in_sample_cond){
-    set <- (1:N)[data$season==season_prev]
+    set <- (1:N)[data$periods==season_prev]
   }else{
     set <- (1:N_prev)
   }
@@ -271,7 +286,7 @@ foot_rank <- function(data, object,
   # questa condizione significa che siamo "dentro" alla #     # stagione e che il training ha le stesse squadre del      # test
   suppressWarnings(
   cond_1 <-   all(sort(unique(team_home))== sort(unique(team1_prev)))
-  #& N < length(unique(team1_prev[(1:N)[data$season==season_prev]]))*( length(unique(team1_prev[(1:N)[data$season==season_prev]]))-1)
+  #& N < length(unique(team1_prev[(1:N)[data$periods==season_prev]]))*( length(unique(team1_prev[(1:N)[data$periods==season_prev]]))-1)
   )
 
   # questa condizione significa che il training NON ha
@@ -298,7 +313,7 @@ foot_rank <- function(data, object,
       {
       #cond_1 <- FALSE
       conta_punti_veri <- rep(0, length(unique(team_home)))
-      for (n in (1:N)[data$season==season_prev]){
+      for (n in (1:N)[data$periods==season_prev]){
         if (y[(n),1]>y[(n),2]){
           conta_punti_veri[team_home[n]]=conta_punti_veri[team_home[n]]+3
           conta_punti_veri[team_away[n]]=conta_punti_veri[team_away[n]]
@@ -402,7 +417,7 @@ foot_rank <- function(data, object,
     }
 
     if (in_sample_cond){
-       set <- (1:N)[data$season==season_prev]
+       set <- (1:N)[data$periods==season_prev]
     }else{
       set <- (1:N_prev)
     }
@@ -680,7 +695,7 @@ foot_rank <- function(data, object,
     }
 
     if (in_sample_cond){
-      set <- (1:N)[data$season==season_prev]
+      set <- (1:N)[data$periods==season_prev]
     }else{
       set <- (1:N_prev)
     }

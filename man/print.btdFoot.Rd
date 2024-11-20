@@ -32,3 +32,6 @@
 \description{
 Provides detailed posterior summaries for the Bayesian Bradley-Terry-Davidson model parameters.
 }
+\author{
+Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
+}

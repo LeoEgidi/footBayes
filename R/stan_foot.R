@@ -5,7 +5,7 @@
 #'
 #' @param data A data frame containing match data with columns:
 #'   \itemize{
-#'     \item \code{season}: Season identifier (integer >= 1).
+#'     \item \code{periods}:  Time point of each observation (integer >= 1).
 #'     \item \code{home_team}: Home team's name (character string).
 #'     \item \code{away_team}: Away team's name (character string).
 #'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
@@ -21,7 +21,7 @@
 #'     \item \code{"zero_infl_skellam"}: Zero-inflated Skellam model.
 #'   }
 #' @param predict An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.
-#' @param ranking An optional data frame containing ranking points for teams:
+#' @param ranking An optional \code{"btdFoot"} class element or a data frame containing ranking points for teams with the following columns:
 #'   \itemize{
 #'     \item \code{periods}: Time periods corresponding to the rankings (integer >= 1).
 #'     \item \code{team}: Team names matching those in \code{data} (character string).
@@ -191,10 +191,10 @@
 #'   arrange(periods, desc(rank_points))
 #'
 #'
-#' colnames(italy_2021) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+#' colnames(italy_2021) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 #'
 #' fit_with_ranking <- stan_foot(
-#'   data = italy_2021,
+#'   data = italy_2021
 #'   model = "diag_infl_biv_pois",
 #'   ranking = ranking,
 #'   home_effect = TRUE,
@@ -223,7 +223,7 @@
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #'  dplyr::filter(Season=="2000" |  Season=="2001"| Season=="2002")
 #'
-#'colnames(italy_2000_2002) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+#'colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 #'
 #' ### Fit Stan models
 #' ## no dynamics, no predictions
@@ -319,20 +319,20 @@ stan_foot <- function(data,
     stop("Data dimensions are wrong! Please,
          supply a matrix/data frame containing
          the following mandatory column items:
-         season, home team, away team,
-         home goals, away goals.")
+         periods, home_team, away_team,
+         home_goals, away_goals.")
   }
 
 
-  required_cols <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+  required_cols <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
   missing_cols <- setdiff(required_cols, names(data))
   if (length(missing_cols) > 0) {
     stop(paste("data is missing required columns:", paste(missing_cols, collapse = ", ")))
   }
 
   #if (dim(data)[2]==5){
-  colnames(data) <- c("season", "home_team", "away_team",
-                      "home_goals", "away_goals")
+  # colnames(data) <- c("periods", "home_team", "away_team",
+  #                     "home_goals", "away_goals")
   #}
 
   # checks about formats
@@ -346,8 +346,8 @@ stan_foot <- function(data,
     warning("Your dataset seems too large!
              The function will evaluate the first
              five columns as follows:
-             season, home team, away team, home goals,
-             away goals")
+             periods, home_team, away_team, home_goals,
+             away_goals")
     #  stop("Wrong number of columns! Please,
     #       supply a matrix/data frame containing
     #       the following mandatory column items:
@@ -502,7 +502,7 @@ stan_foot <- function(data,
     instants <- rep(1, N)
   }else if (dynamic_type == "weekly" ){
       dyn <- "dynamic_"
-      if (length(unique(data$season))!=1){
+      if (length(unique(data$periods))!=1){
         stop("When using weekly dynamics,
               please consider one season only.")
       }else{
@@ -527,16 +527,16 @@ stan_foot <- function(data,
       }
     }else if(dynamic_type=="seasonal"){
       dyn <- "dynamic_"
-      if (length(unique(data$season))==1){
+      if (length(unique(data$periods))==1){
         dyn <-""
         warning("When using seasonal dynamics,
               please consider more than one season.
               No dynamics is used to fit the model")
       }
-      season_count <- length(unique(data$season))
-      season <- match(data$season, unique(data$season))
+      season_count <- length(unique(data$periods))
+      season <- match(data$periods, unique(data$periods))
       ntimes <- season_count
-      #time_tot <- c(1:length(unique(data$season)))
+      #time_tot <- c(1:length(unique(data$periods)))
       time <- c(1:season_count)
       instants <- season[1:N]
       #ntimes_prev <- length(unique(season[1:(N+N_prev)]))-length(unique(season[1:N]))
@@ -726,10 +726,18 @@ stan_foot <- function(data,
     nteams <- length(unique(data$home_team))
     ranking_matrix <- matrix(0, nrow = ntimes_rank, ncol = nteams)
   } else {
-    # Ensure ranking is either a matrix or a data frame
-    if (!is.matrix(ranking) && !is.data.frame(ranking)) {
-      stop("Ranking must be a matrix or a data frame with at least 5 columns: season, home team, away team, home goals, away goals.")
-    }
+      if (inherits(ranking, "btdFoot")) {
+        ranking <- as.data.frame(ranking$rank)
+        colnames(ranking) <- c("periods", "team", "rank_points")
+      } else if (!is.matrix(ranking) && !is.data.frame(ranking)) {
+          stop("Ranking must be a btdFoot class element, a matrix, or a data frame with 3 columns: periods, team, rank_points.")
+        }
+
+
+    # # Ensure ranking is either a matrix or a data frame
+    # if (!is.matrix(ranking) && !is.data.frame(ranking)) {
+    #   stop("Ranking must be a matrix or a data frame with at least 5 columns: season, home team, away team, home goals, away goals.")
+    # }
 
     # Convert ranking to data frame if it's not already
     ranking <- as.data.frame(ranking)
@@ -799,7 +807,7 @@ stan_foot <- function(data,
         # Assume periods correspond directly
         instants_rank <- instants
       } else {
-        stop("The length of 'ntimes' and 'ntimes_rank' must be equal to directly map the periods.")
+        stop("Ranking periods and data must be equal to directly map the periods.")
       }
     } else {
       # Use user-provided mapping

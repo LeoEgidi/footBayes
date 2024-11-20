@@ -21,7 +21,7 @@ stan_foot(
 \arguments{
 \item{data}{A data frame containing match data with columns:
 \itemize{
-  \item \code{season}: Season identifier (integer >= 1).
+  \item \code{periods}:  Time point of each observation (integer >= 1).
   \item \code{home_team}: Home team's name (character string).
   \item \code{away_team}: Away team's name (character string).
   \item \code{home_goals}: Goals scored by the home team (integer >= 0).
@@ -40,7 +40,7 @@ stan_foot(
 
 \item{predict}{An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.}
 
-\item{ranking}{An optional data frame containing ranking points for teams:
+\item{ranking}{An optional \code{"btdFoot"} class element or a data frame containing ranking points for teams with the following columns:
 \itemize{
   \item \code{periods}: Time periods corresponding to the rankings (integer >= 1).
   \item \code{team}: Team names matching those in \code{data} (character string).
@@ -197,10 +197,10 @@ ranking <- ranking \%>\%
   arrange(periods, desc(rank_points))
 
 
-colnames(italy_2021) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+colnames(italy_2021) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 fit_with_ranking <- stan_foot(
-  data = italy_2021,
+  data = italy_2021
   model = "diag_infl_biv_pois",
   ranking = ranking,
   home_effect = TRUE,
@@ -229,7 +229,7 @@ italy_2000_2002<- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
  dplyr::filter(Season=="2000" |  Season=="2001"| Season=="2002")
 
-colnames(italy_2000_2002) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 ### Fit Stan models
 ## no dynamics, no predictions
