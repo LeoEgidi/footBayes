@@ -110,7 +110,7 @@ foot_prob <- function(object, data, home_team, away_team){
 
   find_match <- c()
   for (i in 1:length(home_team))
-    find_match[i] <- which( data_prev$home_team %in% home_team[i] & data_prev$away %in% away_team[i])
+    find_match[i] <- which( data_prev$home_team %in% home_team[i] & data_prev$away_team %in% away_team[i])
 
 
   true_gol_home <- data_prev$home_goals[find_match]
@@ -479,7 +479,7 @@ foot_prob <- function(object, data, home_team, away_team){
 
     # lancia prediction_routine se e solo se predict è non missing
 
-    if (predict!=0){
+    if (predict>0){
       prob_matrix <- prediction_routine(team1_prev, team2_prev, object$att,
                                         object$def, object$home,
                                         object$corr, object$abilities, model, predict,
