@@ -24,9 +24,9 @@ btd_foot(
 }
 The data frame must not contain missing values.}
 
-\item{dynamic_rank}{Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).}
+\item{dynamic_rank}{A logical value indicating whether a dynamic ranking model is used (default is \code{FALSE}).}
 
-\item{home_effect}{Logical; if \code{TRUE}, includes a home effect in the model (default is \code{FALSE}).}
+\item{home_effect}{A logical value indicating the inclusion of a home effect in the model. (default is \code{FALSE}).}
 
 \item{prior_par}{A list specifying the prior distributions for the parameters of interest, using the \code{normal} function:
 \itemize{
@@ -106,6 +106,8 @@ fit_result_dyn <- btd_foot(
 )
 
 print(fit_result_dyn)
+
+print(fit_result_dyn, pars = c("logStrength", "home"), teams = c("AC Milan", "AS Roma"))
 
 # Static Ranking Example with MAP Rank Measure
 fit_result_stat <- btd_foot(

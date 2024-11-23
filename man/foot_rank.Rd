@@ -4,7 +4,12 @@
 \alias{foot_rank}
 \title{Rank and points predictions}
 \usage{
-foot_rank(data, object, team_sel, visualize = c("aggregated", "individual"))
+foot_rank(
+  data,
+  object,
+  teams = NULL,
+  visualize = c("aggregated", "individual")
+)
 }
 \arguments{
 \item{data}{A data frame containing match data with columns:
@@ -18,7 +23,7 @@ foot_rank(data, object, team_sel, visualize = c("aggregated", "individual"))
 
 \item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
 
-\item{team_sel}{Selected team(s). By default, all the teams are selected.}
+\item{teams}{An optional character vector specifying team names to include. If \code{NULL}, all teams are included.}
 
 \item{visualize}{Type of plot, default is \code{"aggregated"}.}
 }
@@ -45,7 +50,7 @@ italy_1999_2000<- italy \%>\%
 dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
 dplyr::filter(Season == "1999"|Season=="2000")
 
-colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 fit <- stan_foot(italy_1999_2000, "double_pois", iter = 200)
 foot_rank(italy_1999_2000, fit)

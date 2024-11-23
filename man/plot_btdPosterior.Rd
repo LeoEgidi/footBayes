@@ -4,20 +4,20 @@
 \alias{plot_btdPosterior}
 \title{Plot Posterior Distributions for btdFoot Objects}
 \usage{
-plot_btdPosterior(x, teams_of_interest = NULL, ncol = NULL, scales = NULL, ...)
+plot_btdPosterior(x, teams = NULL, ncol = NULL, scales = NULL, ...)
 }
 \arguments{
 \item{x}{An object of class \code{btdFoot}.}
 
-\item{teams_of_interest}{Optional. A character vector of team names to include in the posterior boxplots. If \code{NULL}, all teams are included.}
+\item{teams}{An optional character vector specifying team names to include in the posterior boxplots. If \code{NULL}, all teams are included.}
 
-\item{ncol}{Optional. An integer specifying the number of columns in the facet wrap. Defaults:
+\item{ncol}{An optional integer specifying the number of columns in the facet wrap. Defaults:
 \itemize{
   \item Dynamic Ranking: \code{ncol = 8}.
   \item Static Ranking: \code{ncol = 4}.
 }}
 
-\item{scales}{Optional. A character string specifying the scales for the facets. Options:
+\item{scales}{An optional character string specifying the scales for the facets. Options:
 \itemize{
   \item Dynamic Ranking: \code{"free_x"}, \code{"free_y"}, \code{"free"}.
   \item Static Ranking: \code{"free_y"}, \code{"fixed"}.
@@ -40,6 +40,45 @@ Visualizes posterior distributions of team strengths with customizable facets.
 \itemize{
 \item Dynamic Ranking: Faceted boxplots of posterior log-strengths by team and period.
 \item Static Ranking: Faceted boxplots of posterior log-strengths for each team.
+
+}
+}
+\examples{
+
+\dontrun{
+require(dplyr)
+
+data("italy")
+
+italy_2020_2021_rank <- italy \%>\%
+ select(Season, home, visitor, hgoal, vgoal) \%>\%
+ filter(Season == "2020" | Season == "2021") \%>\%
+ mutate(match_outcome = case_when(
+   hgoal > vgoal ~ 1,        # Home team wins
+   hgoal == vgoal ~ 2,       # Draw
+   hgoal < vgoal ~ 3         # Away team wins
+ )) \%>\%
+ mutate(periods = case_when(
+   row_number() <= 190 ~ 1,
+   row_number() <= 380 ~ 2,
+   row_number() <= 570 ~ 3,
+   TRUE ~ 4
+ )) \%>\%  # Assign periods based on match number
+ select(periods, home_team = home,
+               away_team = visitor, match_outcome)
+
+fit_rank_dyn <- btd_foot(
+ data = italy_2020_2021_rank,
+ dynamic_rank = TRUE,
+ rank_measure = "median",
+ iter = 1000,
+ cores = 2,
+ chains = 2)
+
+plot_btdPosterior(fit_rank_dyn)
+
+plot_btdPosterior(fit_rank_dyn, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"), ncol = 2)
+
 
 }
 }

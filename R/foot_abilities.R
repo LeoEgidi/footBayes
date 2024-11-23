@@ -16,7 +16,7 @@
 #'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 #'   }
 #' @param type Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}.
-#' @param team  Valid team names.
+#' @param teams  An optional character vector specifying team names to include. If \code{NULL}, all teams are included.
 #' @param ... Optional graphical parameters.
 #'
 #' @return
@@ -79,7 +79,7 @@
 
 foot_abilities <- function(object, data,
                            type = c("attack", "defense", "both"),
-                           team,...){
+                           teams = NULL,...){
 
 
   ## Check for 'type'
@@ -119,10 +119,10 @@ foot_abilities <- function(object, data,
   # colnames(data) <- c("periods", "home", "away",
   #                     "homegoals", "awaygoals")
 
-  teams <- unique(c(data$home_team, data$away_team))
+  teams_all <- unique(c(data$home_team, data$away_team))
 
-  if (!is.character(teams)){
-    teams <- as.character(teams)
+  if (!is.character(teams_all)){
+    teams_all <- as.character(teams_all)
   }
 
   oldpar <- par(no.readonly = TRUE)    # code line i
@@ -139,14 +139,14 @@ foot_abilities <- function(object, data,
     # Extract posterior samples
     sims <- rstan::extract(stan_fit)
 
-    if (missing(team)){
-      sel_teams <- teams
+    if (is.null(teams)){
+      sel_teams <- teams_all
       # }else if(team==c("all")){
       #   sel_teams <- teams
     }else{
-      sel_teams<-teams[match(team, teams)]
+      sel_teams<-teams_all[match(teams, teams_all)]
     }
-    sel_teams_index <- match(sel_teams, teams)
+    sel_teams_index <- match(sel_teams, teams_all)
 
     if (is.na(sum(sel_teams_index))){
       stop("Select only valid teams' names!")
@@ -154,6 +154,14 @@ foot_abilities <- function(object, data,
 
     att <- sims$att
     def <- sims$def
+
+
+    num_teams <- length(unique(sel_teams))
+
+    # Calculate the number of rows and columns
+    nrow_plot <- ceiling(sqrt(num_teams))           # Approximate square root for rows
+    ncol_plot <- ceiling(num_teams / nrow_plot)           # Determine columns to fit all teams
+
 
     if (length(dim(att))==3){
       T <- dim(att)[2]
@@ -202,15 +210,6 @@ foot_abilities <- function(object, data,
         hi=mt_def_75$value
       )
 
-
-      num_teams <- length(unique(att_data$teams))
-
-      # Calculate the number of rows and columns
-      nrow_plot <- ceiling(sqrt(num_teams))           # Approximate square root for rows
-      ncol_plot <- ceiling(num_teams / nrow_plot)           # Determine columns to fit all teams
-
-
-
       if (length(unique(data$periods))==1){
         timings <- 1:dim(sims$att)[2]
         sp <- length(timings)%/%5
@@ -258,7 +257,7 @@ foot_abilities <- function(object, data,
           xaxis_text(size = rel(1.2)) +
           theme(
             plot.title = element_text(size = 16),
-            strip.text = element_text(size = 8, color = "black"),
+            strip.text = element_text(size = 12, color = "black"),
             axis.text.x = element_text(face = "bold", color = "black", angle = 45, size = 9),
             axis.text.y = element_text(size = 11),
             plot.subtitle = element_text(size = 12),
@@ -303,7 +302,7 @@ foot_abilities <- function(object, data,
           xaxis_text(size = rel(1.2)) +
           theme(
             plot.title = element_text(size = 16),
-            strip.text = element_text(size = 8, color = "black"),
+            strip.text = element_text(size = 12, color = "black"),
             axis.text.x = element_text(face = "bold", color = "black", angle = 45, size = 9),
             axis.text.y = element_text(size = 11),
             plot.subtitle = element_text(size = 12),
@@ -347,7 +346,7 @@ foot_abilities <- function(object, data,
           xaxis_text(size = rel(1.2)) +
           theme(
             plot.title = element_text(size = 16),
-            strip.text = element_text(size = 8, color = "black"),
+            strip.text = element_text(size = 12, color = "black"),
             axis.text.x = element_text(face = "bold", color = "black", angle = 45, size = 9),
             axis.text.y = element_text(size = 11),
             plot.subtitle = element_text(size = 12),
@@ -441,15 +440,15 @@ foot_abilities <- function(object, data,
 
       ability <- sims$ability
 
-      if (length(dim(ability))==3){
+      if (length(dim(ability)) > 3){
 
         T <- dim(ability)[2]
-        nteams <- dim(ability)[3]
-        ability_med=apply(ability,c(2,3), stats::median)
-        ability_025=apply(ability, c(2,3), function(x) stats::quantile(x, 0.025))
-        ability_25=apply(ability, c(2,3), function(x) stats::quantile(x, 0.25))
-        ability_75=apply(ability, c(2,3), function(x) stats::quantile(x, 0.75))
-        ability_975=apply(ability, c(2,3), function(x) stats::quantile(x, 0.975))
+        nteams <- dim(ability)[4]
+        ability_med=apply(ability, c(3, 4), stats::median)
+        ability_025=apply(ability, c(3,4), function(x) stats::quantile(x, 0.025))
+        ability_25=apply(ability, c(3,4), function(x) stats::quantile(x, 0.25))
+        ability_75=apply(ability, c(3,4), function(x) stats::quantile(x, 0.75))
+        ability_975=apply(ability, c(3,4), function(x) stats::quantile(x, 0.975))
 
         squadre_valide <- match(sel_teams,unique(c(data$home_team, data$away_team)))
 
@@ -513,7 +512,7 @@ foot_abilities <- function(object, data,
           yaxis_text(size=rel(1.2))+
           xaxis_text( size = rel(1.2))+
           theme(plot.title = element_text(size = 16),
-                strip.text = element_text(size = 8, color = "black"),
+                strip.text = element_text(size = 12, color = "black"),
                 axis.text.x =  element_text(face="bold",
                                             color="black",
                                             angle=45, size =9),
@@ -524,7 +523,8 @@ foot_abilities <- function(object, data,
           theme_bw()
 
 
-      }else if (length(dim(ability))==2){
+      }else{
+        ability <- ability[,1,]
         ability_mean <- apply(ability, 2, mean)[sel_teams_index]
         ability_sd <- apply(ability, 2, sd)[sel_teams_index]
         ability_025 <- apply(ability, 2, function(x) stats::quantile(x, 0.025))[sel_teams_index]
@@ -557,12 +557,12 @@ foot_abilities <- function(object, data,
 
     # check on selected team
 
-    if (missing(team)){
-      sel_teams <- teams
+    if (is.null(teams)){
+      sel_teams <- teams_all
       # }else if(team==c("all")){
       #   sel_teams <- teams
     }else{
-      sel_teams<-teams[match(team, unique(c(data$home_team, data$away_team)))]
+      sel_teams<-teams_all[match(team, unique(c(data$home_team, data$away_team)))]
     }
     sel_teams_index <- match(sel_teams, unique(c(data$home_team, data$away_team)))
 
@@ -687,9 +687,7 @@ foot_abilities <- function(object, data,
 
     }
   }else{
-    stop("Please, provide one of the following
-         classes for the 'object' argument: 'stanfit',
-         'list'.")
+    stop("Provide one among these three model fit classes: 'stanfit', 'stanFoot' or 'list'.")
   }
 
 

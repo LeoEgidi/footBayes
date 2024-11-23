@@ -21,7 +21,10 @@
 #'A \code{\link{data.frame}} containing the number of out-of-sample matches specified through the
 #'argument \code{predict}  passed either in the \code{mle_foot} or in the \code{stan_foot} function.
 #'For Bayesian Poisson models the function returns also the most likely outcome (mlo) and a posterior
-#' probability plot for the exact results.
+#'probability plot for the exact results, where matches are sorted by the degree of favoritism.
+#'Specifically, matches are ordered from those in which the favorite team has the highest posterior probability
+#'of winning to those where the underdog is more likely to win.
+#'
 #'
 #'@details
 #'
@@ -39,7 +42,7 @@
 #' require(dplyr)
 #'
 #' data("italy")
-#' italy_2000<- italy %>%
+#' italy_2000 <- italy %>%
 #'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
 #'  dplyr::filter(Season=="2000")
 #'
@@ -59,6 +62,11 @@
 
 foot_prob <- function(object, data, home_team, away_team){
 
+
+
+  # if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  #   stop("Package 'ggplot2' is required for plotting.")
+  # }
 
   required_cols <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
   missing_cols <- setdiff(required_cols, names(data))
@@ -348,11 +356,19 @@ foot_prob <- function(object, data, home_team, away_team){
         #axes_titles$favorite <- as.character(as.vector(axes_titles$favorite))
         # To change the color of the gradation :
 
+        num_matches <- length(unique(data_exp_tot$new_matches))
+
+        # Calculate the number of rows and columns
+        nrow_plot <- ceiling(sqrt(num_matches))           # Approximate square root for rows
+        ncol_plot <- ceiling(num_matches / nrow_plot)
+
+
         p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
           theme_bw() +
           scale_fill_gradient(low="white", high="black") +
           facet_wrap(facets = ~reorder(new_matches, prob_h),
-                     scales = "fixed"
+                     scales = "fixed",
+                     ncol = ncol_plot, nrow = nrow_plot
                      #labeller = as_labeller(c(axes_titles$underdog)),
                      #strip.position = "left"
           )+
@@ -477,9 +493,7 @@ foot_prob <- function(object, data, home_team, away_team){
     }
 
 
-    # lancia prediction_routine se e solo se predict è non missing
-
-    if (predict>0){
+    if (predict!=0){
       prob_matrix <- prediction_routine(team1_prev, team2_prev, object$att,
                                         object$def, object$home,
                                         object$corr, object$abilities, model, predict,

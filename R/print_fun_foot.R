@@ -343,7 +343,7 @@ print.compareFoot <- function(x, ...) {
   cat("Predictive performance metrics\n")
   print(x$metrics)
   if (!is.null(x$confusion_matrix)) {
-    cat("\nConfusion Matrices\n")
+    cat("\nConfusion matrices\n")
     for (model_name in names(x$confusion_matrix)) {
       cat("Model:", model_name, "\n \n",sep = " ")
       print(x$confusion_matrix[[model_name]])

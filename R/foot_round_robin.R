@@ -11,7 +11,7 @@
 #'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
 #'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 #'   }
-#' @param team_sel Selected team(s). By default, all the teams are selected.
+#' @param teams An optional character vector specifying team names to include. If \code{NULL}, all teams are included.
 #'
 #'@details
 #'
@@ -49,8 +49,11 @@
 #' @export
 
 
-foot_round_robin <- function(data, object, team_sel){
+foot_round_robin <- function(data, object, teams = NULL){
 
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("Package 'ggplot2' is required for plotting.")
+  }
 
   required_cols <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
   missing_cols <- setdiff(required_cols, names(data))
@@ -71,9 +74,9 @@ foot_round_robin <- function(data, object, team_sel){
 
   sims <- rstan::extract(stan_fit)
   y <- as.matrix(data[,4:5])
-  teams <- unique(data$home_team)
-  team_home <- match(data$home_team, teams)
-  team_away <- match(data$away_team, teams)
+  teams_all <- unique(data$home_team)
+  team_home <- match(data$home_team, teams_all)
+  team_away <- match(data$away_team, teams_all)
 
   if (is.null(sims$diff_y_prev) & is.null(sims$y_prev)){
     stop("There is not any test set!
@@ -120,19 +123,19 @@ foot_round_robin <- function(data, object, team_sel){
     team2_prev <- c(team2_prev, team1_prev)
   }
 
-  if (missing(team_sel)){
-    team_sel <- teams[unique(team1_prev)]
+  if (is.null(teams)){
+    teams <- teams_all[unique(team1_prev)]
   }
-  team_index <- match(team_sel, teams)
+  team_index <- match(teams, teams_all)
 
 
   if (is.na(sum(team_index))){
-    warning(paste(team_sel[is.na(team_index)],
+    warning(paste(teams[is.na(team_index)],
     "is not in the test set. Pleasy provide a valid team name. "))
     team_index <- team_index[!is.na(team_index)]
   }
 
-  team_names <- teams[team_index]
+  team_names <- teams_all[team_index]
   nteams<- length(unique(team_home))
   nteams_new <- length(team_index)
   M <-dim(sims$diff_y_rep)[1]
@@ -203,29 +206,30 @@ foot_round_robin <- function(data, object, team_sel){
    data_ex <- expand.grid(Home=x_ex, Away=y_ex)
    data_ex$prob=as.double(counts_mix[1:nteams, 1:nteams][team_index, team_index])
 
-   p <- ggplot(data_ex, aes(Home, Away, z= prob)) +
-    geom_tile(aes(fill = prob)) +
-    theme_bw() +
-    labs(x_ex, xaxis_text( size = rel(1.2)))+
-    labs(y_ex, yaxis_text( size = rel(1.2)))+
-    scale_fill_gradient(low="white", high="red")+
-    scale_x_discrete( limits= team_names  ) +
-    scale_y_discrete( limits= team_names  ) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-    geom_text(aes(label=as.vector(punt[team_index, team_index])), size =2.1)+
-    geom_rect(aes(xmin =as.vector(x1_x2),
-                  xmax = as.vector(x2_x1),
-                  ymin =as.vector(x1_x2),
-                  ymax =as.vector(x2_x1)),
-                  fill = "black", color = "black",
-                  size = 1)+
-    ggtitle("Home win posterior probabilities")
+   p <- ggplot(data_ex, aes(Home, Away, z = prob)) +
+     geom_tile(aes(fill = prob)) +
+     theme_bw() +
+     labs(x = x_ex, xaxis_text(size = rel(1.2))) +
+     labs(y = y_ex, yaxis_text(size = rel(1.2))) +
+     scale_fill_gradient(low = "white", high = "red3", name = "Prob") +  # Change legend title here
+     scale_x_discrete(limits = team_names) +
+     scale_y_discrete(limits = team_names) +
+     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+     geom_text(aes(label = as.vector(punt[team_index, team_index])), size = 4.1) +
+     geom_rect(aes(xmin = as.vector(x1_x2),
+                   xmax = as.vector(x2_x1),
+                   ymin = as.vector(x1_x2),
+                   ymax = as.vector(x2_x1)),
+               fill = "black", color = "black",
+               size = 1) +
+     ggtitle("Home win posterior probabilities")
+
    if (sum(data_ex$prob)==0){
-      tbl <- cbind(team_sel[data_ex$Home], team_sel[data_ex$Away], as.vector(punt[team_index, team_index]))
+      tbl <- cbind(teams[data_ex$Home], teams[data_ex$Away], as.vector(punt[team_index, team_index]))
       colnames(tbl) <- c("Home", "Away", "Observed")
       tbl <- dplyr::as_tibble(tbl) %>% dplyr::filter(Home!=Away)
       }else{
-      tbl <- cbind(team_sel[data_ex$Home], team_sel[data_ex$Away], round(data_ex$prob,3),
+      tbl <- cbind(teams[data_ex$Home], teams[data_ex$Away], round(data_ex$prob,3),
                    as.vector(punt[team_index, team_index]))
       colnames(tbl) <- c("Home", "Away", "Home_prob", "Observed")
       tbl <- dplyr::as_tibble(tbl) %>% dplyr::filter(Home!=Away & Home_prob!=0 )

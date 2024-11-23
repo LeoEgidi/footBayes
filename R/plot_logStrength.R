@@ -8,45 +8,83 @@
 #'}
 #'
 #' @param x An object of class \code{btdFoot}.
-#' @param teams_of_interest Optional. A character vector of team names to include in the rankings plot. If \code{NULL}, all teams are included.
-#' @param ncol Optional. An integer specifying the number of columns in the facet wrap for dynamic ranking plots. Defaults to \code{8}.
+#' @param teams An optional character vector specifying team names to include in the rankings plot. If \code{NULL}, all teams are included.
 #' @param ... Additional arguments passed to \code{geom_line()}, \code{geom_point()}, and \code{geom_segment()} for customization (e.g., \code{size}, \code{alpha}, \code{color}).
 #'
 #' @return A ggplot object representing the rankings plot.
 #'
 #' @author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
 #'
+#'
+#' @examples
+#'
+#' \dontrun{
+#' require(dplyr)
+#'
+#' data("italy")
+#'
+#'italy_2020_2021_rank <- italy %>%
+#'  select(Season, home, visitor, hgoal, vgoal) %>%
+#'  filter(Season == "2020" | Season == "2021") %>%
+#'  mutate(match_outcome = case_when(
+#'    hgoal > vgoal ~ 1,        # Home team wins
+#'    hgoal == vgoal ~ 2,       # Draw
+#'    hgoal < vgoal ~ 3         # Away team wins
+#'  )) %>%
+#'  mutate(periods = case_when(
+#'    row_number() <= 190 ~ 1,
+#'    row_number() <= 380 ~ 2,
+#'    row_number() <= 570 ~ 3,
+#'    TRUE ~ 4
+#'  )) %>%  # Assign periods based on match number
+#'  select(periods, home_team = home,
+#'                away_team = visitor, match_outcome)
+#'
+#'fit_rank_dyn <- btd_foot(
+#'  data = italy_2020_2021_rank,
+#'  dynamic_rank = TRUE,
+#'  rank_measure = "median",
+#'  iter = 1000,
+#'  cores = 2,
+#'  chains = 2)
+#'
+#'plot_logStrength(fit_rank_dyn)
+#'
+#'plot_logStrength(fit_rank_dyn, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"))
+#'
+#'
+#' }
 #' @import ggplot2
 #' @export
-plot_logStrength <- function(x, teams_of_interest = NULL, ncol = 8, ...) {
+plot_logStrength <- function(x, teams = NULL, ...) {
   # Check if the object is of class 'btdFoot'
   if (!inherits(x, "btdFoot")) {
     stop("Object must be of class 'btdFoot'.")
   }
 
-  # Ensure that 'ggplot2' is available
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' is required for plotting.")
-  }
+  # # Ensure that 'ggplot2' is available
+  # if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  #   stop("Package 'ggplot2' is required for plotting.")
+  # }
 
   # Determine if the ranking is dynamic or static
   is_dynamic <- ifelse(max(x$rank$periods, na.rm = TRUE) > 1, TRUE, FALSE)
 
-  # Handle teams_of_interest
-  if (!is.null(teams_of_interest)) {
+  # Handle teams
+  if (!is.null(teams)) {
     # Check that specified teams exist
     available_teams <- unique(c(x$data$home_team, x$data$away_team))
-    missing_teams <- setdiff(teams_of_interest, available_teams)
+    missing_teams <- setdiff(teams, available_teams)
     if (length(missing_teams) > 0) {
       stop(paste0("The following teams are not present in the data: ", paste(missing_teams, collapse = ", ")))
     }
 
-    x$rank <- x$rank[x$rank$team %in% teams_of_interest, ]
+    x$rank <- x$rank[x$rank$team %in% teams, ]
   }
 
   if (is_dynamic) {
-    # Dynamic Ranking Plot: Rank Points over Periods for each team
-    p <- ggplot(x$rank, aes(x = periods, y = rank_points, color = team)) +
+    # Dynamic Ranking Plot
+    p <- ggplot(x$rank, aes(x = x$rank$periods, y = x$rank$log_strengths, color = x$rank$team)) +
       geom_line(...) +
       geom_point(...) +
       labs(
@@ -63,10 +101,10 @@ plot_logStrength <- function(x, teams_of_interest = NULL, ncol = 8, ...) {
         color = guide_legend(title = "Team")
       )
   } else {
-    # Static Ranking Plot: Horizontal lines from x=0 to x=rank_points for each team, with a dot at the end
-    p <- ggplot(x$rank, aes(y = stats::reorder(team, rank_points), x = rank_points)) +
+    # Static Ranking Plot
+    p <- ggplot(x$rank, aes(y = stats::reorder(x$rank$team, x$rank$log_strengths), x = x$rank$log_strengths)) +
       geom_segment(
-        aes(x = 0, xend = rank_points, yend = team),
+        aes(x = 0, xend = x$rank$log_strengths, yend = x$rank$team),
         color = "deepskyblue4",
         size = 1,
         ...

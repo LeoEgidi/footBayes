@@ -10,8 +10,8 @@
 #'     \item \code{match_outcome}: Outcome (1 if home team beats away team, 2 for tie, and 3 if away team beats home team).
 #'   }
 #'   The data frame must not contain missing values.
-#' @param dynamic_rank Logical; if \code{TRUE}, uses a dynamic ranking model (default is \code{FALSE}).
-#' @param home_effect Logical; if \code{TRUE}, includes a home effect in the model (default is \code{FALSE}).
+#' @param dynamic_rank A logical value indicating whether a dynamic ranking model is used (default is \code{FALSE}).
+#' @param home_effect A logical value indicating the inclusion of a home effect in the model. (default is \code{FALSE}).
 #' @param prior_par A list specifying the prior distributions for the parameters of interest, using the \code{normal} function:
 #'   \itemize{
 #'     \item \code{logStrength}: Prior for the team log-strengths. Default is \code{normal(0, 3)}.
@@ -86,6 +86,8 @@
 #' )
 #'
 #' print(fit_result_dyn)
+#'
+#'print(fit_result_dyn, pars = c("logStrength", "home"), teams = c("AC Milan", "AS Roma"))
 #'
 #' # Static Ranking Example with MAP Rank Measure
 #' fit_result_stat <- btd_foot(

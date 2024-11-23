@@ -23,13 +23,12 @@
 #'     \item \code{"pseudoR2"}: Computes the Pseudo \eqn{R^2}, defined as the geometric mean of the probabilities assigned to the actual results.
 #'   }
 #'   Default is \code{c("accuracy", "brier", "ACP", "pseudoR2", "RPS")}, computing the specified metrics.
-#' @param conf_matrix Logical indicating whether to generate a confusion matrix comparing predicted outcomes against actual outcomes for each model or probability matrix. Default is \code{FALSE}.
+#' @param conf_matrix A logical value indicating whether to generate a confusion matrix comparing predicted outcomes against actual outcomes for each model or probability matrix. Default is \code{FALSE}.
 #' @return An object of class \code{compare_foot_output}, which is a list containing:
 #'   \itemize{
 #'     \item \code{metrics}: A data frame containing the metric values for each model or probability matrix.
-#'     \item \code{confusion_matrix}: (Optional) A list of confusion matrices for each model or probability matrix, included if \code{conf_matrix = TRUE}.
+#'     \item \code{confusion_matrix}: Confusion matrices for each model or probability matrix.
 #'   }
-#'   The object has a custom print method for formatted output.
 #' @details The function extracts predictions from each model or directly uses the provided probability matrices and computes the chosen metrics on the test dataset. It also possible to compute confusion matrices.
 #'
 #' @author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}

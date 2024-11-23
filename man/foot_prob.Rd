@@ -27,7 +27,9 @@ foot_prob(object, data, home_team, away_team)
 A \code{\link{data.frame}} containing the number of out-of-sample matches specified through the
 argument \code{predict}  passed either in the \code{mle_foot} or in the \code{stan_foot} function.
 For Bayesian Poisson models the function returns also the most likely outcome (mlo) and a posterior
-probability plot for the exact results.
+probability plot for the exact results, where matches are sorted by the degree of favoritism.
+Specifically, matches are ordered from those in which the favorite team has the highest posterior probability
+of winning to those where the underdog is more likely to win.
 }
 \description{
 The function provides a table containing the home win, draw and away win probabilities for a bunch of
@@ -45,7 +47,7 @@ require(tidyverse)
 require(dplyr)
 
 data("italy")
-italy_2000<- italy \%>\%
+italy_2000 <- italy \%>\%
  dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
  dplyr::filter(Season=="2000")
 

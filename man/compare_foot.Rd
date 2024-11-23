@@ -36,15 +36,14 @@ compare_foot(
 }
 Default is \code{c("accuracy", "brier", "ACP", "pseudoR2", "RPS")}, computing the specified metrics.}
 
-\item{conf_matrix}{Logical indicating whether to generate a confusion matrix comparing predicted outcomes against actual outcomes for each model or probability matrix. Default is \code{FALSE}.}
+\item{conf_matrix}{A logical value indicating whether to generate a confusion matrix comparing predicted outcomes against actual outcomes for each model or probability matrix. Default is \code{FALSE}.}
 }
 \value{
 An object of class \code{compare_foot_output}, which is a list containing:
   \itemize{
     \item \code{metrics}: A data frame containing the metric values for each model or probability matrix.
-    \item \code{confusion_matrix}: (Optional) A list of confusion matrices for each model or probability matrix, included if \code{conf_matrix = TRUE}.
+    \item \code{confusion_matrix}: Confusion matrices for each model or probability matrix.
   }
-  The object has a custom print method for formatted output.
 }
 \description{
 Compares multiple football models or directly provided probability matrices based on specified metrics (accuracy, Brier score, ranked probability score, Pseudo \eqn{R^2}, average coverage probability), using a test dataset. Additionally, computes the confusion matrices. The function returns an object of class \code{compareFoot}.

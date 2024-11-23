@@ -4,7 +4,13 @@
 \alias{foot_abilities}
 \title{Plot football abilities from Stan and MLE models}
 \usage{
-foot_abilities(object, data, type = c("attack", "defense", "both"), team, ...)
+foot_abilities(
+  object,
+  data,
+  type = c("attack", "defense", "both"),
+  teams = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{An object either of class \code{stanfit} or \code{stanFoot} as given by \code{stan_foot} function, or class
@@ -22,7 +28,7 @@ foot_abilities(object, data, type = c("attack", "defense", "both"), team, ...)
 
 \item{type}{Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}.}
 
-\item{team}{Valid team names.}
+\item{teams}{An optional character vector specifying team names to include. If \code{NULL}, all teams are included.}
 
 \item{...}{Optional graphical parameters.}
 }
@@ -71,7 +77,7 @@ foot_abilities(fit4, italy_2000_2002)
 
 fit5 <-stan_foot(data = italy_2000_2002,
                  model = "biv_pois",
-                 predict = 306,
+                 predict = 180,
                  dynamic_type = "seasonal")   # bivariate poisson
 foot_abilities(fit5, italy_2000_2002)
 

@@ -4,7 +4,7 @@
 \alias{foot_round_robin}
 \title{Round-robin for football leagues}
 \usage{
-foot_round_robin(data, object, team_sel)
+foot_round_robin(data, object, teams = NULL)
 }
 \arguments{
 \item{data}{A data frame containing match data with columns:
@@ -18,7 +18,7 @@ foot_round_robin(data, object, team_sel)
 
 \item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
 
-\item{team_sel}{Selected team(s). By default, all the teams are selected.}
+\item{teams}{An optional character vector specifying team names to include. If \code{NULL}, all teams are included.}
 }
 \value{
 Round-robin plot with the home-win posterior probabilities computed from the ppd of the fitted model via the \code{stan_foot} function.

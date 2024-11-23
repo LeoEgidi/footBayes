@@ -9,13 +9,13 @@
 #'}
 #'
 #' @param x An object of class \code{btdFoot}.
-#' @param teams_of_interest Optional. A character vector of team names to include in the posterior boxplots. If \code{NULL}, all teams are included.
-#' @param ncol Optional. An integer specifying the number of columns in the facet wrap. Defaults:
+#' @param teams An optional character vector specifying team names to include in the posterior boxplots. If \code{NULL}, all teams are included.
+#' @param ncol An optional integer specifying the number of columns in the facet wrap. Defaults:
 #' \itemize{
 #'   \item Dynamic Ranking: \code{ncol = 8}.
 #'   \item Static Ranking: \code{ncol = 4}.
 #'}
-#' @param scales Optional. A character string specifying the scales for the facets. Options:
+#' @param scales An optional character string specifying the scales for the facets. Options:
 #' \itemize{
 #'   \item Dynamic Ranking: \code{"free_x"}, \code{"free_y"}, \code{"free"}.
 #'   \item Static Ranking: \code{"free_y"}, \code{"fixed"}.
@@ -31,36 +31,74 @@
 #'
 #' @author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
 #'
+#' @examples
+#'
+#' \dontrun{
+#' require(dplyr)
+#'
+#' data("italy")
+#'
+#'italy_2020_2021_rank <- italy %>%
+#'  select(Season, home, visitor, hgoal, vgoal) %>%
+#'  filter(Season == "2020" | Season == "2021") %>%
+#'  mutate(match_outcome = case_when(
+#'    hgoal > vgoal ~ 1,        # Home team wins
+#'    hgoal == vgoal ~ 2,       # Draw
+#'    hgoal < vgoal ~ 3         # Away team wins
+#'  )) %>%
+#'  mutate(periods = case_when(
+#'    row_number() <= 190 ~ 1,
+#'    row_number() <= 380 ~ 2,
+#'    row_number() <= 570 ~ 3,
+#'    TRUE ~ 4
+#'  )) %>%  # Assign periods based on match number
+#'  select(periods, home_team = home,
+#'                away_team = visitor, match_outcome)
+#'
+#'fit_rank_dyn <- btd_foot(
+#'  data = italy_2020_2021_rank,
+#'  dynamic_rank = TRUE,
+#'  rank_measure = "median",
+#'  iter = 1000,
+#'  cores = 2,
+#'  chains = 2)
+#'
+#'plot_btdPosterior(fit_rank_dyn)
+#'
+#'plot_btdPosterior(fit_rank_dyn, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"), ncol = 2)
+#'
+#'
+#' }
 #' @import ggplot2
 #' @export
 
-plot_btdPosterior <- function(x, teams_of_interest = NULL, ncol = NULL, scales = NULL, ...) {
+plot_btdPosterior <- function(x, teams = NULL, ncol = NULL, scales = NULL, ...) {
   # Check if the object is of class 'btdFoot'
   if (!inherits(x, "btdFoot")) {
     stop("Object must be of class 'btdFoot'.")
   }
 
-  # Ensure that required packages are available
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' is required for plotting.")
-  }
-  if (!requireNamespace("rstan", quietly = TRUE)) {
-    stop("Package 'rstan' is required for extracting posterior samples.")
-  }
+  # # Ensure that required packages are available
+  # if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  #   stop("Package 'ggplot2' is required for plotting.")
+  # }
+  # if (!requireNamespace("rstan", quietly = TRUE)) {
+  #   stop("Package 'rstan' is required for extracting posterior samples.")
+  # }
 
   # Extract parameters
   BTDparameters <- rstan::extract(x$fit)
 
   # Get team names
-  teams <- unique(c(x$data$home_team, x$data$away_team))
+  teams_all <- unique(c(x$data$home_team, x$data$away_team))
 
-  # Define teams_of_interest if not provided
-  if (is.null(teams_of_interest)) {
-    teams_of_interest <- teams
+  # Define teams if not provided
+  if (is.null(teams)) {
+    teams <- teams_all
   } else {
     # Validate that provided teams exist
-    if (!all(teams_of_interest %in% teams)) {
-      stop("Some teams in 'teams_of_interest' are not present in the data.")
+    if (!all(teams %in% teams_all)) {
+      stop("Some teams in 'teams' are not present in the data.")
     }
   }
 
@@ -77,20 +115,20 @@ plot_btdPosterior <- function(x, teams_of_interest = NULL, ncol = NULL, scales =
   }
 
   # Create the dataframe for boxplot using vectorized operations
-  for (team in teams_of_interest) {
-    team_index <- which(teams == team)
+  for (team in teams) {
+    team_index <- which(teams_all == team)
 
     for (k in 1:ntimes_rank) {
       if (is_dynamic) {
-        if (length(dim(BTDparameters[["psi"]])) < 3) {
-          stop("Expected 'psi' to have three dimensions for dynamic ranking.")
+        if (length(dim(BTDparameters[["logStrength"]])) < 3) {
+          stop("Expected 'logStrength' to have three dimensions for dynamic ranking.")
         }
-        posterior_values <- BTDparameters[["psi"]][, team_index, k]
+        posterior_values <- BTDparameters[["logStrength"]][, k, team_index]
       } else {
-        if (length(dim(BTDparameters[["psi"]])) == 2) {
-          posterior_values <- BTDparameters[["psi"]][, team_index]
+        if (length(dim(BTDparameters[["logStrength"]])) == 2) {
+          posterior_values <- BTDparameters[["logStrength"]][, team_index]
         } else {
-          stop("Unexpected dimensions for 'psi' parameter.")
+          stop("Unexpected dimensions for 'logStrength' parameter.")
         }
       }
 
@@ -119,13 +157,13 @@ plot_btdPosterior <- function(x, teams_of_interest = NULL, ncol = NULL, scales =
       geom_boxplot(aes(fill = as.factor(period)), ...) +
       facet_wrap(~ team, scales = scales, ncol = ncol) +
       labs(
-        x = "Period",
+        x = "Periods",
         y = "Log-Strength Values",
-        fill = "Period"
+        fill = "Periods"
       ) +
       theme_bw() +
       theme(
-        strip.text = element_text(size = 8, color = "black"),
+        strip.text = element_text(size = 12, color = "black"),
         legend.position = "none",
         axis.text.x = element_text(angle = 0, hjust = 0)
       )
@@ -141,7 +179,7 @@ plot_btdPosterior <- function(x, teams_of_interest = NULL, ncol = NULL, scales =
       ) +
       theme_bw() +
       theme(
-        strip.text = element_text(size = 8, color = "black"),
+        strip.text = element_text(size = 12, color = "black"),
         legend.position = "none",
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank()

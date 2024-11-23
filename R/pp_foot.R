@@ -68,6 +68,11 @@ pp_foot <- function(data, object,
                     coverage = 0.95){
 
 
+
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("Package 'ggplot2' is required for plotting.")
+  }
+
   required_cols <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
   missing_cols <- setdiff(required_cols, names(data))
   if (length(missing_cols) > 0) {
@@ -137,34 +142,36 @@ pp_foot <- function(data, object,
   frame <- data.frame(valori=esiti_short, rel=freq_rel_frame_add[,2] )
 
   p <- ggplot(frame, aes(x=valori, y=rel))+
-    geom_point(position = "jitter", alpha = 0.2, aes( colour="simulated")) +
-    geom_segment(mapping=aes( x=-3-0.5, y=freq_rel_obs[1],
-                              xend=-3+0.5, yend=freq_rel_obs[1], colour ="observed") , size=2)+
-    geom_segment(mapping=aes( x=-2-0.5, y=freq_rel_obs[2],
-                              xend=-2+0.5, yend=freq_rel_obs[2]) , size=2, color = "#1E90FF")+
-    geom_segment(mapping=aes( x=-1-0.5, y=freq_rel_obs[3],
-                              xend=-1+0.5, yend=freq_rel_obs[3]) , size=2, color = "#1E90FF")+
-    geom_segment(mapping=aes( x=0-0.5, y=freq_rel_obs[4],
-                              xend=0+0.5, yend=freq_rel_obs[4]) , size=2, color = "#1E90FF")+
-    geom_segment(mapping=aes( x=1-0.5, y=freq_rel_obs[5],
-                              xend=1+0.5, yend=freq_rel_obs[5]) , size=2, color = "#1E90FF")+
-    geom_segment(mapping=aes( x=2-0.5, y=freq_rel_obs[6],
-                              xend=2+0.5, yend=freq_rel_obs[6]) , size=2, color = "#1E90FF")+
-    geom_segment(mapping=aes( x=3-0.5, y=freq_rel_obs[7],
-                              xend=3+0.5, yend=freq_rel_obs[7]) , size=2, color = "#1E90FF")+
-    labs(x="Goal difference", y="Posterior pred. distrib.")+
+    geom_point(position = "jitter", alpha = 0.2, aes(colour="simulated")) +
+    geom_segment(mapping=aes(x=-3-0.5, y=freq_rel_obs[1],
+                             xend=-3+0.5, yend=freq_rel_obs[1], colour="observed"), size=2) +
+    geom_segment(mapping=aes(x=-2-0.5, y=freq_rel_obs[2],
+                             xend=-2+0.5, yend=freq_rel_obs[2]), size=2, color="#1E90FF") +
+    geom_segment(mapping=aes(x=-1-0.5, y=freq_rel_obs[3],
+                             xend=-1+0.5, yend=freq_rel_obs[3]), size=2, color="#1E90FF") +
+    geom_segment(mapping=aes(x=0-0.5, y=freq_rel_obs[4],
+                             xend=0+0.5, yend=freq_rel_obs[4]), size=2, color="#1E90FF") +
+    geom_segment(mapping=aes(x=1-0.5, y=freq_rel_obs[5],
+                             xend=1+0.5, yend=freq_rel_obs[5]), size=2, color="#1E90FF") +
+    geom_segment(mapping=aes(x=2-0.5, y=freq_rel_obs[6],
+                             xend=2+0.5, yend=freq_rel_obs[6]), size=2, color="#1E90FF") +
+    geom_segment(mapping=aes(x=3-0.5, y=freq_rel_obs[7],
+                             xend=3+0.5, yend=freq_rel_obs[7]), size=2, color="#1E90FF") +
+    labs(x="Goal difference", y="Posterior predictive distribution") +
     scale_colour_manual(name="",
-                        values=c(observed="#1E90FF", simulated ="#FFA500"))+
-    yaxis_text(size=rel(1.2))+
-    xaxis_text( size = rel(1.2))+
-    scale_x_discrete(limits = esiti_short,
-                     labels=c("-3", "-2", "-1", "0","1", "2", "3"))+
+                        values=c(observed="#1E90FF", simulated="#FFA500"),
+                        labels=c("Observed", "Simulated")) +
+    yaxis_text(size=rel(1.2)) +
+    xaxis_text(size=rel(1.2)) +
+    scale_x_discrete(limits=esiti_short,
+                     labels=c("-3", "-2", "-1", "0", "1", "2", "3")) +
     theme(axis.title=element_text(size=19),
-          axis.text.x = element_text(size=15),
-          axis.text.y = element_text(size=15),
-          legend.position = "bottom",
-          legend.text = element_text(size = 15)) +
+          axis.text.x=element_text(size=15),
+          axis.text.y=element_text(size=15),
+          legend.position="bottom",
+          legend.text=element_text(size=15)) +
     theme_bw()
+
 
    p_value <- c()
      for (j in 1:length(esiti_short))
@@ -222,7 +229,8 @@ p <- ggplot(df, aes(x = c(1:ngames_train))) +
       yaxis_text(size=rel(1.4))+
       xaxis_text( size = rel(1.4))+
       scale_colour_manual(name="",
-                      values=c(observed="#1E90FF", simulated ="#FFA500"))+
+                      values=c(observed="#1E90FF", simulated ="#FFA500"),
+                      labels=c("Observed", "Simulated"))+
       theme(axis.title=element_text(size=19),
       axis.text.x = element_text(size=15),
       axis.text.y = element_text(size=15),

@@ -4,14 +4,12 @@
 \alias{plot_logStrength}
 \title{Plot Rankings for btdFoot Objects}
 \usage{
-plot_logStrength(x, teams_of_interest = NULL, ncol = 8, ...)
+plot_logStrength(x, teams = NULL, ...)
 }
 \arguments{
 \item{x}{An object of class \code{btdFoot}.}
 
-\item{teams_of_interest}{Optional. A character vector of team names to include in the rankings plot. If \code{NULL}, all teams are included.}
-
-\item{ncol}{Optional. An integer specifying the number of columns in the facet wrap for dynamic ranking plots. Defaults to \code{8}.}
+\item{teams}{An optional character vector specifying team names to include in the rankings plot. If \code{NULL}, all teams are included.}
 
 \item{...}{Additional arguments passed to \code{geom_line()}, \code{geom_point()}, and \code{geom_segment()} for customization (e.g., \code{size}, \code{alpha}, \code{color}).}
 }
@@ -25,6 +23,45 @@ Visualizes team rankings based on whether the ranking is dynamic or static.
 \itemize{
 \item Dynamic Ranking: Plots Rank Points over Periods for each team with lines and points.
 \item Static Ranking: Plots Rank Points on the x-axis against Team Names on the y-axis with horizontal lines and points.
+}
+}
+\examples{
+
+\dontrun{
+require(dplyr)
+
+data("italy")
+
+italy_2020_2021_rank <- italy \%>\%
+ select(Season, home, visitor, hgoal, vgoal) \%>\%
+ filter(Season == "2020" | Season == "2021") \%>\%
+ mutate(match_outcome = case_when(
+   hgoal > vgoal ~ 1,        # Home team wins
+   hgoal == vgoal ~ 2,       # Draw
+   hgoal < vgoal ~ 3         # Away team wins
+ )) \%>\%
+ mutate(periods = case_when(
+   row_number() <= 190 ~ 1,
+   row_number() <= 380 ~ 2,
+   row_number() <= 570 ~ 3,
+   TRUE ~ 4
+ )) \%>\%  # Assign periods based on match number
+ select(periods, home_team = home,
+               away_team = visitor, match_outcome)
+
+fit_rank_dyn <- btd_foot(
+ data = italy_2020_2021_rank,
+ dynamic_rank = TRUE,
+ rank_measure = "median",
+ iter = 1000,
+ cores = 2,
+ chains = 2)
+
+plot_logStrength(fit_rank_dyn)
+
+plot_logStrength(fit_rank_dyn, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"))
+
+
 }
 }
 \author{

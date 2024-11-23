@@ -40,7 +40,7 @@
 #'   }
 #'
 #'   See the \pkg{rstanarm} package for more details on specifying priors.
-#' @param home_effect Logical indicating whether to include a home effect (default is \code{TRUE}).
+#' @param home_effect A logical value indicating the inclusion of a home effect in the model. (default is \code{FALSE}).
 #' @param norm_method A character string specifying the method used to normalize team-specific ranking points. Options are:
 #'   \itemize{
 #'     \item \code{"none"}: No normalization (default).
@@ -820,7 +820,6 @@ stan_foot <- function(data,
     # If ntimes_rank = 1, instants_rank are all equal to 1 and repeated the length of instants
     instants_rank <- rep(1, length(instants))
   }
-
 
 
 
