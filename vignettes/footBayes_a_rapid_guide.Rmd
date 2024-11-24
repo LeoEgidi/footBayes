@@ -465,6 +465,35 @@ print(fit_result_stat_2,
       teams = c("AC Milan", "AS Roma", "FC Crotone"))
 ```
 
+## Visualization tools
+
+After fitting the model, the ```btd_foot``` function outputs an object of class ```btdFoot```. This object can be used by the ```plot_btdPosterior``` function, which is designed to visualize the posterior distributions for the log-strenghts, log-tie and home effect parameters, providing insights into the uncertainty and variability of estimates. Depending on the specifications, it can generate either boxplots or density plots of the posterior distributions. In the case of a dynamic Bayesian BTD model, the function produces a sequence of boxplots for each time period and for each team specified in the ```teams``` argument, or for all analyzed teams if this argument is omitted.
+
+
+By default, ```plot_btdPosterior``` generates boxplots of the posterior distributions of teams' log-strengths. This is particularly useful for comparing the central tendency and variability of team strengths across different periods or between teams.
+
+```{r plot_btdPosterior, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+
+# Dynamic Ranking
+
+plot_btdPosterior(fit_result_dyn)
+
+plot_btdPosterior(fit_result_dyn, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"), ncol = 2)
+
+
+# Static Ranking
+
+plot_btdPosterior(fit_result_stat)
+
+plot_btdPosterior(fit_result_stat, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"), ncol = 2)
+
+
+
+```
+
+
+
+
 
 # Goal-based models fit
 
@@ -498,7 +527,7 @@ italy <- as.data.frame(italy)
 italy_2000 <- subset(italy[, c(2,3,4,6,7)],
                      Season =="2000")
 
-colnames(italy_2000) <- c("season", "home_team", "away_team", "home_goals", "away_goals")
+colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 
 head(italy_2000)
@@ -543,7 +572,7 @@ We can also depict the marginal posterior distributions for $\rho$ (and eventual
 ## Marginal posterior with bayesplot
 
 posterior1 <- as.matrix(fit1_stan$fit)
-mcmc_areas(posterior1, regex_pars=c("home_effect", "rho",
+mcmc_areas(posterior1, regex_pars=c("home", "rho",
   "sigma_att", "sigma_def")) +
   theme_bw()
 ```
@@ -679,7 +708,7 @@ fit2_stan <- stan_foot(data = italy_2000,
                        dynamic_type ="weekly",
                        #cores = 4,
                        iter = n_iter) # biv poisson
-print(fit2_stan, pars =c("home_effect", "rho", "sigma_att",
+print(fit2_stan, pars =c("home", "rho", "sigma_att",
                         "sigma_def"))
 ```
 
@@ -697,7 +726,7 @@ fit3_stan <- stan_foot(data = italy_2000,
                        dynamic_type = "weekly",
                        #cores = 4,
                        iter = n_iter)  # double poisson
-print(fit3_stan, pars =c("home_effect", "sigma_att",
+print(fit3_stan, pars =c("home", "sigma_att",
                         "sigma_def"))
 ```
 
@@ -724,7 +753,7 @@ fit3_stan_t <- stan_foot(data = italy_2000,
                 dynamic_type = "weekly",
                 #cores = 4,
                 iter = n_iter)  # double poisson
-print(fit3_stan_t, pars =c("home_effect", "sigma_att",
+print(fit3_stan_t, pars =c("home", "sigma_att",
                            "sigma_def"))
 ```
 
@@ -803,11 +832,13 @@ Other useful PP checks, such as the overlap between data density and replicated 
 # extracting the replications
 
 sims <-rstan::extract(fit1_stan$fit)
-goal_diff <- italy_2000$hgoal-italy_2000$vgoal
+goal_diff <- italy_2000$home_goals-italy_2000$away_goals
 
 # plotting data density vs replications densities
 
-ppc_dens_overlay(goal_diff, sims$y_rep[,,1]-sims$y_rep[,,2], bw = 0.5)
+ppc_dens_overlay(goal_diff, sims$y_rep[,,1]-sims$y_rep[,,2], bw = 0.5) +
+    theme_bw()
+
 ```
 
 From this plot above we have the empirical confirmation that the goal difference is well captured by the static bivariate Poisson model.
@@ -909,7 +940,7 @@ foot_rank(data = italy_2000, object = fit4_stan)
 # team-specific plot
 
 foot_rank(italy_2000, fit4_stan, 
-          team_sel = c("AC Milan", "AS Roma"), 
+          teams = c("AC Milan", "AS Roma"), 
           visualize = "individual")
 
 foot_rank(italy_2000, fit4_stan, 
