@@ -297,7 +297,7 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
                      color = "black", linetype = "solid", size = 0.5) +
         geom_segment(aes(x = quantiles[2], xend = quantiles[2], y = 0, yend = approx(x, y, xout = quantiles[2])$y),
                      color = "black", linetype = "solid", size = 0.5) +
-        # Labels and theme
+
         labs(
           x = label,
           y = "Posterior Density",
