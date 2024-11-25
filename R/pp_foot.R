@@ -50,7 +50,7 @@
 #'
 #'fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 #'
-#'pp_foot(italy_2000, fit)
+#'pp_foot(fit, italy_2000)
 #'
 #' }
 #' @import ggplot2
@@ -63,7 +63,7 @@
 #' @export
 
 
-pp_foot <- function(data, object,
+pp_foot <- function(object, data,
                     type = c("aggregated", "matches"),
                     coverage = 0.95){
 

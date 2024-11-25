@@ -3,7 +3,7 @@ Type: Package
 Title: Fitting Bayesian and MLE Football Models
 Version: 0.2.0
 Date: 2023-08-25
-Author: Leonardo Egidi[aut, cre], Vasilis Palaskas[aut].
+Author: Leonardo Egidi[aut, cre], Roberto Macrì Demartino[aut], and Vasilis Palaskas[aut].
 Maintainer: Leonardo Egidi <legidi@units.it>
 License: GPL-2
 Description: This is the first package allowing for the estimation,
@@ -22,7 +22,7 @@ URL: https://github.com/leoegidi/footbayes
 Encoding: UTF-8
 SystemRequirements: pandoc (>= 1.12.3), pandoc-citeproc
 Depends: R (>= 3.1.0)
-Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, bayesplot, matrixStats, 
+Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, ggridges, bayesplot, matrixStats, 
          extraDistr, parallel, metRology, dplyr, tidyr, numDeriv, magrittr
 Suggests: testthat, knitr (>= 1.37), rmarkdown (>= 2.10), loo
 VignetteBuilder: knitr

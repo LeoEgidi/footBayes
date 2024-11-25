@@ -43,15 +43,15 @@
 #' colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 #'
 #' fit <- stan_foot(italy_1999_2000, "double_pois", iter = 200)
-#' foot_rank(italy_1999_2000, fit)
-#' foot_rank(italy_1999_2000, fit, visualize =  "individual")
+#' foot_rank(fit, italy_1999_2000)
+#' foot_rank(fit, italy_1999_2000, visualize =  "individual")
 #'  }
 #'
 #' @importFrom reshape2 melt
 #' @importFrom bayesplot color_scheme_get
 #' @export
 
-foot_rank <- function(data, object,
+foot_rank <- function(object, data,
                       teams = NULL,
                       visualize = c("aggregated","individual"))
   {

@@ -40,8 +40,8 @@
 #'
 #'fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter = 200)
 #'
-#'foot_round_robin(italy_1999_2000, fit)
-#'foot_round_robin(italy_1999_2000, fit, c("Parma AC", "AS Roma"))
+#'foot_round_robin(fit, italy_1999_2000)
+#'foot_round_robin(fit, italy_1999_2000, c("Parma AC", "AS Roma"))
 #'
 #'}
 #' @import ggplot2
@@ -49,7 +49,7 @@
 #' @export
 
 
-foot_round_robin <- function(data, object, teams = NULL){
+foot_round_robin <- function(object, data, teams = NULL){
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required for plotting.")

@@ -4,9 +4,11 @@
 \alias{foot_round_robin}
 \title{Round-robin for football leagues}
 \usage{
-foot_round_robin(data, object, teams = NULL)
+foot_round_robin(object, data, teams = NULL)
 }
 \arguments{
+\item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
+
 \item{data}{A data frame containing match data with columns:
 \itemize{
   \item \code{periods}:  Time point of each observation (integer >= 1).
@@ -15,8 +17,6 @@ foot_round_robin(data, object, teams = NULL)
   \item \code{home_goals}: Goals scored by the home team (integer >= 0).
   \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 }}
-
-\item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
 
 \item{teams}{An optional character vector specifying team names to include. If \code{NULL}, all teams are included.}
 }
@@ -45,8 +45,8 @@ colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals"
 
 fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter = 200)
 
-foot_round_robin(italy_1999_2000, fit)
-foot_round_robin(italy_1999_2000, fit, c("Parma AC", "AS Roma"))
+foot_round_robin(fit, italy_1999_2000)
+foot_round_robin(fit, italy_1999_2000, c("Parma AC", "AS Roma"))
 
 }
 }

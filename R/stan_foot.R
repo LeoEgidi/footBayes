@@ -260,7 +260,7 @@
 #' fit_6 <- stan_foot(data = italy_2000_2002,
 #'                   model = "double_pois",
 #'                   dynamic_type = "seasonal",
-#'                   predict = 306) # double poisson
+#'                   predict = 170) # double poisson
 #' print(fit_6, pars = c("home", "sigma_att",
 #'                     "sigma_def"))
 #'

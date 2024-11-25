@@ -472,28 +472,85 @@ After fitting the model, the ```btd_foot``` function outputs an object of class 
 
 By default, ```plot_btdPosterior``` generates boxplots of the posterior distributions of teams' log-strengths. This is particularly useful for comparing the central tendency and variability of team strengths across different periods or between teams.
 
-```{r plot_btdPosterior, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r plot_btdPosterior_dyn, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
 
 # Dynamic Ranking
 
 plot_btdPosterior(fit_result_dyn)
 
-plot_btdPosterior(fit_result_dyn, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"), ncol = 2)
+```
 
+```{r plot_btdPosterior_stat, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
 
 # Static Ranking
 
 plot_btdPosterior(fit_result_stat)
 
-plot_btdPosterior(fit_result_stat, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"), ncol = 2)
+
+```
+
+It is also possible to select specific teams to plot by using the ```teams``` argument
+
+```{r plot_btdPosterior_teams_dyn, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+
+# Dynamic Ranking
+
+plot_btdPosterior(fit_result_dyn,
+                  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
+                  ncol = 2)
+```
+
+
+```{r plot_btdPosterior_teams_stat, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+
+# Static Ranking
+
+plot_btdPosterior(fit_result_stat, 
+                  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
+                  ncol = 2)
 
 
 
 ```
 
 
+Additionally, it is possible to plot the posterior density by setting  ```plot_type = "density"```  
 
 
+```{r plot_btdPosterior_teams_dyn_dens, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+
+# Dynamic Ranking
+
+plot_btdPosterior(fit_result_dyn,
+                  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
+                  plot_type = "density",
+                  scales = "free_y")
+```
+
+
+```{r plot_btdPosterior_teams_stat_dens, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+
+# Static Ranking
+
+plot_btdPosterior(fit_result_stat, 
+                  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
+                  plot_type = "density",
+                  scales = "free_y")
+
+
+
+```
+
+
+Furthermore, the ```plot_logStrength``` function allows for plotting team rankings based on different summary measures of the posterior log-strengths, including the median, mean, and maximum a posteriori (MAP) estimates used in the ```btd_foot``` function. Specifically, this function generates a ggplot object that represents the log-strength values of teams, facilitating the comparison of team performance across different periods or among various teams. Similar to the ```plot_btdPosterior``` function, specific teams can be selected using the ```teams``` argument.
+
+```{r plot_logStrength_teams_dyn, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+
+# Dynamic Ranking
+
+plot_logStrength(fit_result_dyn,
+                  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"))
+```
 
 # Goal-based models fit
 
@@ -768,6 +825,90 @@ As we may conclude, the situation has been only slightly improved.
 <!--                 iter = 1000)  # student_t -->
 <!-- foot_abilities(fit5, italy_2000) -->
 <!-- ``` -->
+
+# Using ```btd_foot``` and ```stan_foot``` sequentially
+
+One of the main features of the ```footBayes``` package is the ability to first compute the log-strengths using the Bayesian Bradley-Terry-Davidson model through the ```btd_foot``` function and then fit a Bayesian goal-based model using the ```stan_foot```  by passing the previously estimated historical team strengths as an additional covariate via the ```ranking``` argument. Specifically, this argument accepts an element of class ```btdFoot```or alternatively a data frame with the following columns:
+
+- ```periods```: Time periods corresponding to the rankings (integer >= 1),
+- ```team```: Team names matching those in data (character string),
+- ```rank_points```: Ranking points (relative strengths) for each team (numeric).
+
+The ability to use either ```btdFoot``` objects or custom ranking data frames provides flexibility in how the user can model team strengths, allowing for the integration of various ranking systems, such as the [FIFA ranking](https://inside.fifa.com/fifa-world-ranking).
+
+```{r}
+
+# Dynamic Bradley-Terry-Davidson model
+
+data("italy")
+
+ italy_2020_2021_rank <- italy %>%
+   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%  
+   dplyr::filter(Season == "2020" | Season == "2021") %>% 
+   dplyr::mutate(match_outcome = dplyr::case_when(
+     hgoal > vgoal ~ 1,        # Home team wins
+     hgoal == vgoal ~ 2,       # Draw
+     hgoal < vgoal ~ 3         # Away team wins
+   )) %>%
+   dplyr::filter(dplyr::row_number() <= 570) %>%
+   dplyr::mutate(periods = dplyr::case_when(
+     dplyr::row_number() <= 190 ~ 1,
+     dplyr::row_number() <= 380 ~ 2,
+     dplyr::row_number() <= 570 ~ 3
+   )) %>%  
+   dplyr::select(periods, home_team = home,
+    away_team = visitor, match_outcome)
+
+ 
+ 
+ fit_btd_dyn <- btd_foot(
+   data = italy_2020_2021_rank,
+   dynamic_rank = TRUE,
+   rank_measure = "median",
+   iter = 1000,
+   #cores = 2,
+   chains = 2,
+   control = list(adapt_delta = 0.9,
+                  max_treedepth = 12)
+ )
+ 
+# Dynamic Bivariate Poisson Model 
+ 
+ italy_2020_2021_fit <- italy %>%
+   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%  
+   dplyr::filter(Season == "2020" | Season == "2021")  %>%
+   dplyr::filter(dplyr::row_number() <= 570) %>% 
+   dplyr::mutate(periods = dplyr::case_when(
+     dplyr::row_number() <= 190 ~ 1,
+     dplyr::row_number() <= 380 ~ 2,
+     dplyr::row_number() <= 570 ~ 3
+   )) %>%  # Assign periods based on match number
+   dplyr::select(periods, home_team = home,
+    away_team = visitor, home_goals = hgoal, away_goals = vgoal)
+
+ 
+ 
+ fit_stan_rank <- stan_foot(data = italy_2020_2021_fit,
+                           model="biv_pois",
+                           ranking = fit_btd_dyn,
+                           predict = 180,
+                           prior_par = list(
+                             ability = student_t(4,0,NULL),
+                             ability_sd = cauchy(0,25),
+                             home = normal(0, 5)),
+                           dynamic_type = "season",
+                           #cores = 4,
+                           iter = 1000) 
+
+
+
+print(fit_stan_rank, 
+      pars = c("home","rho","sigma_att", "sigma_def"))
+
+```
+
+
+
 # Model estimates and visualization tools
 
 ## Plotting and interpreting team-specific abilities
@@ -812,10 +953,10 @@ The function ```pp_foot``` allows to obtain:
 ```{r pp_foot, echo = TRUE, eval = NOT_CRAN}
 ## PP checks: aggregated goal's differences and ordered goal differences
 
-pp_foot(data = italy_2000, object = fit1_stan, 
+pp_foot(object = fit1_stan, data = italy_2000,
         type = "aggregated")
 
-pp_foot(data = italy_2000, object = fit1_stan, 
+pp_foot(object = fit1_stan, data = italy_2000, 
         type = "matches")
 
 ```
@@ -899,7 +1040,7 @@ where $(\tilde{x}^{(s)}, \tilde{y}^{(s)})$ represents the $s$-th MCMC pair of th
 ```{r foot_roundrobin, echo=TRUE, eval = NOT_CRAN}
 ## Home win out-of-sample probabilities
 
-foot_round_robin(data = italy_2000, object = fit4_stan)
+foot_round_robin(object = fit4_stan, data = italy_2000)
 ```
 
 Red cells denote more likely home-wins (close to 0.6), such as: Lazio Roma - Fiorentina (observed result: 3-0, home win), Lazio Roma - Udinese (observed result: 3-1, home win), Juventus - AC Perugia (observed result: 1-0, home win), Brescia Calcio - AS Bari (observed result: 3-1, home win). Conversely, lighter cells denote more likely away wins (close to 0.6), such as: AS Bari - AS Roma (observed result: 1-4, away win), AS Bari - Inter (observed result: 1-2, away win).
@@ -919,11 +1060,12 @@ We can provide here:
 
 # aggregated plot
 
-foot_rank(data = italy_2000, object = fit1_stan)
+foot_rank(object = fit1_stan, data = italy_2000)
 
 # team-specific plot
 
-foot_rank(data = italy_2000, object = fit1_stan, visualize = "individual")
+foot_rank(object = fit1_stan, data = italy_2000,
+          visualize = "individual")
 
 ```
 
@@ -935,23 +1077,73 @@ foot_rank(data = italy_2000, object = fit1_stan, visualize = "individual")
 
 # aggregated plot
 
-foot_rank(data = italy_2000, object = fit4_stan)
+foot_rank(object = fit4_stan, data = italy_2000)
 
 # team-specific plot
 
-foot_rank(italy_2000, fit4_stan, 
+foot_rank(fit4_stan, italy_2000,
           teams = c("AC Milan", "AS Roma"), 
           visualize = "individual")
 
-foot_rank(italy_2000, fit4_stan, 
+foot_rank(fit4_stan, italy_2000,
           visualize = "individual")
 
 ```
 
 
 
-## Model comparisons: LOOIC and WAIC
+# Model comparisons
 
+## Comparing Football Prediction Models using ```compare_foot```
+
+Evaluating the performance of these models is crucial to understand their predictive power and reliability. The ```compare_foot``` function provides a comprehensive way to compare different models or probability matrices using metrics like accuracy, Brier score, ranked probability score (RPS), Pseudo $R^2$, and average coverage probability (ACP). It also offers the option to compute confusion matrices for a detailed performance analysis.
+
+```{r}
+
+italy_2020_2021_fit <- italy %>%
+  dplyr::select(Season, home, visitor, hgoal, vgoal) %>%  
+  dplyr::filter(Season == "2020" | Season == "2021")  %>%
+  dplyr::mutate(periods = dplyr::case_when(
+    dplyr::row_number() <= 190 ~ 1,
+    dplyr::row_number() <= 380 ~ 2,
+    dplyr::row_number() <= 570 ~ 3,
+    TRUE ~ 4
+  )) %>%  # Assign periods based on match number
+  dplyr::select(periods, home_team = home,
+                away_team = visitor, home_goals = hgoal, away_goals = vgoal)
+
+
+fit_comp_1 <- stan_foot(data = italy_2020_2021_fit,
+                       model="biv_pois",
+                       home_effect = TRUE,
+                       predict = 190,
+                       dynamic_type = "season",
+                       #cores = 4,
+                       iter = n_iter)  
+
+fit_comp_2 <- stan_foot(data = italy_2020_2021_fit,
+                       model="double_pois",
+                       home_effect = TRUE,
+                       predict = 190,
+                       dynamic_type = "season",
+                       #cores = 4,
+                       iter = n_iter) 
+
+compare_results_models <- compare_foot(
+  source = list(biv_pois = fit_comp_1,
+                double_pois = fit_comp_2),
+  test_data = italy_2020_2021_test,
+  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS"),
+  conf_matrix = TRUE)
+
+
+print(compare_results_models)
+```
+
+
+
+
+## LOOIC and WAIC
 Comparing statistical models in terms of some **predictive information criteria** should conclude many analysis and can be carried out by using the Leave-one-out cross-validation criterion (**LOOIC**) and the Watanabe Akaike Information criterion (**WAIC**) performed by using the ```loo``` package. For more details about LOOIC and WAIC, read the paper <span style="color:red">@vehtari2016practical</span>.
 
 The general formulation for the predictive information criteria is the following:
@@ -1008,7 +1200,7 @@ Extensions and to-do list for the next package's versions:
 
 1. **Data Web-scraping**: automatic routine to scrape data from internet;
 
-2. **More numerical outputs**: posterior probabilities, confusion matrices, betting strategies, etc.;
+2. **More numerical outputs**: posterior probabilities, betting strategies, etc.;
 
 3. **Diagnostics, pp checks** designed for football;
 

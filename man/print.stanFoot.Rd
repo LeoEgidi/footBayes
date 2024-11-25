@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{An object of class \code{stanFoot}.}
 
-\item{pars}{Optional character vector specifying parameters to include in the summary. This can be specific parameter names or macro parameter groups (e.g., \code{"att"}, \code{"def"}, \code{"att_raw"}, \code{"def_raw"}, \code{"home"}, \code{"sigma_att"}, \code{"sigma_def"}, \code{"Sigma_att"}, \code{"Sigma_def"}, \code{"rho"}, \code{"beta"}, and \code{"sigma_y"}). If \code{NULL}, all parameters are included.}
+\item{pars}{Optional character vector specifying parameters to include in the summary. This can be specific parameter names (e.g., \code{"att"}, \code{"def"}, \code{"att_raw"}, \code{"def_raw"}, \code{"home"}, \code{"sigma_att"}, \code{"sigma_def"}, \code{"rho"}, and \code{"beta"}). If \code{NULL}, all parameters are included.}
 
 \item{teams}{Optional character vector specifying team names whose \code{"att"}, \code{"def"}, \code{"att_raw"}, \code{"def_raw"} parameters should be displayed.}
 

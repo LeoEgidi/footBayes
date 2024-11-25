@@ -4,9 +4,11 @@
 \alias{pp_foot}
 \title{Posterior predictive checks for football models}
 \usage{
-pp_foot(data, object, type = c("aggregated", "matches"), coverage = 0.95)
+pp_foot(object, data, type = c("aggregated", "matches"), coverage = 0.95)
 }
 \arguments{
+\item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
+
 \item{data}{A data frame containing match data with columns:
 \itemize{
   \item \code{periods}:  Time point of each observation (integer >= 1).
@@ -15,8 +17,6 @@ pp_foot(data, object, type = c("aggregated", "matches"), coverage = 0.95)
   \item \code{home_goals}: Goals scored by the home team (integer >= 0).
   \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 }}
-
-\item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
 
 \item{type}{Type of plots, one among \code{"aggregated"} or \code{"matches"}.}
 
@@ -53,7 +53,7 @@ colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "aw
 
 fit <- stan_foot(italy_2000, "double_pois", iter = 200)
 
-pp_foot(italy_2000, fit)
+pp_foot(fit, italy_2000)
 
 }
 }
