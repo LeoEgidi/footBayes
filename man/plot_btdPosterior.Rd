@@ -99,7 +99,7 @@ plot_btdPosterior(
 
 plot_btdPosterior(
   fit_rank_dyn,
-  plot_type = "density"
+  plot_type = "density",
   teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
   ncol = 2
 )

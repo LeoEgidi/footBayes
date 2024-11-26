@@ -5,7 +5,7 @@
 #' @param x An object of class \code{stanFoot}.
 #' @param pars Optional character vector specifying parameters to include in the summary. This can be specific parameter names (e.g., \code{"att"}, \code{"def"}, \code{"att_raw"}, \code{"def_raw"}, \code{"home"}, \code{"sigma_att"}, \code{"sigma_def"}, \code{"rho"}, and \code{"beta"}). If \code{NULL}, all parameters are included.
 #' @param teams Optional character vector specifying team names whose \code{"att"}, \code{"def"}, \code{"att_raw"}, \code{"def_raw"} parameters should be displayed.
-#' @param digits Number of significant digits to use when printing numeric values.
+#' @param digits Number of digits to use when printing numeric values. Default is \code{3}.
 #' @param true_names Logical value indicating whether to display team names in parameter summaries. Default is \code{TRUE}.
 #' @param ... Additional arguments passed.
 #' @method print stanFoot
@@ -159,7 +159,7 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
 #' @param x An object of class \code{btdFoot}.
 #' @param pars Optional character vector specifying parameters to include in the summary (e.g., \code{"logStrength"}, \code{"logTie"}, \code{"home"}, \code{"log_lik"}, and \code{"y_rep"}).
 #' @param teams Optional character vector specifying team names whose \code{logStrength} parameters should be displayed.
-#' @param digits Number of significant digits to use when printing numeric values.
+#' @param digits Number of digits to use when printing numeric values. Default is \code{3}.
 #' @param true_names Logical value indicating whether to display team names in parameter summaries. Default is \code{TRUE}.
 #' @param display Character string specifying which parts of the output to display. Options are \code{"both"}, \code{"rankings"}, or \code{"parameters"}. Default is \code{"both"}.
 #' @param ... Additional arguments passed.
@@ -332,6 +332,7 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
 #' Provides a formatted output when printing objects of class \code{compareFoot}, displaying the predictive performance metrics and, if available, the confusion matrices for each model or probability matrix.
 #'
 #' @param x An object of class \code{compareFoot} returned by \code{\link{compare_foot}}.
+#' @param digits  Number of digits to use when printing numeric values for the metrics. Default is \code{3}.
 #' @param ... Additional arguments passed to \code{print}.
 #' @method print compareFoot
 #'
@@ -339,15 +340,31 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
 #'
 #' @export
 #'
-print.compareFoot <- function(x, ...) {
-  cat("Predictive performance metrics\n")
-  print(x$metrics)
+print.compareFoot <- function(x, digits = 3, ...) {
+  cat("Predictive Performance Metrics\n")
+
+  # Format the metrics data frame based on the specified number of digits
+  formatted_metrics <- x$metrics
+  metric_cols <- setdiff(names(formatted_metrics), "Model")
+
+  # Apply rounding to the specified number of digits
+  formatted_metrics[metric_cols] <- lapply(formatted_metrics[metric_cols], function(col) {
+    if (is.numeric(col)) {
+      format(round(col, digits), nsmall = digits)
+    } else {
+      col
+    }
+  })
+
+  print(formatted_metrics, row.names = FALSE, ...)
+
   if (!is.null(x$confusion_matrix)) {
-    cat("\nConfusion matrices\n")
+    cat("\nConfusion Matrices\n")
     for (model_name in names(x$confusion_matrix)) {
-      cat("Model:", model_name, "\n \n",sep = " ")
-      print(x$confusion_matrix[[model_name]])
+      cat("Model:", model_name, "\n\n")
+      print(x$confusion_matrix[[model_name]], ...)
       cat("\n")
     }
   }
 }
+

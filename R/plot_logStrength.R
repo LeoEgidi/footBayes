@@ -55,6 +55,7 @@
 #'
 #' }
 #' @import ggplot2
+#' @importFrom rlang .data
 #' @export
 plot_logStrength <- function(x, teams = NULL, ...) {
   # Check if the object is of class 'btdFoot'
@@ -84,7 +85,7 @@ plot_logStrength <- function(x, teams = NULL, ...) {
 
   if (is_dynamic) {
     # Dynamic Ranking Plot
-    p <- ggplot(x$rank, aes(x = x$rank$periods, y = x$rank$log_strengths, color = x$rank$team)) +
+    p <- ggplot(x$rank, aes(x = .data$periods, y = .data$log_strengths, color = .data$team)) +
       geom_line(...) +
       geom_point(...) +
       labs(
@@ -102,9 +103,9 @@ plot_logStrength <- function(x, teams = NULL, ...) {
       )
   } else {
     # Static Ranking Plot
-    p <- ggplot(x$rank, aes(y = stats::reorder(x$rank$team, x$rank$log_strengths), x = x$rank$log_strengths)) +
+    p <- ggplot(x$rank, aes(y = stats::reorder(.data$team, .data$log_strengths), x = .data$log_strengths)) +
       geom_segment(
-        aes(x = 0, xend = x$rank$log_strengths, yend = x$rank$team),
+        aes(x = 0, xend = .data$log_strengths, yend = .data$team),
         color = "deepskyblue4",
         size = 1,
         ...

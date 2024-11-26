@@ -4,10 +4,12 @@
 \alias{print.compareFoot}
 \title{Print method for compareFoot objects}
 \usage{
-\method{print}{compareFoot}(x, ...)
+\method{print}{compareFoot}(x, digits = 3, ...)
 }
 \arguments{
 \item{x}{An object of class \code{compareFoot} returned by \code{\link{compare_foot}}.}
+
+\item{digits}{Number of digits to use when printing numeric values for the metrics. Default is \code{3}.}
 
 \item{...}{Additional arguments passed to \code{print}.}
 }

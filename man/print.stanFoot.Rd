@@ -13,7 +13,7 @@
 
 \item{teams}{Optional character vector specifying team names whose \code{"att"}, \code{"def"}, \code{"att_raw"}, \code{"def_raw"} parameters should be displayed.}
 
-\item{digits}{Number of significant digits to use when printing numeric values.}
+\item{digits}{Number of digits to use when printing numeric values. Default is \code{3}.}
 
 \item{true_names}{Logical value indicating whether to display team names in parameter summaries. Default is \code{TRUE}.}
 

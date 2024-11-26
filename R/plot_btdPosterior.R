@@ -78,7 +78,7 @@
 #'
 #' plot_btdPosterior(
 #'   fit_rank_dyn,
-#'   plot_type = "density"
+#'   plot_type = "density",
 #'   teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
 #'   ncol = 2
 #' )
@@ -88,6 +88,7 @@
 #' @importFrom rstan extract
 #' @importFrom ggridges stat_density_ridges
 #' @importFrom stats approx
+#' @importFrom rlang .data
 #' @export
 
 plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", teams = NULL, ncol = NULL, scales = NULL, ...) {
@@ -161,7 +162,7 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
         if (is.null(scales)) scales <- "free_x"
 
         # Dynamic Posterior Boxplot: Faceted by team and period
-        p <- ggplot(data_df, aes(x = as.factor(data_df$period), y = data_df$log_strength)) +
+        p <- ggplot(data_df, aes(x = as.factor(period), y = .data$log_strength)) +
           geom_boxplot(aes(fill = as.factor(period)), ...) +
           facet_wrap(~ team, scales = scales, ncol = ncol) +
           labs(
@@ -177,7 +178,7 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
           )
       } else {
         # Static Posterior Boxplot: Boxplots on the same plot with team names on x-axis
-        p <- ggplot(data_df, aes(x = data_df$team, y = data_df$log_strength)) +
+        p <- ggplot(data_df, aes(x = team, y = .data$log_strength)) +
           geom_boxplot(aes(fill = team), ...) +
           labs(
             x = "Teams",
@@ -198,7 +199,7 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
         if (is.null(scales)) scales <- "free_x"
 
         # Dynamic Posterior Density Plot using ggridges
-        p <- ggplot(data_df, aes(x = data_df$log_strength, y = as.factor(data_df$period),  fill = stat(quantile))) +
+        p <- ggplot(data_df, aes(x = .data$log_strength, y = as.factor(period), fill = stat(quantile))) +
           ggridges::stat_density_ridges(quantile_lines = TRUE,
                                         calc_ecdf = TRUE,
                                         geom = "density_ridges_gradient",
@@ -209,20 +210,20 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
           labs(
             x = "Log-Strength Values",
             y = "Periods",
-            fill = "Log-Strength"
+            fill = "Probability"
           ) +
           theme_bw() +
           theme(
             strip.text = element_text(size = 12, color = "black")
           ) +
           scale_fill_manual(name = "Prob.", values = c("#FFA500", "#1E90FF", "#FFA500"),
-                            labels = c("(0, 2.5%]", "(2.5%, 97,5%]", "(97.5%, 1]")) +
+                            labels = c("(0, 2.5%]", "(2.5%, 97.5%]", "(97.5%, 1]")) +
           scale_y_discrete(
             expand = expansion(mult = c(0, 0.35))  # Adds 35% padding on the top
           )
       } else {
         # Static Posterior Density Plot using ggridges
-        p <- ggplot(data_df, aes(x = data_df$log_strength, y = data_df$team, fill = stat(quantile))) +
+        p <- ggplot(data_df, aes(x = .data$log_strength, y = team, fill = stat(quantile))) +
           ggridges::stat_density_ridges(quantile_lines = TRUE,
                                         calc_ecdf = TRUE,
                                         geom = "density_ridges_gradient",
@@ -234,11 +235,11 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
           labs(
             x = "Log-Strength Values",
             y = "Teams",
-            fill = "Log-Strength"
+            fill = "Probability"
           ) +
           theme_bw() +
           scale_fill_manual(name = "Prob.", values = c("#FFA500", "#1E90FF", "#FFA500"),
-                            labels = c("(0, 2.5%]", "(2.5%, 97,5%]", "(97.5%, 1]")) +
+                            labels = c("(0, 2.5%]", "(2.5%, 97.5%]", "(97.5%, 1]")) +
           scale_y_discrete(
             expand = expansion(mult = c(0, 0.35))  # Adds 35% padding on the top
           )
@@ -266,7 +267,7 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
     )
 
     if (plot_type == "boxplot") {
-      p <- ggplot(df, aes(x = df$parameter, y = df$value)) +
+      p <- ggplot(df, aes(x = .data$parameter, y = .data$value)) +
         geom_boxplot(...) +
         labs(
           x = "",
@@ -288,20 +289,20 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
       )
 
       # Create the plot
-      p <- ggplot(density_data, aes(x = density_data$x, y = density_data$y)) +
+      p <- ggplot(density_data, aes(x = .data$x, y = .data$y)) +
         # Add the filled regions
-        geom_ribbon(aes(ymin = 0, ymax = density_data$y, fill =density_data$quantile_fill), alpha = 1) +
+        geom_ribbon(aes(ymin = 0, ymax = .data$y, fill = .data$quantile_fill), alpha = 1) +
         # Add the density curve line
         geom_line(color = "black", size = 0.5) +
         # Add vertical lines for quantiles within the density range
-        geom_segment(aes(x = quantiles[1], xend = quantiles[1], y = 0, yend = approx(x, y, xout = quantiles[1])$y),
+        geom_segment(aes(x = quantiles[1], xend = quantiles[1], y = 0, yend = approx(.data$x, .data$y, xout = quantiles[1])$y),
                      color = "black", linetype = "solid", size = 0.5) +
-        geom_segment(aes(x = quantiles[2], xend = quantiles[2], y = 0, yend = approx(x, y, xout = quantiles[2])$y),
+        geom_segment(aes(x = quantiles[2], xend = quantiles[2], y = 0, yend = approx(.data$x, .data$y, xout = quantiles[2])$y),
                      color = "black", linetype = "solid", size = 0.5) +
         labs(
           x = label,
           y = "Posterior Density",
-          fill = "Prob."
+          fill = "Probability"
         ) +
         scale_fill_manual(values = c("#FFA500", "#1E90FF", "#FFA500"),
                           labels = c("(0, 2.5%]", "(2.5%, 97.5%]", "(97.5%, 1]")) +
