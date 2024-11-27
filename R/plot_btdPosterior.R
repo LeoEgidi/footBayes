@@ -214,7 +214,8 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
           ) +
           theme_bw() +
           theme(
-            strip.text = element_text(size = 12, color = "black")
+            strip.text = element_text(size = 12, color = "black"),
+            legend.position = "top"
           ) +
           scale_fill_manual(name = "Prob.", values = c("#FFA500", "#1E90FF", "#FFA500"),
                             labels = c("(0, 2.5%]", "(2.5%, 97.5%]", "(97.5%, 1]")) +
@@ -238,6 +239,7 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
             fill = "Probability"
           ) +
           theme_bw() +
+          theme(legend.position = "top")
           scale_fill_manual(name = "Prob.", values = c("#FFA500", "#1E90FF", "#FFA500"),
                             labels = c("(0, 2.5%]", "(2.5%, 97.5%]", "(97.5%, 1]")) +
           scale_y_discrete(

@@ -37,9 +37,8 @@
 #'
 #' @examples
 #' \dontrun{
-#' ### predict the last two weeks
-#' require(tidyverse)
-#' require(dplyr)
+#' library(tidyverse)
+#' library(dplyr)
 #'
 #' data("italy")
 #' italy_2000 <- italy %>%
@@ -47,6 +46,8 @@
 #'  dplyr::filter(Season=="2000")
 #'
 #' colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+#'
+#'
 #'
 #' fit <- stan_foot(data = italy_2000,
 #'                  model="double_pois",
@@ -61,8 +62,6 @@
 
 
 foot_prob <- function(object, data, home_team, away_team){
-
-
 
   # if (!requireNamespace("ggplot2", quietly = TRUE)) {
   #   stop("Package 'ggplot2' is required for plotting.")
@@ -217,29 +216,35 @@ foot_prob <- function(object, data, home_team, away_team){
                           prob_a = round(prob_a,3),
                           mlo = mlo)
 
-
         # To change the color of the gradation :
 
-        p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
+        p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) +
+          geom_tile(aes(fill = Prob)) +
           theme_bw() +
           scale_fill_gradient(low="white", high="black") +
 
           geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
                         xmax = as.numeric(as.vector(true_gol_home))+0.5,
                         ymin = as.numeric(as.vector(true_gol_away))-0.5,
-                        ymax =as.numeric(as.vector(true_gol_away))+0.5),
-                    fill = "transparent", color = "red", size = 1.5)+
+                        ymax =as.numeric(as.vector(true_gol_away))+0.5,
+                        color = "True Result"),  # Mapped color for legend
+                    fill = "transparent", size = 1.5)+
           labs(title= "Posterior match probabilities")+
           yaxis_text(size=12)+
           xaxis_text( size = rel(12))+
-          theme(plot.title = element_text(size = 22),
+          scale_x_continuous(breaks = unique(data_exp_tot$Home)) +
+          scale_y_continuous(breaks = unique(data_exp_tot$Away)) +
+          theme_bw() +
+          theme(plot.title = element_text(size = 18),
                 strip.text = element_text(size = 12),
-                axis.text.x = element_text(size=22),
-                axis.text.y = element_text(size=22),
+                axis.text.x = element_text(size=16),
+                axis.text.y = element_text(size=16),
                 plot.subtitle=element_text(size=13),
-                axis.title=element_text(size=18,face="bold"),
+                axis.title=element_text(size=18),
                 legend.text=element_text(size=14)) +
-          theme_bw()
+          scale_color_manual(name = "", values = c("True Result" = "red")) +  # Added legend entry
+          guides(color = guide_legend(override.aes = list(fill = NA)))  # Ensure only border is shown
+
 
       }else{
 
@@ -363,7 +368,8 @@ foot_prob <- function(object, data, home_team, away_team){
         ncol_plot <- ceiling(num_matches / nrow_plot)
 
 
-        p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) + geom_tile(aes(fill = Prob)) +
+        p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) +
+          geom_tile(aes(fill = Prob)) +
           theme_bw() +
           scale_fill_gradient(low="white", high="black") +
           facet_wrap(facets = ~reorder(new_matches, prob_h),
@@ -375,25 +381,27 @@ foot_prob <- function(object, data, home_team, away_team){
           geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
                         xmax = as.numeric(as.vector(true_gol_home))+0.5,
                         ymin = as.numeric(as.vector(true_gol_away))-0.5,
-                        ymax =as.numeric(as.vector(true_gol_away))+0.5),
-                    fill = "transparent", color = "red", size = 1.5)+
+                        ymax =as.numeric(as.vector(true_gol_away))+0.5,
+                        color = "True Result"),  # Mapped color for legend
+                    fill = "transparent", size = 1.5)+
           labs(title= "Posterior match probabilities")+
           yaxis_text(size=12)+
           xaxis_text( size = rel(12))+
           ylab("Underdog")+
           xlab("Favorite")+
-          theme(plot.title = element_text(size = 22),
+          theme_bw() +
+          theme(plot.title = element_text(size = 18),
                 strip.text = element_text(size = 11),
                 #strip.placement = "outside",   # format to look like title
                 strip.background = element_blank(),
-                axis.text.x = element_text(size=22),
-                axis.text.y = element_text(size=22),
+                axis.text.x = element_text(size=16),
+                axis.text.y = element_text(size=16),
                 plot.subtitle=element_text(size=8.5),
-                axis.title=element_text(size=18,face="bold"),
+                axis.title=element_text(size=18),
                 legend.text=element_text(size=14),
                 panel.spacing = unit(0.2, "lines")) +
-          theme_bw()
-
+          scale_color_manual(name = "", values = c("True Result" = "red")) +  # Added legend entry
+          guides(color = guide_legend(override.aes = list(fill = NA)))   # Ensure only border is shown
 
       }
       return(list(prob_table = tbl, prob_plot = p))
@@ -469,10 +477,10 @@ foot_prob <- function(object, data, home_team, away_team){
       }
 
       prob_func <- function(mat_x, mat_y){
-        res <- mat_x-mat_y
-        prob_h <- apply(res, 2, function(x) sum(x > 0) )/n.iter
-        prob_d <- apply(res, 2, function(x) sum(x == 0) )/n.iter
-        prob_a <- apply(res, 2, function(x) sum(x < 0) )/n.iter
+        res <- mat_x - mat_y
+        prob_h <- apply(res, 2, function(x) sum(x > 0) ) / n.iter
+        prob_d <- apply(res, 2, function(x) sum(x == 0) ) / n.iter
+        prob_a <- apply(res, 2, function(x) sum(x < 0) ) / n.iter
         return(list(prob_h = prob_h,
                     prob_d = prob_d,
                     prob_a = prob_a))
@@ -506,6 +514,3 @@ foot_prob <- function(object, data, home_team, away_team){
   }
 
 }
-
-
-

@@ -19,7 +19,7 @@
 #' @examples
 #'
 #' \dontrun{
-#' require(dplyr)
+#' library(dplyr)
 #'
 #' data("italy")
 #'

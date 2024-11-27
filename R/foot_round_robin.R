@@ -29,7 +29,7 @@
 #'@examples
 #'
 #'\dontrun{
-#'require(dplyr)
+#'library(dplyr)
 #'
 #'data("italy")
 #'italy_1999_2000<- italy %>%
@@ -214,7 +214,7 @@ foot_round_robin <- function(object, data, teams = NULL){
      scale_fill_gradient(low = "white", high = "red3", name = "Prob") +  # Change legend title here
      scale_x_discrete(limits = team_names) +
      scale_y_discrete(limits = team_names) +
-     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
      geom_text(aes(label = as.vector(punt[team_index, team_index])), size = 4.1) +
      geom_rect(aes(xmin = as.vector(x1_x2),
                    xmax = as.vector(x2_x1),

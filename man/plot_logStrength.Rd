@@ -28,7 +28,7 @@ Visualizes team rankings based on whether the ranking is dynamic or static.
 \examples{
 
 \dontrun{
-require(dplyr)
+library(dplyr)
 
 data("italy")
 

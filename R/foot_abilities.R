@@ -28,8 +28,8 @@
 #'
 #' @examples
 #' \dontrun{
-#' require(dplyr)
-#' require(tidyverse)
+#' library(dplyr)
+#' library(tidyverse)
 #'
 #' data("italy")
 #' italy <- as_tibble(italy)
@@ -255,13 +255,14 @@ foot_abilities <- function(object, data,
           ) +
           yaxis_text(size = rel(1.2)) +
           xaxis_text(size = rel(1.2)) +
+          theme_bw() +
           theme(
             plot.title = element_text(size = 16),
             strip.text = element_text(size = 12, color = "black"),
-            axis.text.x = element_text(face = "bold", color = "black", angle = 45, size = 9),
+            axis.text.x = element_text(color = "black", size = 9),
             axis.text.y = element_text(size = 11),
             plot.subtitle = element_text(size = 12),
-            legend.position = "bottom",
+            legend.position = "top",
             legend.text = element_text(size = 15)
           ) +
           scale_color_manual(
@@ -269,8 +270,7 @@ foot_abilities <- function(object, data,
             values = c(defense = color_scheme_get("blue")[[4]],
                        attack = color_scheme_get("red")[[4]]),
             labels = c("Attack Effects", "Defense Effects")
-          ) +
-          theme_bw()
+          )
       } else if (type == "attack") {
         position_lookup <-
           att_data %>%
@@ -303,7 +303,7 @@ foot_abilities <- function(object, data,
           theme(
             plot.title = element_text(size = 16),
             strip.text = element_text(size = 12, color = "black"),
-            axis.text.x = element_text(face = "bold", color = "black", angle = 45, size = 9),
+            axis.text.x = element_text(color = "black", size = 9),
             axis.text.y = element_text(size = 11),
             plot.subtitle = element_text(size = 12),
             legend.position = "bottom",
@@ -344,21 +344,21 @@ foot_abilities <- function(object, data,
           ) +
           yaxis_text(size = rel(1.2)) +
           xaxis_text(size = rel(1.2)) +
+          theme_bw() +
           theme(
             plot.title = element_text(size = 16),
             strip.text = element_text(size = 12, color = "black"),
-            axis.text.x = element_text(face = "bold", color = "black", angle = 45, size = 9),
+            axis.text.x = element_text(color = "black", size = 9),
             axis.text.y = element_text(size = 11),
             plot.subtitle = element_text(size = 12),
-            legend.position = "bottom",
+            legend.position = "top",
             legend.text = element_text(size = 15)
           ) +
           scale_color_manual(
             name = "",
             values = c(defense = color_scheme_get("blue")[[4]]),
             labels = c("Defense Effects")
-          ) +
-          theme_bw()
+          )
       }
 
     }else if (length(dim(att))==2){
@@ -511,16 +511,15 @@ foot_abilities <- function(object, data,
           ) +
           yaxis_text(size=rel(1.2))+
           xaxis_text( size = rel(1.2))+
+          theme_bw() +
           theme(plot.title = element_text(size = 16),
                 strip.text = element_text(size = 12, color = "black"),
-                axis.text.x =  element_text(face="bold",
-                                            color="black",
-                                            angle=45, size =9),
+                axis.text.x =  element_text(color="black",
+                                            angle=0, size =9),
                 axis.text.y = element_text(size=11),
                 plot.subtitle=element_text(size=12),
-                legend.position = "bottom",
-                legend.text = element_text(size = 15)) +
-          theme_bw()
+                legend.position = "top",
+                legend.text = element_text(size = 15))
 
 
       }else{
@@ -694,7 +693,6 @@ foot_abilities <- function(object, data,
 
 
 }
-
 
 
 

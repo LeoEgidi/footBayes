@@ -39,7 +39,7 @@
 #'@examples
 #'
 #'\dontrun{
-#'require(dplyr)
+#'library(dplyr)
 #'
 #'data("italy")
 #'italy_2000 <- italy %>%
@@ -117,69 +117,70 @@ pp_foot <- function(object, data,
       diff_gol_rep <- round(diff_gol_rep,0)
     }
 
-  for (j in 1:M){
-    for (u in 1:length(esiti_short)){
+    for (j in 1:M){
+      for (u in 1:length(esiti_short)){
 
-      if (length((as.double(table(diff_gol_rep[j,]))[as.double(names(table(diff_gol_rep[j,])))==esiti_short[u]]))==0){
-        freq_rel_matrix[j,u] <- 0 # correzione quando non ricorre il risultato nel MCMC
-      }else{
-       freq_rel_matrix[j,u] <-  (as.double(table(diff_gol_rep[j,]))[as.double(names(table(diff_gol_rep[j,])))==esiti_short[u]])/ngames_train
-      }}}
+        if (length((as.double(table(diff_gol_rep[j,]))[as.double(names(table(diff_gol_rep[j,])))==esiti_short[u]]))==0){
+          freq_rel_matrix[j,u] <- 0 # correzione quando non ricorre il risultato nel MCMC
+        }else{
+          freq_rel_matrix[j,u] <-  (as.double(table(diff_gol_rep[j,]))[as.double(names(table(diff_gol_rep[j,])))==esiti_short[u]])/ngames_train
+        }}}
 
-  freq_rel_frame_add <- matrix(NA, M*length(esiti_short),2)
+    freq_rel_frame_add <- matrix(NA, M*length(esiti_short),2)
 
-  for(j in 1:M){
-    freq_rel_frame <- data.frame(valori=esiti_short,  rel=freq_rel_matrix[j,])
-    freq_rel_frame_add[( (7*j)-6):(7*j),] <- as.matrix(freq_rel_frame)
-  }
-
-  freq_rel_obs=c()
-
-  for (u in 1:length(esiti_short)){
-    freq_rel_obs[u]=(as.double(table(diff_gol))[ as.double(names(table(diff_gol)))==esiti_short[u]])/ngames_train
+    for(j in 1:M){
+      freq_rel_frame <- data.frame(valori=esiti_short,  rel=freq_rel_matrix[j,])
+      freq_rel_frame_add[( (7*j)-6):(7*j),] <- as.matrix(freq_rel_frame)
     }
 
-  frame <- data.frame(valori=esiti_short, rel=freq_rel_frame_add[,2] )
+    freq_rel_obs=c()
 
-  p <- ggplot(frame, aes(x=valori, y=rel))+
-    geom_point(position = "jitter", alpha = 0.2, aes(colour="simulated")) +
-    geom_segment(mapping=aes(x=-3-0.5, y=freq_rel_obs[1],
-                             xend=-3+0.5, yend=freq_rel_obs[1], colour="observed"), size=2) +
-    geom_segment(mapping=aes(x=-2-0.5, y=freq_rel_obs[2],
-                             xend=-2+0.5, yend=freq_rel_obs[2]), size=2, color="#1E90FF") +
-    geom_segment(mapping=aes(x=-1-0.5, y=freq_rel_obs[3],
-                             xend=-1+0.5, yend=freq_rel_obs[3]), size=2, color="#1E90FF") +
-    geom_segment(mapping=aes(x=0-0.5, y=freq_rel_obs[4],
-                             xend=0+0.5, yend=freq_rel_obs[4]), size=2, color="#1E90FF") +
-    geom_segment(mapping=aes(x=1-0.5, y=freq_rel_obs[5],
-                             xend=1+0.5, yend=freq_rel_obs[5]), size=2, color="#1E90FF") +
-    geom_segment(mapping=aes(x=2-0.5, y=freq_rel_obs[6],
-                             xend=2+0.5, yend=freq_rel_obs[6]), size=2, color="#1E90FF") +
-    geom_segment(mapping=aes(x=3-0.5, y=freq_rel_obs[7],
-                             xend=3+0.5, yend=freq_rel_obs[7]), size=2, color="#1E90FF") +
-    labs(x="Goal difference", y="Posterior predictive distribution") +
-    scale_colour_manual(name="",
-                        values=c(observed="#1E90FF", simulated="#FFA500"),
-                        labels=c("Observed", "Simulated")) +
-    yaxis_text(size=rel(1.2)) +
-    xaxis_text(size=rel(1.2)) +
-    scale_x_discrete(limits=esiti_short,
-                     labels=c("-3", "-2", "-1", "0", "1", "2", "3")) +
-    theme(axis.title=element_text(size=19),
-          axis.text.x=element_text(size=15),
-          axis.text.y=element_text(size=15),
-          legend.position="bottom",
-          legend.text=element_text(size=15)) +
-    theme_bw()
+    for (u in 1:length(esiti_short)){
+      freq_rel_obs[u]=(as.double(table(diff_gol))[ as.double(names(table(diff_gol)))==esiti_short[u]])/ngames_train
+    }
+
+    frame <- data.frame(valori=esiti_short, rel=freq_rel_frame_add[,2] )
+
+    p <- ggplot(frame, aes(x=valori, y=rel))+
+      geom_point(position = "jitter", alpha = 0.2, aes(colour="simulated")) +
+      geom_segment(mapping=aes(x=-3-0.5, y=freq_rel_obs[1],
+                               xend=-3+0.5, yend=freq_rel_obs[1], colour="observed"), size=2) +
+      geom_segment(mapping=aes(x=-2-0.5, y=freq_rel_obs[2],
+                               xend=-2+0.5, yend=freq_rel_obs[2]), size=2, color="#1E90FF") +
+      geom_segment(mapping=aes(x=-1-0.5, y=freq_rel_obs[3],
+                               xend=-1+0.5, yend=freq_rel_obs[3]), size=2, color="#1E90FF") +
+      geom_segment(mapping=aes(x=0-0.5, y=freq_rel_obs[4],
+                               xend=0+0.5, yend=freq_rel_obs[4]), size=2, color="#1E90FF") +
+      geom_segment(mapping=aes(x=1-0.5, y=freq_rel_obs[5],
+                               xend=1+0.5, yend=freq_rel_obs[5]), size=2, color="#1E90FF") +
+      geom_segment(mapping=aes(x=2-0.5, y=freq_rel_obs[6],
+                               xend=2+0.5, yend=freq_rel_obs[6]), size=2, color="#1E90FF") +
+      geom_segment(mapping=aes(x=3-0.5, y=freq_rel_obs[7],
+                               xend=3+0.5, yend=freq_rel_obs[7]), size=2, color="#1E90FF") +
+      labs(x="Goal difference", y="Posterior predictive distribution") +
+      scale_colour_manual(name="",
+                          values=c(observed="#1E90FF", simulated="#FFA500"),
+                          labels=c("Observed", "Simulated")) +
+      yaxis_text(size=rel(1.2)) +
+      xaxis_text(size=rel(1.2)) +
+      scale_x_discrete(limits=esiti_short,
+                       labels=c("-3", "-2", "-1", "0", "1", "2", "3")) +
+      theme_bw() +
+      theme(axis.title=element_text(size=19),
+            axis.text.x=element_text(size=15),
+            axis.text.y=element_text(size=15),
+            legend.position="top",
+            legend.text=element_text(size=15))
 
 
-   p_value <- c()
-     for (j in 1:length(esiti_short))
-        p_value[j] <- round(sum(frame$rel[frame$valori==esiti_short[j]]>=freq_rel_obs[j])/M,3)
 
-   tbl <- data.frame(valori = esiti_short, p_val = p_value)
-   colnames(tbl) <- c("goal diff.",  "Bayesian p-value")
-   return(list(pp_plot = p, pp_table = tbl))
+    p_value <- c()
+    for (j in 1:length(esiti_short))
+      p_value[j] <- round(sum(frame$rel[frame$valori==esiti_short[j]]>=freq_rel_obs[j])/M,3)
+
+    tbl <- data.frame(valori = esiti_short, p_val = p_value)
+    colnames(tbl) <- c("goal diff.",  "Bayesian p-value")
+    return(list(pp_plot = p, pp_table = tbl))
 
   }else if (type=="matches"){
     scd <- as.numeric(as.vector(diff_gol))[1:ngames_train]
@@ -211,9 +212,9 @@ pp_foot <- function(object, data,
     df <- data.frame(list(scd = sort_scd, scd_hat = sort_scd_hat, scd_se = sort_scd_se,
                           scd_ub = sort_scd_ub, scd_lb = sort_scd_lb
                           #scd_ub2 = sort_scd_ub2, scd_lb2 = sort_scd_lb2
-                          ))
+    ))
 
-p <- ggplot(df, aes(x = c(1:ngames_train))) +
+    p <- ggplot(df, aes(x = c(1:ngames_train))) +
       geom_ribbon(aes(ymin = scd_lb, ymax = scd_ub),
                   fill = "#FFA500") +
       #geom_ribbon(aes(ymin = scd_lb2, ymax = scd_ub2),
@@ -224,24 +225,24 @@ p <- ggplot(df, aes(x = c(1:ngames_train))) +
       scale_x_continuous(name="games") +
       #scale_y_discrete(name="score difference", limits=seq(-8,8)) +
       scale_y_continuous(name="Goal difference",
-                  breaks = c(-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8),
-                  sec.axis = dup_axis()) +
+                         breaks = c(-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8),
+                         sec.axis = dup_axis()) +
       yaxis_text(size=rel(1.4))+
       xaxis_text( size = rel(1.4))+
       scale_colour_manual(name="",
-                      values=c(observed="#1E90FF", simulated ="#FFA500"),
-                      labels=c("Observed", "Simulated"))+
+                          values=c(observed="#1E90FF", simulated ="#FFA500"),
+                          labels=c("Observed", "Simulated"))+
+      theme_bw() +
       theme(axis.title=element_text(size=19),
-      axis.text.x = element_text(size=15),
-      axis.text.y = element_text(size=15),
-      legend.position = "bottom",
-      legend.text = element_text(size = 15)) +
-      theme_bw()
+            axis.text.x = element_text(size=15),
+            axis.text.y = element_text(size=15),
+            legend.position = "top",
+            legend.text = element_text(size = 15))
 
-      tbl = data.frame(alpha = coverage, coverage = round(ci_alpha,3))
-      colnames(tbl) <- c("1-alpha", "emp. coverage")
-      return(list(pp_plot = p, pp_table = tbl))
+    tbl = data.frame(alpha = coverage, coverage = round(ci_alpha,3))
+    colnames(tbl) <- c("1-alpha", "emp. coverage")
+    return(list(pp_plot = p, pp_table = tbl))
 
-      }
+  }
 
 }

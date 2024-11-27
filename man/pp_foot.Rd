@@ -42,7 +42,7 @@ returned by the \code{stan_foot} function.
 \examples{
 
 \dontrun{
-require(dplyr)
+library(dplyr)
 
 data("italy")
 italy_2000 <- italy \%>\%

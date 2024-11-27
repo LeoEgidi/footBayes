@@ -10,6 +10,8 @@ vignette: >
   %\VignetteIndexEntry{Fitting football models and visualizing predictions with the ```footBayes``` package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+params:
+  EVAL: !r identical(Sys.getenv("NOT_CRAN"), "true")
 ---
 
 
@@ -19,11 +21,16 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   purl = NOT_CRAN,
-  eval = NOT_CRAN
+  eval = if (isTRUE(exists("params"))) params$EVAL else FALSE
 )
 knitr::opts_chunk$set(fig.align = 'center', 
-                      warning=FALSE, message=FALSE, fig.asp=0.625, fig.height =10, fig.width = 8, 
-                      out.width='750px', dpi=200, 
+                      warning=FALSE, 
+                      message=FALSE, 
+                      fig.asp=0.625,
+                      fig.height =10,
+                      fig.width = 8, 
+                      out.width='750px',
+                      dpi=100, 
                       global.par = TRUE,
                       dev='png',  
                       dev.args=list(pointsize=10)
@@ -427,6 +434,7 @@ log-scale an additive term as show
     p_{ij}^L &= \dfrac{\exp(\psi_j)}{\exp(\psi_i + \text{home})+\exp(\psi_j)+\exp(\nu+ (\psi_i + \text{home} + \psi_j)/2)},
 \end{align}
 where $\text{home}$ is the home effect parameter. The argument ```home_effect``` permits to consider this extension of the Bayesian BTD where an additional parameter representing the home effect is considered:
+
 - ```home_effect = TRUE```: includes a home effect in the model.
 - ```home_effect = FALSE```:  excludes a home effect in the model.
 

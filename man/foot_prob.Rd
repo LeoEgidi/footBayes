@@ -42,9 +42,8 @@ fitted via the \code{mle_foot} the probabilities are computed by simulating from
 }
 \examples{
 \dontrun{
-### predict the last two weeks
-require(tidyverse)
-require(dplyr)
+library(tidyverse)
+library(dplyr)
 
 data("italy")
 italy_2000 <- italy \%>\%
@@ -52,6 +51,8 @@ italy_2000 <- italy \%>\%
  dplyr::filter(Season=="2000")
 
 colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+
+
 
 fit <- stan_foot(data = italy_2000,
                  model="double_pois",
