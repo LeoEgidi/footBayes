@@ -152,8 +152,202 @@ foot_abilities <- function(object, data,
       stop("Select only valid teams' names!")
     }
 
+<<<<<<< HEAD
     att <- sims$att
     def <- sims$def
+=======
+  att <- sims$att
+  def <- sims$def
+
+  if (length(dim(att))==3){
+  T <- dim(att)[2]
+  nteams <- dim(att)[3]
+  att_med=apply(att,c(2,3), stats::median)
+  def_med=apply(def,c(2,3), stats::median)
+  att_025=apply(att, c(2,3), function(x) stats::quantile(x, 0.025))
+  att_25=apply(att, c(2,3), function(x) stats::quantile(x, 0.25))
+  att_75=apply(att, c(2,3), function(x) stats::quantile(x, 0.75))
+  att_975=apply(att, c(2,3), function(x) stats::quantile(x, 0.975))
+  def_025=apply(def, c(2,3), function(x) stats::quantile(x, 0.025))
+  def_25=apply(def, c(2,3), function(x) stats::quantile(x, 0.25))
+  def_75=apply(def, c(2,3), function(x)  stats::quantile(x, 0.75))
+  def_975=apply(def, c(2,3), function(x)  stats::quantile(x, 0.975))
+
+  squadre_valide <- match(sel_teams,unique(c(data$home, data$away)))
+
+  mt_att_025 <- melt(att_025[, squadre_valide])
+  mt_att_25 <- melt(att_25[, squadre_valide])
+  mt_att_50 <- melt(att_med[, squadre_valide])
+  mt_att_75 <- melt(att_75[, squadre_valide])
+  mt_att_975 <- melt(att_975[, squadre_valide])
+
+  mt_def_025 <- melt(def_025[, squadre_valide])
+  mt_def_25 <- melt(def_25[, squadre_valide])
+  mt_def_50 <- melt(def_med[, squadre_valide])
+  mt_def_75 <- melt(def_75[, squadre_valide])
+  mt_def_975 <- melt(def_975[, squadre_valide])
+
+  teams_fac_rep <- rep(sel_teams, each = T)
+  times_rep <- rep(1:T, length(sel_teams))
+
+  att_data=data.frame(
+    teams=teams_fac_rep,
+    times=times_rep,
+    mid=mt_att_50$value,
+    lo=mt_att_25$value,
+    hi=mt_att_75$value
+  )
+
+  def_data=data.frame(
+    teams=teams_fac_rep,
+    times=times_rep,
+    mid=mt_def_50$value,
+    lo=mt_def_25$value,
+    hi=mt_def_75$value
+  )
+
+  if (length(unique(data$season))==1){
+    timings <- 1:dim(sims$att)[2]
+    sp <- length(timings)%/%5
+    timings_breaks <- timings[sp*c(1:5)]
+  }else{
+    timings <- unique(data$season)
+    timings_breaks <- timings
+  }
+  if (type =="both"){
+  position_lookup <-
+    att_data %>%
+    group_by(teams) %>%
+    summarise(pos=first(teams))
+  label_w_position <- function(team_name) {
+    paste0(team_name, " (", with(position_lookup, pos[teams == player_name]),")")
+  }
+  ggplot() +
+    geom_ribbon(
+      aes(x = times, ymin = lo, ymax = hi),
+      data = att_data,
+      fill = color_scheme_get("gray")[[2]]
+      ) +
+    geom_ribbon(
+      aes(x = times, ymin = lo, ymax = hi),
+      data = def_data,
+      fill = color_scheme_get("gray")[[2]]
+      )+
+    geom_line(
+      aes(x = times, y = mid, colour = "attack"),
+      data = att_data,
+      size = 1
+      )+
+    geom_line(
+      aes(x = times, y = mid, colour = "defence"),
+      data = def_data,
+      size = 1
+      )+
+    scale_color_manual(name ="",
+      values = c(defence = color_scheme_get("blue")[[4]],
+                                attack=  color_scheme_get("red")[[4]]))+
+    facet_wrap("teams", scales = "free", ncol = 3, nrow = 7)+
+    lims(y = c( min(att_25-0.3), max(att_75+0.3))) +
+    scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
+    labs(x = "Times", y = "Teams' effects",
+         title = "Attack and defense effects (50% posterior bars)"
+         #,
+         #subtitle = "for teams of Premier League 2016/2017"
+         ) +
+    yaxis_text(size=rel(1.2))+
+    xaxis_text( size = rel(1.2))+
+    theme(plot.title = element_text(size = 16),
+          strip.text = element_text(size = 12),
+          axis.text.x =  element_text(face="bold",
+                                                   color="black",
+                                                   angle=45, size =9),
+          axis.text.y = element_text(size=11),
+          plot.subtitle=element_text(size=12),
+      legend.position = "bottom",
+      legend.text = element_text(size = 15))
+  }else if (type =="attack"){
+    position_lookup <-
+      att_data %>%
+      group_by(teams) %>%
+      summarise(pos=first(teams))
+    label_w_position <- function(team_name) {
+      paste0(team_name, " (", with(position_lookup, pos[teams == player_name]),")")
+    }
+    ggplot() +
+      geom_ribbon(
+        aes(x = times, ymin = lo, ymax = hi),
+        data = att_data,
+        fill = color_scheme_get("gray")[[2]]
+      ) +
+      geom_line(
+        aes(x = times, y = mid, colour = "attack"),
+        data = att_data,
+        size = 1
+      )+
+      scale_color_manual(name="",
+        values = c(attack =
+          color_scheme_get("red")[[4]]))+
+      facet_wrap("teams", scales = "free", ncol = 3, nrow =7)+
+      lims(y = c( min(att_25-0.3),
+        max(att_75+0.3))) +
+      scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
+      labs(x = "Times", y = "Teams' effects",
+           title = "Attack effects (50% posterior bars)"
+      ) +
+      yaxis_text(size=rel(1.2))+
+      xaxis_text( size = rel(1.2))+
+      theme(plot.title = element_text(size = 16),
+            strip.text = element_text(size = 12),
+            axis.text.x =  element_text(face="bold",
+                          color="black",
+                          angle=45, size =9),
+            axis.text.y = element_text(size=11),
+            plot.subtitle=element_text(size=12),
+            legend.position = "bottom",
+            legend.text = element_text(size = 15))
+
+  }else if (type =="defense"){
+    position_lookup <-
+      att_data %>%
+      group_by(teams) %>%
+      summarise(pos=first(teams))
+    label_w_position <- function(team_name) {
+      paste0(team_name, " (", with(position_lookup, pos[teams == player_name]),")")
+    }
+    ggplot() +
+      geom_ribbon(
+        aes(x = times, ymin = lo, ymax = hi),
+        data = def_data,
+        fill = color_scheme_get("gray")[[2]]
+      )+
+      geom_line(
+        aes(x = times, y = mid, colour = "defence"),
+        data = def_data,
+        size = 1
+      )+
+      scale_color_manual(name="",
+        values = c(defence =
+          color_scheme_get("blue")[[4]]
+      ))+
+      facet_wrap("teams", scales = "free", ncol = 3, nrow = 7)+
+      lims(y = c( min(def_25-0.3), max(def_75+0.3))) +
+      scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
+      labs(x = "Times", y = "Teams' effects",
+           title = "Defense effects (50% posterior bars)"
+      ) +
+      yaxis_text(size=rel(1.2))+
+      xaxis_text( size = rel(1.2))+
+      theme(plot.title = element_text(size = 16),
+            strip.text = element_text(size = 12),
+            axis.text.x =  element_text(face="bold",
+                                        color="black",
+                                        angle=45, size =9),
+            axis.text.y = element_text(size=11),
+            plot.subtitle=element_text(size=12),
+        legend.position = "bottom",
+        legend.text = element_text(size = 15))
+  }
+>>>>>>> master
 
 
     num_teams <- length(unique(sel_teams))
@@ -361,6 +555,7 @@ foot_abilities <- function(object, data,
           )
       }
 
+<<<<<<< HEAD
     }else if (length(dim(att))==2){
       att_mean <- apply(att, 2, mean)[sel_teams_index]
       att_sd <- apply(att, 2, sd)[sel_teams_index]
@@ -370,6 +565,56 @@ foot_abilities <- function(object, data,
       def_sd <- apply(def, 2, sd)[sel_teams_index]
       def_025 <- apply(def, 2, function(x) stats::quantile(x, 0.025))[sel_teams_index]
       def_975 <- apply(def, 2, function(x) stats::quantile(x, 0.975))[sel_teams_index]
+=======
+      position_lookup <-
+        ability_data %>%
+        group_by(teams) %>%
+        summarise(pos=first(teams))
+      label_w_position <- function(team_name) {
+        paste0(team_name, " (", with(position_lookup, pos[teams == player_name]),")")
+      }
+      ggplot() +
+        geom_ribbon(
+          aes(x = times, ymin = lo, ymax = hi),
+          data = ability_data,
+          fill = color_scheme_get("red")[[2]]
+        ) +
+        geom_line(
+          aes(x = times, y = mid),
+          data = ability_data,
+          size = 1,
+          color = color_scheme_get("red")[[4]]
+        )+
+        scale_color_manual(name = "",
+          values = c(color_scheme_get("blue")[[4]],
+                                      color_scheme_get("red")[[4]]))+
+        facet_wrap("teams", scales = "free", ncol = 3, nrow = 7)+
+        lims(y = c( min(ability_25-0.2), max(ability_75+0.2))) +
+        scale_x_discrete( limits=factor(timings), breaks = timings_breaks  ) +
+        labs(x = "Times", y = "Teams' effects",
+             title = "Global abilities effects (50% posterior bars)"
+             #,
+             #subtitle = "for teams of Premier League 2016/2017"
+        ) +
+        yaxis_text(size=rel(1.2))+
+        xaxis_text( size = rel(1.2))+
+        theme(plot.title = element_text(size = 16),
+              strip.text = element_text(size = 12),
+              axis.text.x =  element_text(face="bold",
+                                          color="black",
+                                          angle=45, size =9),
+              axis.text.y = element_text(size=11),
+              plot.subtitle=element_text(size=12),
+          legend.position = "bottom",
+          legend.text = element_text(size = 15))
+
+
+    }else if (length(dim(ability))==2){
+      ability_mean <- apply(ability, 2, mean)[sel_teams_index]
+      ability_sd <- apply(ability, 2, sd)[sel_teams_index]
+      ability_025 <- apply(ability, 2, function(x) stats::quantile(x, 0.025))[sel_teams_index]
+      ability_975 <- apply(ability, 2, function(x) stats::quantile(x, 0.975))[sel_teams_index]
+>>>>>>> master
 
       par(mfrow=c(1,1), oma =c(1,1,1,1))
       par(mfrow=c(1,1), oma =c(1,1,1,1))
