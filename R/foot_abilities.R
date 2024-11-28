@@ -299,21 +299,21 @@ foot_abilities <- function(object, data,
           ) +
           yaxis_text(size = rel(1.2)) +
           xaxis_text(size = rel(1.2)) +
+          theme_bw() +
           theme(
             plot.title = element_text(size = 16),
             strip.text = element_text(size = 12, color = "black"),
             axis.text.x = element_text(color = "black", size = 9),
             axis.text.y = element_text(size = 11),
             plot.subtitle = element_text(size = 12),
-            legend.position = "bottom",
+            legend.position = "top",
             legend.text = element_text(size = 15)
           ) +
           scale_color_manual(
             name = "",
             values = c(attack = color_scheme_get("red")[[4]]),
             labels = c("Attack Effects")
-          ) +
-          theme_bw()
+          )
       } else if (type == "defense") {
         position_lookup <-
           def_data %>%
