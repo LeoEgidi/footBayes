@@ -43,7 +43,6 @@ or from MLE models fitted via the \code{mle_foot} function.
 \examples{
 \dontrun{
 library(dplyr)
-library(tidyverse)
 
 data("italy")
 italy <- as_tibble(italy)
