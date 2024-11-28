@@ -29,7 +29,6 @@
 #' @examples
 #' \dontrun{
 #' library(dplyr)
-#' library(tidyverse)
 #'
 #' data("italy")
 #' italy <- as_tibble(italy)
