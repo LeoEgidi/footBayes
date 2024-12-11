@@ -1,13 +1,13 @@
 data{
       int N;                      // number of games
-      int y[N,2];                 // scores
+      array[N,2] int y;                 // scores
       int nteams;                 // number of teams
-      int team1[N];               // home team index
-      int team2[N];               // away team index
+      array[N] int team1;               // home team index
+      array[N] int team2;               // away team index
       int ntimes;                 // dynamic periods
-      int time[ntimes];
-      int instants[N];
-      int instants_rank[N];
+      array[ntimes] int time;
+      array[N] int instants;
+      array[N] int instants_rank;
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
@@ -128,9 +128,9 @@ data{
 
     }
     generated quantities{
-      int y_rep[N,2];
+      array[N,2] int y_rep;
       vector[N] log_lik;
-      int diff_y_rep[N];
+      array[N] int diff_y_rep;
 
       //in-sample replications
       for (n in 1:N){

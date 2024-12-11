@@ -3,10 +3,10 @@ data {
     int nteams;                  // number of teams
     int ntimes_rank;             // number of dynamic periods for rankings
     matrix[ntimes_rank, nteams] ranking; // rankings over time
-    int instants_rank[N];        // time indices for rankings
+    array[N] int instants_rank;        // time indices for rankings
 
-    int team1[N];                // team 1 indices
-    int team2[N];                // team 2 indices
+    array[N] int team1;                // team 1 indices
+    array[N] int team2;                // team 2 indices
     matrix[N, 2] y;              // scores: column 1 is team1, column 2 is team2
     real nu;                     // degrees of freedom for the Student's t-distribution
 

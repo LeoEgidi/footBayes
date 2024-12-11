@@ -7,14 +7,14 @@ functions{
     }
     data{
       int N;
-      int diff_y[N];
+      array[N] int diff_y;
       int nteams;
-      int team1[N];
-      int team2[N];
+      array[N] int team1;
+      array[N] int team2;
       int ntimes;                 // dynamic periods
-      int time[ntimes];
-      int instants[N];
-      int instants_rank[N];
+      array[ntimes] int time;
+      array[N] int instants;
+      array[N] int instants_rank;
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
@@ -133,8 +133,8 @@ functions{
       }
     }
     generated quantities{
-      int y_rep[N,2];
-      int diff_y_rep[N];
+      array[N,2] int y_rep;
+      array[N] int diff_y_rep;
       vector[N] log_lik;
 
       //in-sample replications

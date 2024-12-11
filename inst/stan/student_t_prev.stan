@@ -4,11 +4,11 @@ data {
     int nteams;                 // Number of teams
     int ntimes_rank;            // Number of dynamic periods for rankings
     matrix[ntimes_rank, nteams] ranking; // Rankings over time
-    int instants_rank[N];       // Time indices for rankings for observed matches
-    int team1[N];               // Team 1 indices for observed matches
-    int team2[N];               // Team 2 indices for observed matches
-    int team1_prev[N_prev];     // Team 1 indices for predicted matches
-    int team2_prev[N_prev];     // Team 2 indices for predicted matches
+    array[N] int instants_rank;       // Time indices for rankings for observed matches
+    array[N] int team1;               // Team 1 indices for observed matches
+    array[N] int team2;               // Team 2 indices for observed matches
+    array[N_prev] int team1_prev;     // Team 1 indices for predicted matches
+    array[N_prev] int team2_prev;     // Team 2 indices for predicted matches
     matrix[N, 2] y;             // Scores: column 1 is team1, column 2 is team2
     real nu;                    // Degrees of freedom for the Student's t-distribution
 

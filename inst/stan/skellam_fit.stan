@@ -7,11 +7,11 @@ functions{
     }
     data{
       int N;
-      int diff_y[N];
+      array[N] int diff_y;
       int nteams;
-      int team1[N];
-      int team2[N];
-      int instants_rank[N];
+      array[N] int team1;
+      array[N] int team2;
+      array[N] int instants_rank;
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
@@ -41,7 +41,7 @@ functions{
       real adj_h_eff;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
-      real theta[N,2];
+      array[N,2] real theta;
 
       for (t in 1:nteams){
         att[t] = att_raw[t]-mean(att_raw);
@@ -107,8 +107,8 @@ functions{
       }
     }
     generated quantities{
-      int y_rep[N,2];
-      int diff_y_rep[N];
+      array[N,2] int y_rep;
+      array[N] int diff_y_rep;
       vector[N] log_lik;
 
       //in-sample replications
