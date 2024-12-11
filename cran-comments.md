@@ -1,8 +1,8 @@
 ## Test environments
 * win-builder (devel and release)
 * rhub
-* local OS X install, R 4.1.1
-* local Linux, R 4.1.1
+* local OS X install, R 4.4.2
+* local Linux, R 4.4.2
 
 ## R CMD check results
 There were no ERRORs or WARNINGs. 
