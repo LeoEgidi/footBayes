@@ -1,6 +1,6 @@
 functions{
 
-    real bipois_lpmf(int[] r , real mu1,real mu2,real mu3) {
+    real bipois_lpmf(array[] int r , real mu1,real mu2,real mu3) {
       real ss;
       real log_s;
       real mus;
@@ -23,7 +23,7 @@ functions{
       }
       return(ss);
     }
-    real diag_infl_bipois_lpmf(int[] r , real mu1,real mu2,real mu3, real p) {
+    real diag_infl_bipois_lpmf(array[] int r , real mu1,real mu2,real mu3, real p) {
     // This way is the easiest and proposed by https://github.com/Torvaney/karlis-ntzoufras-reproduction.
     // However, within model block, we propose in a comment the alternative way that Stan proposes in their documentation for zero inflated models
       real base_prob;
@@ -44,14 +44,14 @@ functions{
 }
     data{
       int N;   // number of games
-      int y[N,2];
+      array[N,2] int y;
       int nteams;
-      int team1[N];
-      int team2[N];
+      array[N] int team1;
+      array[N] int team2;
       int ntimes;                 // dynamic periods
-      int time[ntimes];
-      int instants[N];
-      int instants_rank[N];
+      array[ntimes] int time;
+      array[N] int instants;
+      array[N] int instants_rank;
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
@@ -192,9 +192,9 @@ functions{
 }
 
 generated quantities{
-      int y_rep[N,2];
+      array[N,2] int y_rep;
       vector[N] log_lik;
-      int diff_y_rep[N];
+      array[N] int diff_y_rep;
 
       //in-sample replications
       for (n in 1:N){

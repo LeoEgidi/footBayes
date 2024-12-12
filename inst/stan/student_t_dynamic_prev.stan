@@ -4,16 +4,16 @@ data {
   int nteams;                  // number of teams
   int ntimes;                  // number of dynamic periods for abilities
   int ntimes_rank;             // number of dynamic periods for rankings
-  int team1[N];
-  int team2[N];
-  int team1_prev[N_prev];
-  int team2_prev[N_prev];
+  array[N] int team1;
+  array[N] int team2;
+  array[N_prev] int team1_prev;
+  array[N_prev] int team2_prev;
   matrix[N, 2] y;
   real nu;
-  int time[ntimes];
-  int instants[N];             // time indices for abilities
-  int instants_prev[N_prev];
-  int instants_rank[N];        // time indices for rankings
+  array[ntimes] int time;
+  array[N] int instants;             // time indices for abilities
+  array[N_prev] int instants_prev;
+  array[N] int instants_rank;        // time indices for rankings
   matrix[ntimes_rank, nteams] ranking; // rankings over time
 
   // priors part
@@ -38,7 +38,7 @@ parameters {
   real<lower=0> sigma_alpha;
 }
 transformed parameters {
-  real ability [ntimes, ntimes_rank, nteams];
+  array[ntimes, ntimes_rank, nteams] real ability;
   matrix[ntimes, nteams] mu_alpha;
 
   for (t in 1:ntimes) {

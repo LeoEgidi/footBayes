@@ -2,14 +2,14 @@ data {
       int<lower=1> N;          // Number of observations
       int<lower=1> nteams;          // Number of teams
       int<lower=1> ntimes_rank;      // Number of time points
-      int<lower=1, upper=ntimes_rank> instants_rank[N];  // Time point of each observation
-      int<lower=1, upper=nteams> team1[N];  // Index of team1 in each observation
-      int<lower=1, upper=nteams> team2[N];  // Index of team2 in each observation
+      array[N] int<lower=1, upper=ntimes_rank> instants_rank;  // Time point of each observation
+      array[N] int<lower=1, upper=nteams> team1;  // Index of team1 in each observation
+      array[N] int<lower=1, upper=nteams> team2;  // Index of team2 in each observation
       real mean_logStrength;                // Initial mean for logStrength
       real<lower=0> sd_logStrength;         // Standard deviation of the AR(1) process
       real mean_logTie;
       real<lower=0> sd_logTie;
-      int<lower=1, upper=3> y[N];      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
+      array[N] int<lower=1, upper=3> y;      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
       int<lower=0, upper=1> ind_home;        // Home effect indicator
       real mean_home;              // Mean for home effect
       real<lower=0> sd_home;      // Standard deviation for home effect
@@ -69,7 +69,7 @@ data {
     vector[N] log_lik;
 
     // Posterior predictive vector
-    int y_rep[N];
+    array[N] int y_rep;
 
     for (n in 1:N) {
         // Delta values

@@ -1,13 +1,13 @@
 data {
       int N;                       // number of matches
       int nteams;                  // number of teams
-      int team1[N];                // team 1 indices
-      int team2[N];                // team 2 indices
+      array[N] int team1;                // team 1 indices
+      array[N] int team2;                // team 2 indices
       matrix[N, 2] y;              // scores: column 1 is team1, column 2 is team2
       int ntimes;                  // number of dynamic periods for abilities
       int ntimes_rank;             // number of dynamic periods for rankings
-      int instants[N];             // time indices for abilities
-      int instants_rank[N];
+      array[N] int instants;             // time indices for abilities
+      array[N] int instants_rank;
       matrix[ntimes_rank, nteams] ranking; // rankings over time
       real nu;                     // degrees of freedom for the Student's t-distribution
 
@@ -34,7 +34,7 @@ data {
   real<lower=0> sigma_alpha;
 }
 transformed parameters {
-  real ability [ntimes, ntimes_rank, nteams];
+  array[ntimes, ntimes_rank, nteams] real ability;
   matrix[ntimes, nteams] mu_alpha;
 
   for (t in 1:ntimes) {

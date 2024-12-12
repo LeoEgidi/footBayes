@@ -1,3 +1,9 @@
+# footBayes 1.0.0
+
+* Bradley-Terry model for abilities
+* Dynamic ranking in the models
+* Updated vignette
+* Probabilistic predictive performance (pseudo-R squared, Brier score)
 
 # footBayes 0.2.0
 

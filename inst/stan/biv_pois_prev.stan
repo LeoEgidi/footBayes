@@ -1,6 +1,6 @@
 functions{
 
-      real bipois_lpmf(int[] r , real mu1,real mu2,real mu3) {
+      real bipois_lpmf(array[] int r , real mu1,real mu2,real mu3) {
         real ss;
         real log_s;
         real mus;
@@ -28,14 +28,14 @@ functions{
     data{
       int N;   // number of games
       int N_prev;
-      int y[N,2];
+      array[N,2] int y;
       int nteams;
-      int instants_rank[N];
+      array[N] int instants_rank;
       int ntimes_rank;                 // dynamic periods for ranking
-      int team1[N];
-      int team2[N];
-      int team1_prev[N_prev];
-      int team2_prev[N_prev];
+      array[N] int team1;
+      array[N] int team2;
+      array[N_prev]int team1_prev;
+      array[N_prev] int team2_prev;
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
       real mean_home;              // Mean for home effect
@@ -65,7 +65,7 @@ functions{
       real adj_h_eff;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
-      vector[3] theta[N];
+      array[N] vector[3] theta;
 
       for (t in 1:nteams){
         att[t] = att_raw[t]-mean(att_raw);
@@ -136,11 +136,11 @@ functions{
       }
     }
     generated quantities{
-      int y_rep[N,2];
-      int y_prev[N_prev,2];
-      vector[3] theta_prev[N_prev];
+      array[N,2]int y_rep;
+      array[N_prev,2] int y_prev;
+      array[N_prev] vector[3] theta_prev;
       vector[N] log_lik;
-      int diff_y_rep[N];
+      array[N] int diff_y_rep;
 
       //in-sample replications
       for (n in 1:N){

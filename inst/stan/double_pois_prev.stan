@@ -1,13 +1,13 @@
 data{
       int N;                      // number of games
       int N_prev;                 // number of predicted games
-      int y[N,2];                 // scores
+      array[N,2] int y;                 // scores
       int nteams;                 // number of teams
-      int team1[N];               // home team index
-      int team2[N];               // away team index
-      int team1_prev[N_prev];     // home team for pred.
-      int team2_prev[N_prev];     // away team for pred.
-      int instants_rank[N];
+      array[N] int team1;               // home team index
+      array[N] int team2;               // away team index
+      array[N_prev] int team1_prev;     // home team for pred.
+      array[N_prev] int team2_prev;     // away team for pred.
+      array[N] int instants_rank;
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
@@ -37,7 +37,7 @@ data{
       real adj_h_eff;                   // Adjusted home effect
       vector[nteams] att;        // attack parameters
       vector[nteams] def;        // defence parameters
-      vector[2] theta[N];        // exponentiated linear pred.
+      array[N] vector[2] theta;        // exponentiated linear pred.
 
       for (t in 1:nteams){
         att[t] = att_raw[t]-mean(att_raw);
@@ -104,11 +104,11 @@ data{
 
     }
     generated quantities{
-      int y_rep[N,2];
-      int y_prev[N_prev,2];
-      vector[2] theta_prev[N_prev];
+      array[N,2] int y_rep;
+      array[N_prev,2] int y_prev;
+      array[N_prev] vector[2] theta_prev;
       vector[N] log_lik;
-      int diff_y_rep[N];
+      array[N] int diff_y_rep;
 
       //in-sample replications
       for (n in 1:N){
