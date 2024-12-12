@@ -334,9 +334,6 @@ In this section, we will walk through the steps to use the ```btd_foot``` functi
 
 To this aim, we will use data from the Italian football league for the seasons 2020 and 2021.
 ```{r BTD_data, echo = TRUE, eval = NOT_CRAN}
-library(dplyr)
-library(footBayes) 
-
 data("italy")
 
  italy_2020_2021 <- italy %>%
@@ -568,8 +565,7 @@ plot_btdPosterior(fit_result_dyn,
 
 plot_btdPosterior(fit_result_stat, 
                   teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
-                  plot_type = "density",
-                  scales = "free_y")
+                  plot_type = "density")
 
 
 
