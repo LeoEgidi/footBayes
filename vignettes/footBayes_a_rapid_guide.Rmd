@@ -333,7 +333,7 @@ In this section, we will walk through the steps to use the ```btd_foot``` functi
   - `3` if the away team wins.
 
 To this aim, we will use data from the Italian football league for the seasons 2020 and 2021.
-```{r BTD_data, echo = TRUE, eval = NOT_CRAN}
+```{r BTD_data, echo = TRUE, eval = TRUE}
 library(dplyr)
 library(footBayes) 
 
@@ -382,7 +382,7 @@ The Bayesian BTD model provides posterior distributions for the log-tie and log-
 - ```mean```:  Uses the posterior mean.
 - ```map```: Uses the maximum a posteriori estimate.
 
-```{r BTD_model_1_dyn, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+```{r BTD_model_1_dyn, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Dynamic Ranking Example with Median Rank Measure
  fit_result_dyn <- btd_foot(
    data = italy_2020_2021,
@@ -399,14 +399,14 @@ The Bayesian BTD model provides posterior distributions for the log-tie and log-
 
 The ```btd_foot``` output is an object of class ```btdFoot``` that includes a custom ```print``` function providing detailed posterior summaries of the model parameters. This function allows users to specify the parameters and teams to display via the ```pars ``` and  ```teams``` arguments, respectively, set the number of digits through the  ```digits ``` argument, and determine whether to show rankings, parameters, or both using the  ```display ``` argument.
 
-```{r BTD_model_1_dyn_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r BTD_model_1_dyn_print, message = FALSE, echo = TRUE, eval = TRUE}
 print(fit_result_dyn, 
       display = "parameters", 
       pars = c("logStrength","logTie"),
       teams = c("AC Milan", "AS Roma"))
 ```
 
-```{r BTD_model_1_stat, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+```{r BTD_model_1_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 
  # Static Ranking Example with MAP Rank Measure
  fit_result_stat <- btd_foot(
@@ -419,7 +419,7 @@ print(fit_result_dyn,
  )
 ```
 
-```{r BTD_model_1_stat_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r BTD_model_1_stat_print, message = FALSE, echo = TRUE, eval = TRUE}
 
 print(fit_result_stat, 
       pars = c("logStrength","logTie"),
@@ -447,7 +447,7 @@ The ```prior_par``` argument allows the user to specify a list of prior distribu
  
 Below is an example of how to incorporate the home-field effect into the ```btd_foot``` function by modifying the priors and enabling the home_effect parameter.
 
-```{r BTD_model_2, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+```{r BTD_model_2, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Dynamic Ranking Example with Median Rank Measure
  fit_result_dyn_2 <- btd_foot(
    data = italy_2020_2021,
@@ -467,14 +467,14 @@ Below is an example of how to incorporate the home-field effect into the ```btd_
  )
 ```
 
-```{r BTD_model_2_dyn_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r BTD_model_2_dyn_print, message = FALSE, echo = TRUE, eval = TRUE}
 
 print(fit_result_dyn_2, 
       display = "parameters", 
       pars = c("logTie", "home"))
 ```
 
-```{r BTD_model_2_stat, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+```{r BTD_model_2_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 
  # Static Ranking Example with MAP Rank Measure
  fit_result_stat_2 <- btd_foot(
@@ -493,7 +493,7 @@ print(fit_result_dyn_2,
  )
 ```
 
-```{r BTD_model_2_stat_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r BTD_model_2_stat_print, message = FALSE, echo = TRUE, eval = TRUE}
 
 print(fit_result_stat_2, 
       pars = c("logTie", "home"))
@@ -506,7 +506,7 @@ After fitting the model, the ```btd_foot``` function outputs an object of class 
 
 By default, ```plot_btdPosterior``` generates boxplots of the posterior distributions of teams' log-strengths. This is particularly useful for comparing the central tendency and variability of team strengths across different periods or between teams.
 
-```{r plot_btdPosterior_dyn, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r plot_btdPosterior_dyn, echo = TRUE, eval = TRUE, fig.show="hold"}
 
 # Dynamic Ranking
 
@@ -514,7 +514,7 @@ plot_btdPosterior(fit_result_dyn)
 
 ```
 
-```{r plot_btdPosterior_stat, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r plot_btdPosterior_stat, echo = TRUE, eval = TRUE, fig.show="hold"}
 
 # Static Ranking
 
@@ -525,7 +525,7 @@ plot_btdPosterior(fit_result_stat)
 
 It is also possible to select specific teams to plot by using the ```teams``` argument
 
-```{r plot_btdPosterior_teams_dyn, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r plot_btdPosterior_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"}
 
 # Dynamic Ranking
 
@@ -535,7 +535,7 @@ plot_btdPosterior(fit_result_dyn,
 ```
 
 
-```{r plot_btdPosterior_teams_stat, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r plot_btdPosterior_teams_stat, echo = TRUE, eval = TRUE, fig.show="hold"}
 
 # Static Ranking
 
@@ -551,7 +551,7 @@ plot_btdPosterior(fit_result_stat,
 Additionally, it is possible to plot the posterior density by setting  ```plot_type = "density"```  
 
 
-```{r plot_btdPosterior_teams_dyn_dens, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r plot_btdPosterior_teams_dyn_dens, echo = TRUE, eval = TRUE, fig.show="hold"}
 
 # Dynamic Ranking
 
@@ -562,7 +562,7 @@ plot_btdPosterior(fit_result_dyn,
 ```
 
 
-```{r plot_btdPosterior_teams_stat_dens, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r plot_btdPosterior_teams_stat_dens, echo = TRUE, eval = TRUE, fig.show="hold"}
 
 # Static Ranking
 
@@ -578,7 +578,7 @@ plot_btdPosterior(fit_result_stat,
 
 Furthermore, the ```plot_logStrength``` function allows for plotting team rankings based on different summary measures of the posterior log-strengths, including the median, mean, and maximum a posteriori (MAP) estimates used in the ```btd_foot``` function. Specifically, this function generates a ggplot object that represents the log-strength values of teams, facilitating the comparison of team performance across different periods or among various teams. Similar to the ```plot_btdPosterior``` function, specific teams can be selected using the ```teams``` argument.
 
-```{r plot_logStrength_teams_dyn, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r plot_logStrength_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"}
 
 # Dynamic Ranking
 
@@ -598,7 +598,7 @@ To start with some analysis, let's now ```italy```  data about the Italian Serie
 
 At this stage, we are currently ignoring any time-dependence in our parameters, considering them to be **static** across distinct match-times.  
 
-```{r static_fit, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+```{r static_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 
 ### Use Italian Serie A 2000/2001
 
@@ -636,7 +636,7 @@ fit1_stan <- stan_foot(data = italy_2000,
 
 Similarly to the ```btd_foot``` function, the custom ```print``` function for an object of class ```stanFoot```  provides the usual Bayesian model summaries , including posterior means, medians, standard deviations, percentiles at 2.5\%, 25\%, 75\%, 97.5\% level, effective sample size (```n_eff```) and Gelman-Rubin statistic (```Rhat```). It accepts the same arguments as described previously.
 
-```{r static_fit_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r static_fit_print, message = FALSE, echo = TRUE, eval = TRUE}
 
 ## Print of model summary for parameters:
 
@@ -663,7 +663,7 @@ where $\rho$ is assigned an half-Gaussian distribution with standard deviation e
 
 We can also depict the marginal posterior distributions for $\rho$ (and eventually for the other fixed-effects parameters) using the ```bayesplot``` package for Bayesian visualizations:
 
-```{r static_fit_corr, echo =TRUE, eval = NOT_CRAN}
+```{r static_fit_corr, echo =TRUE, eval = TRUE}
 ## Marginal posterior with bayesplot
 
 posterior1 <- as.matrix(fit1_stan$fit)
@@ -674,7 +674,7 @@ mcmc_areas(posterior1, regex_pars=c("home", "rho",
 
 We can also access the original BP Stan code by typing:
 
-```{r stan_extract, echo = TRUE, eval = NOT_CRAN}
+```{r stan_extract, echo = TRUE, eval = TRUE}
 ### Model's code extraction
 
 fit1_stan$stan_code
@@ -682,7 +682,7 @@ fit1_stan$stan_code
 
 We fit now the same model under the MLE approach with Wald-type confidence intervals. We can then print the MLE estimates, e.g for the parameters $\rho$ and $\text{home}$:
 
-```{r static_fit2, echo = TRUE, eval = NOT_CRAN}
+```{r static_fit2, echo = TRUE, eval = TRUE}
 ### Fit MLE models
 ## no dynamics, no predictions
 ## Wald intervals
@@ -715,7 +715,7 @@ One of the common practices in Bayesian statistics is to change the priors and p
  
 where $t(\text{df}, \mu, \sigma)$ denotes a student-$t$ distribution with df degrees of freedom, location $\mu$ and scale $\sigma$, whereas $\mathsf{Laplace}^+$ denotes a half-Laplace distribution.
 
-```{r static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = NOT_CRAN}
+```{r static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = TRUE}
 ### Fit Stan models
 ## changing priors
 ## student-t for team-specific abilities, laplace for sds
@@ -734,7 +734,7 @@ fit1_stan_t <- stan_foot(data = italy_2000,
 
 Then, we can compare the marginal posteriors from the two models, the one with Gaussian team-specific abilities and the default $\mathsf{Cauchy}(0,5)$ for the team-level sds, and the other one specified above, with student-$t$ distributed team-specific abilities and the $\mathsf{Laplace}^+(0,1)$ for the team-level sds. We depict here the comparison for the attack team-level sds only:
 
-```{r comparing_priors, eval = NOT_CRAN}
+```{r comparing_priors, eval = TRUE}
 ## comparing posteriors
 
 posterior1_t <- as.matrix(fit1_stan_t$fit)
@@ -793,7 +793,7 @@ with hyperparameters $\mu_{\text{att}}, \mu_{\text{def}}, \sigma_{\text{att}}, \
  We can use the ```dynamic_type``` argument in the ```stan_foot``` function, with possible options ```'seasonal'``` or ```'weekly'``` in order to consider more seasons (no examples are given in this course) or more week-times within a single season, respectively.  Let's fit a weekly-dynamic parameters model on the Serie A 2000/2001 season:
 
 
-```{r dynamic_fit,message = FALSE, results='hide', echo =TRUE, eval = NOT_CRAN}
+```{r dynamic_fit,message = FALSE, results='hide', echo =TRUE, eval = TRUE}
 ### Fit Stan models
 ## seasonal dynamics, no predictions
 ## 4 Markov chains, 'n_iter' iterations each
@@ -805,7 +805,7 @@ fit2_stan <- stan_foot(data = italy_2000,
                        iter = n_iter) # biv poisson
 ```
 
-```{r dynamic_fit_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r dynamic_fit_print, message = FALSE, echo = TRUE, eval = TRUE}
 
 print(fit2_stan, pars =c("home", "rho", "sigma_att",
                         "sigma_def"))
@@ -815,7 +815,7 @@ From the printed summary, we may note that the degree of goals' correlation seem
 
 To deal with these issues and broaden the set of candidate models, let's fit also a dynamic double-Poisson model with the ```double_pois``` option for the argument ```model```:
 
-```{r weekly_fit, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+```{r weekly_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 ### Fit Stan models
 ## weekly dynamics, no predictions
 ## 4 chains, 'n_iter' iterations each
@@ -828,7 +828,7 @@ fit3_stan <- stan_foot(data = italy_2000,
 
 ```
 
-```{r weekly_fit_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r weekly_fit_print, message = FALSE, echo = TRUE, eval = TRUE}
 
 print(fit3_stan, pars =c("home", "sigma_att",
                         "sigma_def"))
@@ -843,7 +843,7 @@ The fitting problems mentioned above remain also for the double Poisson model...
  \sigma_{\text{att}},  \sigma_{\text{def}} &\ \sim \mathsf{Cauchy}^+(0,25),
  \end{align}
 
-```{r weekly_fit_t, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+```{r weekly_fit_t, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 ### Fit Stan models
 ## weekly dynamics, no predictions
 ## 4 chains, 'n_iter' iterations each
@@ -859,7 +859,7 @@ fit3_stan_t <- stan_foot(data = italy_2000,
                 iter = n_iter)  # double poisson
 ```
 
-```{r weekly_fit_t_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r weekly_fit_t_print, message = FALSE, echo = TRUE, eval = TRUE}
 
 print(fit3_stan_t, pars =c("home", "sigma_att",
                            "sigma_def"))
@@ -887,7 +887,7 @@ One of the main features of the ```footBayes``` package is the ability to first 
 
 The ability to use either ```btdFoot``` objects or custom ranking data frames provides flexibility in how the user can model team strengths, allowing for the integration of various ranking systems, such as the [FIFA ranking](https://inside.fifa.com/fifa-world-ranking).
 
-```{r btd_foot_and_stan_foot, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+```{r btd_foot_and_stan_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 
 # Dynamic Bradley-Terry-Davidson model
 
@@ -953,7 +953,7 @@ data("italy")
 
 ```
 
-```{r btd_foot_and_stan_foot_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r btd_foot_and_stan_foot_print, message = FALSE, echo = TRUE, eval = TRUE}
 
 print(fit_stan_rank, 
       pars = c("home","rho","sigma_att", "sigma_def"))
@@ -970,7 +970,7 @@ Once the model has been fitted, there is a large amount of interesting summaries
 
 We can produce the team-specific abilities for the two static fits above, ```fit1_mle``` (MLE) and ```fit1_stan``` (Bayes), with red bars for the attack and blue bars for the defence, respectively:
 
-```{r abilities, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r abilities, echo = TRUE, eval = TRUE, fig.show="hold"}
 ## Plotting abilities: credible and confidence 95% intervals
 
 foot_abilities(object = fit1_stan, data = italy_2000, cex.var = 1)
@@ -981,7 +981,7 @@ AS Roma, the team winning the Serie A 2000/2001, is associated with the highest 
 
 We can also depict the team-specific dynamic plots for the dynamic models:
 
-```{r abilities_dyn, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r abilities_dyn, echo = TRUE, eval = TRUE, fig.show="hold"}
 ## Plotting abilities: credible and confidence 95% intervals
 
 foot_abilities(fit2_stan, italy_2000)
@@ -1003,7 +1003,7 @@ The function ```pp_foot``` allows to obtain:
 - a visualization of the match-ordered goal differences along with their 50\% and 95\% credible intervals.
 
 
-```{r pp_foot, echo = TRUE, eval = NOT_CRAN}
+```{r pp_foot, echo = TRUE, eval = TRUE}
 ## PP checks: aggregated goal's differences and ordered goal differences
 
 pp_foot(object = fit1_stan, data = italy_2000,
@@ -1020,7 +1020,7 @@ In the second plot, the ordered observed goal differences are plotted against th
 
 Other useful PP checks, such as the overlap between data density and replicated data densities to check eventual inconsistencies, can be obtained through the standard use of the ```bayesplot``` package, in this case providing an approximation to a continuous distribution using an input kernel choice (```bw = 0.5``` in the ```ppc_dens_overlay``` used below):
 
-```{r pp_checks, echo = TRUE, eval = NOT_CRAN}
+```{r pp_checks, echo = TRUE, eval = TRUE}
 ## PPC densities overlay with the bayesplot package
 
 # extracting the replications
@@ -1058,7 +1058,7 @@ $$p(\tilde{\mathcal{D}}| \mathcal{D}) = \int p(\tilde{\mathcal{D}}| \boldsymbol{
 
 We may then predict test set matches by using the argument ```predict``` of the ```stan_foot``` function, for instance considering the last four weeks of the 2000/2001 season as the test set, and then computing posterior-results probabilities using the function ```foot_prob``` for two teams belonging to the test set, such as Reggina Calcio and AC Milan:
 
-```{r weekly_predict,message = FALSE, results='hide', echo=TRUE, eval = NOT_CRAN}
+```{r weekly_predict,message = FALSE, results='hide', echo=TRUE, eval = TRUE}
 ### Fit Stan models
 ## weekly dynamics, predictions of last four weeks
 ## 4 chains 'n_iter' iterations each
@@ -1071,7 +1071,7 @@ fit4_stan <- stan_foot(data = italy_2000,
                        iter = n_iter)  # biv poisson
 ```
 
-```{r foot_prob_weekly_predict, echo = TRUE, eval = NOT_CRAN, fig.show="hold"}
+```{r foot_prob_weekly_predict, echo = TRUE, eval = TRUE, fig.show="hold"}
 foot_prob(object = fit4_stan, data = italy_2000,
           home_team = "Reggina Calcio",
           away_team= "AC Milan")
@@ -1093,7 +1093,7 @@ p_{\text{loss}} = &\ \textrm{Pr} (X<Y)=\frac{1}{S}\sum_{s=1}^S| \tilde{x}^{(s)}<
 where $(\tilde{x}^{(s)}, \tilde{y}^{(s)})$ represents the $s$-th MCMC pair of the future home goals and away goals for a given match, respectively. According to this scenario, we can depict the home-win posterior probabilities of a given test set through the function ```foot_round_robin```:
 
 
-```{r foot_roundrobin, echo=TRUE, eval = NOT_CRAN}
+```{r foot_roundrobin, echo=TRUE, eval = TRUE}
 ## Home win out-of-sample probabilities
 
 foot_round_robin(object = fit4_stan, data = italy_2000)
@@ -1111,7 +1111,7 @@ We can provide here:
 
 - **rank-league reconstruction** for the first model ```fit1_stan```  by using the **in-sample** replications $\mathcal{D}^{\text{rep}}$ (yellow ribbons for the credible intervals, solid blue lines for the observed cumulated points):
 
-```{r rank_pred1, echo=TRUE, eval = NOT_CRAN}
+```{r rank_pred1, echo=TRUE, eval = TRUE}
 ## Rank league reconstruction
 
 # aggregated plot
@@ -1128,7 +1128,7 @@ foot_rank(object = fit1_stan, data = italy_2000,
 
 - **rank-league prediction** (aggregated or at team-level) for the fourth model ```fit4_stan``` by using the **out-of-sample** replications $\tilde{\mathcal{D}}$ (yellow ribbons for the credible intervals, solid blue lines for the observed cumulated points):
 
-```{r rank_pred2, echo=TRUE, eval = NOT_CRAN}
+```{r rank_pred2, echo=TRUE, eval = TRUE}
 ## Rank predictions for individual teams
 
 # aggregated plot
@@ -1154,7 +1154,7 @@ foot_rank(object = fit4_stan, data = italy_2000,
 
 Evaluating the performance of these models is crucial to understand their predictive power and reliability. The ```compare_foot``` function provides a comprehensive way to compare different models or probability matrices using metrics like accuracy, Brier score, ranked probability score (RPS), Pseudo $R^2$, and average coverage probability (ACP). It also offers the option to compute confusion matrices for a detailed performance analysis.
 
-```{r compare_foot, message = FALSE, results='hide', echo = TRUE, eval = NOT_CRAN}
+```{r compare_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 
 italy_2020_2021_fit <- italy %>%
   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%  
@@ -1203,7 +1203,7 @@ italy_2020_2021_test <- italy %>%
 
 ```
 
-```{r compare_foot_print, message = FALSE, echo = TRUE, eval = NOT_CRAN}
+```{r compare_foot_print, message = FALSE, echo = TRUE, eval = TRUE}
 
 compare_results_models <- compare_foot(
   source = list(biv_pois = fit_comp_1,
@@ -1242,7 +1242,7 @@ This is the **Occam's Razor** occurring in statistics:
 
 We can perform Bayesian model comparisons by using the ```loo``` and ```waic``` functions of the ```loo``` package. We are going to compare the static and the weekly dynamic models on the Italian Serie A 2000/2001:
 
-```{r loo, echo = TRUE, eval = NOT_CRAN}
+```{r loo, echo = TRUE, eval = TRUE}
 ### Model comparisons
 ## LOOIC, loo function
 
