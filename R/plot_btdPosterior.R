@@ -199,7 +199,7 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
         if (is.null(scales)) scales <- "free_x"
 
         # Dynamic Posterior Density Plot using ggridges
-        p <- ggplot(data_df, aes(x = .data$log_strength, y = as.factor(period), fill = stat(quantile))) +
+        p <- ggplot(data_df, aes(x = .data$log_strength, y = as.factor(period), fill = after_stat(quantile))) +
           ggridges::stat_density_ridges(quantile_lines = TRUE,
                                         calc_ecdf = TRUE,
                                         geom = "density_ridges_gradient",
@@ -224,7 +224,7 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
           )
       } else {
         # Static Posterior Density Plot using ggridges
-        p <- ggplot(data_df, aes(x = .data$log_strength, y = team, fill = stat(quantile))) +
+        p <- ggplot(data_df, aes(x = .data$log_strength, y = team, fill = after_stat(quantile))) +
           ggridges::stat_density_ridges(quantile_lines = TRUE,
                                         calc_ecdf = TRUE,
                                         geom = "density_ridges_gradient",
@@ -239,7 +239,7 @@ plot_btdPosterior <- function(x, pars = "logStrength", plot_type = "boxplot", te
             fill = "Probability"
           ) +
           theme_bw() +
-          theme(legend.position = "top")
+          theme(legend.position = "top") +
           scale_fill_manual(name = "Prob.", values = c("#FFA500", "#1E90FF", "#FFA500"),
                             labels = c("(0, 2.5%]", "(2.5%, 97.5%]", "(97.5%, 1]")) +
           scale_y_discrete(
