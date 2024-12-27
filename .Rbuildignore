@@ -10,7 +10,7 @@
 ^doc$
 ^Meta$
 
-^vignettes/.*\.(Rmd|Rnw|R|bib)$
+^vignettes/.*\.(Rmd|Rnw|R|bib|html)$
 ^inst/doc$
 
 
