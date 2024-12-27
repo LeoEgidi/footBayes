@@ -12,7 +12,7 @@ There are currently no downstream dependencies for this package.
 
 ## Note
 We provide a pre-compiled vignette due to its slow time of compilation
-in the inst/doc sub-folder.
+in the inst/precompiled sub-folder.
 
 Thank you
 
