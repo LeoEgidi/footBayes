@@ -3,7 +3,16 @@ Type: Package
 Title: Fitting Bayesian and MLE Football Models
 Version: 1.0.0
 Date: 2024-11-27
-Author: Leonardo Egidi[aut, cre], Roberto Macrì Demartino[aut], and Vasilis Palaskas[aut].
+Authors@R: c(person(given = "Leonardo",
+                      family = "Egidi",
+                      role = c("aut", "cre"),
+                      email = "legidi@units.it"),
+               person(given = c("Roberto", "Macrì"),
+                      family = "Demartino",
+                      role = "aut"),
+               person(given = "Vasilis",
+                      family = "Palaskas.",
+                      role = "aut"))
 Maintainer: Leonardo Egidi <legidi@units.it>
 License: GPL-2
 Description: This is the first package allowing for the estimation,
