@@ -3,7 +3,7 @@
 * Bradley-Terry model for abilities
 * Dynamic ranking in the models
 * Updated vignette
-* Probabilistic predictive performance (pseudo-R squared, Brier score)
+* Probabilistic predictive performance (pseudo-R squared, Brier score, etc.)
 
 # footBayes 0.2.0
 
