@@ -11,4 +11,6 @@
 ^Meta$
 
 ^vignettes/.*\.(Rmd|Rnw|R|bib)$
+^inst/doc$
+
 
