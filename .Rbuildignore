@@ -10,5 +10,5 @@
 ^doc$
 ^Meta$
 
-^vignettes/.*\.(Rmd|Rnw)$
+^vignettes/.*\.(Rmd|Rnw|R|bib)$
 
