@@ -9,3 +9,6 @@
 
 ^doc$
 ^Meta$
+
+^vignettes/.*\.(Rmd|Rnw)$
+
