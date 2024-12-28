@@ -1,8 +1,8 @@
 functions{
       real skellam_lpmf(int k, real lambda1, real lambda2) {
-        //real r = k;
-        return -(lambda1 + lambda2) + (k/2) * log(lambda1/lambda2) +
-          log(modified_bessel_first_kind(abs(k), 2 * sqrt(lambda1 * lambda2)));
+        real r = k;
+        return -(lambda1 + lambda2) + (r/2) * log(lambda1/lambda2) +
+          log(modified_bessel_first_kind(k, 2 * sqrt(lambda1 * lambda2)));
       }
     }
     data{
