@@ -54,7 +54,7 @@ functions{
       vector[nteams] def_raw;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
-      real beta;
+      //real beta;
       real rho;
       real home;
       real gamma;
