@@ -62,7 +62,7 @@ stan_foot(
 
   See the \pkg{rstanarm} package for more details on specifying priors.}
 
-\item{home_effect}{A logical value indicating the inclusion of a home effect in the model. (default is \code{FALSE}).}
+\item{home_effect}{A logical value indicating the inclusion of a home effect in the model. (default is \code{TRUE}).}
 
 \item{norm_method}{A character string specifying the method used to normalize team-specific ranking points. Options are:
 \itemize{
