@@ -40,7 +40,7 @@
 #'   }
 #'
 #'   See the \pkg{rstanarm} package for more details on specifying priors.
-#' @param home_effect A logical value indicating the inclusion of a home effect in the model. (default is \code{FALSE}).
+#' @param home_effect A logical value indicating the inclusion of a home effect in the model. (default is \code{TRUE}).
 #' @param norm_method A character string specifying the method used to normalize team-specific ranking points. Options are:
 #'   \itemize{
 #'     \item \code{"none"}: No normalization (default).
