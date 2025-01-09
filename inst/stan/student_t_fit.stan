@@ -9,6 +9,10 @@ data {
     array[N] int team2;                // team 2 indices
     matrix[N, 2] y;              // scores: column 1 is team1, column 2 is team2
     real nu;                     // degrees of freedom for the Student's t-distribution
+    int<lower=0, upper=1> ind_home;
+    real mean_home;              // Mean for home effect
+    real<lower=0> sd_home;      // Standard deviation for home effect
+
 
     // Priors part
     int<lower=1,upper=4> prior_dist_num;    // 1: Gaussian, 2: t, 3: Cauchy, 4: Laplace
@@ -30,10 +34,14 @@ parameters {
     real<lower=0> sigma_a;           // standard deviation for random effects
     real<lower=0> sigma_y;           // noise term
     real<lower=0> sigma_alpha;       // standard deviation for alpha prior
+    real home;                      // home effect
 }
 transformed parameters {
     // Mixed effects model - common coefficient * dynamic ranking + random effects
     matrix[ntimes_rank, nteams] ability;
+    real adj_h_eff;                   // Adjusted home effect
+
+    adj_h_eff = home * ind_home;
 
     for (t in 1:ntimes_rank) {
         ability[t] = beta * ranking[t] + (alpha * sigma_a)';
@@ -68,11 +76,12 @@ model {
 
     beta ~ normal(0, 2.5);
     sigma_y ~ normal(0, 2.5);
+    target+=normal_lpdf(home|mean_home,sd_home);
 
     // Likelihood
     for (n in 1:N) {
         int rank_time = instants_rank[n];
-        diff_y[n] ~ student_t(nu, ability[rank_time, team1[n]] - ability[rank_time, team2[n]], sigma_y);
+        diff_y[n] ~ student_t(nu, adj_h_eff+ability[rank_time, team1[n]] - ability[rank_time, team2[n]], sigma_y);
     }
 }
 generated quantities {
@@ -81,7 +90,7 @@ generated quantities {
     vector[N] log_lik;
     for (n in 1:N) {
         int rank_time = instants_rank[n];
-        diff_y_rep[n] = student_t_rng(nu, ability[rank_time, team1[n]] - ability[rank_time, team2[n]], sigma_y);
-        log_lik[n] = student_t_lpdf(diff_y[n] | nu, ability[rank_time, team1[n]] - ability[rank_time, team2[n]], sigma_y);
+        diff_y_rep[n] = student_t_rng(nu, adj_h_eff+ability[rank_time, team1[n]] - ability[rank_time, team2[n]], sigma_y);
+        log_lik[n] = student_t_lpdf(diff_y[n] | nu, adj_h_eff+ability[rank_time, team1[n]] - ability[rank_time, team2[n]], sigma_y);
     }
 }

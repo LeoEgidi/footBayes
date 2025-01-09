@@ -11,6 +11,10 @@ data {
     array[N_prev] int team2_prev;     // Team 2 indices for predicted matches
     matrix[N, 2] y;             // Scores: column 1 is team1, column 2 is team2
     real nu;                    // Degrees of freedom for the Student's t-distribution
+    int<lower=0, upper=1> ind_home;
+    real mean_home;              // Mean for home effect
+    real<lower=0> sd_home;      // Standard deviation for home effect
+
 
     // Priors part
     int<lower=1,upper=4> prior_dist_num;    // 1: Gaussian, 2: t, 3: Cauchy, 4: Laplace
@@ -32,9 +36,13 @@ parameters {
     real<lower=0> sigma_a;          // Standard deviation for random effects
     real<lower=0> sigma_y;          // Noise term in our estimate
     real<lower=0> sigma_alpha;      // Standard deviation for alpha prior
+    real home;                      // home effect
 }
 transformed parameters {
     matrix[ntimes_rank, nteams] ability;
+     real adj_h_eff;                   // Adjusted home effect
+
+     adj_h_eff = home * ind_home;
 
     for (t in 1:ntimes_rank) {
         // Compute abilities for all teams at time t
@@ -70,12 +78,14 @@ model {
 
     beta ~ normal(0, 2.5);
     sigma_y ~ normal(0, 2.5);
+    target+=normal_lpdf(home|mean_home,sd_home);
 
     // Likelihood
     for (n in 1:N) {
         int rank_time = instants_rank[n];  // Time index for the current match
         diff_y[n] ~ student_t(
             nu,
+            adj_h_eff+
             ability[rank_time, team1[n]] - ability[rank_time, team2[n]],
             sigma_y
         );
@@ -90,11 +100,13 @@ generated quantities {
         int rank_time = instants_rank[n];
         diff_y_rep[n] = student_t_rng(
             nu,
+            adj_h_eff+
             ability[rank_time, team1[n]] - ability[rank_time, team2[n]],
             sigma_y
         );
         log_lik[n] = student_t_lpdf(
             diff_y[n] | nu,
+            adj_h_eff+
             ability[rank_time, team1[n]] - ability[rank_time, team2[n]],
             sigma_y
         );
@@ -103,6 +115,7 @@ generated quantities {
     for (n in 1:N_prev) {
         diff_y_prev[n] = student_t_rng(
             nu,
+            adj_h_eff+
             ability[instants_rank[N], team1_prev[n]] - ability[instants_rank[N], team2_prev[n]],
             sigma_y
         );
