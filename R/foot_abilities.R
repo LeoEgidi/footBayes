@@ -441,13 +441,14 @@ foot_abilities <- function(object, data,
 
       if (length(dim(ability)) > 3){
 
+        ability <- ability[,,1,] # consider abilities just with the first ranking period
         T <- dim(ability)[2]
-        nteams <- dim(ability)[4]
-        ability_med=apply(ability, c(3, 4), stats::median)
-        ability_025=apply(ability, c(3,4), function(x) stats::quantile(x, 0.025))
-        ability_25=apply(ability, c(3,4), function(x) stats::quantile(x, 0.25))
-        ability_75=apply(ability, c(3,4), function(x) stats::quantile(x, 0.75))
-        ability_975=apply(ability, c(3,4), function(x) stats::quantile(x, 0.975))
+        nteams <- dim(ability)[3]
+        ability_med=apply(ability, c(2,3), stats::median)
+        ability_025=apply(ability, c(2,3), function(x) stats::quantile(x, 0.025))
+        ability_25=apply(ability, c(2,3), function(x) stats::quantile(x, 0.25))
+        ability_75=apply(ability, c(2,3), function(x) stats::quantile(x, 0.75))
+        ability_975=apply(ability, c(2,3), function(x) stats::quantile(x, 0.975))
 
         squadre_valide <- match(sel_teams,unique(c(data$home_team, data$away_team)))
 
