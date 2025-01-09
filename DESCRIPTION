@@ -2,7 +2,7 @@ Package: footBayes
 Type: Package
 Title: Fitting Bayesian and MLE Football Models
 Version: 1.0.0
-Date: 2024-11-27
+Date: 2025-01-09
 Authors@R: c(person(given = "Leonardo",
                       family = "Egidi",
                       role = c("aut", "cre"),
