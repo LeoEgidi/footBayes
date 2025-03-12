@@ -7,7 +7,7 @@
 pp_foot(object, data, type = "aggregated", coverage = 0.95)
 }
 \arguments{
-\item{object}{An object either of class \code{stanFoot}, \code{CmdStanFit}, \code{\link[rstan]{stanfit}}.}
+\item{object}{An object either of class \code{stanFoot}, \code{CmdStanFit}, \code{stanfit}.}
 
 \item{data}{A data frame containing match data with columns:
 \itemize{
@@ -51,7 +51,7 @@ if (instantiate::stan_cmdstan_exists()) {
 
   colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
-  fit <- stan_foot(italy_2000, "double_pois", iter = 200)
+  fit <- stan_foot(italy_2000, "double_pois", iter_sampling = 200)
 
   pp_foot(fit, italy_2000)
 }

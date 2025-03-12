@@ -39,32 +39,31 @@
 #' @examples
 #' \dontrun{
 #' if (instantiate::stan_cmdstan_exists()) {
-#' library(tidyverse)
-#' library(dplyr)
+#'   library(dplyr)
 #'
-#' data("italy")
-#' italy_2000 <- italy %>%
-#'   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
-#'   dplyr::filter(Season == "2000")
+#'   data("italy")
+#'   italy_2000 <- italy %>%
+#'     dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
+#'     dplyr::filter(Season == "2000")
 #'
-#' colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
-#'
+#'   colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 #'
 #'
-#' fit <- stan_foot(
-#'   data = italy_2000,
-#'   model = "double_pois",
-#'   predict = 18
-#' ) # double pois
 #'
-#' foot_prob(
-#'   fit, italy_2000, "Inter",
-#'   "Bologna FC"
-#' )
+#'   fit <- stan_foot(
+#'     data = italy_2000,
+#'     model = "double_pois",
+#'     predict = 18
+#'   ) # double pois
 #'
-#' foot_prob(fit, italy_2000) # all the out-of-sample matches
+#'   foot_prob(
+#'     fit, italy_2000, "Inter",
+#'     "Bologna FC"
+#'   )
+#'
+#'   foot_prob(fit, italy_2000) # all the out-of-sample matches
 #' }
-#'}
+#' }
 #'
 #' @importFrom posterior as_draws_rvars draws_of
 #' @importFrom rstan extract
@@ -79,7 +78,6 @@
 
 
 foot_prob <- function(object, data, home_team, away_team) {
-
   #   ____________________________________________________________________________
   #   Data and argument checks                                                ####
 
@@ -166,8 +164,8 @@ foot_prob <- function(object, data, home_team, away_team) {
 
   if (length(find_match) == 0) {
     stop(paste("There is not any out-of-sample match:",
-               home_team, "-", away_team,
-               sep = ""
+      home_team, "-", away_team,
+      sep = ""
     ))
   }
 
@@ -255,8 +253,8 @@ foot_prob <- function(object, data, home_team, away_team) {
         row_pos_val <- pos[1]
         col_pos_val <- pos[2]
         mlo_val <- paste(row_pos_val - 1, "-", col_pos_val - 1, " (",
-                         round(max(counts_mix / (M * M)), 3), ")",
-                         sep = ""
+          round(max(counts_mix / (M * M)), 3), ")",
+          sep = ""
         )
 
         data_exp_tot <- rbind(data_exp_tot, data_exp)
@@ -341,8 +339,8 @@ foot_prob <- function(object, data, home_team, away_team) {
           col_pos[i] <- pos[2]
 
           mlo[i] <- paste(row_pos[i] - 1, "-", col_pos[i] - 1, " (",
-                          round(max(counts_mix / (M * M)), 3), ")",
-                          sep = ""
+            round(max(counts_mix / (M * M)), 3), ")",
+            sep = ""
           )
 
           data_exp_tot <- rbind(data_exp_tot, data_exp)
@@ -466,9 +464,9 @@ foot_prob <- function(object, data, home_team, away_team) {
         couple <- array(NA, c(n.iter, predict, 2))
         for (n in 1:N_prev) {
           couple[, n, ] <- rbvpois(n.iter,
-                                   a = mean_home[n],
-                                   b = mean_away[n],
-                                   c = corr[1, 2]
+            a = mean_home[n],
+            b = mean_away[n],
+            c = corr[1, 2]
           )
         }
         x <- couple[, , 1]
@@ -477,8 +475,8 @@ foot_prob <- function(object, data, home_team, away_team) {
         diff_y <- matrix(NA, n.iter, predict)
         for (n in 1:N_prev) {
           diff_y[, n] <- rskellam(n.iter,
-                                  mu1 = mean_home[n],
-                                  mu2 = mean_away[n]
+            mu1 = mean_home[n],
+            mu2 = mean_away[n]
           )
         }
         x <- diff_y
@@ -488,9 +486,9 @@ foot_prob <- function(object, data, home_team, away_team) {
         diff_y <- matrix(NA, n.iter, predict)
         for (n in 1:N_prev) {
           diff_y[, n] <- rt.scaled(n.iter,
-                                   df = 7,
-                                   mean = home[1, 2] + ability[team1_prev[n], 2] - ability[team2_prev[n], 2],
-                                   sd = sigma_y
+            df = 7,
+            mean = home[1, 2] + ability[team1_prev[n], 2] - ability[team2_prev[n], 2],
+            sd = sigma_y
           )
         }
         x <- round(diff_y)

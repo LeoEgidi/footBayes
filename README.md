@@ -4,7 +4,7 @@
 # footBayes <img src="man/figures/logo.png" width = 200 align="right" />
 
 [![CRAN Version](https://www.r-pkg.org/badges/version/footBayes)](https://cran.r-project.org/package=footBayes)
-[![R-CMD-check.yaml](https://github.com/RoMaD-96/footBayes_CmdStan/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RoMaD-96/footBayes_CmdStan/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check.yaml](https://github.com/RoMaD-96/footBayes/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RoMaD-96/footBayes/actions/workflows/R-CMD-check.yaml)
 [![Downloads](https://cranlogs.r-pkg.org/badges/footBayes?color=brightgreen)](https://CRAN.R-project.org/package=footBayes)
 
 The goal of `footBayes` is to propose a complete workflow to:

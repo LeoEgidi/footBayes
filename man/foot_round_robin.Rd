@@ -36,19 +36,21 @@ The dataset should refer to one or more seasons from a given national football l
 }
 \examples{
 \dontrun{
-library(dplyr)
+if (instantiate::stan_cmdstan_exists()) {
+  library(dplyr)
 
-data("italy")
-italy_1999_2000 <- italy \%>\%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
-  dplyr::filter(Season == "1999" | Season == "2000")
+  data("italy")
+  italy_1999_2000 <- italy \%>\%
+    dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+    dplyr::filter(Season == "1999" | Season == "2000")
 
-colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+  colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
-fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter = 200)
+  fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter_sampling = 200)
 
-foot_round_robin(fit, italy_1999_2000)
-foot_round_robin(fit, italy_1999_2000, c("Parma AC", "AS Roma"))
+  foot_round_robin(fit, italy_1999_2000)
+  foot_round_robin(fit, italy_1999_2000, c("Parma AC", "AS Roma"))
+}
 }
 }
 \author{

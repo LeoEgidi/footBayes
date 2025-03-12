@@ -44,30 +44,29 @@ fitted via the \code{mle_foot} the probabilities are computed by simulating from
 \examples{
 \dontrun{
 if (instantiate::stan_cmdstan_exists()) {
-library(tidyverse)
-library(dplyr)
+  library(dplyr)
 
-data("italy")
-italy_2000 <- italy \%>\%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
-  dplyr::filter(Season == "2000")
+  data("italy")
+  italy_2000 <- italy \%>\%
+    dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+    dplyr::filter(Season == "2000")
 
-colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
-
+  colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 
-fit <- stan_foot(
-  data = italy_2000,
-  model = "double_pois",
-  predict = 18
-) # double pois
 
-foot_prob(
-  fit, italy_2000, "Inter",
-  "Bologna FC"
-)
+  fit <- stan_foot(
+    data = italy_2000,
+    model = "double_pois",
+    predict = 18
+  ) # double pois
 
-foot_prob(fit, italy_2000) # all the out-of-sample matches
+  foot_prob(
+    fit, italy_2000, "Inter",
+    "Bologna FC"
+  )
+
+  foot_prob(fit, italy_2000) # all the out-of-sample matches
 }
 }
 

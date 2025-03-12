@@ -77,67 +77,69 @@ Fits a Bayesian Bradley-Terry-Davidson model using Stan. Supports both static an
 }
 \examples{
 \dontrun{
+if (instantiate::stan_cmdstan_exists()) {
+  library(dplyr)
 
-library(dplyr)
+  data("italy")
 
-data("italy")
+  italy_2020_2021 <- italy \%>\%
+    dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+    dplyr::filter(Season == "2020" | Season == "2021") \%>\%
+    dplyr::mutate(match_outcome = dplyr::case_when(
+      hgoal > vgoal ~ 1, # Home team wins
+      hgoal == vgoal ~ 2, # Draw
+      hgoal < vgoal ~ 3 # Away team wins
+    )) \%>\%
+    dplyr::mutate(periods = dplyr::case_when(
+      dplyr::row_number() <= 190 ~ 1,
+      dplyr::row_number() <= 380 ~ 2,
+      dplyr::row_number() <= 570 ~ 3,
+      TRUE ~ 4
+    )) \%>\% # Assign periods based on match number
+    dplyr::select(periods,
+      home_team = home,
+      away_team = visitor, match_outcome
+    )
 
-italy_2020_2021 <- italy \%>\%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
-  dplyr::filter(Season == "2020" | Season == "2021") \%>\%
-  dplyr::mutate(match_outcome = dplyr::case_when(
-    hgoal > vgoal ~ 1, # Home team wins
-    hgoal == vgoal ~ 2, # Draw
-    hgoal < vgoal ~ 3 # Away team wins
-  )) \%>\%
-  dplyr::mutate(periods = dplyr::case_when(
-    dplyr::row_number() <= 190 ~ 1,
-    dplyr::row_number() <= 380 ~ 2,
-    dplyr::row_number() <= 570 ~ 3,
-    TRUE ~ 4
-  )) \%>\% # Assign periods based on match number
-  dplyr::select(periods,
-    home_team = home,
-    away_team = visitor, match_outcome
+  # Dynamic Ranking Example with Median Rank Measure
+  fit_result_dyn <- btd_foot(
+    data = italy_2020_2021,
+    dynamic_rank = TRUE,
+    home_effect = TRUE,
+    prior_par = list(
+      logStrength = normal(0, 10),
+      logTie = normal(0, 5),
+      home = normal(0, 5)
+    ),
+    rank_measure = "median",
+    iter_sampling = 1000,
+    parallel_chains = 2,
+    chains = 2
   )
 
-# Dynamic Ranking Example with Median Rank Measure
-fit_result_dyn <- btd_foot(
-  data = italy_2020_2021,
-  dynamic_rank = TRUE,
-  home_effect = TRUE,
-  prior_par = list(
-    logStrength = normal(0, 10),
-    logTie = normal(0, 5),
-    home = normal(0, 5)
-  ),
-  rank_measure = "median",
-  iter = 1000,
-  cores = 2,
-  chains = 2
-)
+  print(fit_result_dyn)
 
-print(fit_result_dyn)
+  print(fit_result_dyn, pars = c("logStrength", "home"), teams = c("AC Milan", "AS Roma"))
 
-print(fit_result_dyn, pars = c("logStrength", "home"), teams = c("AC Milan", "AS Roma"))
+  # Static Ranking Example with MAP Rank Measure
+  fit_result_stat <- btd_foot(
+    data = italy_2020_2021,
+    dynamic_rank = FALSE,
+    prior_par = list(
+      logStrength = normal(0, 10),
+      logTie = normal(0, 5),
+      home = normal(0, 5)
+    ),
+    rank_measure = "map",
+    iter_sampling = 1000,
+    parallel_chains = 2,
+    chains = 2
+  )
 
-# Static Ranking Example with MAP Rank Measure
-fit_result_stat <- btd_foot(
-  data = italy_2020_2021,
-  dynamic_rank = FALSE,
-  prior_par = list(
-    logStrength = normal(0, 10),
-    logTie = normal(0, 5),
-    home = normal(0, 5)
-  ),
-  rank_measure = "map",
-  iter = 1000,
-  chains = 2
-)
-
-print(fit_result_stat)
+  print(fit_result_stat)
+}
 }
 }
 \author{
-Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
+Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}.
 }

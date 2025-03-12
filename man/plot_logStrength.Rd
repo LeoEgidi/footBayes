@@ -25,45 +25,46 @@ Visualizes team rankings based on whether the ranking is dynamic or static.
 }
 \examples{
 \dontrun{
-library(dplyr)
+if (instantiate::stan_cmdstan_exists()) {
+  library(dplyr)
 
-data("italy")
+  data("italy")
 
-italy_2020_2021_rank <- italy \%>\%
-  select(Season, home, visitor, hgoal, vgoal) \%>\%
-  filter(Season == "2020" | Season == "2021") \%>\%
-  mutate(match_outcome = case_when(
-    hgoal > vgoal ~ 1, # Home team wins
-    hgoal == vgoal ~ 2, # Draw
-    hgoal < vgoal ~ 3 # Away team wins
-  )) \%>\%
-  mutate(periods = case_when(
-    row_number() <= 190 ~ 1,
-    row_number() <= 380 ~ 2,
-    row_number() <= 570 ~ 3,
-    TRUE ~ 4
-  )) \%>\% # Assign periods based on match number
-  select(periods,
-    home_team = home,
-    away_team = visitor, match_outcome
+  italy_2020_2021_rank <- italy \%>\%
+    select(Season, home, visitor, hgoal, vgoal) \%>\%
+    filter(Season == "2020" | Season == "2021") \%>\%
+    mutate(match_outcome = case_when(
+      hgoal > vgoal ~ 1, # Home team wins
+      hgoal == vgoal ~ 2, # Draw
+      hgoal < vgoal ~ 3 # Away team wins
+    )) \%>\%
+    mutate(periods = case_when(
+      row_number() <= 190 ~ 1,
+      row_number() <= 380 ~ 2,
+      row_number() <= 570 ~ 3,
+      TRUE ~ 4
+    )) \%>\% # Assign periods based on match number
+    select(periods,
+      home_team = home,
+      away_team = visitor, match_outcome
+    )
+
+  fit_rank_dyn <- btd_foot(
+    data = italy_2020_2021_rank,
+    dynamic_rank = TRUE,
+    rank_measure = "median",
+    iter_sampling = 1000,
+    parallel_chains = 2,
+    chains = 2
   )
 
-fit_rank_dyn <- btd_foot(
-  data = italy_2020_2021_rank,
-  dynamic_rank = TRUE,
-  rank_measure = "median",
-  iter = 1000,
-  cores = 2,
-  chains = 2
-)
+  plot_logStrength(fit_rank_dyn)
 
-plot_logStrength(fit_rank_dyn)
-
-plot_logStrength(fit_rank_dyn, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"))
+  plot_logStrength(fit_rank_dyn, teams = c("AC Milan", "AS Roma", "Juventus", "Inter"))
 }
-
+}
 
 }
 \author{
-Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
+Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}.
 }

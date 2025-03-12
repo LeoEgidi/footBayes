@@ -91,7 +91,6 @@
 foot_abilities <- function(object, data,
                            type = "both",
                            teams = NULL) {
-
   #   ____________________________________________________________________________
   #   Data and arguments checks                                               ####
 

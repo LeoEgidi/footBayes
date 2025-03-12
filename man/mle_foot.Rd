@@ -7,15 +7,24 @@
 mle_foot(data, model, predict = 0, ...)
 }
 \arguments{
-\item{data}{A data frame, or a matrix containing the following mandatory items: season, home team, away team,
-home goals, away goals.}
+\item{data}{A data frame containing match data with columns:
+\itemize{
+  \item \code{periods}:  Time point of each observation (integer >= 1).
+  \item \code{home_team}: Home team's name (character string).
+  \item \code{away_team}: Away team's name (character string).
+  \item \code{home_goals}: Goals scored by the home team (integer >= 0).
+  \item \code{away_goals}: Goals scored by the away team (integer >= 0).
+}}
 
-\item{model}{The type of model used to fit the data.
-One among the following: \code{"double_pois"},
-\code{"biv_pois"}, \code{"skellam"}, \code{"student_t"}.}
+\item{model}{A character string specifying the Stan model to fit. Options are:
+\itemize{
+  \item \code{"double_pois"}: Double Poisson model.
+  \item \code{"biv_pois"}: Bivariate Poisson model.
+  \item \code{"skellam"}: Skellam model.
+  \item \code{"student_t"}: Student's t model.
+  }}
 
-\item{predict}{The number of out-of-sample matches. If missing, the function returns
-the fit for the training set only.}
+\item{predict}{An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.}
 
 \item{...}{Optional arguments for MLE fit algorithms.}
 }

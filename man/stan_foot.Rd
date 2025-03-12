@@ -181,146 +181,146 @@ spirit of (Karlis & Ntzoufras, 2003) to better capture draw occurrences. See the
 }
 \examples{
 \dontrun{
-library(dplyr)
+if (instantiate::stan_cmdstan_exists()) {
+  library(dplyr)
+
+  # Example usage with ranking
+  data("italy")
+  italy <- as_tibble(italy)
+  italy_2021 <- italy \%>\%
+    select(Season, home, visitor, hgoal, vgoal) \%>\%
+    filter(Season == "2021")
 
 
+  teams <- unique(italy_2021$home)
+  n_rows <- 20
 
-# Example usage with ranking
-data("italy")
-italy <- as_tibble(italy)
-italy_2021 <- italy \%>\%
-  select(Season, home, visitor, hgoal, vgoal) \%>\%
-  filter(Season == "2021")
-
-
-teams <- unique(italy_2021$home)
-n_rows <- 20
-
-# Create fake ranking
-ranking <- data.frame(
-  periods = rep(1, n_rows),
-  team = sample(teams, n_rows, replace = FALSE),
-  rank_points = sample(0:60, n_rows, replace = FALSE)
-)
-
-ranking <- ranking \%>\%
-  arrange(periods, desc(rank_points))
-
-
-colnames(italy_2021) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
-
-fit_with_ranking <- stan_foot(
-  data = italy_2021,
-  model = "diag_infl_biv_pois",
-  ranking = ranking,
-  home_effect = TRUE,
-  prior_par = list(
-    ability = student_t(4, 0, NULL),
-    ability_sd = cauchy(0, 3),
-    home = normal(1, 10)
-  ),
-  norm_method = "mad",
-  iter = 1000,
-  chains = 2,
-  cores = 2,
-  control = list(adapt_delta = 0.95, max_treedepth = 15)
-)
-
-# Print a summary of the model fit
-print(fit_with_ranking, pars = c("att", "def"))
-
-
-
-### Use Italian Serie A from 2000 to 2002
-
-data("italy")
-italy <- as_tibble(italy)
-italy_2000_2002 <- italy \%>\%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
-  dplyr::filter(Season == "2000" | Season == "2001" | Season == "2002")
-
-colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
-
-### Fit Stan models
-## no dynamics, no predictions
-
-fit_1 <- stan_foot(
-  data = italy_2000_2002,
-  model = "double_pois"
-) # double poisson
-print(fit_1, pars = c(
-  "home", "sigma_att",
-  "sigma_def"
-))
-
-fit_2 <- stan_foot(
-  data = italy_2000_2002,
-  model = "biv_pois"
-) # bivariate poisson
-print(fit_2, pars = c(
-  "home", "rho",
-  "sigma_att", "sigma_def"
-))
-
-fit_3 <- stan_foot(
-  data = italy_2000_2002,
-  mode = "skellam"
-) # skellam
-print(fit_3, pars = c(
-  "home", "sigma_att",
-  "sigma_def"
-))
-
-fit_4 <- stan_foot(
-  data = italy_2000_2002,
-  model = "student_t"
-) # student_t
-print(fit_4, pars = c("beta"))
-
-## seasonal dynamics, no prediction
-
-fit_5 <- stan_foot(
-  data = italy_2000_2002,
-  model = "double_pois",
-  dynamic_type = "seasonal"
-) # double poisson
-print(fit_5, pars = c(
-  "home", "sigma_att",
-  "sigma_def"
-))
-
-## seasonal dynamics, prediction for the last season
-
-fit_6 <- stan_foot(
-  data = italy_2000_2002,
-  model = "double_pois",
-  dynamic_type = "seasonal",
-  predict = 170
-) # double poisson
-print(fit_6, pars = c(
-  "home", "sigma_att",
-  "sigma_def"
-))
-
-## other priors' options
-# double poisson with
-# student_t priors for teams abilities
-# and laplace prior for the hyper sds
-
-fit_p <- stan_foot(
-  data = italy_2000_2002,
-  model = "double_pois",
-  prior_par = list(
-    ability = student_t(4, 0, NULL),
-    ability_sd = laplace(0, 1),
-    home = normal(1, 10)
+  # Create fake ranking
+  ranking <- data.frame(
+    periods = rep(1, n_rows),
+    team = sample(teams, n_rows, replace = FALSE),
+    rank_points = sample(0:60, n_rows, replace = FALSE)
   )
-)
 
-print(fit_p, pars = c(
-  "home", "sigma_att",
-  "sigma_def"
-))
+  ranking <- ranking \%>\%
+    arrange(periods, desc(rank_points))
+
+
+  colnames(italy_2021) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+
+  fit_with_ranking <- stan_foot(
+    data = italy_2021,
+    model = "diag_infl_biv_pois",
+    ranking = ranking,
+    home_effect = TRUE,
+    prior_par = list(
+      ability = student_t(4, 0, NULL),
+      ability_sd = cauchy(0, 3),
+      home = normal(1, 10)
+    ),
+    norm_method = "mad",
+    iter = 1000,
+    chains = 2,
+    cores = 2,
+    control = list(adapt_delta = 0.95, max_treedepth = 15)
+  )
+
+  # Print a summary of the model fit
+  print(fit_with_ranking, pars = c("att", "def"))
+
+
+
+  ### Use Italian Serie A from 2000 to 2002
+
+  data("italy")
+  italy <- as_tibble(italy)
+  italy_2000_2002 <- italy \%>\%
+    dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+    dplyr::filter(Season == "2000" | Season == "2001" | Season == "2002")
+
+  colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+
+  ### Fit Stan models
+  ## no dynamics, no predictions
+
+  fit_1 <- stan_foot(
+    data = italy_2000_2002,
+    model = "double_pois"
+  ) # double poisson
+  print(fit_1, pars = c(
+    "home", "sigma_att",
+    "sigma_def"
+  ))
+
+  fit_2 <- stan_foot(
+    data = italy_2000_2002,
+    model = "biv_pois"
+  ) # bivariate poisson
+  print(fit_2, pars = c(
+    "home", "rho",
+    "sigma_att", "sigma_def"
+  ))
+
+  fit_3 <- stan_foot(
+    data = italy_2000_2002,
+    mode = "skellam"
+  ) # skellam
+  print(fit_3, pars = c(
+    "home", "sigma_att",
+    "sigma_def"
+  ))
+
+  fit_4 <- stan_foot(
+    data = italy_2000_2002,
+    model = "student_t"
+  ) # student_t
+  print(fit_4, pars = c("beta"))
+
+  ## seasonal dynamics, no prediction
+
+  fit_5 <- stan_foot(
+    data = italy_2000_2002,
+    model = "double_pois",
+    dynamic_type = "seasonal"
+  ) # double poisson
+  print(fit_5, pars = c(
+    "home", "sigma_att",
+    "sigma_def"
+  ))
+
+  ## seasonal dynamics, prediction for the last season
+
+  fit_6 <- stan_foot(
+    data = italy_2000_2002,
+    model = "double_pois",
+    dynamic_type = "seasonal",
+    predict = 170
+  ) # double poisson
+  print(fit_6, pars = c(
+    "home", "sigma_att",
+    "sigma_def"
+  ))
+
+  ## other priors' options
+  # double poisson with
+  # student_t priors for teams abilities
+  # and laplace prior for the hyper sds
+
+  fit_p <- stan_foot(
+    data = italy_2000_2002,
+    model = "double_pois",
+    prior_par = list(
+      ability = student_t(4, 0, NULL),
+      ability_sd = laplace(0, 1),
+      home = normal(1, 10)
+    )
+  )
+
+  print(fit_p, pars = c(
+    "home", "sigma_att",
+    "sigma_def"
+  ))
+}
 }
 }
 \references{

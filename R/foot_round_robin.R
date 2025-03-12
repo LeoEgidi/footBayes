@@ -29,19 +29,21 @@
 #'
 #' @examples
 #' \dontrun{
-#' library(dplyr)
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   library(dplyr)
 #'
-#' data("italy")
-#' italy_1999_2000 <- italy %>%
-#'   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
-#'   dplyr::filter(Season == "1999" | Season == "2000")
+#'   data("italy")
+#'   italy_1999_2000 <- italy %>%
+#'     dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
+#'     dplyr::filter(Season == "1999" | Season == "2000")
 #'
-#' colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+#'   colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 #'
-#' fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter = 200)
+#'   fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter_sampling = 200)
 #'
-#' foot_round_robin(fit, italy_1999_2000)
-#' foot_round_robin(fit, italy_1999_2000, c("Parma AC", "AS Roma"))
+#'   foot_round_robin(fit, italy_1999_2000)
+#'   foot_round_robin(fit, italy_1999_2000, c("Parma AC", "AS Roma"))
+#' }
 #' }
 #' @importFrom ggplot2 ggplot aes geom_tile geom_text geom_rect scale_fill_gradient
 #'   scale_x_continuous scale_y_continuous theme_bw theme element_text ggtitle rel
@@ -50,7 +52,6 @@
 
 
 foot_round_robin <- function(object, data, teams = NULL, output = "both") {
-
   #   ____________________________________________________________________________
   #   Data and arguments checks                                               ####
 
@@ -146,7 +147,7 @@ foot_round_robin <- function(object, data, teams = NULL, output = "both") {
       teams[is.na(team_index)],
       "is not in the test set. Please provide a valid team name. "
     ))
-    #team_index <- team_index[!is.na(team_index)]
+    # team_index <- team_index[!is.na(team_index)]
   }
 
   # Initialize matrices

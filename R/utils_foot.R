@@ -182,13 +182,13 @@ compute_RPS <- function(cum_pred, actual) {
   # Create a matrix of cumulative observed probabilities
   acum <- matrix(0, nrow = length(actual), ncol = 3)
   acum[actual == "Home Win", ] <- matrix(rep(c(1, 1, 1), sum(actual == "Home Win")),
-                                         ncol = 3, byrow = TRUE
+    ncol = 3, byrow = TRUE
   )
   acum[actual == "Draw", ] <- matrix(rep(c(0, 1, 1), sum(actual == "Draw")),
-                                     ncol = 3, byrow = TRUE
+    ncol = 3, byrow = TRUE
   )
   acum[actual == "Away Win", ] <- matrix(rep(c(0, 0, 1), sum(actual == "Away Win")),
-                                         ncol = 3, byrow = TRUE
+    ncol = 3, byrow = TRUE
   )
   squared_diff <- (cum_pred[, 1:2] - acum[, 1:2])^2
   rps_per_obs <- rowSums(squared_diff) / 2 # for 3 outcome categories: (3 - 1)
