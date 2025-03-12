@@ -88,10 +88,12 @@
 
 normal <- function(location = 0, scale = NULL, autoscale = TRUE) {
   validate_parameter_value(scale)
-  list(dist = "normal", df = NA,
+  list(
+    dist = "normal", df = NA,
     location = location,
-       scale = scale,
-       autoscale = autoscale)
+    scale = scale,
+    autoscale = autoscale
+  )
 }
 
 #' @rdname priors
@@ -99,27 +101,33 @@ normal <- function(location = 0, scale = NULL, autoscale = TRUE) {
 student_t <- function(df = 1, location = 0, scale = NULL, autoscale = TRUE) {
   validate_parameter_value(scale)
   validate_parameter_value(df)
-  list(dist = "t", df = df,
-       location = location,
-       scale = scale,
-       autoscale = autoscale)
+  list(
+    dist = "t", df = df,
+    location = location,
+    scale = scale,
+    autoscale = autoscale
+  )
 }
 
 #' @rdname priors
 #' @export
 cauchy <- function(location = 0, scale = NULL, autoscale = TRUE) {
-  student_t(df = 1, location = location,
+  student_t(
+    df = 1, location = location,
     scale = scale,
-    autoscale = autoscale)
+    autoscale = autoscale
+  )
 }
 
 #' @rdname priors
 #' @export
 laplace <- function(location = 0, scale = NULL, autoscale = TRUE) {
-  list(dist = "laplace", df = NA,
+  list(
+    dist = "laplace", df = NA,
     location = location,
     scale = scale,
-    autoscale = autoscale)
+    autoscale = autoscale
+  )
 }
 
 
@@ -132,10 +140,12 @@ laplace <- function(location = 0, scale = NULL, autoscale = TRUE) {
 validate_parameter_value <- function(x) {
   nm <- deparse(substitute(x))
   if (!is.null(x)) {
-    if (!is.numeric(x))
+    if (!is.numeric(x)) {
       stop(nm, " should be NULL or numeric", call. = FALSE)
-    if (any(x <= 0))
+    }
+    if (any(x <= 0)) {
       stop(nm, " should be positive", call. = FALSE)
+    }
   }
   invisible(TRUE)
 }

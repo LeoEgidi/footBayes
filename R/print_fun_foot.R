@@ -9,16 +9,18 @@
 #' @param true_names Logical value indicating whether to display team names in parameter summaries. Default is \code{TRUE}.
 #' @param ... Additional arguments passed.
 #' @method print stanFoot
-#' @importFrom stats setNames
 #'
-#' @author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
+#' @importFrom stats setNames
+#' @importFrom dplyr across
+#' @importFrom dplyr where
+#'
+#' @author Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 #'
 #' @export
 print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names = TRUE, ...) {
-
-  if (!inherits(x, "stanFoot")) {
-    stop("The object must be of class 'stanFoot'.")
-  }
+  # if (!inherits(x, "stanFoot")) {
+  #   stop("The object must be of class 'stanFoot'.")
+  # }
 
 
   if (!is.numeric(digits) || digits <= 0) {
@@ -29,12 +31,12 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
   cat("------------------------------\n\n")
 
 
-  if (!inherits(x$fit, "stanfit")) {
-    stop("The 'fit' component must be a 'stanfit' object.")
+  if (!inherits(x$fit, "CmdStanFit")) {
+    stop("The 'fit' component must be a 'CmdStanFit' object.")
   }
 
-  # Extract all parameter names from the 'stanfit' object
-  all_param_names <- x$fit@sim$pars_oi
+  # Extract all parameter names from the 'CmdStanFit' object
+  all_param_names <- x$fit$metadata()$stan_variables
 
   # Initialize 'final_pars' based on 'pars' argument
   if (!is.null(pars)) {
@@ -62,11 +64,12 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
   if (!is.null(teams)) {
     invalid_teams <- setdiff(teams, teams_all)
     if (length(invalid_teams) > 0) {
-      warning("The following teams are not in the data: ", paste(invalid_teams, collapse = ", "))
       teams <- setdiff(teams, invalid_teams)
-    }
-    if (length(teams) == 0) {
-      stop("No valid teams specified in 'teams'.")
+      if (length(teams) == 0) {
+        stop("No valid teams specified in 'teams'.")
+      } else {
+        warning("The following teams are not in the data: ", paste(invalid_teams, collapse = ", "))
+      }
     }
     # Create a mapping from team names to indices
     team_map <- setNames(seq_along(teams_all), teams_all)
@@ -79,9 +82,9 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
   cat("Posterior summaries for model parameters:\n")
 
   if (is.null(final_pars)) {
-    stan_summary <- rstan::summary(x$fit, ...)$summary
+    stan_summary <- x$fit$summary()
   } else {
-    stan_summary <- rstan::summary(x$fit, pars = unique(final_pars), ...)$summary
+    stan_summary <- x$fit$summary(variables = unique(final_pars))
   }
 
   is_dynamic <- x$stan_data$ntimes > 1
@@ -113,13 +116,13 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
     }
 
     # Define patterns for global parameters
-    patterns_global <- "^(home|rho|sigma_att|sigma_def|theta|y_rep|log_lik|gamma|beta|diff_y_rep|lp__)$"
+    patterns_global <- "^(home|rho|sigma_att|sigma_def|theta|y_rep|log_lik|gamma|beta|diff_y_rep|lp__|lp_approx__)$"
 
-    # **Corrected Line Below: Combine all patterns into a single string**
+    # Combine all patterns into a single string
     combined_patterns <- paste(c(patterns_team, patterns_global), collapse = "|")
 
     # Filter 'stan_summary' to include both team-specific and global parameters
-    stan_summary <- stan_summary[grep(combined_patterns, rownames(stan_summary)), , drop = FALSE]
+    stan_summary <- stan_summary[grep(combined_patterns, as.factor(stan_summary$variable)), , drop = FALSE]
   }
 
   # Replace parameter names with team names if 'true_names' is TRUE
@@ -128,7 +131,7 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
     team_map_rev <- setNames(teams_all, as.character(seq_along(teams_all)))
 
     # Apply the corrected 'team_names_2' function
-    stan_summary_names <- team_names(rownames(stan_summary), exclude_params, team_map_rev)
+    stan_summary_names <- team_names(stan_summary$variable, exclude_params, team_map_rev)
 
     if (!is_dynamic) {
       # Remove trailing commas before the closing bracket
@@ -136,13 +139,14 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
     }
 
     # Assign the cleaned names back to the summary
-    rownames(stan_summary) <- stan_summary_names
+    stan_summary$variable <- stan_summary_names
   }
 
   # Check if there are parameters to display
   if (!is.null(stan_summary) && nrow(stan_summary) > 0) {
     # Round the summary to the specified number of digits and print
-    print(round(stan_summary, digits = digits))
+    print(stan_summary %>%
+      mutate(across(where(is.numeric), ~ round(., digits))))
   } else {
     cat("No parameters to display.\n")
   }
@@ -164,18 +168,20 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
 #' @param display Character string specifying which parts of the output to display. Options are \code{"both"}, \code{"rankings"}, or \code{"parameters"}. Default is \code{"both"}.
 #' @param ... Additional arguments passed.
 #' @method print btdFoot
-#' @importFrom stats setNames
 #'
-#' @author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
+#' @importFrom stats setNames
+#' @importFrom dplyr across
+#' @importFrom dplyr where
+#'
+#' @author Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 #'
 #' @export
 
 print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names = TRUE,
                           display = c("both", "rankings", "parameters"), ...) {
-
-  if (!inherits(x, "btdFoot")) {
-    stop("The object must be of class 'btdFoot'.")
-  }
+  # if (!inherits(x, "btdFoot")) {
+  #   stop("The object must be of class 'btdFoot'.")
+  # }
 
   if (!is.numeric(digits) || digits <= 0) {
     stop("'digits' must be a positive numeric value.")
@@ -196,13 +202,12 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
   }
 
   if (display %in% c("both", "parameters")) {
-
-        if (!inherits(x$fit, "stanfit")) {
-      stop("The 'fit' component must be a 'stanfit' object.")
+    if (!inherits(x$fit, "CmdStanFit")) {
+      stop("The 'fit' component must be a 'CmdStanFit' object.")
     }
 
-    # Extract all parameter names from the 'stanfit' object
-    all_param_names <- x$fit@sim$pars_oi
+    # Extract all parameter names from the 'CmdStanFit' object
+    all_param_names <- x$fit$metadata()$stan_variables
 
     # Initialize 'final_pars' based on 'pars' argument
     if (!is.null(pars)) {
@@ -230,11 +235,12 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
     if (!is.null(teams)) {
       invalid_teams <- setdiff(teams, teams_all)
       if (length(invalid_teams) > 0) {
-        warning("The following teams are not in the data: ", paste(invalid_teams, collapse = ", "))
         teams <- setdiff(teams, invalid_teams)
-      }
-      if (length(teams) == 0) {
-        stop("No valid teams specified in 'teams'.")
+        if (length(teams) == 0) {
+          stop("No valid teams specified in 'teams'.")
+        } else {
+          warning("The following teams are not in the data: ", paste(invalid_teams, collapse = ", "))
+        }
       }
 
       team_map <- setNames(seq_along(teams_all), teams_all)
@@ -248,12 +254,12 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
     # Extract posterior summaries
     cat("Posterior summaries for model parameters:\n")
     if (is.null(final_pars)) {
-      stan_summary <- rstan::summary(x$fit, ...)$summary
+      stan_summary <- x$fit$summary()
     } else {
-      stan_summary <- rstan::summary(x$fit, pars = unique(final_pars), ...)$summary
+      stan_summary <- x$fit$summary(variables = unique(final_pars))
     }
 
-    param_names <- rownames(stan_summary)
+    param_names <- as.factor(stan_summary$variable)
     logStrength_pattern <- "^logStrength"
 
     is_logStrength <- grepl(logStrength_pattern, param_names)
@@ -265,7 +271,6 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
 
     # Filter logStrength_params by 'teams' if provided
     if (!is.null(teams) && nrow(logStrength_params) > 0) {
-
       if (length(teams) > 0) {
         # Map team names to indices
         team_indices <- team_map[teams]
@@ -282,7 +287,7 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
         pattern <- paste0("^", patterns, "$", collapse = "|")
 
         # Filter logStrength_params
-        logStrength_param_names <- rownames(logStrength_params)
+        logStrength_param_names <- logStrength_params$variable
         logStrength_params <- logStrength_params[grep(pattern, logStrength_param_names), , drop = FALSE]
       } else {
         logStrength_params <- NULL
@@ -302,19 +307,18 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
 
     # Replace parameter names with team names if true_names is TRUE
     if (true_names && !is.null(stan_summary) && nrow(stan_summary) > 0) {
-
-      new_param_names <- team_names(rownames(stan_summary), exclude_params, team_map_rev)
+      stan_summary_names <- team_names(stan_summary$variable, exclude_params, team_map_rev)
 
       # Remove trailing commas in static model parameter names
       if (!is_dynamic) {
-        new_param_names <- gsub(",\\]", "]", new_param_names)
+        stan_summary_names <- gsub(",\\]", "]", stan_summary_names)
       }
-
-      rownames(stan_summary) <- new_param_names
+      stan_summary$variable <- stan_summary_names
     }
 
     if (!is.null(stan_summary) && nrow(stan_summary) > 0) {
-      print(round(stan_summary, digits = digits))
+      print(stan_summary %>%
+        mutate(across(where(is.numeric), ~ round(., digits))))
     } else {
       cat("No parameters to display.\n")
     }
@@ -336,7 +340,7 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
 #' @param ... Additional arguments passed to \code{print}.
 #' @method print compareFoot
 #'
-#' @author Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
+#' @author Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 #'
 #' @export
 #'
@@ -367,4 +371,3 @@ print.compareFoot <- function(x, digits = 3, ...) {
     }
   }
 }
-

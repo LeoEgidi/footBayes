@@ -10,8 +10,7 @@ plot_btdPosterior(
   plot_type = "boxplot",
   teams = NULL,
   ncol = NULL,
-  scales = NULL,
-  ...
+  scales = NULL
 )
 }
 \arguments{
@@ -36,9 +35,6 @@ Default is \code{8}.}
 when using a dynamic Bayesian Bradley-Terry-Davidson model.
 Options include \code{"free"}, \code{"fixed"}, \code{"free_x"}, and \code{"free_y"}.
 Default is \code{"free_x"}.}
-
-\item{...}{Additional arguments passed to \code{geom_boxplot()}, \code{geom_density_ridges()},
-or other geoms for customization (e.g., \code{size}, \code{alpha}, \code{color}).}
 }
 \value{
 A \code{ggplot} object representing the posterior distributions plot.
@@ -64,18 +60,20 @@ italy_2020_2021_rank <- italy \%>\%
   select(Season, home, visitor, hgoal, vgoal) \%>\%
   filter(Season \%in\% c("2020", "2021")) \%>\%
   mutate(match_outcome = case_when(
-    hgoal > vgoal ~ 1,        # Home team wins
-    hgoal == vgoal ~ 2,       # Draw
-    hgoal < vgoal ~ 3         # Away team wins
+    hgoal > vgoal ~ 1, # Home team wins
+    hgoal == vgoal ~ 2, # Draw
+    hgoal < vgoal ~ 3 # Away team wins
   )) \%>\%
   mutate(periods = case_when(
     row_number() <= 190 ~ 1,
     row_number() <= 380 ~ 2,
     row_number() <= 570 ~ 3,
     TRUE ~ 4
-  )) \%>\%  # Assign periods based on match number
-  select(periods, home_team = home,
-         away_team = visitor, match_outcome)
+  )) \%>\% # Assign periods based on match number
+  select(periods,
+    home_team = home,
+    away_team = visitor, match_outcome
+  )
 
 # Fit the Bayesian Bradley-Terry-Davidson model with dynamic ranking
 fit_rank_dyn <- btd_foot(

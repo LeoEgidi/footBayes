@@ -4,15 +4,10 @@
 \alias{foot_rank}
 \title{Rank and points predictions}
 \usage{
-foot_rank(
-  object,
-  data,
-  teams = NULL,
-  visualize = c("aggregated", "individual")
-)
+foot_rank(object, data, teams = NULL, visualize = "individual")
 }
 \arguments{
-\item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
+\item{object}{An object either of class \code{stanFoot}, \code{CmdStanFit}, or \code{stanfit}.}
 
 \item{data}{A data frame containing match data with columns:
 \itemize{
@@ -25,11 +20,11 @@ foot_rank(
 
 \item{teams}{An optional character vector specifying team names to include. If \code{NULL}, all teams are included.}
 
-\item{visualize}{Type of plot, default is \code{"aggregated"}.}
+\item{visualize}{Type of plots, one among \code{"aggregated"} or \code{"individual"}. Default is \code{"individual"}.}
 }
 \value{
-Final rank tables and plots with the predicted points for the selected teams as given by the models fitted via the \code{stan_foot}
-function.
+Final rank tables and plots with the predicted points for the selected teams as given by an object of class
+\code{stanFoot}, \code{CmdStanFit}, or \code{stanfit}.
 }
 \description{
 Posterior predictive plots and final rank table for football seasons.
@@ -40,23 +35,22 @@ simulation from the posterior predictive distribution of future (out-of-sample) 
 The dataset should refer to one or more seasons from a given national football league (Premier League, Serie A, La Liga, etc.).
 }
 \examples{
-
 \dontrun{
 library(dplyr)
 
 data("italy")
-italy_1999_2000<- italy \%>\%
-dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
-dplyr::filter(Season == "1999"|Season=="2000")
+italy_1999_2000 <- italy \%>\%
+  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+  dplyr::filter(Season == "1999" | Season == "2000")
 
 colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 fit <- stan_foot(italy_1999_2000, "double_pois", iter = 200)
 foot_rank(fit, italy_1999_2000)
-foot_rank(fit, italy_1999_2000, visualize =  "individual")
- }
+foot_rank(fit, italy_1999_2000, visualize = "individual")
+}
 
 }
 \author{
-Leonardo Egidi \email{legidi@units.it}
+Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 }

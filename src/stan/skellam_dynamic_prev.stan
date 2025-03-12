@@ -152,7 +152,7 @@ functions{
         y_rep[n,1] = poisson_rng(theta_home[n]);
         y_rep[n,2] = poisson_rng(theta_away[n]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-        log_lik[n] =skellam_lpmf(diff_y[n]| theta_home[n], theta_away[n]);
+        log_lik[n] = skellam_lpmf(diff_y[n]| theta_home[n], theta_away[n]);
       }
       //out-of-sample predictions
 

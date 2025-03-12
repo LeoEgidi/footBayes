@@ -4,7 +4,7 @@
 \alias{mle_foot}
 \title{Fit football models with Maximum Likelihood}
 \usage{
-mle_foot(data, model, predict, ...)
+mle_foot(data, model, predict = 0, ...)
 }
 \arguments{
 \item{data}{A data frame, or a matrix containing the following mandatory items: season, home team, away team,
@@ -35,19 +35,21 @@ of the \code{\link{optim}} function.
 }
 \examples{
 \dontrun{
-require(tidyverse)
-require(dplyr)
+library(dplyr)
 
 data("italy")
 italy <- as_tibble(italy)
-italy_2008<- italy \%>\%
-   dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
-   dplyr::filter( Season=="2008")
+italy_2000_2002 <- italy \%>\%
+  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+  dplyr::filter(Season == "2000" | Season == "2001" | Season == "2002")
 
-mle_fit <- mle_foot(data  = italy_2008,
-                   model = "double_pois")
+colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+
+mle_fit <- mle_foot(
+  data = italy_2000_2002,
+  model = "double_pois"
+)
 }
-
 
 }
 \references{

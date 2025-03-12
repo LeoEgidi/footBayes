@@ -1,17 +1,5 @@
----
-output: github_document
----
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-```{r}
-#| echo: false
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-"
-)
-```
 
 # footBayes <img src="man/figures/logo.png" width = 200 align="right" />
 
@@ -21,15 +9,24 @@ knitr::opts_chunk$set(
 
 The goal of `footBayes` is to propose a complete workflow to:
 
--   fit the most well-known football models: double Poisson, bivariate Poisson, Skellam, student-t, according to both maximum likelihood and Bayesian methods (+ Hamiltonian Monte Carlo engine);
+- fit the most well-known football models: double Poisson, bivariate
+  Poisson, Skellam, student-t, according to both maximum likelihood and
+  Bayesian methods (+ Hamiltonian Monte Carlo engine);
 
--   visualize the teams' abilities, the model checks, the rank-league reconstruction;
+- visualize the teams’ abilities, the model checks, the rank-league
+  reconstruction;
 
--   predict out-of-sample matches.
+- predict out-of-sample matches.
 
 ## Installation
 
-Using `footBayes` package requires installing the R package [`cmdstanr`](https://mc-stan.org/cmdstanr/) (not available on CRAN) and the command-line interface to Stan: [`CmdStan`](https://mc-stan.org/users/interfaces/cmdstan.html). You may follow the instructions in [Getting started with CmdStanR](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) to install both.
+Using `footBayes` package requires installing the R package
+[`cmdstanr`](https://mc-stan.org/cmdstanr/) (not available on CRAN) and
+the command-line interface to Stan:
+[`CmdStan`](https://mc-stan.org/users/interfaces/cmdstan.html). You may
+follow the instructions in [Getting started with
+CmdStanR](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) to
+install both.
 
 You can install the released version of `footBayes` from CRAN with:
 
@@ -37,20 +34,26 @@ You can install the released version of `footBayes` from CRAN with:
 install.packages("footBayes", type = "source")
 ```
 
-Please note that it is important to set `type = "source"`. Otherwise, the 'CmdStan' models in the package may not be compiled during installation.
+Please note that it is important to set `type = "source"`. Otherwise,
+the ‘CmdStan’ models in the package may not be compiled during
+installation.
 
-Alternatively to CRAN, you can install the development version from GitHub with:
+Alternatively to CRAN, you can install the development version from
+GitHub with:
 
-```{r gh-installation, eval = FALSE}
+``` r
 # install.packages("devtools")
 devtools::install_github("leoegidi/footBayes")
 ```
 
 ## Example
 
-In what follows, a quick example to fit a Bayesian double Poisson model for the Italian Serie A (seasons 2000-2001, 2001-2002, 2002-2003), visualize the estimated teams' abilities, and predict the last four match days for the season 2002-2003:
+In what follows, a quick example to fit a Bayesian double Poisson model
+for the Italian Serie A (seasons 2000-2001, 2001-2002, 2002-2003),
+visualize the estimated teams’ abilities, and predict the last four
+match days for the season 2002-2003:
 
-```{r example, eval = FALSE}
+``` r
 library(footBayes)
 require(dplyr)
 

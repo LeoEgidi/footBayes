@@ -11,6 +11,7 @@ btd_foot(
   prior_par = list(logStrength = normal(0, 3), logTie = normal(0, 0.3), home = normal(0,
     5)),
   rank_measure = "median",
+  method = "MCMC",
   ...
 )
 }
@@ -43,12 +44,20 @@ Only normal priors are allowed for this model.}
   \item \code{"map"}: Uses the Maximum A Posteriori estimate, calculated as the mode of the posterior distribution.
 }}
 
-\item{...}{Additional arguments passed to \code{\link[rstan]{stan}} (e.g., \code{iter}, \code{chains}, \code{control}).}
+\item{method}{A character string specifying the method used to obtain the Bayesian estimates. Options are:
+\itemize{
+  \item \code{"MCMC"}: Markov chain Monte Carlo algorithm (default).
+  \item \code{"VI"}: Automatic differentiation variational inference algorithms.
+  \item \code{"pathfinder"}: Pathfinder variational inference algorithm.
+  \item \code{"laplace"}: Laplace algorithm.
+}}
+
+\item{...}{Additional arguments passed to \code{\link[cmdstanr]{cmdstanr}} (e.g., \code{iter_sampling}, \code{chains}, \code{parallel_chains}).}
 }
 \value{
 A list of class \code{"btdFoot"} containing:
   \itemize{
-    \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
+    \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[cmdstanr]{cmdstanr}}.
     \item \code{rank}: A data frame with the rankings, including columns:
       \itemize{
         \item \code{periods}: The time period.
@@ -60,6 +69,7 @@ A list of class \code{"btdFoot"} containing:
     \item \code{stan_code}: The path to the Stan model code used.
     \item \code{stan_args}: The optional parameters passed to (\code{...}).
     \item \code{rank_measure}: The method used to compute the rankings.
+    \item \code{alg_method}: The method used to obtain the Bayesian estimates.
   }
 }
 \description{
@@ -76,18 +86,20 @@ italy_2020_2021 <- italy \%>\%
   dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
   dplyr::filter(Season == "2020" | Season == "2021") \%>\%
   dplyr::mutate(match_outcome = dplyr::case_when(
-    hgoal > vgoal ~ 1,        # Home team wins
-    hgoal == vgoal ~ 2,       # Draw
-    hgoal < vgoal ~ 3         # Away team wins
+    hgoal > vgoal ~ 1, # Home team wins
+    hgoal == vgoal ~ 2, # Draw
+    hgoal < vgoal ~ 3 # Away team wins
   )) \%>\%
   dplyr::mutate(periods = dplyr::case_when(
     dplyr::row_number() <= 190 ~ 1,
     dplyr::row_number() <= 380 ~ 2,
     dplyr::row_number() <= 570 ~ 3,
     TRUE ~ 4
-  )) \%>\%  # Assign periods based on match number
-  dplyr::select(periods, home_team = home,
-   away_team = visitor, match_outcome)
+  )) \%>\% # Assign periods based on match number
+  dplyr::select(periods,
+    home_team = home,
+    away_team = visitor, match_outcome
+  )
 
 # Dynamic Ranking Example with Median Rank Measure
 fit_result_dyn <- btd_foot(

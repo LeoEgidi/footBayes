@@ -4,16 +4,10 @@
 \alias{foot_abilities}
 \title{Plot football abilities from Stan and MLE models}
 \usage{
-foot_abilities(
-  object,
-  data,
-  type = c("attack", "defense", "both"),
-  teams = NULL,
-  ...
-)
+foot_abilities(object, data, type = "both", teams = NULL)
 }
 \arguments{
-\item{object}{An object either of class \code{stanfit} or \code{stanFoot} as given by \code{stan_foot} function, or class
+\item{object}{An object either of class \code{stanFoot}, \code{CmdStanFit}, \code{stanfit}, or class
 \code{\link{list}} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
  with \code{mle_foot}.}
 
@@ -26,15 +20,12 @@ foot_abilities(
   \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 }}
 
-\item{type}{Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}.}
+\item{type}{Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}. Default is \code{"both"}.}
 
 \item{teams}{An optional character vector specifying team names to include. If \code{NULL}, all teams are included.}
-
-\item{...}{Optional graphical parameters.}
 }
 \value{
-Abilities plots for the selected teams: for Poisson models only, red denotes the attack,
-blue the defense.
+Abilities plots for the selected teams.
 }
 \description{
 Depicts teams' abilities either from the Stan models fitted via the \code{stan_foot} function
@@ -42,46 +33,57 @@ or from MLE models fitted via the \code{mle_foot} function.
 }
 \examples{
 \dontrun{
-library(dplyr)
+if (instantiate::stan_cmdstan_exists()) {
+  library(dplyr)
 
-data("italy")
-italy <- as_tibble(italy)
+  data("italy")
+  italy <- as_tibble(italy)
 
-### no dynamics, no prediction
+  ### no dynamics, no prediction
 
-italy_2000_2002 <- italy \%>\%
- dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
- dplyr::filter(Season=="2000" |  Season=="2001" | Season =="2002")
+  italy_2000_2002 <- italy \%>\%
+    dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+    dplyr::filter(Season == "2000" | Season == "2001" | Season == "2002")
 
-colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+  colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
-fit1 <- stan_foot(data = italy_2000_2002,
-                  model="double_pois") # double poisson
+  fit1 <- stan_foot(
+    data = italy_2000_2002,
+    model = "double_pois"
+  ) # double poisson
 
-fit2 <- stan_foot(data = italy_2000_2002,
-                  model="biv_pois")    # bivariate poisson
+  fit2 <- stan_foot(
+    data = italy_2000_2002,
+    model = "biv_pois"
+  ) # bivariate poisson
 
-fit3 <- stan_foot(data = italy_2000_2002,
-                  model="skellam")     # skellam
+  fit3 <- stan_foot(
+    data = italy_2000_2002,
+    model = "skellam"
+  ) # skellam
 
-fit4 <- stan_foot(data = italy_2000_2002,
-                  model="student_t")   # student_t
+  fit4 <- stan_foot(
+    data = italy_2000_2002,
+    model = "student_t"
+  ) # student_t
 
-foot_abilities(fit1, italy_2000_2002)
-foot_abilities(fit2, italy_2000_2002)
-foot_abilities(fit3, italy_2000_2002)
-foot_abilities(fit4, italy_2000_2002)
+  foot_abilities(fit1, italy_2000_2002)
+  foot_abilities(fit2, italy_2000_2002)
+  foot_abilities(fit3, italy_2000_2002)
+  foot_abilities(fit4, italy_2000_2002)
 
-### seasonal dynamics, predict the last season
+  ### seasonal dynamics, predict the last season
 
-fit5 <-stan_foot(data = italy_2000_2002,
-                 model = "biv_pois",
-                 predict = 180,
-                 dynamic_type = "seasonal")   # bivariate poisson
-foot_abilities(fit5, italy_2000_2002)
-
+  fit5 <- stan_foot(
+    data = italy_2000_2002,
+    model = "biv_pois",
+    predict = 180,
+    dynamic_type = "seasonal"
+  ) # bivariate poisson
+  foot_abilities(fit5, italy_2000_2002)
+}
 }
 }
 \author{
-Leonardo Egidi \email{legidi@units.it}
+Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}.
 }

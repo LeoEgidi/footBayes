@@ -15,6 +15,7 @@ stan_foot(
   home_effect = TRUE,
   norm_method = "none",
   ranking_map = NULL,
+  method = "MCMC",
   ...
 )
 }
@@ -74,16 +75,25 @@ stan_foot(
 
 \item{ranking_map}{An optional vector mapping ranking periods to data periods. If not provided and the number of ranking periods matches the number of data periods, a direct mapping is assumed.}
 
-\item{...}{Optional parameters passed to \code{\link[rstan]{stan}} (e.g., \code{iter}, \code{chains}, \code{cores}, \code{control}).}
+\item{method}{A character string specifying the method used to obtain the Bayesian estimates. Options are:
+\itemize{
+  \item \code{"MCMC"}: Markov chain Monte Carlo algorithm (default).
+  \item \code{"VI"}: Automatic differentiation variational inference algorithms.
+  \item \code{"pathfinder"}: Pathfinder variational inference algorithm.
+  \item \code{"laplace"}: Laplace algorithm.
+}}
+
+\item{...}{Additional arguments passed to \code{\link[cmdstanr]{cmdstanr}} (e.g., \code{iter_sampling}, \code{chains}, \code{parallel_chains}).}
 }
 \value{
 A list of class \code{"stanFoot"} containing:
   \itemize{
-    \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[rstan]{stan}}.
+    \item \code{fit}: The fitted object returned by \code{\link[cmdstanr]{cmdstanr}}.
     \item \code{data}: The input data.
     \item \code{stan_data}: The data list for Stan.
     \item \code{stan_code}: The Stan code of the underline model.
     \item \code{stan_args}: The optional parameters passed to (\code{...}).
+    \item \code{alg_method}: The method used to obtain the Bayesian estimates.
   }
 }
 \description{
@@ -118,8 +128,8 @@ respectively. Attack/defence parameters are imposed a
 sum-to-zero constraint to achieve identifiability and
 assigned some weakly-informative prior distributions:
 
-\deqn{att_T \sim \mathcal{N}(\mu_{att}, \sigma_{att})}
-\deqn{def_T \sim \mathcal{N}(\mu_{def}, \sigma_{def}),}
+\deqn{att_T \sim \mathrm{N}(\mu_{att}, \sigma_{att})}
+\deqn{def_T \sim \mathrm{N}(\mu_{def}, \sigma_{def}),}
 
 with hyperparameters \eqn{\mu_{att}, \sigma_{att}, \mu_{def}, \sigma_{def}}.
 
@@ -139,7 +149,7 @@ use a student t distribution with 7 degrees of
 freedom (Gelman, 2014):
 
 \deqn{y^{H}_{n}- y^{A}_{n} \sim t(7, ab_{h_{n}}-ab_{a(n)}, \sigma_y)}
-\deqn{ab_t \sim \mathcal{N}(\mu + b \times {prior\_score}_t, sigma_{ab}),}
+\deqn{ab_t \sim \mathrm{N}(\mu + b \times {prior\_score}_t, sigma_{ab}),}
 
 where \eqn{ab_t} is the overall ability for
 the \eqn{t}-th team, whereas \eqn{prior\_score_t}
@@ -154,13 +164,13 @@ number of times \eqn{1, \ldots, \mathcal{T}}, the models
 above would be unchanged, but the priors for the abilities
 parameters at each time \eqn{\tau, \tau=2,\ldots, \mathcal{T},} would be:
 
-\deqn{att_{T, \tau} \sim \mathcal{N}({att}_{T, \tau-1}, \sigma_{att})}
-\deqn{def_{T, \tau} \sim \mathcal{N}({def}_{T, \tau-1}, \sigma_{def}),}
+\deqn{att_{T, \tau} \sim \mathrm{N}({att}_{T, \tau-1}, \sigma_{att})}
+\deqn{def_{T, \tau} \sim \mathrm{N}({def}_{T, \tau-1}, \sigma_{def}),}
 
 whereas for \eqn{\tau=1} we have:
 
-\deqn{att_{T, 1} \sim \mathcal{N}(\mu_{att}, \sigma_{att})}
-\deqn{def_{T, 1} \sim \mathcal{N}(\mu_{def}, \sigma_{def}).}
+\deqn{att_{T, 1} \sim \mathrm{N}(\mu_{att}, \sigma_{att})}
+\deqn{def_{T, 1} \sim \mathrm{N}(\mu_{def}, \sigma_{def}).}
 
 Of course, the identifiability constraint must be imposed for
 each time \eqn{\tau}.
@@ -200,7 +210,7 @@ ranking <- ranking \%>\%
 colnames(italy_2021) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 fit_with_ranking <- stan_foot(
-  data = italy_2021
+  data = italy_2021,
   model = "diag_infl_biv_pois",
   ranking = ranking,
   home_effect = TRUE,
@@ -217,7 +227,7 @@ fit_with_ranking <- stan_foot(
 )
 
 # Print a summary of the model fit
-print(fit_with_ranking, pars = c("att","def"))
+print(fit_with_ranking, pars = c("att", "def"))
 
 
 
@@ -225,65 +235,92 @@ print(fit_with_ranking, pars = c("att","def"))
 
 data("italy")
 italy <- as_tibble(italy)
-italy_2000_2002<- italy \%>\%
- dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
- dplyr::filter(Season=="2000" |  Season=="2001"| Season=="2002")
+italy_2000_2002 <- italy \%>\%
+  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+  dplyr::filter(Season == "2000" | Season == "2001" | Season == "2002")
 
 colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
 ### Fit Stan models
 ## no dynamics, no predictions
 
-fit_1 <- stan_foot(data = italy_2000_2002,
-                  model = "double_pois") # double poisson
-print(fit_1, pars = c("home", "sigma_att",
-                    "sigma_def"))
+fit_1 <- stan_foot(
+  data = italy_2000_2002,
+  model = "double_pois"
+) # double poisson
+print(fit_1, pars = c(
+  "home", "sigma_att",
+  "sigma_def"
+))
 
-fit_2 <- stan_foot(data = italy_2000_2002,
-                  model = "biv_pois")    # bivariate poisson
-print(fit_2, pars = c("home", "rho",
-                    "sigma_att", "sigma_def"))
+fit_2 <- stan_foot(
+  data = italy_2000_2002,
+  model = "biv_pois"
+) # bivariate poisson
+print(fit_2, pars = c(
+  "home", "rho",
+  "sigma_att", "sigma_def"
+))
 
-fit_3 <- stan_foot(data = italy_2000_2002,
-                  mode ="skellam")     # skellam
-print(fit_3, pars = c("home", "sigma_att",
-                    "sigma_def"))
+fit_3 <- stan_foot(
+  data = italy_2000_2002,
+  mode = "skellam"
+) # skellam
+print(fit_3, pars = c(
+  "home", "sigma_att",
+  "sigma_def"
+))
 
-fit_4 <- stan_foot(data = italy_2000_2002,
-                  model = "student_t")   # student_t
+fit_4 <- stan_foot(
+  data = italy_2000_2002,
+  model = "student_t"
+) # student_t
 print(fit_4, pars = c("beta"))
 
 ## seasonal dynamics, no prediction
 
-fit_5 <- stan_foot(data = italy_2000_2002,
-                  model = "double_pois",
-                  dynamic_type = "seasonal") # double poisson
-print(fit_5, pars = c("home", "sigma_att",
-                    "sigma_def"))
+fit_5 <- stan_foot(
+  data = italy_2000_2002,
+  model = "double_pois",
+  dynamic_type = "seasonal"
+) # double poisson
+print(fit_5, pars = c(
+  "home", "sigma_att",
+  "sigma_def"
+))
 
 ## seasonal dynamics, prediction for the last season
 
-fit_6 <- stan_foot(data = italy_2000_2002,
-                  model = "double_pois",
-                  dynamic_type = "seasonal",
-                  predict = 170) # double poisson
-print(fit_6, pars = c("home", "sigma_att",
-                    "sigma_def"))
+fit_6 <- stan_foot(
+  data = italy_2000_2002,
+  model = "double_pois",
+  dynamic_type = "seasonal",
+  predict = 170
+) # double poisson
+print(fit_6, pars = c(
+  "home", "sigma_att",
+  "sigma_def"
+))
 
 ## other priors' options
 # double poisson with
 # student_t priors for teams abilities
 # and laplace prior for the hyper sds
 
-fit_p <- stan_foot(data = italy_2000_2002,
-                   model = "double_pois",
-                   prior_par = list(ability = student_t(4, 0, NULL),
-                                    ability_sd = laplace(0,1),
-                                    home = normal(1, 10)
-                                    ))
+fit_p <- stan_foot(
+  data = italy_2000_2002,
+  model = "double_pois",
+  prior_par = list(
+    ability = student_t(4, 0, NULL),
+    ability_sd = laplace(0, 1),
+    home = normal(1, 10)
+  )
+)
 
-print(fit_p,  pars = c("home", "sigma_att",
-                    "sigma_def"))
+print(fit_p, pars = c(
+  "home", "sigma_att",
+  "sigma_def"
+))
 }
 }
 \references{
@@ -307,5 +344,5 @@ of football match outcomes with estimation of the
 evolution variance parameter. IMA Journal of Management Mathematics, 22(2), 99-113.
 }
 \author{
-Leonardo Egidi \email{legidi@units.it}, Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}, and Vasilis Palaskas \email{vasilis.palaskas94@gmail.com}.
+Leonardo Egidi \email{legidi@units.it}, Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}, and Vasilis Palaskas \email{vasilis.palaskas94@gmail.com}.
 }

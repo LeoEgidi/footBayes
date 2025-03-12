@@ -1,19 +1,18 @@
 Package: footBayes
 Type: Package
 Title: Fitting Bayesian and MLE Football Models
-Version: 1.0.0
-Date: 2025-01-09
+Version: 2.0.0
+Date: 2025-02-14
 Authors@R: c(person(given = "Leonardo",
                       family = "Egidi",
                       role = c("aut", "cre"),
                       email = "legidi@units.it"),
-               person(given = c("Roberto", "Macrì"),
-                      family = "Demartino",
+               person(given = "Roberto",
+                      family = "Macrì Demartino",
                       role = "aut"),
                person(given = "Vasilis",
                       family = "Palaskas.",
                       role = "aut"))
-Maintainer: Leonardo Egidi <legidi@units.it>
 License: GPL-2
 Description: This is the first package allowing for the estimation,
              visualization and prediction of the most well-known 
@@ -27,13 +26,23 @@ Description: This is the first package allowing for the estimation,
              Dixon and Coles (1997) <doi:10.1111/1467-9876.00065>,
              Karlis and Ntzoufras (2003) <doi:10.1111/1467-9884.00366> and
              Egidi, Pauli and Torelli (2018) <doi:10.1177/1471082X18798414>.
+             The package compiles all the 'CmdStan' models once during installation
+             using the 'instantiate' package.
 URL: https://github.com/leoegidi/footbayes
+BugReports: https://github.com/leoegidi/footbayes/issues
 Encoding: UTF-8
-SystemRequirements: pandoc (>= 1.12.3), pandoc-citeproc
-Depends: R (>= 3.1.0)
-Imports: rstan (>= 2.18.1), arm, reshape2, ggplot2, ggridges, bayesplot, matrixStats, 
-         extraDistr, parallel, metRology, dplyr, tidyr, numDeriv, magrittr, rlang
-Suggests: testthat, knitr (>= 1.37), rmarkdown (>= 2.10), loo
+SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan), pandoc (>= 1.12.3), pandoc-citeproc
+Depends: R (>= 4.2.0)
+Imports: rstan (>= 2.18.1), instantiate, reshape2, ggplot2, ggridges, matrixStats, 
+         extraDistr, metRology, dplyr, tidyr, numDeriv, magrittr, rlang, posterior
+Suggests: 
+    testthat (>= 3.0.0),
+    knitr (>= 1.37),
+    rmarkdown (>= 2.10),
+    loo,
+    cmdstanr (>= 0.6.0)
+Additional_repositories: https://stan-dev.r-universe.dev/
 RoxygenNote: 7.3.2
 LazyData: true
 BuildManual: yes
+Config/testthat/edition: 3
