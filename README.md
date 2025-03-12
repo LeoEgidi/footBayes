@@ -52,25 +52,67 @@ match days for the season 2002-2003:
 ``` r
 library(footBayes)
 library(dplyr)
+```
 
-# dataset for Italian serie A
+
+``` r 
+# Dataset for Italian Serie A
 data("italy")
 italy <- as_tibble(italy)
 italy_2000_2002 <- italy %>%
   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
   filter(Season == "2000" | Season == "2001" | Season == "2002")
 
-colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+colnames(italy_2000_2002) <- c("periods",
+                               "home_team",
+                               "away_team",
+                               "home_goals",
+                               "away_goals")
 
-fit1 <- stan_foot(
-  data = italy_2000_2002,
-  model = "double_pois",
-  predict = 36
-) # double poisson fit (predict last 4 match-days)
+# Double poisson fit (predict last 4 match-days)
+fit1 <- stan_foot(data = italy_2000_2002,
+                  model = "double_pois",
+                  predict = 36,
+                  iter_sampling = 200,
+                  chains = 2) 
+```
+
+
+The results (i.e., attack and defense effects) can be investigated using
+``` r 
+print(fit1, pars = c("att", "def"))
+```
+
+To visually investigate the attack and defense effects, we
+can use the `foot_abilities` function
+``` r 
 foot_abilities(fit1, italy_2000_2002) # teams abilities
+```
+
+<img src="man/figures/readme_foot_abilities.png" width="60%" style="display: block; margin: auto;" />
+
+To check the adequacy of the Bayesian model the function `pp_foot` provides posterior predictive plots
+``` r 
 pp_foot(fit1, italy_2000_2002) # pp checks
+```
+<img src="man/figures/readme_pp_foot.png" width="60%" style="display: block; margin: auto;" />
+
+
+Furthermore, the function `foot_rank` shows the final rank table and the plot with the predicted points
+``` r 
 foot_rank(fit1, italy_2000_2002) # rank league reconstruction
+```
+
+<img src="man/figures/readme_foot_rank.png" width="60%" style="display: block; margin: auto;" />
+
+
+In order to analyze the possible outcomes of the predicted matches, the function `foot_prob` provides a table containing the home win, draw and away win probabilities for the out-of-sample matches
+``` r 
 foot_prob(fit1, italy_2000_2002) # out-of-sample posterior pred. probabilities
 ```
+
+<img src="man/figures/readme_foot_prob.png" width="60%" style="display: block; margin: auto;" />
+
+
 
 For more and more technical details and references, see the vignette!

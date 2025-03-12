@@ -51,11 +51,15 @@ devtools::install_github("leoegidi/footBayes")
 
 In what follows, a quick example to fit a Bayesian double Poisson model for the Italian Serie A (seasons 2000-2001, 2001-2002, 2002-2003), visualize the estimated teams' abilities, and predict the last four match days for the season 2002-2003:
 
-```{r example, eval = FALSE}
+```{r load, message=FALSE}
 library(footBayes)
 library(dplyr)
+```
 
-# dataset for Italian serie A
+
+
+```{r fit1, results='hide', message=FALSE}
+# Dataset for Italian Serie A
 data("italy")
 italy <- as_tibble(italy)
 italy_2000_2002 <- italy %>%
@@ -68,13 +72,41 @@ colnames(italy_2000_2002) <- c("periods",
                                "home_goals",
                                "away_goals")
 
+# Double poisson fit (predict last 4 match-days)
 fit1 <- stan_foot(data = italy_2000_2002,
                   model = "double_pois",
-                  predict = 36) # double poisson fit (predict last 4 match-days)
+                  predict = 36,
+                  iter_sampling = 200,
+                  chains = 2) 
+```
+
+
+The results (i.e., attack and defense effects) can be investigated using
+```{r summary}
+print(fit1, pars = c("att", "def"))
+```
+
+To visually investigate the attack and defense effects, we
+can use the `foot_abilities` function
+```{r abilities}
 foot_abilities(fit1, italy_2000_2002) # teams abilities
+```
+
+To check the adequacy of the Bayesian model the function `pp_foot` provides posterior predictive plots
+```{r pp_foot}
 pp_foot(fit1, italy_2000_2002) # pp checks
+```
+
+Furthermore, the function `foot_rank` shows the final rank table and the plot with the predicted points
+```{r pp_foot}
 foot_rank(fit1, italy_2000_2002) # rank league reconstruction
+```
+
+In order to analyze the possible outcomes of the predicted matches, the function `foot_prob` provides a table containing the home win, draw and away win probabilities for the out-of-sample matches
+```{r pp_foot}
 foot_prob(fit1, italy_2000_2002) # out-of-sample posterior pred. probabilities
 ```
+
+
 
 For more and more technical details and references, see the vignette!
