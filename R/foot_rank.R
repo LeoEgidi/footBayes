@@ -700,9 +700,9 @@ foot_rank <- function(object, data,
       ) +
       geom_line(aes(x = day, y = q_50, color = "Simulated"),
         data = df_team_sel,
-        size = 1.1, na.rm = TRUE
+        linewidth = 1.1, na.rm = TRUE
       ) +
-      geom_line(size = 0.8, linetype = "solid", aes(color = "Observed"), na.rm = TRUE) +
+      geom_line(linewidth = 0.8, linetype = "solid", aes(color = "Observed"), na.rm = TRUE) +
       xlab("Match day") +
       ylab("Cumulated Points") +
       ylim(0, max(mt_975) + 2) +
