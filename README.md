@@ -89,13 +89,13 @@ can use the `foot_abilities` function
 foot_abilities(fit1, italy_2000_2002) # teams abilities
 ```
 
-<img src="man/figures/readme_foot_abilities.png" width="60%" style="display: block; margin: auto;" />
+<img src="man/figures/readme_foot_abilities.png" width="80%" style="display: block; margin: auto;" />
 
 To check the adequacy of the Bayesian model the function `pp_foot` provides posterior predictive plots
 ``` r 
 pp_foot(fit1, italy_2000_2002) # pp checks
 ```
-<img src="man/figures/readme_pp_foot.png" width="60%" style="display: block; margin: auto;" />
+<img src="man/figures/readme_pp_foot.png" width="80%" style="display: block; margin: auto;" />
 
 
 Furthermore, the function `foot_rank` shows the final rank table and the plot with the predicted points
@@ -103,7 +103,7 @@ Furthermore, the function `foot_rank` shows the final rank table and the plot wi
 foot_rank(fit1, italy_2000_2002) # rank league reconstruction
 ```
 
-<img src="man/figures/readme_foot_rank.png" width="60%" style="display: block; margin: auto;" />
+<img src="man/figures/readme_foot_rank.png" width="80%" style="display: block; margin: auto;" />
 
 
 In order to analyze the possible outcomes of the predicted matches, the function `foot_prob` provides a table containing the home win, draw and away win probabilities for the out-of-sample matches
@@ -111,7 +111,7 @@ In order to analyze the possible outcomes of the predicted matches, the function
 foot_prob(fit1, italy_2000_2002) # out-of-sample posterior pred. probabilities
 ```
 
-<img src="man/figures/readme_foot_prob.png" width="60%" style="display: block; margin: auto;" />
+<img src="man/figures/readme_foot_prob.png" width="80%" style="display: block; margin: auto;" />
 
 
 
