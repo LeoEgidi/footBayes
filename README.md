@@ -9,23 +9,19 @@
 
 The goal of `footBayes` is to propose a complete workflow to:
 
-- fit the most well-known football models: double Poisson, bivariate
-  Poisson, Skellam, student-t, according to both maximum likelihood and
-  Bayesian methods (+ Hamiltonian Monte Carlo engine);
+-   Fit the most well-known football models, including the double Poisson, bivariate Poisson, Skellam, and Student‑t distributions. It supports both maximum likelihood estimation (MLE) and Bayesian inference. For Bayesian methods, it incorporates several techniques: MCMC sampling with Hamiltonian Monte Carlo, variational inference using either the Pathfinder algorithm or Automatic Differentiation Variational Inference (ADVI), and the Laplace approximation.
 
-- visualize the teams’ abilities, the model checks, the rank-league
-  reconstruction;
+-   Visualize the teams' abilities, the model checks, the rank-league reconstruction;
 
-- predict out-of-sample matches.
+-   Predict out-of-sample matches.
 
 ## Installation
 
 Using `footBayes` package requires installing the R package
 [`cmdstanr`](https://mc-stan.org/cmdstanr/) (not available on CRAN) and
 the command-line interface to Stan:
-[`CmdStan`](https://mc-stan.org/users/interfaces/cmdstan.html). You may
-follow the instructions in [Getting started with
-CmdStanR](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) to
+[`CmdStan`](https://mc-stan.org/users/interfaces/cmdstan.html). 
+You may follow the instructions in [Getting started with CmdStanR](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) to
 install both.
 
 You can install the released version of `footBayes` from CRAN with:
@@ -55,7 +51,7 @@ match days for the season 2002-2003:
 
 ``` r
 library(footBayes)
-require(dplyr)
+library(dplyr)
 
 # dataset for Italian serie A
 data("italy")
@@ -64,14 +60,16 @@ italy_2000_2002 <- italy %>%
   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
   filter(Season == "2000" | Season == "2001" | Season == "2002")
 
+colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+
 fit1 <- stan_foot(
   data = italy_2000_2002,
   model = "double_pois",
   predict = 36
 ) # double poisson fit (predict last 4 match-days)
 foot_abilities(fit1, italy_2000_2002) # teams abilities
-pp_foot(italy_2000_2002, fit1) # pp checks
-foot_rank(italy_2000_2002, fit1) # rank league reconstruction
+pp_foot(fit1, italy_2000_2002) # pp checks
+foot_rank(fit1, italy_2000_2002) # rank league reconstruction
 foot_prob(fit1, italy_2000_2002) # out-of-sample posterior pred. probabilities
 ```
 
