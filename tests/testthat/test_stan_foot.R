@@ -94,7 +94,7 @@ test_that("Data checks", {
 
   # Two or more names
   expect_error(stan_foot(england_2004,
-    model = c("double_pois", "biv_pois")
+                         model = c("double_pois", "biv_pois")
   ))
 
   # Six arguments
@@ -155,34 +155,35 @@ test_that("Static models predictions errors", {
 
   # Correct model
   expect_error(stan_foot(england_2004,
-    model = "student_t",
-    predict = 10,
-    iter_sampling = 200,
-    chains = 2
+                         model = "student_t",
+                         predict = 10,
+                         iter_sampling = 200,
+                         chains = 2,
+                         seed = 433
   ), NA)
 
   # Predicted games more than the number of played matches
   expect_error(stan_foot(england_2004,
-    model = "student_t",
-    predict = nrow(england_2004) + 1
+                         model = "student_t",
+                         predict = nrow(england_2004) + 1
   ))
 
   # Predict not a number
   expect_error(stan_foot(england_2004,
-    model = "student_t",
-    predict = "a"
+                         model = "student_t",
+                         predict = "a"
   ))
 
   # Predict negative
   expect_error(stan_foot(england_2004,
-    model = "student_t",
-    predict = -25
+                         model = "student_t",
+                         predict = -25
   ))
 
   # Predict decimal number
   expect_error(stan_foot(england_2004,
-    model = "student_t",
-    predict = 30.6
+                         model = "student_t",
+                         predict = 30.6
   ))
 })
 
@@ -230,37 +231,39 @@ test_that("dynamics cause warnings/errors", {
 
   # Correct weekly dynamics
   expect_error(stan_foot(england_2004,
-    model = "double_pois",
-    dynamic_type = "weekly",
-    method = "VI"
+                         model = "double_pois",
+                         dynamic_type = "weekly",
+                         method = "VI",
+                         seed = 433
   ), NA)
 
   # Fake dynamic for one season
   expect_warning(stan_foot(england_2004,
-    model = "double_pois",
-    dynamic_type = "seasonal",
-    method = "VI"
+                           model = "double_pois",
+                           dynamic_type = "seasonal",
+                           method = "VI",
+                           seed = 433
   ))
 
   # Wrong dynamic
   expect_error(stan_foot(england_2004,
-    model = "student_t",
-    dynamic_type = "annual",
-    predict = 25
+                         model = "student_t",
+                         dynamic_type = "annual",
+                         predict = 25
   ))
 
   # Multiple seasons
   expect_error(stan_foot(england_1999_2001,
-    model = "double_pois",
-    dynamic_type = "weekly"
+                         model = "double_pois",
+                         dynamic_type = "weekly"
   ))
 
   # Number of matches different between teams
   expect_error(
     stan_foot(england_2004_all,
-      model = "double_pois",
-      dynamic_type = "weekly",
-      iter_sampling = 200, chains = 2
+              model = "double_pois",
+              dynamic_type = "weekly",
+              iter_sampling = 200, chains = 2
     )
   )
   #
@@ -304,80 +307,85 @@ test_that("Prior argument possible errors/warnings", {
 
   # Null prior_par use the default one
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = NULL,
-    method = "VI"
+                         prior_par = NULL,
+                         method = "VI"
   ), NA)
 
   # Defualt prior for the abilities
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = list(ability_sd = cauchy(0, 5)),
-    method = "VI"
+                         prior_par = list(ability_sd = cauchy(0, 5)),
+                         method = "VI"
   ), NA)
 
   # Wrong prior distribution
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = list(ability_sd = binomial(10, 0.5)),
-    method = "VI"
+                         prior_par = list(ability_sd = binomial(10, 0.5)),
+                         method = "VI"
   ))
 
 
   # Defualt prior for the ability_sd
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = list(ability = normal(0, NULL)),
-    method = "VI"
+                         prior_par = list(ability = normal(0, NULL)),
+                         method = "VI",
+                         seed = 433
   ), NA)
   # Wrong prior distribution
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = list(ability = gaussian(10, 20)),
-    method = "VI"
+                         prior_par = list(ability = gaussian(10, 20)),
+                         method = "VI"
   ))
 
   # Ability prior with fixed scale
   expect_warning(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = list(ability = normal(0, 10)),
-    method = "VI"
+                           prior_par = list(ability = normal(0, 10)),
+                           method = "VI",
+                           seed = 433
   ))
 
   # It must be a list
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = c(10, 5),
-    method = "VI"
+                         prior_par = c(10, 5),
+                         method = "VI"
   ))
 
   # Different priors
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = list(
-      ability = student_t(4, 0, NULL),
-      ability_sd = laplace(0, 1)
-    ),
-    method = "VI"
+                         prior_par = list(
+                           ability = student_t(4, 0, NULL),
+                           ability_sd = laplace(0, 1)
+                         ),
+                         method = "VI",
+                         seed = 433
   ), NA)
 
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = list(
-      ability = cauchy(0, NULL),
-      ability_sd = normal(0, 1)
-    ),
-    method = "VI"
+                         prior_par = list(
+                           ability = cauchy(0, NULL),
+                           ability_sd = normal(0, 1)
+                         ),
+                         method = "VI",
+                         seed = 433
   ), NA)
 
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior_par = list(
-      ability = laplace(0, NULL),
-      ability_sd = student_t(2, 0, 5)
-    ),
-    method = "VI"
+                         prior_par = list(
+                           ability = laplace(0, NULL),
+                           ability_sd = student_t(2, 0, 5)
+                         ),
+                         method = "VI",
+                         seed = 433
   ), NA)
 
   # Wrong input prior
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior = dirichlet(4, 0, 1), iter_sampling = 200
+                         prior = dirichlet(4, 0, 1), iter_sampling = 200
   ))
 
   # Wrong scale argument
   a <- "d"
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    prior = normal(0, a), iter_sampling = 200
+                         prior = normal(0, a), iter_sampling = 200
   ))
 })
 
@@ -411,34 +419,36 @@ test_that("Home effect works", {
 
   # home effect correct
   expect_error(stan_foot(england_2004,
-    model = "double_pois",
-    home_effect = TRUE,
-    iter_sampling = 200,
-    chains = 2
+                         model = "double_pois",
+                         home_effect = TRUE,
+                         iter_sampling = 200,
+                         chains = 2,
+                         seed = 433
   ), NA)
 
   expect_error(stan_foot(england_2004,
-    model = "double_pois",
-    home_effect = FALSE,
-    iter_sampling = 200,
-    chains = 2
+                         model = "double_pois",
+                         home_effect = FALSE,
+                         iter_sampling = 200,
+                         chains = 2,
+                         seed = 433
   ), NA)
 
   # Home effect wrong
   expect_error(stan_foot(england_2004,
-    model = "double_pois",
-    home_effect = "TRUE",
-    iter_sampling = 200,
-    chains = 2
+                         model = "double_pois",
+                         home_effect = "TRUE",
+                         iter_sampling = 200,
+                         chains = 2
   ))
 
   # Wrong home prior distribution
   expect_error(stan_foot(england_2004,
-    model = "double_pois",
-    home_effect = TRUE,
-    prior_par = list(home = cauchy(0, 5)),
-    iter_sampling = 200,
-    chains = 2
+                         model = "double_pois",
+                         home_effect = TRUE,
+                         prior_par = list(home = cauchy(0, 5)),
+                         iter_sampling = 200,
+                         chains = 2
   ))
 })
 
@@ -466,18 +476,20 @@ test_that("multiple method names cause error", {
 
   # Correct model with VI
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    method = "VI"
+                         method = "VI",
+                         seed = 433
   ), NA)
 
   # Correct model with pathfinder
   expect_error(stan_foot(england_1999_2001, "biv_pois",
-    method = "pathfinder"
+                         method = "pathfinder",
+                         seed = 433
   ), NA)
 
   # Correct model with laplace
   expect_error(stan_foot(england_1999_2001, "double_pois",
-    method = "laplace",
-    seed = 433
+                         method = "laplace",
+                         seed = 433
   ), NA)
 
 
@@ -533,8 +545,8 @@ test_that("integration between btd_foot and stan_foot", {
       dplyr::row_number() <= 380 ~ 2
     )) %>% # Assign periods based on match number
     dplyr::select(periods,
-      home_team = home,
-      away_team = visitor, match_outcome
+                  home_team = home,
+                  away_team = visitor, match_outcome
     )
 
 
@@ -546,7 +558,8 @@ test_that("integration between btd_foot and stan_foot", {
     dynamic_rank = FALSE,
     rank_measure = "median",
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
 
@@ -556,7 +569,8 @@ test_that("integration between btd_foot and stan_foot", {
     ranking = fit_btd_PL,
     norm_method = "mad",
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   ), NA)
 })
 
@@ -594,7 +608,8 @@ test_that("ranking with extra columns triggers warning and subsets to first thre
     stan_foot(
       data = data_valid, model = "double_pois", dynamic_type = "seasonal",
       ranking = ranking_extra,
-      iter_sampling = 200, chains = 2
+      iter_sampling = 200, chains = 2,
+      seed = 433
     )
   )
 

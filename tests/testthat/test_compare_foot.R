@@ -125,20 +125,23 @@ test_that("compare_foot warns and skips stan_foot object without y_prev or diff_
     data = italy_2000,
     model = "double_pois", predict = 18,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   ) # Double Poisson model
   fit_2 <- stan_foot(
     data = italy_2000,
     model = "biv_pois",
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   ) # Bivariate Poisson model
 
   fit_3 <- stan_foot(
     data = italy_2000,
     model = "student_t", predict = 18,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   ) # Skellam model
 
   italy_2000_test <- italy_2000[289:306, ]
@@ -191,7 +194,8 @@ test_that("compare_foot warns and skips source object with different predicted m
     data = italy_2000,
     model = "double_pois", predict = 18,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   ) # Double Poisson model
 
   fit_2 <- c(1,2,3,1)
@@ -200,7 +204,8 @@ test_that("compare_foot warns and skips source object with different predicted m
     data = italy_2000,
     model = "student_t", predict = 15,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   ) # Skellam model
 
   italy_2000_test <- italy_2000[289:306, ]

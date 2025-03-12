@@ -35,7 +35,8 @@ test_that("foot_prob errors when data is missing required columns and when it re
     model = "double_pois",
     predict = 30,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   # Missing a column in the data
@@ -69,7 +70,8 @@ test_that("foot_prob errors when data is missing required columns and when it re
     model = "student_t",
     predict = 30,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   # Correct model CmdStan
@@ -159,7 +161,8 @@ test_that("foot_prob errors when home_team and away_team lengths mismatch", {
     model = "double_pois",
     predict = 30,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   # Correct
@@ -196,7 +199,8 @@ test_that("foot_prob errors when home_team and away_team lengths mismatch", {
     data = england_2004,
     model = "double_pois",
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   expect_error(
@@ -234,7 +238,8 @@ test_that("foot_prob errors when predict is zero for list objects", {
     data = england_2004,
     model = "double_pois",
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   expect_error(

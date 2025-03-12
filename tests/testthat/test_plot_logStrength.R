@@ -43,7 +43,8 @@ test_that("Dynamic ranking plot returns a ggplot object with correct labels", {
   dyn_btd <- btd_foot(
     data = england_04_05, dynamic_rank = TRUE,
     method = "MCMC", iter_sampling = 200, rank_measure = "mean",
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   p <- plot_logStrength(dyn_btd)
@@ -84,7 +85,8 @@ test_that("Static ranking plot returns a ggplot object with correct labels", {
   stat_btd <- btd_foot(
     data = england_04, dynamic_rank = FALSE,
     method = "MCMC", iter_sampling = 200, rank_measure = "mean",
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   p <- plot_logStrength(stat_btd)
@@ -122,7 +124,8 @@ test_that("Filtering by teams works as expected and error is thrown if specified
   stat_btd <- btd_foot(
     data = england_04, dynamic_rank = FALSE,
     method = "MCMC", iter_sampling = 200, rank_measure = "mean",
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   p <- plot_logStrength(stat_btd, teams = c("Arsenal", "Chelsea"))

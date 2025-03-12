@@ -35,7 +35,8 @@ test_that("foot_round_robin errors when data is missing required columns and whe
     model = "double_pois",
     predict = 30,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   # Missing a column in the data
@@ -69,7 +70,8 @@ test_that("foot_round_robin errors when data is missing required columns and whe
     model = "student_t",
     predict = 30,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   # Correct model CmdStan
@@ -163,7 +165,8 @@ test_that("foot_round_robin errors for teams argument", {
     model = "double_pois",
     predict = 30,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   # Correct
@@ -215,7 +218,8 @@ test_that("foot_round_robin works for different values of output", {
     model = "double_pois",
     predict = 30,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   # Correct
@@ -276,7 +280,8 @@ test_that("foot_round_robin works for the last round of the season", {
     model = "double_pois",
     predict = 19,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   # Correct
@@ -318,7 +323,8 @@ test_that("foot_round_robin works with multiple seasons", {
     model = "double_pois",
     predict = 38,
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   # Correct

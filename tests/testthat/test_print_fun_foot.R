@@ -95,7 +95,8 @@ test_that("print.stanFoot prints the summary header", {
   ##  Tests                                                                   ####
 
   model <- stan_foot(england_99_00, "biv_pois",
-                     method = "VI"
+                     method = "VI",
+                     seed = 433
   )
   output <- capture.output(print(model))
   expect_true(any(grepl("Summary of Stan football model", output)))
@@ -104,7 +105,8 @@ test_that("print.stanFoot prints the summary header", {
 
   model_dyn <- stan_foot(england_99_00, "biv_pois",
                          dynamic_type = "seasonal",
-                         method = "VI"
+                         method = "VI",
+                         seed = 433
   )
   expect_error(print(model_dyn), NA)
 
@@ -132,7 +134,8 @@ test_that("print.stanFoot filters parameters using 'pars'", {
   ##  Tests                                                                   ####
 
   model <- stan_foot(england_1999, "biv_pois",
-                     method = "VI"
+                     method = "VI",
+                     seed = 433
   )
   # When specifying pars = "att", only parameters matching "att" should be printed.
   output <- capture.output(print(model, pars = "att"))
@@ -162,7 +165,8 @@ test_that("print.stanFoot errors-warnings when invalid teams are provided", {
   ##  Tests                                                                   ####
 
   model <- stan_foot(england_1999, "biv_pois",
-                     method = "VI"
+                     method = "VI",
+                     seed = 433
   )
   expect_warning(print(model, teams = c("Milan","Arsenal")))
   expect_error(print(model, teams = "Milan"))
@@ -207,7 +211,8 @@ test_that("print.btdFoot errors for non-positive digits", {
   model <- btd_foot(
     data = england_2004,
     dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   expect_error(print(model, digits = 0), "'digits' must be a positive numeric value.")
 })
@@ -246,7 +251,8 @@ test_that("print.btdFoot prints model header and ranking table", {
   model <- btd_foot(
     data = england_04_05,
     dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   output <- capture.output(print(model))
   expect_true(any(grepl("Bayesian Bradley-Terry-Davidson model", output)))
@@ -256,7 +262,8 @@ test_that("print.btdFoot prints model header and ranking table", {
   model_dyn <- btd_foot(
     data = england_04_05,
     dynamic_rank = TRUE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   output <- capture.output(print(model_dyn))
   expect_true(any(grepl("Bayesian Bradley-Terry-Davidson model", output)))
@@ -297,7 +304,8 @@ test_that("print.btdFoot filters parameters using 'pars'", {
   model <- btd_foot(
     data = england_2004,
     dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   output <- capture.output(print(model, pars = "logStrength"))
   expect_true(any(grepl("logStrength", output)))
@@ -337,7 +345,8 @@ test_that("print.btdFoot filters team-specific parameters", {
   model <- btd_foot(
     data = england_04_05,
     dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   expect_error(print(model, teams = "Arsenal"), NA)
 
@@ -345,7 +354,8 @@ test_that("print.btdFoot filters team-specific parameters", {
   model_dyn <- btd_foot(
     data = england_04_05,
     dynamic_rank = TRUE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   expect_error(print(model_dyn, teams = "Arsenal"), NA)
 })
@@ -418,13 +428,15 @@ test_that("print.compareFoot prints predictive performance metrics", {
   model_1 <- stan_foot(england_1999,
                        "biv_pois",
                        predict = 30,
-                       method = "VI"
+                       method = "VI",
+                       seed = 433
   )
 
   model_2 <- stan_foot(england_1999,
                        "double_pois",
                        predict = 30,
-                       method = "VI"
+                       method = "VI",
+                       seed = 433
   )
   comp <- compare_foot(
     list(double_poisson = model_2, bivariate_poisson = model_1),
@@ -456,13 +468,15 @@ test_that("print.compareFoot prints confusion matrices", {
   model_1 <- stan_foot(england_1999,
                        "biv_pois",
                        predict = 30,
-                       method = "VI"
+                       method = "VI",
+                       seed = 433
   )
 
   model_2 <- stan_foot(england_1999,
                        "double_pois",
                        predict = 30,
-                       method = "VI"
+                       method = "VI",
+                       seed = 433
   )
   comp <- compare_foot(list(double_poisson = model_2, bivariate_poisson = model_1),
                        england_1999[351:380, ],

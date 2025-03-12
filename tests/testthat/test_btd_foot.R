@@ -167,7 +167,8 @@ test_that("btd_foot returns a valid output both for static models", {
   # MCMC
   result <- expect_error(btd_foot(
     data = england_2004, dynamic_rank = FALSE,
-    method = "MCMC", iter_sampling = 200, chains = 2
+    method = "MCMC", iter_sampling = 200, chains = 2,
+    seed = 433
   ), NA)
 
   expect_s3_class(result, "btdFoot")
@@ -183,7 +184,8 @@ test_that("btd_foot returns a valid output both for static models", {
   # VI
   result <- expect_error(btd_foot(
     data = england_2004, dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   ), NA)
 
   expect_s3_class(result, "btdFoot")
@@ -199,7 +201,8 @@ test_that("btd_foot returns a valid output both for static models", {
   # Pathfinder
   result <- expect_error(btd_foot(
     data = england_2004, dynamic_rank = FALSE,
-    method = "pathfinder"
+    method = "pathfinder",
+    seed = 433
   ), NA)
 
   expect_s3_class(result, "btdFoot")
@@ -215,7 +218,8 @@ test_that("btd_foot returns a valid output both for static models", {
   # Laplace
   result <- expect_error(btd_foot(
     data = england_2004, dynamic_rank = FALSE,
-    method = "laplace"
+    method = "laplace",
+    seed = 433
   ), NA)
 
   expect_s3_class(result, "btdFoot")
@@ -266,7 +270,8 @@ test_that("btd_foot returns a valid output both for dynamic models", {
   # MCMC
   result <- btd_foot(
     data = england_04_05, dynamic_rank = TRUE,
-    method = "MCMC", iter_sampling = 200, chains = 2
+    method = "MCMC", iter_sampling = 200, chains = 2,
+    seed = 433
   )
 
   expect_s3_class(result, "btdFoot")
@@ -282,7 +287,8 @@ test_that("btd_foot returns a valid output both for dynamic models", {
   # VI
   result <- btd_foot(
     data = england_04_05, dynamic_rank = TRUE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_s3_class(result, "btdFoot")
@@ -298,7 +304,8 @@ test_that("btd_foot returns a valid output both for dynamic models", {
   # Pathfinder
   result <- btd_foot(
     data = england_04_05, dynamic_rank = TRUE,
-    method = "pathfinder"
+    method = "pathfinder",
+    seed = 433
   )
 
   expect_s3_class(result, "btdFoot")
@@ -314,7 +321,8 @@ test_that("btd_foot returns a valid output both for dynamic models", {
   # Laplace
   result <- btd_foot(
     data = england_04_05, dynamic_rank = TRUE,
-    method = "laplace"
+    method = "laplace",
+    seed = 433
   )
 
   expect_s3_class(result, "btdFoot")
@@ -366,7 +374,8 @@ test_that("btd_foot errors using the home effect", {
   expect_error(btd_foot(
     data = england_04_05, home_effect = TRUE,
     method = "MCMC", iter_sampling = 200, rank_measure = "map",
-    chains = 2
+    chains = 2,
+    seed = 433
   ), NA)
 
   # Wrong model
@@ -445,7 +454,8 @@ test_that("btd_foot errors using the home effect", {
   expect_error(btd_foot(
     data = england_2004,
     prior_par = NULL,
-    method = "MCMC", iter_sampling = 200, chains = 2
+    method = "MCMC", iter_sampling = 200, chains = 2,
+    seed = 433
   ), NA)
 })
 

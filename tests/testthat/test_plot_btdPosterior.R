@@ -46,7 +46,8 @@ test_that("Error is thrown for invalid 'pars' argument", {
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -88,7 +89,8 @@ test_that("Error is thrown for invalid 'plot_type' argument", {
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -127,7 +129,8 @@ test_that("Error is thrown if specified teams are not present in the data", {
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -166,7 +169,8 @@ test_that("Dynamic ranking: logStrength boxplot returns a ggplot object", {
 
   btd_dyn <- btd_foot(
     data = england_04_05, dynamic_rank = TRUE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   p <- plot_btdPosterior(btd_dyn, pars = "logStrength", plot_type = "boxplot")
@@ -206,7 +210,8 @@ test_that("Dynamic ranking: logStrength density plot returns a ggplot object", {
 
   btd_dyn <- btd_foot(
     data = england_04_05, dynamic_rank = TRUE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   p <- plot_btdPosterior(btd_dyn, pars = "logStrength", plot_type = "density")
@@ -243,7 +248,8 @@ test_that("Static ranking: logStrength boxplot returns a ggplot object with corr
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   p <- plot_btdPosterior(btd, pars = "logStrength", plot_type = "boxplot")
@@ -282,7 +288,8 @@ test_that("Static ranking: logStrength density plot returns a ggplot object with
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   p <- plot_btdPosterior(btd, pars = "logStrength", plot_type = "density")
@@ -322,7 +329,8 @@ test_that("Plot for 'logTie' parameter (boxplot) returns a ggplot object with co
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   p <- plot_btdPosterior(btd, pars = "logTie", plot_type = "boxplot")
@@ -361,7 +369,8 @@ test_that("Plot for 'logTie' parameter (density) returns a ggplot object", {
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   p <- plot_btdPosterior(btd, pars = "logTie", plot_type = "density")
@@ -400,7 +409,8 @@ test_that("Plot for 'home' parameter (boxplot) returns a ggplot object with corr
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE, home_effect = TRUE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   p <- plot_btdPosterior(btd, pars = "home", plot_type = "boxplot")
@@ -439,7 +449,8 @@ test_that("Plot for 'home' parameter (density) returns a ggplot object", {
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE, home_effect = TRUE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   p <- plot_btdPosterior(btd, pars = "home", plot_type = "density")
@@ -478,7 +489,8 @@ test_that("Error is thrown if parameter column is not found in draws for 'home'"
 
   btd <- btd_foot(
     data = england_04_05, dynamic_rank = FALSE, home_effect = FALSE,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(

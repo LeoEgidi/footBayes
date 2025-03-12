@@ -31,7 +31,8 @@ test_that("pp_foot returns proper output for aggregated type", {
     data = england_2004,
     model = "double_pois",
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   result <- pp_foot(object = model, data = england_2004, type = "aggregated")
@@ -82,7 +83,8 @@ test_that("pp_foot returns proper output for matches type", {
     data = england_2004,
     model = "double_pois",
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
 
   result <- pp_foot(object = model, data = england_2004, type = "matches", coverage = 0.95)
@@ -131,7 +133,8 @@ test_that("pp_foot errors if required columns are missing", {
     data = england_2004,
     model = "double_pois",
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
   # Remove the 'periods' column
   data_missing <- england_2004[, -1]
@@ -177,7 +180,9 @@ test_that("expect error in input", {
     data = england_2004,
     model = "student_t",
     iter_sampling = 200,
-    chains = 2
+    chains = 2,
+    seed = 433
   )
   expect_error(pp_foot(object = model$fit, data = england_2004), NA)
 })
+

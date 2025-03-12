@@ -29,7 +29,8 @@ test_that("foot_rank errors when required columns are missing", {
   model_pois <- stan_foot(
     data = england_2004,
     model = "double_pois",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
 
@@ -69,7 +70,8 @@ test_that("foot_rank errors for invalid 'visualize' or 'output' argument", {
   model_pois <- stan_foot(
     data = england_2004,
     model = "double_pois",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -110,7 +112,8 @@ test_that("foot_rank returns aggregated output as a list with rank_table and ran
   model_pois <- stan_foot(
     data = england_2004,
     model = "double_pois",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   res <- foot_rank(model_pois$fit, england_2004, visualize = "aggregated")
   expect_type(res, "list")
@@ -123,7 +126,8 @@ test_that("foot_rank returns aggregated output as a list with rank_table and ran
     data = england_2004,
     model = "double_pois",
     predict = 30,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   res <- foot_rank(model_pois_pred, england_2004, visualize = "aggregated")
   expect_type(res, "list")
@@ -161,7 +165,8 @@ test_that("foot_rank returns aggregated output as a list with rank_table and ran
   model_skellam <- stan_foot(
     data = england_2004,
     model = "skellam",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   res <- foot_rank(model_skellam, england_2004, visualize = "aggregated")
   expect_type(res, "list")
@@ -174,7 +179,8 @@ test_that("foot_rank returns aggregated output as a list with rank_table and ran
     data = england_2004,
     model = "skellam",
     predict = 30,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   res <- foot_rank(model_skellam_pred, england_2004, visualize = "aggregated")
   expect_type(res, "list")
@@ -212,7 +218,8 @@ test_that("foot_rank returns aggregated output as a list with rank_table and ran
   model_student <- stan_foot(
     data = england_2004,
     model = "student_t",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   res <- foot_rank(model_student, england_2004, visualize = "aggregated")
   expect_type(res, "list")
@@ -225,7 +232,8 @@ test_that("foot_rank returns aggregated output as a list with rank_table and ran
     data = england_2004,
     model = "student_t",
     predict = 30,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   res <- foot_rank(model_student_pred, england_2004, visualize = "aggregated")
   expect_type(res, "list")
@@ -265,7 +273,8 @@ test_that("foot_rank returns a ggplot object for individual visualization for sk
   model_skellam <- stan_foot(
     data = england_2004,
     model = "skellam",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   res <- foot_rank(model_skellam, england_2004, visualize = "individual")
@@ -276,7 +285,8 @@ test_that("foot_rank returns a ggplot object for individual visualization for sk
     data = england_2004,
     model = "skellam",
     predict = 30,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   res <- foot_rank(model_skellam_pred, england_2004, visualize = "individual")
@@ -311,7 +321,8 @@ test_that("foot_rank returns a ggplot object for individual visualization for st
   model_student <- stan_foot(
     data = england_2004,
     model = "student_t",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   res <- foot_rank(model_student, england_2004, visualize = "individual")
@@ -322,7 +333,8 @@ test_that("foot_rank returns a ggplot object for individual visualization for st
     data = england_2004,
     model = "student_t",
     predict = 30,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   res <- foot_rank(model_student_pred, england_2004, visualize = "individual")
@@ -359,7 +371,8 @@ test_that("foot_rank returns a ggplot object for individual visualization for po
   model_pois <- stan_foot(
     data = england_2004,
     model = "student_t",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   res <- foot_rank(model_pois, england_2004, visualize = "individual")
@@ -369,7 +382,8 @@ test_that("foot_rank returns a ggplot object for individual visualization for po
     data = england_2004,
     model = "student_t",
     predict = 30,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   res <- foot_rank(model_pois_pred, england_2004, visualize = "individual")
@@ -411,7 +425,8 @@ test_that("foot_rank warns when provided team names are not in the test set", {
   model_pois <- stan_foot(
     data = england_2004,
     model = "double_pois",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
   expect_warning(
     foot_rank(model_pois, england_2004, teams = c("NoTrueTeam")),
@@ -448,7 +463,8 @@ test_that("foot_rank errors when out-of-sample matches belong to multiple season
     data = england_04_05,
     model = "double_pois",
     predict = 390,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -486,7 +502,8 @@ test_that("foot_rank errors when the number of out-of-sample matches is too smal
     data = england_04_05,
     model = "double_pois",
     predict = 2,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -523,7 +540,8 @@ test_that("foot_rank ensure that more out-of-sample matches (at least two comple
     data = england_04,
     model = "double_pois",
     predict = 19,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -534,7 +552,8 @@ test_that("foot_rank ensure that more out-of-sample matches (at least two comple
     data = england_04,
     model = "double_pois",
     predict = 38,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -585,7 +604,8 @@ test_that("foot_rank when the teams of out-of-sample matches are different", {
     data = england_04_05,
     model = "double_pois",
     predict = 380,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -596,7 +616,8 @@ test_that("foot_rank when the teams of out-of-sample matches are different", {
     data = england_04_05_na,
     model = "double_pois",
     predict = 380,
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -632,7 +653,8 @@ test_that("foot_rank when the teams of in-sample matches", {
   model_pois <- stan_foot(
     data = england_04_05,
     model = "double_pois",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -643,7 +665,8 @@ test_that("foot_rank when the teams of in-sample matches", {
   model_skellam <- stan_foot(
     data = england_04_05,
     model = "skellam",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(
@@ -655,7 +678,8 @@ test_that("foot_rank when the teams of in-sample matches", {
   model_student <- stan_foot(
     data = england_04_05,
     model = "student_t",
-    method = "VI"
+    method = "VI",
+    seed = 433
   )
 
   expect_error(

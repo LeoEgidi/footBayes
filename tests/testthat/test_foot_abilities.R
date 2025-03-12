@@ -147,7 +147,8 @@ test_that("Bayesian model returns ggplot for both, attack, and defense", {
 
   # Poisson models
   fit_static <- stan_foot(england_2004, "double_pois",
-                          iter_sampling = 200, chains = 2)
+                          iter_sampling = 200, chains = 2,
+                          seed = 433)
 
   teams_used <- unique(c(england_2004$home_team, england_2004$away_team))
   # For testing, if there are more than 2 teams, use only the first two.
@@ -164,7 +165,8 @@ test_that("Bayesian model returns ggplot for both, attack, and defense", {
 
   # t-student model
   fit_static_t_stud <- stan_foot(england_2004, "student_t",
-                                 iter_sampling = 200, chains = 2)
+                                 iter_sampling = 200, chains = 2,
+                                 seed = 433)
 
   # Returning object
   p_static_t_stud <- foot_abilities(fit_static_t_stud, england_2004, teams = c("Arsenal", "Everton"))
@@ -217,7 +219,8 @@ test_that("Dynamic models return ggplot without errors", {
 
   # Poisson models
   fit_dynamic <- stan_foot(england_1999_2000, "biv_pois", dynamic_type = "seasonal",
-                           iter_sampling = 200, chains = 2)
+                           iter_sampling = 200, chains = 2,
+                           seed = 433)
 
   # Test that no errors occur with various teams selections
   expect_error(foot_abilities(fit_dynamic, england_1999_2000), NA)
@@ -238,7 +241,8 @@ test_that("Dynamic models return ggplot without errors", {
 
   # t-student model
   fit_dynamic_t_stud <- stan_foot(england_1999_2000, "student_t", dynamic_type = "seasonal",
-                                  iter_sampling = 200, chains = 2)
+                                  iter_sampling = 200, chains = 2,
+                                  seed = 433)
 
   # Returning object
   p_dynamic_t_stud <- foot_abilities(fit_dynamic_t_stud, england_1999_2000, teams = c("Arsenal", "Everton"))
