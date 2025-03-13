@@ -1,9 +1,10 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# footBayes <img src="man/figures/logo.png" width = 200 align="right" />
+# footBayes <img src="man/figures/logo.png" width = 180 align="right" />
 
 [![CRAN Version](https://www.r-pkg.org/badges/version/footBayes)](https://cran.r-project.org/package=footBayes)
+![Dev Version](https://img.shields.io/badge/Development%20Version-2.0.0-brightgreen?style=flat&color=blue)
 [![R-CMD-check.yaml](https://github.com/RoMaD-96/footBayes/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RoMaD-96/footBayes/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/RoMaD-96/footBayes/graph/badge.svg)](https://app.codecov.io/gh/RoMaD-96/footBayes)
 [![Downloads](https://cranlogs.r-pkg.org/badges/footBayes?color=brightgreen)](https://CRAN.R-project.org/package=footBayes)
