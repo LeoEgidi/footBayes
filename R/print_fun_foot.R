@@ -178,7 +178,7 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
 #' @export
 
 print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names = TRUE,
-                          display = c("both", "rankings", "parameters"), ...) {
+                          display = "both", ...) {
   # if (!inherits(x, "btdFoot")) {
   #   stop("The object must be of class 'btdFoot'.")
   # }
@@ -187,7 +187,7 @@ print.btdFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names =
     stop("'digits' must be a positive numeric value.")
   }
 
-  display <- match.arg(display)
+  display <- match.arg(display, c("both", "rankings", "parameters"))
 
   cat("Bayesian Bradley-Terry-Davidson model\n")
   cat("------------------------------------------------\n")

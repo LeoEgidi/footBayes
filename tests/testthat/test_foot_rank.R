@@ -392,10 +392,11 @@ test_that("foot_rank returns a ggplot object for individual visualization for po
   res <- foot_rank(model_pois_pred, england_2004, visualize = "individual", teams = "Arsenal")
   expect_true(inherits(res, "ggplot"))
 
-  res <- foot_rank(model_pois_pred, england_2004, visualize = "individual",
-                   teams = c("Arsenal", "Chelsea"))
+  res <- foot_rank(model_pois_pred, england_2004,
+    visualize = "individual",
+    teams = c("Arsenal", "Chelsea")
+  )
   expect_true(inherits(res, "ggplot"))
-
 })
 
 test_that("foot_rank warns when provided team names are not in the test set", {
@@ -507,7 +508,8 @@ test_that("foot_rank errors when the number of out-of-sample matches is too smal
   )
 
   expect_error(
-    foot_rank(model_pois, england_04_05))
+    foot_rank(model_pois, england_04_05)
+  )
 })
 
 
@@ -545,7 +547,8 @@ test_that("foot_rank ensure that more out-of-sample matches (at least two comple
   )
 
   expect_error(
-    foot_rank(model_pois, england_04))
+    foot_rank(model_pois, england_04)
+  )
 
 
   model_pois <- stan_foot(
@@ -557,7 +560,8 @@ test_that("foot_rank ensure that more out-of-sample matches (at least two comple
   )
 
   expect_error(
-    foot_rank(model_pois, england_04), NA)
+    foot_rank(model_pois, england_04), NA
+  )
 })
 
 
@@ -609,7 +613,8 @@ test_that("foot_rank when the teams of out-of-sample matches are different", {
   )
 
   expect_error(
-    foot_rank(model_pois, england_04_05), NA)
+    foot_rank(model_pois, england_04_05), NA
+  )
 
   # Unknown future results
   model_pois_na <- stan_foot(
@@ -621,7 +626,8 @@ test_that("foot_rank when the teams of out-of-sample matches are different", {
   )
 
   expect_error(
-    foot_rank(model_pois_na, england_04_05_na), NA)
+    foot_rank(model_pois_na, england_04_05_na), NA
+  )
 })
 
 
@@ -658,9 +664,11 @@ test_that("foot_rank when the teams of in-sample matches", {
   )
 
   expect_error(
-    foot_rank(model_pois, england_04_05, visualize =  "individual"), NA)
+    foot_rank(model_pois, england_04_05, visualize = "individual"), NA
+  )
   expect_error(
-    foot_rank(model_pois, england_04_05, visualize =  "aggregated"), NA)
+    foot_rank(model_pois, england_04_05, visualize = "aggregated"), NA
+  )
 
   model_skellam <- stan_foot(
     data = england_04_05,
@@ -670,9 +678,11 @@ test_that("foot_rank when the teams of in-sample matches", {
   )
 
   expect_error(
-    foot_rank(model_skellam, england_04_05, visualize = "individual"), NA)
+    foot_rank(model_skellam, england_04_05, visualize = "individual"), NA
+  )
   expect_error(
-    foot_rank(model_skellam, england_04_05, visualize = "aggregated"), NA)
+    foot_rank(model_skellam, england_04_05, visualize = "aggregated"), NA
+  )
 
 
   model_student <- stan_foot(
@@ -683,7 +693,99 @@ test_that("foot_rank when the teams of in-sample matches", {
   )
 
   expect_error(
-    foot_rank(model_student, england_04_05, visualize = "individual"), NA)
+    foot_rank(model_student, england_04_05, visualize = "individual"), NA
+  )
   expect_error(
-    foot_rank(model_student, england_04_05, visualize = "aggregated"), NA)
+    foot_rank(model_student, england_04_05, visualize = "aggregated"), NA
+  )
+})
+
+
+
+
+test_that("foot_rank works for cond_2", {
+  skip_on_cran()
+  skip_if_not(stan_cmdstan_exists())
+
+
+  data_train <- tibble(
+    periods = rep(1, 13),
+    home_team = c(
+      "Juventus", "Inter", "AC Milan", "Napoli", "Roma",
+      "Juventus", "Inter", "AC Milan", "Napoli", "Roma",
+      "Juventus", "Inter", "AC Milan"
+    ),
+    away_team = c(
+      "Inter", "AC Milan", "Napoli", "Roma", "Juventus",
+      "AC Milan", "Roma", "Roma", "Juventus", "Inter",
+      "Napoli", "Juventus", "Roma"
+    ),
+    home_goals = c(2, 1, 0, 3, 1, 2, 1, 1, 2, 0, 3, 1, 2),
+    away_goals = c(1, 1, 2, 0, 2, 0, 0, 1, 2, 1, 1, 1, 0)
+  )
+
+
+  data_test <- tibble(
+    periods = rep(2, 4),
+    home_team = c("Juventus", "Inter", "AC Milan", "Napoli"),
+    away_team = c("Inter", "AC Milan", "Napoli", "Juventus"),
+    home_goals = c(2, 1, 0, 1),
+    away_goals = c(1, 2, 1, 1)
+  )
+
+
+  data_full <- bind_rows(data_train, data_test)
+
+
+  fit <- stan_foot(
+    data = data_full,
+    model = "double_pois",
+    predict = 4
+  )
+
+  expect_error(foot_rank(fit, data_full, visualize = "aggregated"), NA)
+})
+
+
+
+test_that("foot_rank works for cond_2 individual", {
+  skip_on_cran()
+  skip_if_not(stan_cmdstan_exists())
+
+  training_data <- tibble(
+    periods = rep(1, 19),
+    home_team = c(
+      "Juventus", "Inter", "AC Milan", "Napoli", "Roma",
+      "Juventus", "Inter", "AC Milan", "Napoli", "Roma",
+      "Juventus", "Inter", "AC Milan", "Napoli", "Roma",
+      "Juventus", "Inter", "AC Milan", "Roma"
+    ),
+    away_team = c(
+      "Inter", "AC Milan", "Napoli", "Roma", "Juventus",
+      "AC Milan", "Napoli", "Roma", "Juventus", "Inter",
+      "Napoli", "Roma", "Juventus", "Inter", "AC Milan",
+      "Roma", "Juventus", "Inter", "Napoli"
+    ),
+    home_goals = sample(0:3, 19, replace = TRUE),
+    away_goals = sample(0:3, 19, replace = TRUE)
+  )
+
+  test_data <- tibble(
+    periods = rep(2, 4),
+    home_team = c("Juventus", "Inter", "AC Milan", "Napoli"),
+    away_team = c("Inter", "AC Milan", "Napoli", "Juventus"),
+    home_goals = sample(0:3, 4, replace = TRUE),
+    away_goals = sample(0:3, 4, replace = TRUE)
+  )
+
+  data_full <- bind_rows(training_data, test_data)
+
+
+  fit <- stan_foot(
+    data = data_full,
+    model = "double_pois",
+    predict = 4
+  )
+
+  expect_error(foot_rank(fit, data_full, visualize = "individual"), NA)
 })

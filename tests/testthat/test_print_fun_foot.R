@@ -110,6 +110,8 @@ test_that("print.stanFoot prints the summary header", {
   )
   expect_error(print(model_dyn), NA)
 
+
+
 })
 
 
@@ -172,6 +174,33 @@ test_that("print.stanFoot errors-warnings when invalid teams are provided", {
   expect_error(print(model, teams = "Milan"))
 })
 
+test_that("print.stanFoot for selected teams and dynamic models", {
+  skip_on_cran()
+  skip_if_not(stan_cmdstan_exists())
+
+  ##  ............................................................................
+  ##  Data                                                                    ####
+  data("england")
+
+  england_99_00 <- england %>%
+    dplyr::filter(division == 1) %>%
+    dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
+    dplyr::filter(Season == "1999" | Season == "2000")
+
+  colnames(england_99_00) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+
+
+  ##  ............................................................................
+  ##  Tests                                                                   ####
+
+  model <- stan_foot(england_99_00, "biv_pois",
+                     method = "VI",
+                     dynamic_type = "seasonal",
+                     seed = 433
+  )
+  expect_error(print(model, teams = c("Chelsea","Arsenal"), pars = "att"), NA)
+  expect_error(print(model, teams = "Chelsea", pars = "att"), NA)
+})
 
 
 #   ____________________________________________________________________________
@@ -358,6 +387,9 @@ test_that("print.btdFoot filters team-specific parameters", {
     seed = 433
   )
   expect_error(print(model_dyn, teams = "Arsenal"), NA)
+  expect_error(print(model_dyn, teams = "Arsenal", pars = "logStrength"), NA)
+  expect_error(print(model_dyn, teams = c("Arsenal", "Liverpool"),
+                     pars = c("logStrength", "logTie")), NA)
 })
 
 
