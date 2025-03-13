@@ -54,6 +54,7 @@ jobs:
             usethis
             testthat
             covr
+            xml2
 
       - name: Build Cmdstan
         run: |
