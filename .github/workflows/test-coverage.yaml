@@ -62,6 +62,7 @@ jobs:
           cmdstanr::install_cmdstan(cores = parallel::detectCores())
         shell: Rscript {0}
 
+
       - name: Test coverage
         run: |
           cov <- covr::package_coverage(
@@ -95,3 +96,4 @@ jobs:
         with:
           name: coverage-test-failures
           path: ${{ runner.temp }}/package
+
