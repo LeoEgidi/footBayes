@@ -357,7 +357,7 @@ foot_rank <- function(object, data,
       }
     }
 
-    # assumption for games "within" the season
+    # Assumption for games "within" the season
     if (cond_1 || cond_2) {
       obs <- sort.int(true_point_count + true_point_count_pre, index.return = TRUE, decreasing = TRUE)$x
       obs_names <- sort.int(true_point_count + true_point_count_pre, index.return = TRUE, decreasing = TRUE)$ix
@@ -476,7 +476,7 @@ foot_rank <- function(object, data,
       }
 
 
-      # compute the true point for the training sample, dynamically
+      # Compute the true point for the training sample, dynamically
       true_point_count_pre_dyn <- matrix(0, length(unique(team_home)), day_index)
       for (n in set2) {
         if (y[(n), 1] > y[(n), 2]) {
@@ -519,16 +519,15 @@ foot_rank <- function(object, data,
 
       true_point_count_pre_dyn <- matrix(0, length(unique(team_home)), day_index)
 
-      # qui è un casino: non sempre le stagioni hanno lo stesso numero di squadre...
-      # per esempio la serie A 2004-2005 aveva 20 squadre, quella prima 18.
-      # questo new_N funziona quindi solo nell'ipotesi in cui il campionato da prevedere
-      # e quelli prima abbiano lo stesso numero di squadre
+      # Note: The number of teams per season may vary.
+      # For example, the 2004-2005 Serie A season featured 20 teams, while the preceding season had 18.
+      # Therefore, the new_N function works correctly only if the championship being predicted
+      # and the historical seasons all have the same number of teams.
       old_matches <- number_match_days * mod * length(unique(team1_prev)) / 2
       new_N <- seq(1 + old_matches, N)
-      # floor( (N/ (length(unique(team1_prev))/2))  ))
 
 
-      # compute the true point for the training sample, dynamically
+      # Compute the true point for the training sample, dynamically
       for (n in new_N) {
         if (y[(n), 1] > y[(n), 2]) {
           true_point_count_pre_dyn[team_home[n], day_index_rep[n - old_matches]] <- true_point_count_pre_dyn[team_home[n], day_index_rep[n - old_matches]] + 3
@@ -556,11 +555,11 @@ foot_rank <- function(object, data,
       }
     }
 
-    # compute the true points for the test set sample, dynamically
+    # Compute the true points for the test set sample, dynamically
     true_points_count_post_dyn <- matrix(NA, length(unique(team_home)), max(unique(day_index_prev)))
 
 
-    # compute the points on the MCMC, dynamically
+    # Compute the points on the MCMC, dynamically
     point_count_dyn <- array(0, c(M, length(unique(team_home)), max(day_index_prev)))
     cumsum_points_dyn <- array(0, c(M, length(unique(team_home)), max(day_index_prev)))
     for (t in 1:M) {
@@ -662,7 +661,6 @@ foot_rank <- function(object, data,
           matrix(
             NA,
             length(team_names),
-            # length(unique(team_home)),
             day_index
           ),
           points_dyn_med[team_index, (day_index + 1):max(day_index_prev)]

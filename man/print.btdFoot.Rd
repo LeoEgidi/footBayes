@@ -10,7 +10,7 @@
   teams = NULL,
   digits = 3,
   true_names = TRUE,
-  display = c("both", "rankings", "parameters"),
+  display = "both",
   ...
 )
 }

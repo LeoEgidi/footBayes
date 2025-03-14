@@ -85,6 +85,7 @@
 mle_foot <- function(data, model, predict = 0, ...) {
   #   ____________________________________________________________________________
   #   Data Checks                                                             ####
+
   if (!is.matrix(data) & !is.data.frame(data)) {
     stop("Data are not stored in matrix/data frame
          structure. Pleasy, provide data correctly.")

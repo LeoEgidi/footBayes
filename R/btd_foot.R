@@ -134,7 +134,7 @@ btd_foot <- function(data,
                      method = "MCMC",
                      ...) {
   #   ____________________________________________________________________________
-  #   Data check                                                              ####
+  #   Data checks                                                             ####
 
   # Check that data is a data frame
   if (!is.data.frame(data)) {

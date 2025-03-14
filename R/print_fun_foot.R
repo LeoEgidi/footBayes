@@ -22,7 +22,6 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
   #   stop("The object must be of class 'stanFoot'.")
   # }
 
-
   if (!is.numeric(digits) || digits <= 0) {
     stop("'digits' must be a positive numeric value.")
   }

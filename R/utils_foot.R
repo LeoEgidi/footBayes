@@ -194,4 +194,3 @@ compute_RPS <- function(cum_pred, actual) {
   rps_per_obs <- rowSums(squared_diff) / 2 # for 3 outcome categories: (3 - 1)
   mean(rps_per_obs)
 }
-
