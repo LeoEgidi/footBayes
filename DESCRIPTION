@@ -2,7 +2,7 @@ Package: footBayes
 Type: Package
 Title: Fitting Bayesian and MLE Football Models
 Version: 2.0.0
-Date: 2025-02-14
+Date: 2025-03-14
 Authors@R: c(person(given = "Leonardo",
                       family = "Egidi",
                       role = c("aut", "cre"),
@@ -13,21 +13,24 @@ Authors@R: c(person(given = "Leonardo",
                person(given = "Vasilis",
                       family = "Palaskas.",
                       role = "aut"))
+Maintainer: Leonardo Egidi <legidi@units.it>
 License: GPL-2
 Description: This is the first package allowing for the estimation,
              visualization and prediction of the most well-known 
              football models: double Poisson, bivariate Poisson,
              Skellam, student_t, diagonal-inflated bivariate Poisson, and
-             zero-inflated Skellam. The package allows Hamiltonian
-             Monte Carlo (HMC) estimation through the underlying Stan
-             environment and Maximum Likelihood estimation (MLE, for 
-             'static' models only). The model construction relies on
-             the most well-known football references, such as 
+             zero-inflated Skellam. It supports both maximum likelihood estimation (MLE, for 
+             'static' models only) and Bayesian inference.
+             For Bayesian methods, it incorporates several techniques:
+             MCMC sampling with Hamiltonian Monte Carlo, variational inference using
+             either the Pathfinder algorithm or Automatic Differentiation Variational
+             Inference (ADVI), and the Laplace approximation.
+             The package compiles all the 'CmdStan' models once during installation
+             using the 'instantiate' package.
+             The model construction relies on the most well-known football references, such as 
              Dixon and Coles (1997) <doi:10.1111/1467-9876.00065>,
              Karlis and Ntzoufras (2003) <doi:10.1111/1467-9884.00366> and
              Egidi, Pauli and Torelli (2018) <doi:10.1177/1471082X18798414>.
-             The package compiles all the 'CmdStan' models once during installation
-             using the 'instantiate' package.
 URL: https://github.com/leoegidi/footbayes
 BugReports: https://github.com/leoegidi/footbayes/issues
 Encoding: UTF-8
