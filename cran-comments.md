@@ -14,8 +14,7 @@ There are currently no downstream dependencies for this package.
 We provide a pre-compiled vignette due to its slow time of compilation
 in the inst/precompiled sub-folder.
 
-We also fixed an error arising in the 0.2.0 version about the imported
-packages, by changing the DESCRIPTION file.
+
 
 Thank you
 
