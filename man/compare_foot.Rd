@@ -14,7 +14,7 @@ compare_foot(
 \arguments{
 \item{source}{A named list containing either:
 \itemize{
-  \item Fitted model objects (of class \code{stanFoot} or \code{stanfit}), each representing a football model.
+  \item Fitted model objects (of class  \code{stanFoot}, \code{CmdStanFit}, \code{stanfit}), each representing a football model.
   \item Matrices where each matrix contains the estimated probabilities for "Home Win," "Draw," and "Away Win" in its columns.
 }}
 
@@ -53,35 +53,81 @@ The function extracts predictions from each model or directly uses the provided 
 }
 \examples{
 \dontrun{
-library(dplyr)
+if (instantiate::stan_cmdstan_exists()) {
+  library(dplyr)
 
-data("italy")
-italy_2000 <- italy \%>\%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
-  dplyr::filter(Season == "2000")
+  data("italy")
+  italy_2000 <- italy \%>\%
+    dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+    dplyr::filter(Season == "2000")
 
-colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+  colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
-# Example with fitted models
-fit_1 <- stan_foot(data = italy_2000,
-                   model = "double_pois", predict = 18)  # Double Poisson model
-fit_2 <- stan_foot(data = italy_2000,
-                   model = "biv_pois", predict = 18)     # Bivariate Poisson model
+  # Example with fitted models
+  fit_1 <- stan_foot(
+    data = italy_2000,
+    model = "double_pois", predict = 18
+  ) # Double Poisson model
+  fit_2 <- stan_foot(
+    data = italy_2000,
+    model = "biv_pois", predict = 18
+  ) # Bivariate Poisson model
 
-italy_2000_test <- italy_2000[289:306, ]
+  italy_2000_test <- italy_2000[289:306, ]
 
 
-compare_results_models <- compare_foot(
-  source = list(double_poisson = fit_1,
-                bivariate_poisson = fit_2),
-  test_data = italy_2000_test,
-  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS"),
-  conf_matrix = TRUE
-)
+  compare_results_models <- compare_foot(
+    source = list(
+      double_poisson = fit_1,
+      bivariate_poisson = fit_2
+    ),
+    test_data = italy_2000_test,
+    metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS"),
+    conf_matrix = TRUE
+  )
 
-print(compare_results_models)
+  print(compare_results_models)
+
+
+  # Example with probability matrices
+
+  home_team <- c(
+    "AC Milan", "Inter", "Juventus", "AS Roma", "Napoli",
+    "Lazio", "Atalanta", "Fiorentina", "Torino", "Sassuolo", "Udinese"
+  )
+
+  away_team <- c(
+    "Juventus", "Napoli", "Inter", "Atalanta", "Lazio",
+    "AC Milan", "Sassuolo", "Torino", "Fiorentina", "Udinese", "AS Roma"
+  )
+
+  # Home and Away goals based on given data
+  home_goals <- c(2, 0, 2, 2, 3, 1, 4, 2, 1, 1, 2)
+  away_goals <- c(1, 0, 1, 3, 2, 1, 1, 2, 1, 1, 2)
+
+  # Combine into a data frame
+  test_data <- data.frame(home_team, away_team, home_goals, away_goals)
+
+  # Define the data for each column
+  pW <- c(0.51, 0.45, 0.48, 0.53, 0.56, 0.39, 0.52, 0.55, 0.61, 0.37, 0.35)
+  pD <- c(0.27, 0.25, 0.31, 0.18, 0.23, 0.30, 0.24, 0.26, 0.18, 0.19, 0.22)
+  pL <- c(0.22, 0.30, 0.21, 0.29, 0.21, 0.31, 0.24, 0.19, 0.21, 0.44, 0.43)
+
+  # Create the data frame table_prob
+  table_prob <- data.frame(pW, pD, pL)
+  matrix_prob <- as.matrix(table_prob)
+
+  # Use compare_foot function
+  compare_results_matrices <- compare_foot(
+    source = list(matrix_1 = matrix_prob),
+    test_data = test_data,
+    metric = c("accuracy", "brier", "pseudoR2", "ACP", "RPS")
+  )
+  # Print the results
+  print(compare_results_matrices)
+}
 }
 }
 \author{
-Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
+Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 }

@@ -4,10 +4,10 @@
 \alias{foot_round_robin}
 \title{Round-robin for football leagues}
 \usage{
-foot_round_robin(object, data, teams = NULL)
+foot_round_robin(object, data, teams = NULL, output = "both")
 }
 \arguments{
-\item{object}{An object of class \code{\link[rstan]{stanfit}} or \code{stanFoot} as given by \code{stan_foot} function.}
+\item{object}{An object either of class \code{stanFoot}, \code{CmdStanFit}, \code{stanfit}.}
 
 \item{data}{A data frame containing match data with columns:
 \itemize{
@@ -19,9 +19,12 @@ foot_round_robin(object, data, teams = NULL)
 }}
 
 \item{teams}{An optional character vector specifying team names to include. If \code{NULL}, all teams are included.}
+
+\item{output}{An optional character string specifying the type of output to return. One of \code{"both"}, \code{"table"},
+or \code{"plot"}. Default is \code{"both"}.}
 }
 \value{
-Round-robin plot with the home-win posterior probabilities computed from the ppd of the fitted model via the \code{stan_foot} function.
+Round-robin plot with the home-win posterior probabilities computed from the posterior predictive distribution of the fitted model.
 }
 \description{
 Posterior predictive probabilities for a football season in a round-robin format
@@ -32,24 +35,24 @@ simulation from the posterior predictive distribution of future (out-of-sample) 
 The dataset should refer to one or more seasons from a given national football league (Premier League, Serie A, La Liga, etc.).
 }
 \examples{
-
 \dontrun{
-library(dplyr)
+if (instantiate::stan_cmdstan_exists()) {
+  library(dplyr)
 
-data("italy")
-italy_1999_2000<- italy \%>\%
-dplyr::select(Season, home, visitor, hgoal,vgoal) \%>\%
-dplyr::filter(Season == "1999"|Season=="2000")
+  data("italy")
+  italy_1999_2000 <- italy \%>\%
+    dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
+    dplyr::filter(Season == "1999" | Season == "2000")
 
-colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+  colnames(italy_1999_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
-fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter = 200)
+  fit <- stan_foot(italy_1999_2000, "double_pois", predict = 45, iter_sampling = 200)
 
-foot_round_robin(fit, italy_1999_2000)
-foot_round_robin(fit, italy_1999_2000, c("Parma AC", "AS Roma"))
-
+  foot_round_robin(fit, italy_1999_2000)
+  foot_round_robin(fit, italy_1999_2000, c("Parma AC", "AS Roma"))
+}
 }
 }
 \author{
-Leonardo Egidi \email{legidi@units.it}
+Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 }

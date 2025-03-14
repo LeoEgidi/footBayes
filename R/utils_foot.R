@@ -101,17 +101,6 @@ normalize_rank_points <- function(rank_points, method) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 #' Replace Indices with Team Names (Internal Function)
 #'
 #' Substitutes numeric indices in parameter names with corresponding team names based on a predefined mapping.
@@ -138,8 +127,8 @@ team_names <- function(param_names, exclude_params, team_map_rev) {
 
 
       if (length(matches[[1]]) >= 3) {
-        time_index <- matches[[1]][2]   # First index (time)
-        team_index <- matches[[1]][3]   # Second index (team)
+        time_index <- matches[[1]][2] # First index (time)
+        team_index <- matches[[1]][3] # Second index (team)
 
         # Check if the second index corresponds to a team
         if (team_index %in% names(team_map_rev)) {
@@ -158,7 +147,7 @@ team_names <- function(param_names, exclude_params, team_map_rev) {
       matches <- regmatches(name, regexec(pattern_one, name))
       # Ensure that the single index is captured
       if (length(matches[[1]]) >= 2) {
-        team_index <- matches[[1]][2]   # Single index (team)
+        team_index <- matches[[1]][2] # Single index (team)
 
         # Check if the index corresponds to a team
         if (team_index %in% names(team_map_rev)) {
@@ -172,4 +161,36 @@ team_names <- function(param_names, exclude_params, team_map_rev) {
 
     return(name)
   }, USE.NAMES = FALSE)
+}
+
+#' Compute the Ranked Probability Score (RPS) (Internal Function)
+#'
+#' Computes the Ranked Probability Score (RPS) from cumulative predicted probabilities
+#' and actual outcomes. The RPS is calculated as the mean of the squared differences
+#' between the cumulative predicted probabilities (for the first two outcome categories)
+#' and the corresponding cumulative observed probabilities.
+#'
+#' @param cum_pred A numeric matrix of cumulative predicted probabilities for each observation.
+#'   It should have at least two columns; the probability for the final outcome is assumed to be 1.
+#' @param actual A character vector of actual outcomes. Each element should be one of
+#'   \code{"Home Win"}, \code{"Draw"}, or \code{"Away Win"}.
+#'
+#' @return A numeric value representing the mean Ranked Probability Score.
+#'
+#' @noRd
+compute_RPS <- function(cum_pred, actual) {
+  # Create a matrix of cumulative observed probabilities
+  acum <- matrix(0, nrow = length(actual), ncol = 3)
+  acum[actual == "Home Win", ] <- matrix(rep(c(1, 1, 1), sum(actual == "Home Win")),
+    ncol = 3, byrow = TRUE
+  )
+  acum[actual == "Draw", ] <- matrix(rep(c(0, 1, 1), sum(actual == "Draw")),
+    ncol = 3, byrow = TRUE
+  )
+  acum[actual == "Away Win", ] <- matrix(rep(c(0, 0, 1), sum(actual == "Away Win")),
+    ncol = 3, byrow = TRUE
+  )
+  squared_diff <- (cum_pred[, 1:2] - acum[, 1:2])^2
+  rps_per_obs <- rowSums(squared_diff) / 2 # for 3 outcome categories: (3 - 1)
+  mean(rps_per_obs)
 }

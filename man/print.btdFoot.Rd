@@ -10,7 +10,7 @@
   teams = NULL,
   digits = 3,
   true_names = TRUE,
-  display = c("both", "rankings", "parameters"),
+  display = "both",
   ...
 )
 }
@@ -33,5 +33,5 @@
 Provides detailed posterior summaries for the Bayesian Bradley-Terry-Davidson model parameters.
 }
 \author{
-Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}
+Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 }

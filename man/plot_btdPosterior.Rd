@@ -10,8 +10,7 @@ plot_btdPosterior(
   plot_type = "boxplot",
   teams = NULL,
   ncol = NULL,
-  scales = NULL,
-  ...
+  scales = NULL
 )
 }
 \arguments{
@@ -36,9 +35,6 @@ Default is \code{8}.}
 when using a dynamic Bayesian Bradley-Terry-Davidson model.
 Options include \code{"free"}, \code{"fixed"}, \code{"free_x"}, and \code{"free_y"}.
 Default is \code{"free_x"}.}
-
-\item{...}{Additional arguments passed to \code{geom_boxplot()}, \code{geom_density_ridges()},
-or other geoms for customization (e.g., \code{size}, \code{alpha}, \code{color}).}
 }
 \value{
 A \code{ggplot} object representing the posterior distributions plot.
@@ -54,58 +50,61 @@ Plots for the posterior distributions of team log-strengths and other parameters
 }
 \examples{
 \dontrun{
-library(dplyr)
+if (instantiate::stan_cmdstan_exists()) {
+  library(dplyr)
 
-# Load example data
-data("italy")
+  # Load example data
+  data("italy")
 
-# Prepare the data
-italy_2020_2021_rank <- italy \%>\%
-  select(Season, home, visitor, hgoal, vgoal) \%>\%
-  filter(Season \%in\% c("2020", "2021")) \%>\%
-  mutate(match_outcome = case_when(
-    hgoal > vgoal ~ 1,        # Home team wins
-    hgoal == vgoal ~ 2,       # Draw
-    hgoal < vgoal ~ 3         # Away team wins
-  )) \%>\%
-  mutate(periods = case_when(
-    row_number() <= 190 ~ 1,
-    row_number() <= 380 ~ 2,
-    row_number() <= 570 ~ 3,
-    TRUE ~ 4
-  )) \%>\%  # Assign periods based on match number
-  select(periods, home_team = home,
-         away_team = visitor, match_outcome)
+  # Prepare the data
+  italy_2020_2021_rank <- italy \%>\%
+    select(Season, home, visitor, hgoal, vgoal) \%>\%
+    filter(Season \%in\% c("2020", "2021")) \%>\%
+    mutate(match_outcome = case_when(
+      hgoal > vgoal ~ 1, # Home team wins
+      hgoal == vgoal ~ 2, # Draw
+      hgoal < vgoal ~ 3 # Away team wins
+    )) \%>\%
+    mutate(periods = case_when(
+      row_number() <= 190 ~ 1,
+      row_number() <= 380 ~ 2,
+      row_number() <= 570 ~ 3,
+      TRUE ~ 4
+    )) \%>\% # Assign periods based on match number
+    select(periods,
+      home_team = home,
+      away_team = visitor, match_outcome
+    )
 
-# Fit the Bayesian Bradley-Terry-Davidson model with dynamic ranking
-fit_rank_dyn <- btd_foot(
-  data = italy_2020_2021_rank,
-  dynamic_rank = TRUE,
-  rank_measure = "median",
-  iter = 1000,
-  cores = 2,
-  chains = 2
-)
+  # Fit the Bayesian Bradley-Terry-Davidson model with dynamic ranking
+  fit_rank_dyn <- btd_foot(
+    data = italy_2020_2021_rank,
+    dynamic_rank = TRUE,
+    rank_measure = "median",
+    iter_sampling = 1000,
+    parallel_chains = 2,
+    chains = 2
+  )
 
-# Plot posterior distributions with default settings
-plot_btdPosterior(fit_rank_dyn)
+  # Plot posterior distributions with default settings
+  plot_btdPosterior(fit_rank_dyn)
 
-# Plot posterior distributions for specific teams with customized facets
-plot_btdPosterior(
-  fit_rank_dyn,
-  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
-  ncol = 2
-)
+  # Plot posterior distributions for specific teams with customized facets
+  plot_btdPosterior(
+    fit_rank_dyn,
+    teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
+    ncol = 2
+  )
 
-plot_btdPosterior(
-  fit_rank_dyn,
-  plot_type = "density",
-  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
-  ncol = 2
-)
+  plot_btdPosterior(
+    fit_rank_dyn,
+    plot_type = "density",
+    teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
+    ncol = 2
+  )
 }
-
+}
 }
 \author{
-Roberto Macrì Demartino \email{roberto.macridemartino@phd.unipd.it}.
+Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}.
 }

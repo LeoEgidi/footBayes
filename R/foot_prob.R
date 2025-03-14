@@ -3,8 +3,9 @@
 #' The function provides a table containing the home win, draw and away win probabilities for a bunch of
 #' out-of-sample matches as specified by \code{stan_foot} or \code{mle_foot}.
 #'
-#' @param object An object either of class \code{\link[rstan]{stanfit}} and \code{stanFoot} as given by \code{stan_foot} function or
-#' \code{\link{list}} as given by \code{mle_foot}.
+#' @param object An object either of class \code{stanFoot}, \code{CmdStanFit}, \code{\link[rstan]{stanfit}}, or class
+#'               \code{\link{list}} containing the Maximum Likelihood Estimates (MLE) for the model parameters fitted
+#'                with \code{mle_foot}.
 #' @param data A data frame containing match data with columns:
 #'   \itemize{
 #'     \item \code{periods}:  Time point of each observation (integer >= 1).
@@ -16,56 +17,69 @@
 #' @param home_team The home team(s) for the predicted matches.
 #' @param away_team The away team(s) for the predicted matches.
 #'
-#'@return
+#' @return
 #'
-#'A \code{\link{data.frame}} containing the number of out-of-sample matches specified through the
-#'argument \code{predict}  passed either in the \code{mle_foot} or in the \code{stan_foot} function.
-#'For Bayesian Poisson models the function returns also the most likely outcome (mlo) and a posterior
-#'probability plot for the exact results, where matches are sorted by the degree of favoritism.
-#'Specifically, matches are ordered from those in which the favorite team has the highest posterior probability
-#'of winning to those where the underdog is more likely to win.
-#'
-#'
-#'@details
-#'
-#'For Bayesian models fitted via \code{stan_foot} the results probabilities are computed according to the
-#'simulation from the posterior predictive distribution of future (out-of-sample) matches. For MLE models
-#'fitted via the \code{mle_foot} the probabilities are computed by simulating from the MLE estimates.
+#' A \code{\link{data.frame}} containing the number of out-of-sample matches specified through the
+#' argument \code{predict}  passed either in the \code{mle_foot} or in the \code{stan_foot} function.
+#' For Bayesian Poisson models the function returns also the most likely outcome (mlo) and a posterior
+#' probability plot for the exact results, where matches are sorted by the degree of favoritism.
+#' Specifically, matches are ordered from those in which the favorite team has the highest posterior probability
+#' of winning to those where the underdog is more likely to win.
 #'
 #'
-#'@author Leonardo Egidi \email{legidi@units.it}
+#' @details
+#'
+#' For Bayesian models fitted via \code{stan_foot} the results probabilities are computed according to the
+#' simulation from the posterior predictive distribution of future (out-of-sample) matches. For MLE models
+#' fitted via the \code{mle_foot} the probabilities are computed by simulating from the MLE estimates.
+#'
+#'
+#' @author Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}.
 #'
 #' @examples
 #' \dontrun{
-#' library(tidyverse)
-#' library(dplyr)
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   library(dplyr)
 #'
-#' data("italy")
-#' italy_2000 <- italy %>%
-#'  dplyr::select(Season, home, visitor, hgoal,vgoal) %>%
-#'  dplyr::filter(Season=="2000")
+#'   data("italy")
+#'   italy_2000 <- italy %>%
+#'     dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
+#'     dplyr::filter(Season == "2000")
 #'
-#' colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+#'   colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 #'
 #'
 #'
-#' fit <- stan_foot(data = italy_2000,
-#'                  model="double_pois",
-#'                  predict = 18)  # double pois
+#'   fit <- stan_foot(
+#'     data = italy_2000,
+#'     model = "double_pois",
+#'     predict = 18
+#'   ) # double pois
 #'
-#' foot_prob(fit, italy_2000, "Inter",
-#'           "Bologna FC")
+#'   foot_prob(
+#'     fit, italy_2000, "Inter",
+#'     "Bologna FC"
+#'   )
 #'
-#' foot_prob(fit, italy_2000) # all the out-of-sample matches
+#'   foot_prob(fit, italy_2000) # all the out-of-sample matches
 #' }
+#' }
+#'
+#' @importFrom posterior as_draws_rvars draws_of
+#' @importFrom rstan extract
+#' @importFrom ggplot2 ggplot geom_tile theme_bw scale_fill_gradient geom_rect labs
+#'   scale_x_continuous scale_y_continuous element_text scale_color_manual
+#'    guides facet_wrap unit ylab xlab element_blank
+#' @importFrom dplyr group_by mutate arrange distinct
+#' @importFrom extraDistr rbvpois rskellam
+#' @importFrom metRology rt.scaled
+#'
 #' @export
 
 
-foot_prob <- function(object, data, home_team, away_team){
-
-  # if (!requireNamespace("ggplot2", quietly = TRUE)) {
-  #   stop("Package 'ggplot2' is required for plotting.")
-  # }
+foot_prob <- function(object, data, home_team, away_team) {
+  #   ____________________________________________________________________________
+  #   Data and argument checks                                                ####
 
   required_cols <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
   missing_cols <- setdiff(required_cols, names(data))
@@ -73,264 +87,287 @@ foot_prob <- function(object, data, home_team, away_team){
     stop(paste("data is missing required columns:", paste(missing_cols, collapse = ", ")))
   }
 
+  teams <- unique(c(data$home_team, data$away_team))
 
-  # rename
+  if (inherits(object, "stanFoot") || inherits(object, "CmdStanFit")) {
+    if (inherits(object, "stanFoot")) {
+      # For stanFoot objects, the draws are available in object$fit
+      draws <- object$fit$draws()
+    } else {
+      # For CmdStanFit objects, draw directly from object
+      draws <- object$draws()
+    }
+    draws <- posterior::as_draws_rvars(draws)
 
-  # colnames(data) <- c("season", "home", "away",
-  #                     "home_goals", "away_goals")
-  teams <- unique(data$home_team)
+    # Check that at least one of 'y_prev' or 'diff_y_prev' exists in draws.
+    if (!("y_prev" %in% names(draws) || "diff_y_prev" %in% names(draws))) {
+      stop("Model '%s' does not contain 'y_prev' or 'diff_y_prev' in its samples. Ensure the model was fitted with 'predict' set appropriately.")
+    }
 
-  # predict check: if 0 or null, no probabilities
-
-  if (inherits(object, "stanfit")){
+    sims <- list()
+    # Use 'y_prev' if available; otherwise, use 'diff_y_prev'
+    if ("y_prev" %in% names(draws)) {
+      sims$y_prev <- posterior::draws_of(draws[["y_prev"]])
+      predict <- dim(sims$y_prev)[2]
+    } else {
+      sims$diff_y_prev <- posterior::draws_of(draws[["diff_y_prev"]])
+      predict <- dim(sims$diff_y_prev)[2]
+    }
+  } else if (inherits(object, "stanfit")) {
     sims <- rstan::extract(object)
-    predict <- c(dim(sims$y_prev)[2], dim(sims$diff_y_prev)[2])
-  } else if (inherits(object, "stanFoot")) {
-    sims <- rstan::extract(object$fit)
-    predict <- c(dim(sims$y_prev)[2], dim(sims$diff_y_prev)[2])
-  } else if (inherits(object, "list")){
+
+    if (!("y_prev" %in% names(sims) || "diff_y_prev" %in% names(sims))) {
+      stop("Model '%s' does not contain 'y_prev' or 'diff_y_prev' in its samples. Ensure the model was fitted with 'predict' set appropriately.")
+    }
+
+    if ("y_prev" %in% names(sims)) {
+      predict <- dim(sims$y_prev)[2]
+    } else {
+      predict <- dim(sims$diff_y_prev)[2]
+    }
+  } else if (inherits(object, "list")) {
     predict <- object$predict
-  }else{
-    stop("Provide one among these three model fit classes: 'stanfit', 'stanFoot' or 'list'.")
+  } else {
+    stop("Provide one among these four model fit classes: 'stanfit', 'CmdStanFit', 'stanFoot' or 'list'.")
   }
 
-  if (is.null(predict)){
-    stop("foot_prob cannot be used if the 'predict' argument is set to zero.")
-  }else if (predict ==0){
+  if (is.null(predict) || predict == 0) {
     stop("foot_prob cannot be used if the 'predict' argument is set to zero.")
   }
 
-  # define data
 
-  data_prev <- data[(dim(data)[1]-predict +1):(dim(data)[1]),]
+  #   ____________________________________________________________________________
+  #   Dataframes and plots                                                    ####
 
-  # checks su home_team/away_team
 
-  if (missing(home_team) & missing(away_team)){
+  data_prev <- data[(dim(data)[1] - predict + 1):(dim(data)[1]), ]
+
+  # Checks on home_team/away_team
+
+  if (missing(home_team) & missing(away_team)) {
     home_team <- data_prev$home_team
     away_team <- data_prev$away_team
   }
 
-  if (length(home_team)!= length(away_team)){
+  if (length(home_team) != length(away_team)) {
     stop("Please, include the same number for home and away teams.")
   }
 
   find_match <- c()
-  for (i in 1:length(home_team))
-    find_match[i] <- which( data_prev$home_team %in% home_team[i] & data_prev$away_team %in% away_team[i])
+  for (i in 1:length(home_team)) {
+    find_match[i] <- which(data_prev$home_team %in% home_team[i] & data_prev$away_team %in% away_team[i])
+  }
 
 
   true_gol_home <- data_prev$home_goals[find_match]
   true_gol_away <- data_prev$away_goals[find_match]
 
-  if (length(find_match)==0){
+  if (length(find_match) == 0) {
     stop(paste("There is not any out-of-sample match:",
-               home_team,"-", away_team, sep=""))
+      home_team, "-", away_team,
+      sep = ""
+    ))
   }
 
-  # compute probabilities with stan/mle
+  # Compute probabilities with stan/mle
 
-  if (inherits(object, "stanfit") || inherits(object, "stanFoot")){
-
-    if (is.null(sims$y_prev)){  # student_t model
+  if (inherits(object, c("stanFoot", "stanfit", "CmdStanFit"))) {
+    if (is.null(sims$y_prev)) { # student_t model
       M <- dim(sims$diff_y_prev)[1]
-      prob_h =  prob_d = prob_a = c()
+      prob_h <- prob_d <- prob_a <- c()
 
-      x <- round(sims$diff_y_prev,0)
-      prob_h <- round(apply(x, 2, function(x) sum(x>0))/M,3)
-      prob_d <- round(apply(x, 2, function(x) sum(x==0))/M,3)
-      prob_a <- round(apply(x, 2, function(x) sum(x<0))/M,3)
+      x <- round(sims$diff_y_prev, 0)
+      prob_h <- round(apply(x, 2, function(x) sum(x > 0)) / M, 3)
+      prob_d <- round(apply(x, 2, function(x) sum(x == 0)) / M, 3)
+      prob_a <- round(apply(x, 2, function(x) sum(x < 0)) / M, 3)
 
       # only table
 
-      tbl <- data.frame(home_team = home_team,
-                        away_team = away_team,
-                        prob_h = prob_h[find_match],
-                        prob_d = prob_d[find_match],
-                        prob_a = prob_a[find_match])
+      tbl <- data.frame(
+        home_team = home_team,
+        away_team = away_team,
+        prob_h = prob_h[find_match],
+        prob_d = prob_d[find_match],
+        prob_a = prob_a[find_match]
+      )
 
       return(list(prob_table = tbl))
-
-    }else{  # poisson models
+    } else { # poisson models
       M <- dim(sims$y_prev)[1]
-      previsioni1<-sims$y_prev[, find_match ,1]
-      previsioni2<-sims$y_prev[, find_match,2]
+      prediction1 <- sims$y_prev[, find_match, 1]
+      prediction2 <- sims$y_prev[, find_match, 2]
 
-      prob_h =  prob_d = prob_a = row_pos = col_pos = mlo = c()
-      data_exp_tot <- rep(1,4)
+      prob_h <- prob_d <- prob_a <- c()
+      # For MLO computation in multiple matches branch:
+      row_pos <- rep(NA, length(find_match))
+      col_pos <- rep(NA, length(find_match))
+      mlo <- rep(NA, length(find_match))
 
-      if (length(find_match)==1){
-        posterior_prop1<-table(subset(previsioni1, previsioni1<15))
-        posterior_prop2<-table(subset(previsioni2, previsioni2<15))
+      data_exp_tot <- data.frame(
+        Home = numeric(0),
+        Away = numeric(0),
+        Prob = numeric(0),
+        matches = character(0),
+        true_gol_home = numeric(0),
+        true_gol_away = numeric(0)
+      )
 
-        teamaa=home_team
-        teamab=away_team
+      if (length(find_match) == 1) {
+        posterior_prop1 <- table(subset(prediction1, prediction1 < 15))
+        posterior_prop2 <- table(subset(prediction2, prediction2 < 15))
 
-        x_min=y_min=min(length(posterior_prop1),
-                        length(posterior_prop2))
+        teamaa <- home_team
+        teamab <- away_team
 
-        counts_mix<-matrix(0, min(length(posterior_prop1), length(posterior_prop2)),
-                           min(length(posterior_prop1), length(posterior_prop2)))
+        x_min <- y_min <- min(
+          length(posterior_prop1),
+          length(posterior_prop2)
+        )
 
-        for (j in 1: min(length(posterior_prop1), length(posterior_prop2))){
-          for (t in 1: min(length(posterior_prop1), length(posterior_prop2))){
-            counts_mix[j,t]<-posterior_prop1[j]*posterior_prop2[t]
-          }}
+        counts_mix <- matrix(0, x_min, y_min)
+
+        for (j in 1:x_min) {
+          for (t in 1:y_min) {
+            counts_mix[j, t] <- posterior_prop1[j] * posterior_prop2[t]
+          }
+        }
         dim1 <- dim(counts_mix)[1]
         dim2 <- dim(counts_mix)[2]
 
-        x <- seq(0,dim1-1, length.out=dim1)
-        y <- seq(0,dim2-1, length.out=dim2)
-        data_exp <- expand.grid(Home=x, Away=y)
-        data_exp$Prob <- as.double(counts_mix/(M*M))
-        data_exp$matches <- paste(  teamaa,"-", teamab)
+        x_seq <- seq(0, dim1 - 1, length.out = dim1)
+        y_seq <- seq(0, dim2 - 1, length.out = dim2)
+        data_exp <- expand.grid(Home = x_seq, Away = y_seq)
+        data_exp$Prob <- as.double(counts_mix / (M * M))
+        data_exp$matches <- paste(teamaa, "-", teamab)
         data_exp$true_gol_home <- true_gol_home
         data_exp$true_gol_away <- true_gol_away
 
+        # Overall "adjusted" probabilities
+        prob_h_val <- sum(counts_mix[lower.tri(counts_mix)] / (M * M)) / sum(data_exp$Prob)
+        prob_d_val <- sum(diag(counts_mix / (M * M))) / sum(data_exp$Prob)
+        prob_a_val <- sum(counts_mix[upper.tri(counts_mix)] / (M * M)) / sum(data_exp$Prob)
 
-        #rep(i, length(data_exp$Prob))
-
-        # overall "adjusted" probabilities
-        prob_h <- sum(counts_mix[lower.tri(counts_mix)]/(M*M))/sum(data_exp$Prob)
-        prob_d <- sum(diag(counts_mix/(M*M)))/sum(data_exp$Prob)
-        prob_a <- sum(counts_mix[upper.tri(counts_mix)]/(M*M))/sum(data_exp$Prob)
-
-        # MLO (most likely outcome)
-
-        row_pos <- row(counts_mix)[counts_mix==max(counts_mix)]
-        col_pos <- col(counts_mix)[counts_mix==max(counts_mix)]
-
-
-        mlo <- paste(row_pos-1, "-", col_pos-1, " (",
-                     round(max(counts_mix/(M*M)),3), ")" , sep="")
+        # MLO (most likely outcome) using which.max and arrayInd to get a single index
+        ind_max <- which.max(counts_mix)
+        pos <- arrayInd(ind_max, dim(counts_mix))
+        row_pos_val <- pos[1]
+        col_pos_val <- pos[2]
+        mlo_val <- paste(row_pos_val - 1, "-", col_pos_val - 1, " (",
+          round(max(counts_mix / (M * M)), 3), ")",
+          sep = ""
+        )
 
         data_exp_tot <- rbind(data_exp_tot, data_exp)
-        data_exp_tot <- data_exp_tot[-c(1), ]
 
+        tbl <- data.frame(
+          home_team = home_team,
+          away_team = away_team,
+          prob_h = round(prob_h_val, 3),
+          prob_d = round(prob_d_val, 3),
+          prob_a = round(prob_a_val, 3),
+          mlo = mlo_val
+        )
 
-
-        tbl <- data.frame(home_team = home_team,
-                          away_team = away_team,
-                          prob_h = round(prob_h,3),
-                          prob_d = round(prob_d,3),
-                          prob_a = round(prob_a,3),
-                          mlo = mlo)
-
-        # To change the color of the gradation :
-
-        p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) +
+        p <- ggplot(data_exp_tot, aes(Home, Away, z = Prob)) +
           geom_tile(aes(fill = Prob)) +
           theme_bw() +
-          scale_fill_gradient(low="white", high="black") +
-
-          geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
-                        xmax = as.numeric(as.vector(true_gol_home))+0.5,
-                        ymin = as.numeric(as.vector(true_gol_away))-0.5,
-                        ymax =as.numeric(as.vector(true_gol_away))+0.5,
-                        color = "True Result"),  # Mapped color for legend
-                    fill = "transparent", size = 1.5)+
-          labs(title= "Posterior match probabilities")+
-          yaxis_text(size=12)+
-          xaxis_text( size = rel(12))+
+          scale_fill_gradient(low = "white", high = "black") +
+          geom_rect(
+            aes(
+              xmin = as.numeric(as.vector(true_gol_home)) - 0.5,
+              xmax = as.numeric(as.vector(true_gol_home)) + 0.5,
+              ymin = as.numeric(as.vector(true_gol_away)) - 0.5,
+              ymax = as.numeric(as.vector(true_gol_away)) + 0.5,
+              color = "True Result"
+            ),
+            fill = "transparent", linewidth = 1.5
+          ) +
+          labs(title = "Posterior match probabilities") +
           scale_x_continuous(breaks = unique(data_exp_tot$Home)) +
           scale_y_continuous(breaks = unique(data_exp_tot$Away)) +
           theme_bw() +
-          theme(plot.title = element_text(size = 18),
-                strip.text = element_text(size = 12),
-                axis.text.x = element_text(size=16),
-                axis.text.y = element_text(size=16),
-                plot.subtitle=element_text(size=13),
-                axis.title=element_text(size=18),
-                legend.text=element_text(size=14)) +
-          scale_color_manual(name = "", values = c("True Result" = "red")) +  # Added legend entry
-          guides(color = guide_legend(override.aes = list(fill = NA)))  # Ensure only border is shown
+          theme(
+            plot.title = element_text(size = 18),
+            strip.text = element_text(size = 12),
+            axis.text.x = element_text(size = 16),
+            axis.text.y = element_text(size = 16),
+            plot.subtitle = element_text(size = 13),
+            axis.title = element_text(size = 18),
+            legend.text = element_text(size = 14)
+          ) +
+          scale_color_manual(name = "", values = c("True Result" = "red")) +
+          guides(color = guide_legend(override.aes = list(fill = NA)))
+      } else {
+        teamaa <- teamab <- c()
+        for (i in 1:length(find_match)) {
+          posterior_prop1 <- table(prediction1[, i])
+          posterior_prop2 <- table(prediction2[, i])
 
+          teamaa[i] <- home_team[i]
+          teamab[i] <- away_team[i]
 
-      }else{
+          x_min <- y_min <- 5
 
-        teamaa = teamab = c()
-        for (i in 1:length(find_match)){
-          posterior_prop1<-table(previsioni1[,i])
-          posterior_prop2<-table(previsioni2[,i])
+          counts_mix <- matrix(0, x_min, y_min)
 
-          teamaa[i]=home_team[i]
-          teamab[i]=away_team[i]
+          for (j in 1:x_min) {
+            for (t in 1:y_min) {
+              counts_mix[j, t] <- posterior_prop1[j] * posterior_prop2[t]
+            }
+          }
 
-          x_min=y_min= 5
-          #min(length(posterior_prop1),              ## OLD CODE
-          #              length(posterior_prop2))
-
-          counts_mix<- matrix(0, x_min, y_min)
-          #matrix(0, min(length(posterior_prop1), length(posterior_prop2)),          ## OLD CODE
-          #                 min(length(posterior_prop1), length(posterior_prop2)))
-
-          for (j in 1: x_min ){
-            for (t in 1: y_min ){
-              counts_mix[j,t]<-posterior_prop1[j]*posterior_prop2[t]
-            }}
-
-          # qq<-posterior_prop1[as.double(names(posterior_prop1))>=x_min]
-          # rr <- posterior_prop2
-          # qq_rr <- matrix(rep(rr, length(qq)), length(rr), length(qq))
-          # counts_mix[x_min, 1:y_min ] <- qq%*%t(qq_rr)[,1:y_min] # arrivato qui: 23/11
-          # counts_mix[x_min, y_min] <- counts_mix[x_min, y_min] + sum(qq%*%t(qq_rr)[,(y_min+1):length(rr)])
-          # qq2<-posterior_prop2[as.double(names(posterior_prop2))>=y_min]
-          # rr2 <- posterior_prop1
-          # qq_rr2 <- matrix(rep(rr2, length(qq2)), length(rr2), length(qq2))
-          # counts_mix[1:x_min, y_min] <- counts_mix[1:x_min, y_min] +  qq2%*%t(qq_rr2)[,1:x_min]
-          # counts_mix[x_min, y_min] <-counts_mix[x_min, y_min] + sum(qq2%*%t(qq_rr2)[,(x_min+1):length(rr2)])
           dim1 <- dim(counts_mix)[1]
           dim2 <- dim(counts_mix)[2]
 
-          x <- seq(0,dim1-1, length.out=dim1)
-          y <- seq(0,dim2-1, length.out=dim2)
-          data_exp <- expand.grid(Home=x, Away=y)
-          data_exp$Prob <- as.double(counts_mix/(M*M))
-          data_exp$matches <- paste(  teamaa[i],"-", teamab[i])
+          x_seq <- seq(0, dim1 - 1, length.out = dim1)
+          y_seq <- seq(0, dim2 - 1, length.out = dim2)
+          data_exp <- expand.grid(Home = x_seq, Away = y_seq)
+          data_exp$Prob <- as.double(counts_mix / (M * M))
+          data_exp$matches <- paste(teamaa[i], "-", teamab[i])
           data_exp$true_gol_home <- true_gol_home[i]
           data_exp$true_gol_away <- true_gol_away[i]
 
-
-          #rep(i, length(data_exp$Prob))
-
           # overall "adjusted" probabilities
-          prob_h[i] <- sum(counts_mix[lower.tri(counts_mix)]/(M*M))/sum(data_exp$Prob)
-          prob_d[i] <- sum(diag(counts_mix/(M*M)))/sum(data_exp$Prob)
-          prob_a[i] <- sum(counts_mix[upper.tri(counts_mix)]/(M*M))/sum(data_exp$Prob)
+          prob_h[i] <- sum(counts_mix[lower.tri(counts_mix)] / (M * M)) / sum(data_exp$Prob)
+          prob_d[i] <- sum(diag(counts_mix / (M * M))) / sum(data_exp$Prob)
+          prob_a[i] <- sum(counts_mix[upper.tri(counts_mix)] / (M * M)) / sum(data_exp$Prob)
 
-          # MLO (most likely outcome)
+          # MLO (most likely outcome) using which.max and arrayInd
+          ind_max <- which.max(counts_mix)
+          pos <- arrayInd(ind_max, dim(counts_mix))
+          row_pos[i] <- pos[1]
+          col_pos[i] <- pos[2]
 
-          row_pos[i] <- row(counts_mix)[counts_mix==max(counts_mix)]
-          col_pos[i] <- col(counts_mix)[counts_mix==max(counts_mix)]
-
-
-          mlo[i] <- paste(row_pos[i]-1, "-", col_pos[i]-1, " (",
-                          round(max(counts_mix/(M*M)),3), ")" , sep="")
+          mlo[i] <- paste(row_pos[i] - 1, "-", col_pos[i] - 1, " (",
+            round(max(counts_mix / (M * M)), 3), ")",
+            sep = ""
+          )
 
           data_exp_tot <- rbind(data_exp_tot, data_exp)
         }
-        data_exp_tot <- data_exp_tot[-c(1), ]
 
-
-
-        tbl <- data.frame(home_team = home_team,
-                          away_team = away_team,
-                          prob_h = round(prob_h,3),
-                          prob_d = round(prob_d,3),
-                          prob_a = round(prob_a,3),
-                          mlo = mlo)
+        tbl <- data.frame(
+          home_team = home_team,
+          away_team = away_team,
+          prob_h = round(prob_h, 3),
+          prob_d = round(prob_d, 3),
+          prob_a = round(prob_a, 3),
+          mlo = mlo
+        )
 
         data_exp_tot <- data_exp_tot %>%
-          dplyr::group_by(matches)%>%
-          dplyr::mutate(prob_h = sum(Prob[Home > Away]),
-                        prob_d = sum(Prob[Home == Away]),
-                        prob_a = sum(Prob[Home < Away]))
+          dplyr::group_by(matches) %>%
+          dplyr::mutate(
+            prob_h = sum(Prob[Home > Away]),
+            prob_d = sum(Prob[Home == Away]),
+            prob_a = sum(Prob[Home < Away])
+          )
 
-        data_exp_tot$favorite <- rep(teamaa, each = x_min*y_min)
-        data_exp_tot$underdog <- rep(teamab, each = x_min*y_min)
+        data_exp_tot$favorite <- rep(teamaa, each = x_min * y_min)
+        data_exp_tot$underdog <- rep(teamab, each = x_min * y_min)
 
-        # re-order in terms of favorite and underdog
-        indexes <- (1:dim(data_exp_tot)[1])[data_exp_tot$prob_h < data_exp_tot$prob_a]
+        # Use which() to avoid NA values in indexes
+        indexes <- which(data_exp_tot$prob_h < data_exp_tot$prob_a)
         temp1 <- data_exp_tot$prob_h[indexes]
         temp2 <- data_exp_tot$prob_a[indexes]
         data_exp_tot$prob_h[indexes] <- temp2
@@ -352,62 +389,59 @@ foot_prob <- function(object, data, home_team, away_team){
         data_exp_tot$true_gol_away[indexes] <- temp_tg1
 
         data_exp_tot <- dplyr::arrange(data_exp_tot, prob_h)
-        fav_teams <- data_exp_tot%>%distinct(favorite)
-        und_teams <- data_exp_tot%>%distinct(underdog)
-        axes_titles <- data.frame(matches = unique(data_exp_tot$matches),
-                                  axis_title_x = fav_teams[,2],
-                                  axis_title_y = und_teams[,2])
+        fav_teams <- data_exp_tot %>% distinct(favorite)
+        und_teams <- data_exp_tot %>% distinct(underdog)
+        axes_titles <- data.frame(
+          matches = unique(data_exp_tot$matches),
+          axis_title_x = fav_teams[, 2],
+          axis_title_y = und_teams[, 2]
+        )
         data_exp_tot$new_matches <- paste(data_exp_tot$favorite, "-", data_exp_tot$underdog)
-        #axes_titles$favorite <- as.character(as.vector(axes_titles$favorite))
-        # To change the color of the gradation :
 
         num_matches <- length(unique(data_exp_tot$new_matches))
-
-        # Calculate the number of rows and columns
-        nrow_plot <- ceiling(sqrt(num_matches))           # Approximate square root for rows
+        nrow_plot <- ceiling(sqrt(num_matches))
         ncol_plot <- ceiling(num_matches / nrow_plot)
 
-
-        p <- ggplot(data_exp_tot, aes(Home, Away, z= Prob)) +
+        p <- ggplot(data_exp_tot, aes(Home, Away, z = Prob)) +
           geom_tile(aes(fill = Prob)) +
           theme_bw() +
-          scale_fill_gradient(low="white", high="black") +
-          facet_wrap(facets = ~reorder(new_matches, prob_h),
-                     scales = "fixed",
-                     ncol = ncol_plot, nrow = nrow_plot
-                     #labeller = as_labeller(c(axes_titles$underdog)),
-                     #strip.position = "left"
-          )+
-          geom_rect(aes(xmin = as.numeric(as.vector(true_gol_home))-0.5,
-                        xmax = as.numeric(as.vector(true_gol_home))+0.5,
-                        ymin = as.numeric(as.vector(true_gol_away))-0.5,
-                        ymax =as.numeric(as.vector(true_gol_away))+0.5,
-                        color = "True Result"),  # Mapped color for legend
-                    fill = "transparent", size = 1.5)+
-          labs(title= "Posterior match probabilities")+
-          yaxis_text(size=12)+
-          xaxis_text( size = rel(12))+
-          ylab("Underdog")+
-          xlab("Favorite")+
+          scale_fill_gradient(low = "white", high = "black") +
+          facet_wrap(
+            facets = ~ reorder(new_matches, prob_h),
+            scales = "fixed",
+            ncol = ncol_plot, nrow = nrow_plot
+          ) +
+          geom_rect(
+            aes(
+              xmin = as.numeric(as.vector(true_gol_home)) - 0.5,
+              xmax = as.numeric(as.vector(true_gol_home)) + 0.5,
+              ymin = as.numeric(as.vector(true_gol_away)) - 0.5,
+              ymax = as.numeric(as.vector(true_gol_away)) + 0.5,
+              color = "True Result"
+            ),
+            fill = "transparent", linewidth = 1.5
+          ) +
+          labs(title = "Posterior match probabilities") +
+          ylab("Underdog") +
+          xlab("Favorite") +
           theme_bw() +
-          theme(plot.title = element_text(size = 18),
-                strip.text = element_text(size = 11),
-                #strip.placement = "outside",   # format to look like title
-                strip.background = element_blank(),
-                axis.text.x = element_text(size=16),
-                axis.text.y = element_text(size=16),
-                plot.subtitle=element_text(size=8.5),
-                axis.title=element_text(size=18),
-                legend.text=element_text(size=14),
-                panel.spacing = unit(0.2, "lines")) +
-          scale_color_manual(name = "", values = c("True Result" = "red")) +  # Added legend entry
-          guides(color = guide_legend(override.aes = list(fill = NA)))   # Ensure only border is shown
-
+          theme(
+            plot.title = element_text(size = 18),
+            strip.text = element_text(size = 11),
+            strip.background = element_blank(),
+            axis.text.x = element_text(size = 16),
+            axis.text.y = element_text(size = 16),
+            plot.subtitle = element_text(size = 8.5),
+            axis.title = element_text(size = 18),
+            legend.text = element_text(size = 14),
+            panel.spacing = unit(0.2, "lines")
+          ) +
+          scale_color_manual(name = "", values = c("True Result" = "red")) +
+          guides(color = guide_legend(override.aes = list(fill = NA)))
       }
       return(list(prob_table = tbl, prob_plot = p))
     }
-
-  }else if (inherits(object, "list")){
+  } else if (inherits(object, "list")) {
     model <- object$model
     predict <- object$predict
     n.iter <- object$n.iter
@@ -415,102 +449,85 @@ foot_prob <- function(object, data, home_team, away_team){
     team2_prev <- object$team2_prev
     N_prev <- predict
 
-
-
-    # routine prediction if predict is not 0
     prediction_routine <- function(team1_prev, team2_prev, att, def, home,
-                                   corr, ability, model, predict, n.iter){
+                                   corr, ability, model, predict, n.iter) {
+      mean_home <- exp(home[1, 2] + att[team1_prev, 2] + def[team2_prev, 2])
+      mean_away <- exp(att[team2_prev, 2] + def[team1_prev, 2])
 
-      mean_home <- exp(home[1,2] + att[team1_prev,2] + def[team2_prev,2])
-      mean_away <- exp(att[team2_prev,2] + def[team1_prev,2])
-
-
-      if (model=="double_pois"){
-
-        x = y = x_q1 = y_q1 = x_q2 = y_q2 = matrix(NA, n.iter, predict)
-        for (n in 1: N_prev){
-          x[,n] <- rpois(n.iter, mean_home[n])
-          y[,n] <- rpois(n.iter, mean_away[n])
-          # x_q1[,n] <- rpois(n.iter, mean_home_q1[n])
-          # y_q1[,n] <- rpois(n.iter, mean_away_q1[n])
-          # x_q2[,n] <- rpois(n.iter, mean_home_q2[n])
-          # y_q2[,n] <- rpois(n.iter, mean_away_q2[n])
-
+      if (model == "double_pois") {
+        x <- y <- matrix(NA, n.iter, predict)
+        for (n in 1:N_prev) {
+          x[, n] <- rpois(n.iter, mean_home[n])
+          y[, n] <- rpois(n.iter, mean_away[n])
         }
-
-
-      }else if (model == "biv_pois"){
+      } else if (model == "biv_pois") {
         couple <- array(NA, c(n.iter, predict, 2))
-        x = y = x_q1 = y_q1 = x_q2 = y_q2 = matrix(NA, n.iter, predict)
-        for (n in 1: N_prev){
-          couple[,n,] <- rbvpois(n.iter,  a = mean_home[n],
-                                 b= mean_away[n],
-                                 c = corr[1,2])
-
+        for (n in 1:N_prev) {
+          couple[, n, ] <- rbvpois(n.iter,
+            a = mean_home[n],
+            b = mean_away[n],
+            c = corr[1, 2]
+          )
         }
-        x <- couple[,,1]
-        y <- couple[,,2]
-
-
-      }else if (model == "skellam"){
+        x <- couple[, , 1]
+        y <- couple[, , 2]
+      } else if (model == "skellam") {
         diff_y <- matrix(NA, n.iter, predict)
-        for (n in 1:N_prev){
-          diff_y[,n] <- rskellam(n.iter,
-                                 mu1 = mean_home[n],
-                                 mu2 = mean_away[n])
+        for (n in 1:N_prev) {
+          diff_y[, n] <- rskellam(n.iter,
+            mu1 = mean_home[n],
+            mu2 = mean_away[n]
+          )
         }
         x <- diff_y
         y <- matrix(0, n.iter, predict)
-
-      }else if (model == "student_t"){
+      } else if (model == "student_t") {
         sigma_y <- object$sigma_y
         diff_y <- matrix(NA, n.iter, predict)
-        for (n in 1:N_prev){
-          diff_y[,n] <- rt.scaled(n.iter, df = 7,
-                                  mean = home[1,2] + ability[team1_prev[n],2] - ability[team2_prev[n],2],
-                                  sd = sigma_y)
+        for (n in 1:N_prev) {
+          diff_y[, n] <- rt.scaled(n.iter,
+            df = 7,
+            mean = home[1, 2] + ability[team1_prev[n], 2] - ability[team2_prev[n], 2],
+            sd = sigma_y
+          )
         }
-        x <- round(diff_y)   # rounded to the closest integer, as Gelman does
+        x <- round(diff_y)
         y <- matrix(0, n.iter, predict)
-
-
       }
 
-      prob_func <- function(mat_x, mat_y){
+      prob_func <- function(mat_x, mat_y) {
         res <- mat_x - mat_y
-        prob_h <- apply(res, 2, function(x) sum(x > 0) ) / n.iter
-        prob_d <- apply(res, 2, function(x) sum(x == 0) ) / n.iter
-        prob_a <- apply(res, 2, function(x) sum(x < 0) ) / n.iter
-        return(list(prob_h = prob_h,
-                    prob_d = prob_d,
-                    prob_a = prob_a))
+        prob_h <- apply(res, 2, function(x) sum(x > 0)) / n.iter
+        prob_d <- apply(res, 2, function(x) sum(x == 0)) / n.iter
+        prob_a <- apply(res, 2, function(x) sum(x < 0)) / n.iter
+        return(list(
+          prob_h = prob_h,
+          prob_d = prob_d,
+          prob_a = prob_a
+        ))
       }
 
       conf <- prob_func(x, y)
-      # conf_q1 <- prob_func(x_q1, y_q1)
-      # conf_q2 <- prob_func(x_q2, y_q2)
 
-      tbl <- data.frame(home_team = teams[team1_prev[find_match]],
-                        away_team = teams[team2_prev[find_match]],
-                        prob_h = conf$prob_h[find_match],
-                        prob_d = conf$prob_d[find_match],
-                        prob_a = conf$prob_a[find_match]
+      tbl <- data.frame(
+        home_team = teams[team1_prev[find_match]],
+        away_team = teams[team2_prev[find_match]],
+        prob_h = conf$prob_h[find_match],
+        prob_d = conf$prob_d[find_match],
+        prob_a = conf$prob_a[find_match]
       )
       return(tbl)
-
     }
 
-
-    if (predict!=0){
-      prob_matrix <- prediction_routine(team1_prev, team2_prev, object$att,
-                                        object$def, object$home,
-                                        object$corr, object$abilities, model, predict,
-                                        n.iter)
-
-
+    if (predict != 0) {
+      prob_matrix <- prediction_routine(
+        team1_prev, team2_prev, object$att,
+        object$def, object$home,
+        object$corr, object$abilities, model, predict,
+        n.iter
+      )
     }
 
     return(list(prob_table = prob_matrix))
   }
-
 }
