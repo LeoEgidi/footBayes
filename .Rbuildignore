@@ -7,11 +7,10 @@
 ^CRAN-RELEASE$
 ^CRAN-SUBMISSION$
 
-^doc$
+^docs$
 ^Meta$
 
-^vignettes/.*\.(Rmd|Rnw|R|bib|html)$
-^inst/doc$
+^rebuild-long-running-vignette.R
 
 
 ^\.github$

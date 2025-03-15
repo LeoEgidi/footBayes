@@ -1,7 +1,7 @@
 ---
 title: "Fitting football models and visualizing predictions with the `footBayes` package"
 author: "Leonardo Egidi, Roberto Macrì Demartino, and Vasilis Palaskas"
-date: "2025-03-15"
+date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
     toc: yes
@@ -15,7 +15,29 @@ params:
 ---
 
 
-
+```{r setup,  include = FALSE}
+NOT_CRAN <- identical(tolower(Sys.getenv("NOT_CRAN")), "true")
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  purl = NOT_CRAN,
+  eval = if (isTRUE(exists("params"))) params$EVAL else FALSE
+)
+knitr::opts_chunk$set(
+  fig.align = "center",
+  warning = FALSE,
+  message = FALSE,
+  fig.asp = 0.625,
+  fig.height = 10,       # Reduced height
+  fig.width = 8,        # Reduced width
+  out.width = "750px",  # Reduced output width
+  dpi = 100,
+  global.par = TRUE,
+  dev = "png",
+  dev.args = list(pointsize = 10),
+  fig.path = ""  # Added this line to the standard setup chunk
+  )
+```
 
 <!-- -->
 # Modeling football outcomes
@@ -301,8 +323,7 @@ Using `footBayes` package requires installing the R package [`cmdstanr`](https:/
 
 You can install the released version of `footBayes` from CRAN with:
 
-
-``` r
+```{r footBayes_inst_cran, echo =TRUE, eval = FALSE}
 install.packages("footBayes", type = "source")
 ```
 
@@ -310,16 +331,14 @@ Please note that it is important to set `type = "source"`. Otherwise, the 'CmdSt
 
 Alternatively to CRAN, you can install the development version from GitHub with:
 
-
-``` r
+```{r footBayes_inst, echo =TRUE, eval = FALSE}
 library(devtools)
 install_github("LeoEgidi/footBayes")
 ```
 
 and load the following required packages (please, install them on your laptops):
 
-
-``` r
+```{r libraries, echo = TRUE, eval = TRUE}
 library(footBayes)
 library(loo)
 library(ggplot2)
@@ -343,8 +362,7 @@ In this section, we will walk through the steps to use the ```btd_foot``` functi
   - `3` if the away team wins.
 
 To this aim, we will use data from the Italian football league for the seasons 2020 and 2021.
-
-``` r
+```{r BTD_data, echo = TRUE, eval = TRUE}
 library(dplyr)
 library(footBayes)
 
@@ -395,8 +413,7 @@ The Bayesian BTD model provides posterior distributions for the log-tie and log-
 - ```mean```:  Uses the posterior mean.
 - ```map```: Uses the maximum a posteriori estimate.
 
-
-``` r
+```{r BTD_model_1_dyn, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Dynamic Ranking Example with Median Rank Measure
 fit_result_dyn <- btd_foot(
   data = italy_2020_2021,
@@ -408,25 +425,20 @@ fit_result_dyn <- btd_foot(
   adapt_delta = 0.9,
   max_treedepth = 12
 )
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
 
 The ```btd_foot``` output is an object of class ```btdFoot``` that includes a custom ```print``` function providing detailed posterior summaries of the model parameters. This function allows users to specify the parameters and teams to display via the ```pars ``` and  ```teams``` arguments, respectively, set the number of digits through the  ```digits ``` argument, and determine whether to show rankings, parameters, or both using the  ```display ``` argument.
 
-
-``` r
+```{r BTD_model_1_dyn_print, message = FALSE, echo = TRUE, eval = TRUE}
 print(fit_result_dyn,
   display = "parameters",
   pars = c("logStrength", "logTie"),
   teams = c("AC Milan", "AS Roma")
 )
-#> Error: object 'fit_result_dyn' not found
 ```
 
-
-``` r
+```{r BTD_model_1_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Static Ranking Example with MAP Rank Measure
 fit_result_stat <- btd_foot(
   data = italy_2020_2021,
@@ -436,17 +448,13 @@ fit_result_stat <- btd_foot(
   # parallel_chains = 2,
   chains = 2
 )
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
-
-``` r
+```{r BTD_model_1_stat_print, message = FALSE, echo = TRUE, eval = TRUE}
 print(fit_result_stat,
   pars = c("logStrength", "logTie"),
   teams = c("AC Milan", "AS Roma")
 )
-#> Error: object 'fit_result_stat' not found
 ```
 
 Another significant feature implemented in the ```btd_foot``` function is the ability to account for the **home-field effect**. This effect represents the psychological or logistical benefits that the home team may have over the visiting team. This is modeled as a multiplicative order effect <span style="color:red"> @davidson_beaver_1977</span> in the Bayesian BTD framework. This multiplicative parameter becomes in the
@@ -470,8 +478,7 @@ The ```prior_par``` argument allows the user to specify a list of prior distribu
 
 Below is an example of how to incorporate the home-field effect into the ```btd_foot``` function by modifying the priors and enabling the home_effect parameter.
 
-
-``` r
+```{r BTD_model_2, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Dynamic Ranking Example with Median Rank Measure
 fit_result_dyn_2 <- btd_foot(
   data = italy_2020_2021,
@@ -489,21 +496,16 @@ fit_result_dyn_2 <- btd_foot(
   adapt_delta = 0.9,
   max_treedepth = 12
 )
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
-
-``` r
+```{r BTD_model_2_dyn_print, message = FALSE, echo = TRUE, eval = TRUE}
 print(fit_result_dyn_2,
   display = "parameters",
   pars = c("logTie", "home")
 )
-#> Error: object 'fit_result_dyn_2' not found
 ```
 
-
-``` r
+```{r BTD_model_2_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Static Ranking Example with MAP Rank Measure
 fit_result_stat_2 <- btd_foot(
   data = italy_2020_2021,
@@ -519,16 +521,12 @@ fit_result_stat_2 <- btd_foot(
   # parallel_chains = 2,
   chains = 2
 )
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
-
-``` r
+```{r BTD_model_2_stat_print, message = FALSE, echo = TRUE, eval = TRUE}
 print(fit_result_stat_2,
   pars = c("logTie", "home")
 )
-#> Error: object 'fit_result_stat_2' not found
 ```
 
 The `btd_foot` function offers flexibility in how the posterior distributions are obtained by allowing users to choose the estimation method via the `method` argument. This argument enables the user to balance computational efficiency with the precision of uncertainty estimates. The available options include:
@@ -543,8 +541,7 @@ The `btd_foot` function offers flexibility in how the posterior distributions ar
 
 Below is an example that demonstrates how to use Variational Inference as the estimation method:
 
-
-``` r
+```{r BTD_model_vi, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Variational Inference Example
 fit_result_vi <- btd_foot(
   data = italy_2020_2021,
@@ -552,8 +549,7 @@ fit_result_vi <- btd_foot(
   rank_measure = "mean",
   method = "VI"
 )
-#> Error:
-#> ! Stan model file "" not found.
+
 ```
 
 ## Visualization tools
@@ -563,53 +559,44 @@ After fitting the model, the ```btd_foot``` function outputs an object of class 
 
 By default, ```plot_btdPosterior``` generates boxplots of the posterior distributions of teams' log-strengths. This is particularly useful for comparing the central tendency and variability of team strengths across different periods or between teams.
 
-
-``` r
+```{r plot_btdPosterior_dyn, echo = TRUE, eval = TRUE, fig.show="hold"}
 # Dynamic Ranking
 
 plot_btdPosterior(fit_result_dyn)
-#> Error: object 'fit_result_dyn' not found
 ```
 
-
-``` r
+```{r plot_btdPosterior_stat, echo = TRUE, eval = TRUE, fig.show="hold"}
 # Static Ranking
 
 plot_btdPosterior(fit_result_stat)
-#> Error: object 'fit_result_stat' not found
 ```
 
 It is also possible to select specific teams to plot by using the ```teams``` argument
 
-
-``` r
+```{r plot_btdPosterior_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"}
 # Dynamic Ranking
 
 plot_btdPosterior(fit_result_dyn,
   teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
   ncol = 2
 )
-#> Error: object 'fit_result_dyn' not found
 ```
 
 
-
-``` r
+```{r plot_btdPosterior_teams_stat, echo = TRUE, eval = TRUE, fig.show="hold"}
 # Static Ranking
 
 plot_btdPosterior(fit_result_stat,
   teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
   ncol = 2
 )
-#> Error: object 'fit_result_stat' not found
 ```
 
 
 Additionally, it is possible to plot the posterior density by setting  ```plot_type = "density"```
 
 
-
-``` r
+```{r plot_btdPosterior_teams_dyn_dens, echo = TRUE, eval = TRUE, fig.show="hold"}
 # Dynamic Ranking
 
 plot_btdPosterior(fit_result_dyn,
@@ -617,12 +604,10 @@ plot_btdPosterior(fit_result_dyn,
   plot_type = "density",
   scales = "free_y"
 )
-#> Error: object 'fit_result_dyn' not found
 ```
 
 
-
-``` r
+```{r plot_btdPosterior_teams_stat_dens, echo = TRUE, eval = TRUE, fig.show="hold"}
 # Static Ranking
 
 plot_btdPosterior(fit_result_stat,
@@ -630,20 +615,17 @@ plot_btdPosterior(fit_result_stat,
   plot_type = "density",
   scales = "free_y"
 )
-#> Error: object 'fit_result_stat' not found
 ```
 
 
 Furthermore, the ```plot_logStrength``` function allows for plotting team rankings based on different summary measures of the posterior log-strengths, including the median, mean, and maximum a posteriori (MAP) estimates used in the ```btd_foot``` function. Specifically, this function generates a ggplot object that represents the log-strength values of teams, facilitating the comparison of team performance across different periods or among various teams. Similar to the ```plot_btdPosterior``` function, specific teams can be selected using the ```teams``` argument.
 
-
-``` r
+```{r plot_logStrength_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"}
 # Dynamic Ranking
 
 plot_logStrength(fit_result_dyn,
   teams = c("AC Milan", "AS Roma", "Juventus", "Inter")
 )
-#> Error: object 'fit_result_dyn' not found
 ```
 
 # Goal-based models fit
@@ -658,8 +640,7 @@ To start with some analysis, let's now ```italy```  data about the Italian Serie
 
 At this stage, we are currently ignoring any time-dependence in our parameters, considering them to be **static** across distinct match-times.
 
-
-``` r
+```{r static_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 ### Use Italian Serie A 2000/2001
 
 ## with 'dplyr' environment
@@ -695,14 +676,11 @@ fit1_stan <- stan_foot(
   # parallel_chains = 4,
   iter_sampling = n_iter
 ) # biv poisson
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
 Similarly to the ```btd_foot``` function, the custom ```print``` function for an object of class ```stanFoot```  provides the usual Bayesian model summaries , including posterior means, medians, standard deviations, percentiles at 2.5\%, 25\%, 75\%, 97.5\% level, effective sample size (```n_eff```) and Gelman-Rubin statistic (```Rhat```). It accepts the same arguments as described previously.
 
-
-``` r
+```{r static_fit_print, message = FALSE, echo = TRUE, eval = TRUE}
 ## Print of model summary for parameters:
 
 print(fit1_stan,
@@ -712,7 +690,6 @@ print(fit1_stan,
   ),
   teams = c("AC Milan", "AS Roma")
 )
-#> Error: object 'fit1_stan' not found
 ```
 
 The **Gelman-Rubin statistic** $\hat{R}$ (```Rhat```) is below the threshold 1.1 for all the parameters, whereas the **effective sample size** (```n_eff```), measuring the approximate number of iid replications from the Markov chains, does not appear to be problematic. Thus, HMC sampling reached the convergence.
@@ -731,28 +708,23 @@ where $\rho$ is assigned an half-Gaussian distribution with standard deviation e
 
 We can also depict the marginal posterior distributions for $\rho$ (and eventually for the other fixed-effects parameters) using the ```bayesplot``` package for Bayesian visualizations:
 
-
-``` r
+```{r static_fit_corr, echo =TRUE, eval = TRUE}
 ## Marginal posterior with bayesplot
 
 posterior1 <- fit1_stan$fit$draws(format = "matrix")
-#> Error: object 'fit1_stan' not found
 mcmc_areas(posterior1, pars = c(
   "home", "rho",
   "sigma_att", "sigma_def"
 )) +
   theme_bw()
-#> Error: object 'posterior1' not found
 ```
 
 We can also access the original BP Stan code by typing:
 
-
-``` r
+```{r stan_extract, echo = TRUE, eval = TRUE}
 ### Model's code extraction
 
 fit1_stan$stan_code
-#> Error: object 'fit1_stan' not found
 ```
 
 
@@ -768,22 +740,19 @@ In addition the `stan_foot` function provides flexibility in obtaining posterior
 
 Below is an example that demonstrates how to use Pathfinder algorithm as the estimation method:
 
-
-``` r
+```{r stan_foot_model_pth, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Pathfinder algorithm example
 fit1_stan_path <- stan_foot(
   data = italy_2000,
   model = "biv_pois",
   method = "pathfinder"
 ) # biv poisson
-#> Error:
-#> ! Stan model file "" not found.
+
 ```
 
 We fit now the same model under the MLE approach with Wald-type confidence intervals. We can then print the MLE estimates, e.g for the parameters $\rho$ and $\text{home}$:
 
-
-``` r
+```{r static_fit2, echo = TRUE, eval = TRUE}
 ### Fit MLE models
 ## no dynamics, no predictions
 ## Wald intervals
@@ -794,8 +763,6 @@ fit1_mle <- mle_foot(
   interval = "Wald"
 ) # mle biv poisson
 fit1_mle$home_effect
-#>      2.5% mle 97.5%
-#> [1,]  0.2 0.3  0.39
 ```
 
 We got a very similar estimate to the Bayesian model for the home-effect.
@@ -820,8 +787,7 @@ One of the common practices in Bayesian statistics is to change the priors and p
 
 where $t(\text{df}, \mu, \sigma)$ denotes a student-$t$ distribution with df degrees of freedom, location $\mu$ and scale $\sigma$, whereas $\mathsf{Laplace}^+$ denotes a half-Laplace distribution.
 
-
-``` r
+```{r static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = TRUE}
 ### Fit Stan models
 ## changing priors
 ## student-t for team-specific abilities, laplace for sds
@@ -838,27 +804,21 @@ fit1_stan_t <- stan_foot(
   # parallel_chains = 4,
   iter_sampling = n_iter
 ) # biv poisson
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
 Then, we can compare the marginal posteriors from the two models, the one with Gaussian team-specific abilities and the default $\mathsf{Cauchy}(0,5)$ for the team-level sds, and the other one specified above, with student-$t$ distributed team-specific abilities and the $\mathsf{Laplace}^+(0,1)$ for the team-level sds. We depict here the comparison for the attack team-level sds only:
 
-
-``` r
+```{r comparing_priors, eval = TRUE}
 ## comparing posteriors
 
 posterior1_t <- fit1_stan_t$fit$draws(format = "matrix")
-#> Error: object 'fit1_stan_t' not found
 model_names <- c("Default", "Stud+Laplace")
 color_scheme_set(scheme = "gray")
 gl_posterior <- cbind(
   posterior1[, "sigma_att"],
   posterior1_t[, "sigma_att"]
 )
-#> Error: object 'posterior1' not found
 colnames(gl_posterior) <- c("sigma_att", "sigma_att_t")
-#> Error: object 'gl_posterior' not found
 mcmc_areas(gl_posterior, pars = c("sigma_att", "sigma_att_t")) +
   xaxis_text(on = TRUE, size = ggplot2::rel(2.9)) +
   yaxis_text(on = TRUE, size = ggplot2::rel(2.9)) +
@@ -866,7 +826,6 @@ mcmc_areas(gl_posterior, pars = c("sigma_att", "sigma_att_t")) +
   ggtitle("Att/def sds") +
   theme(plot.title = element_text(hjust = 0.5, size = rel(2.6))) +
   theme_bw()
-#> Error: object 'gl_posterior' not found
 ```
 
 The student+laplace prior induces a lower amount of group-variability in the $\sigma_{\text{att}}$ marginal posterior distribution (then, a larger shrinkage towards the grand mean $\mu_{\text{att}}$).
@@ -910,8 +869,7 @@ with hyperparameters $\mu_{\text{att}}, \mu_{\text{def}}, \sigma_{\text{att}}, \
  We can use the ```dynamic_type``` argument in the ```stan_foot``` function, with possible options ```'seasonal'``` or ```'weekly'``` in order to consider more seasons (no examples are given in this course) or more week-times within a single season, respectively.  Let's fit a weekly-dynamic parameters model on the Serie A 2000/2001 season:
 
 
-
-``` r
+```{r dynamic_fit,message = FALSE, results='hide', echo =TRUE, eval = TRUE}
 ### Fit Stan models
 ## seasonal dynamics, no predictions
 ## 2 Markov chains, 'n_iter' iterations each
@@ -924,25 +882,20 @@ fit2_stan <- stan_foot(
   chains = 2,
   iter_sampling = n_iter
 ) # biv poisson
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
-
-``` r
+```{r dynamic_fit_print, message = FALSE, echo = TRUE, eval = TRUE}
 print(fit2_stan, pars = c(
   "home", "rho", "sigma_att",
   "sigma_def"
 ))
-#> Error: object 'fit2_stan' not found
 ```
 
 From the printed summary, we may note that the degree of goals' correlation seems to be again very small here. Moreover, the Gelman-Rubin statistic for $\sigma_{\text{att}}$ is relatively high, whereas the effective sample sizes for $\sigma_{\text{att}}$ and $\sigma_{\text{def}}$ are quite low. This is suggesting possible inefficiencies during the HMC sampling and that a *model-reparametrization* could be suited and effective at this stage.  Another option is to play a bit with the prior specification for $\sigma_{\text{att}}$ and $\sigma_{\text{def}}$, for instance by specifying a prior inducing less shrinkage in the team-specific abilities.
 
 To deal with these issues and broaden the set of candidate models, let's fit also a dynamic double-Poisson model with the ```double_pois``` option for the argument ```model```:
 
-
-``` r
+```{r weekly_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 ### Fit Stan models
 ## weekly dynamics, no predictions
 ## 2 chains, 'n_iter' iterations each
@@ -955,17 +908,13 @@ fit3_stan <- stan_foot(
   chains = 2,
   iter_sampling = n_iter
 ) # double poisson
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
-
-``` r
+```{r weekly_fit_print, message = FALSE, echo = TRUE, eval = TRUE}
 print(fit3_stan, pars = c(
   "home", "sigma_att",
   "sigma_def"
 ))
-#> Error: object 'fit3_stan' not found
 ```
 
 
@@ -977,8 +926,7 @@ The fitting problems mentioned above remain also for the double Poisson model...
  \sigma_{\text{att}},  \sigma_{\text{def}} &\ \sim \mathsf{Cauchy}^+(0,25),
  \end{align}
 
-
-``` r
+```{r weekly_fit_t, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 ### Fit Stan models
 ## weekly dynamics, no predictions
 ## 2 chains, 'n_iter' iterations each
@@ -996,17 +944,13 @@ fit3_stan_t <- stan_foot(
   chains = 2,
   iter_sampling = n_iter
 ) # double poisson
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
-
-``` r
+```{r weekly_fit_t_print, message = FALSE, echo = TRUE, eval = TRUE}
 print(fit3_stan_t, pars = c(
   "home", "sigma_att",
   "sigma_def"
 ))
-#> Error: object 'fit3_stan_t' not found
 ```
 
 As we may conclude, the situation has been only slightly improved.
@@ -1031,8 +975,7 @@ One of the main features of the ```footBayes``` package is the ability to first 
 
 The ability to use either ```btdFoot``` objects or custom ranking data frames provides flexibility in how the user can model team strengths, allowing for the integration of various ranking systems, such as the [FIFA ranking](https://inside.fifa.com/fifa-world-ranking).
 
-
-``` r
+```{r btd_foot_and_stan_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Dynamic Bradley-Terry-Davidson model
 
 data("italy")
@@ -1068,8 +1011,6 @@ fit_btd_dyn <- btd_foot(
   adapt_delta = 0.9,
   max_treedepth = 12
 )
-#> Error:
-#> ! Stan model file "" not found.
 
 # Dynamic Bivariate Poisson Model
 
@@ -1104,15 +1045,12 @@ fit_stan_rank <- stan_foot(
   # parallel_chains = 2,
   iter_sampling = 1000
 )
-#> Error: object 'fit_btd_dyn' not found
 ```
 
-
-``` r
+```{r btd_foot_and_stan_foot_print, message = FALSE, echo = TRUE, eval = TRUE}
 print(fit_stan_rank,
   pars = c("home", "rho", "sigma_att", "sigma_def")
 )
-#> Error: object 'fit_stan_rank' not found
 ```
 
 
@@ -1125,30 +1063,21 @@ Once the model has been fitted, there is a large amount of interesting summaries
 
 We can produce the team-specific abilities for the two static fits above, ```fit1_mle``` (MLE) and ```fit1_stan``` (Bayes), with red bars for the attack and blue bars for the defence, respectively:
 
-
-``` r
+```{r abilities, echo = TRUE, eval = TRUE, fig.show="hold"}
 ## Plotting abilities: credible and confidence 95% intervals
 
 foot_abilities(object = fit1_stan, data = italy_2000)
-#> Error: object 'fit1_stan' not found
 foot_abilities(object = fit1_mle, data = italy_2000)
 ```
-
-<div class="figure" style="text-align: center">
-<img src="abilities-1.png" alt="plot of chunk abilities" width="750px" />
-<p class="caption">plot of chunk abilities</p>
-</div>
 
 AS Roma, the team winning the Serie A 2000/2001, is associated with the highest attack ability and the lowest defence ability according to both the models. In general, the models seem to well capture the static abilities: AS Roma, Lazio Roma and Juventus (1st, 3rd and 2nd at the end of that season, respectively) are rated as the best teams in terms of their abilities, whereas AS Bari, SSC Napoli and Vicenza Calcio (all relegated at the end of the season) have the worst abilities.
 
 We can also depict the team-specific dynamic plots for the dynamic models:
 
-
-``` r
+```{r abilities_dyn, echo = TRUE, eval = TRUE, fig.show="hold"}
 ## Plotting abilities: credible and confidence 95% intervals
 
 foot_abilities(fit2_stan, italy_2000)
-#> Error: object 'fit2_stan' not found
 ```
 
 As we can see, dynamic abilities naturally evolve over the time: better teams (AS Roma, Lazio Roma, Juventus, Parma) are associated with increasing attack abilities and decreasing defence abilities, whereas the worst ones (AS Bari, SSC NApoli, and Hellas Verona) exhibit decreasing attacking skills and increasing defensive skills. The reason for these increasing/decreasing behaviours is straightforward: at the beginning, all the attack/defence parameters have been initialized to have location equal to 0. The user is free to change the location, and in the final package's version he will also have the possibility to elicit different team-specific hyper-prior locations.
@@ -1167,21 +1096,18 @@ The function ```pp_foot``` allows to obtain:
 - a visualization of the match-ordered goal differences along with their 50\% and 95\% credible intervals.
 
 
-
-``` r
+```{r pp_foot, echo = TRUE, eval = TRUE}
 ## PP checks: aggregated goal's differences and ordered goal differences
 
 pp_foot(
   object = fit1_stan, data = italy_2000,
   type = "aggregated"
 )
-#> Error: object 'fit1_stan' not found
 
 pp_foot(
   object = fit1_stan, data = italy_2000,
   type = "matches"
 )
-#> Error: object 'fit1_stan' not found
 ```
 
 The aggregated goal difference frequencies seem to be decently captured by the model's replications: in the first plot, blue horizontal lines denote the observed goal differences frequencies registered in the dataset, whereas yellow jittered points denote the correspondent replications. Goal-difference of 0, corresponding to the draws occurrences, is only slightly underestimated by the model. However, in general there are no particular clues of model's misfit.
@@ -1190,18 +1116,14 @@ In the second plot, the ordered observed goal differences are plotted against th
 
 Other useful PP checks, such as the overlap between data density and replicated data densities to check eventual inconsistencies, can be obtained through the standard use of the ```bayesplot``` package, in this case providing an approximation to a continuous distribution using an input kernel choice (```bw = 0.5``` in the ```ppc_dens_overlay``` used below):
 
-
-``` r
+```{r pp_checks, echo = TRUE, eval = TRUE}
 ## PPC densities overlay with the bayesplot package
 
 # extracting the replications
 draws_raw <- fit1_stan$fit$draws()
-#> Error: object 'fit1_stan' not found
 draws <- posterior::as_draws_rvars(draws_raw)
-#> Error: object 'draws_raw' not found
 sims <- list()
 sims$y_rep <- posterior::draws_of(draws[["y_rep"]])
-#> Error: object 'draws' not found
 
 goal_diff <- italy_2000$home_goals - italy_2000$away_goals
 
@@ -1209,7 +1131,6 @@ goal_diff <- italy_2000$home_goals - italy_2000$away_goals
 
 ppc_dens_overlay(goal_diff, sims$y_rep[, , 1] - sims$y_rep[, , 2], bw = 0.5) +
   theme_bw()
-#> Error in validate_predictions(yrep, N): is.matrix(predictions) is not TRUE
 ```
 
 From this plot above we have the empirical confirmation that the goal difference is well captured by the static bivariate Poisson model.
@@ -1235,8 +1156,7 @@ $$p(\tilde{\mathcal{D}}| \mathcal{D}) = \int p(\tilde{\mathcal{D}}| \boldsymbol{
 
 We may then predict test set matches by using the argument ```predict``` of the ```stan_foot``` function, for instance considering the last four weeks of the 2000/2001 season as the test set, and then computing posterior-results probabilities using the function ```foot_prob``` for two teams belonging to the test set, such as Reggina Calcio and AC Milan:
 
-
-``` r
+```{r weekly_predict,message = FALSE, results='hide', echo=TRUE, eval = TRUE}
 ### Fit Stan models
 ## weekly dynamics, predictions of last four weeks
 ## 2 chains 'n_iter' iterations each
@@ -1250,18 +1170,14 @@ fit4_stan <- stan_foot(
   chains = 2,
   iter_sampling = n_iter
 ) # biv poisson
-#> Error:
-#> ! Stan model file "" not found.
 ```
 
-
-``` r
+```{r foot_prob_weekly_predict, echo = TRUE, eval = TRUE, fig.show="hold"}
 foot_prob(
   object = fit4_stan, data = italy_2000,
   home_team = "Reggina Calcio",
   away_team = "AC Milan"
 )
-#> Error: object 'fit4_stan' not found
 ```
 
 Darker regions are associated with higher posterior probabilities, whereas the red square corresponds to the actual observed result, 2-1 for Reggina Calcio. According to the posterior-results probabilities, this final observed result had in principle about a 5% probability to happen! (Remember, football is about rare events...).
@@ -1280,12 +1196,10 @@ p_{\text{loss}} = &\ \textrm{Pr} (X<Y)=\frac{1}{S}\sum_{s=1}^S| \tilde{x}^{(s)}<
 where $(\tilde{x}^{(s)}, \tilde{y}^{(s)})$ represents the $s$-th MCMC pair of the future home goals and away goals for a given match, respectively. According to this scenario, we can depict the home-win posterior probabilities of a given test set through the function ```foot_round_robin```:
 
 
-
-``` r
+```{r foot_roundrobin, echo=TRUE, eval = TRUE}
 ## Home win out-of-sample probabilities
 
 foot_round_robin(object = fit4_stan, data = italy_2000)
-#> Error: object 'fit4_stan' not found
 ```
 
 Red cells denote more likely home-wins (close to 0.6), such as: Lazio Roma - Fiorentina (observed result: 3-0, home win), Lazio Roma - Udinese (observed result: 3-1, home win), Juventus - AC Perugia (observed result: 1-0, home win), Brescia Calcio - AS Bari (observed result: 3-1, home win). Conversely, lighter cells denote more likely away wins (close to 0.6), such as: AS Bari - AS Roma (observed result: 1-4, away win), AS Bari - Inter (observed result: 1-2, away win).
@@ -1300,14 +1214,12 @@ We can provide here:
 
 - **rank-league reconstruction** for the first model ```fit1_stan```  by using the **in-sample** replications $\mathcal{D}^{\text{rep}}$ (yellow ribbons for the credible intervals, solid blue lines for the observed cumulated points):
 
-
-``` r
+```{r rank_pred1, echo=TRUE, eval = TRUE}
 ## Rank league reconstruction
 
 # aggregated plot
 
 foot_rank(object = fit1_stan, data = italy_2000)
-#> Error: object 'fit1_stan' not found
 
 # team-specific plot
 
@@ -1315,20 +1227,17 @@ foot_rank(
   object = fit1_stan, data = italy_2000,
   visualize = "individual"
 )
-#> Error: object 'fit1_stan' not found
 ```
 
 
 - **rank-league prediction** (aggregated or at team-level) for the fourth model ```fit4_stan``` by using the **out-of-sample** replications $\tilde{\mathcal{D}}$ (yellow ribbons for the credible intervals, solid blue lines for the observed cumulated points):
 
-
-``` r
+```{r rank_pred2, echo=TRUE, eval = TRUE}
 ## Rank predictions for individual teams
 
 # aggregated plot
 
 foot_rank(object = fit4_stan, data = italy_2000)
-#> Error: object 'fit4_stan' not found
 
 # team-specific plot
 
@@ -1337,13 +1246,11 @@ foot_rank(
   teams = c("AC Milan", "AS Roma"),
   visualize = "individual"
 )
-#> Error: object 'fit4_stan' not found
 
 foot_rank(
   object = fit4_stan, data = italy_2000,
   visualize = "individual"
 )
-#> Error: object 'fit4_stan' not found
 ```
 
 
@@ -1354,8 +1261,7 @@ foot_rank(
 
 Evaluating the performance of these models is crucial to understand their predictive power and reliability. The ```compare_foot``` function provides a comprehensive way to compare different models or probability matrices using metrics like accuracy, Brier score, ranked probability score (RPS), Pseudo $R^2$, and average coverage probability (ACP). It also offers the option to compute confusion matrices for a detailed performance analysis.
 
-
-``` r
+```{r compare_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 italy_2020_2021_fit <- italy %>%
   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
   dplyr::filter(Season == "2020" | Season == "2021") %>%
@@ -1380,8 +1286,6 @@ fit_comp_1 <- stan_foot(
   # parallel_chains = 4,
   iter_sampling = n_iter
 )
-#> Error:
-#> ! Stan model file "" not found.
 
 fit_comp_2 <- stan_foot(
   data = italy_2020_2021_fit,
@@ -1392,8 +1296,6 @@ fit_comp_2 <- stan_foot(
   # parallel_chains = 4,
   iter_sampling = n_iter
 )
-#> Error:
-#> ! Stan model file "" not found.
 
 
 italy_2020_2021_test <- italy %>%
@@ -1414,8 +1316,7 @@ italy_2020_2021_test <- italy %>%
   )
 ```
 
-
-``` r
+```{r compare_foot_print, message = FALSE, echo = TRUE, eval = TRUE}
 compare_results_models <- compare_foot(
   source = list(
     biv_pois = fit_comp_1,
@@ -1425,11 +1326,9 @@ compare_results_models <- compare_foot(
   metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS"),
   conf_matrix = TRUE
 )
-#> Error: object 'fit_comp_1' not found
 
 
 print(compare_results_models, digits = 3)
-#> Error: object 'compare_results_models' not found
 ```
 
 
@@ -1456,29 +1355,22 @@ This is the **Occam's Razor** occurring in statistics:
 
 We can perform Bayesian model comparisons using the ``$loo()`` method, which computes an approximate LOO-CV using the ```loo``` package. To use this method, you must compute and store the pointwise log-likelihood in your Stan program. We will compare the static and weekly dynamic models for the 2000/2001 Italian Serie A:
 
-
-``` r
+```{r loo, echo = TRUE, eval = TRUE}
 ### Model comparisons
 ## LOOIC, loo function
 
 # compute loo
 
 loo1 <- fit1_stan$fit$loo()
-#> Error: object 'fit1_stan' not found
 loo1_t <- fit1_stan_t$fit$loo()
-#> Error: object 'fit1_stan_t' not found
 loo2 <- fit2_stan$fit$loo()
-#> Error: object 'fit2_stan' not found
 loo3 <- fit3_stan$fit$loo()
-#> Error: object 'fit3_stan' not found
 loo3_t <- fit3_stan_t$fit$loo()
-#> Error: object 'fit3_stan_t' not found
 
 
 # compare three looic
 
 loo_compare(loo1, loo1_t, loo2, loo3, loo3_t)
-#> Error: object 'loo1' not found
 ```
 
 According to the above model LOOIC comparisons, the weekly-dynamic double Poisson models  attain the lowest LOOIC values and are then the favored models in terms of predictive accuracy. The static model's ```fit1_stan``` final looic is suggesting that the assumption of static team-specific parameters is too restrictive and oversimplified to capture teams' skills over time and make reliable predictions. Anyway, from model checking we have the suggestion that even the static model has a reliable goodness of fit and could be used for some simplified analysis not requiring complex dynamic patterns.

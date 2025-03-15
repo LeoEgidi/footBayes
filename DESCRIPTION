@@ -46,6 +46,7 @@ Suggests:
     cmdstanr (>= 0.6.0)
 Additional_repositories: https://stan-dev.r-universe.dev/
 RoxygenNote: 7.3.2
+VignetteBuilder: knitr
 LazyData: true
 BuildManual: yes
 Config/testthat/edition: 3
