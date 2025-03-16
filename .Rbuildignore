@@ -9,8 +9,13 @@
 
 ^docs$
 ^Meta$
+^doc$
 
 ^rebuild-long-running-vignette.R
 
+^README\.Rmd$
+^README-.*\.png$
+^\README_cache$
+^logo\.png$
 
 ^\.github$
