@@ -43,6 +43,7 @@ Suggests:
     knitr (>= 1.37),
     rmarkdown (>= 2.10),
     loo,
+    bayesplot,
     cmdstanr (>= 0.6.0)
 Additional_repositories: https://stan-dev.r-universe.dev/
 RoxygenNote: 7.3.2

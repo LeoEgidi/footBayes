@@ -1,7 +1,7 @@
 params <-
 list(EVAL = FALSE)
 
-## ----setup,  include = FALSE---------------------------------------------------------------------------------
+## ----setup,  include = FALSE--------------------------------------------------------------------------------
 NOT_CRAN <- identical(tolower(Sys.getenv("NOT_CRAN")), "true")
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -25,24 +25,25 @@ knitr::opts_chunk$set(
   )
 
 
-## ----footBayes_inst_cran, echo =TRUE, eval = FALSE-----------------------------------------------------------
+## ----footBayes_inst_cran, echo =TRUE, eval = FALSE----------------------------------------------------------
 # install.packages("footBayes", type = "source")
 
 
-## ----footBayes_inst, echo =TRUE, eval = FALSE----------------------------------------------------------------
+## ----footBayes_inst, echo =TRUE, eval = FALSE---------------------------------------------------------------
 # library(devtools)
 # install_github("LeoEgidi/footBayes")
 
 
-## ----libraries, echo = TRUE, eval = TRUE---------------------------------------------------------------------
+## ----libraries, echo = TRUE, eval = TRUE--------------------------------------------------------------------
 library(footBayes)
 library(loo)
 library(ggplot2)
 library(ggridges)
 library(dplyr)
+library(bayesplot)
 
 
-## ----BTD_data, echo = TRUE, eval = TRUE----------------------------------------------------------------------
+## ----BTD_data, echo = TRUE, eval = TRUE---------------------------------------------------------------------
 library(dplyr)
 library(footBayes)
 
@@ -68,7 +69,7 @@ italy_2020_2021 <- italy %>%
   )
 
 
-## ----BTD_model_1_dyn, message = FALSE, results='hide', echo = TRUE, eval = TRUE------------------------------
+## ----BTD_model_1_dyn, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------------------
 # Dynamic Ranking Example with Median Rank Measure
 fit_result_dyn <- btd_foot(
   data = italy_2020_2021,
@@ -82,7 +83,7 @@ fit_result_dyn <- btd_foot(
 )
 
 
-## ----BTD_model_1_dyn_print, message = FALSE, echo = TRUE, eval = TRUE----------------------------------------
+## ----BTD_model_1_dyn_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------------------
 print(fit_result_dyn,
   display = "parameters",
   pars = c("logStrength", "logTie"),
@@ -90,7 +91,7 @@ print(fit_result_dyn,
 )
 
 
-## ----BTD_model_1_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------------------
+## ----BTD_model_1_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE----------------------------
 # Static Ranking Example with MAP Rank Measure
 fit_result_stat <- btd_foot(
   data = italy_2020_2021,
@@ -102,14 +103,14 @@ fit_result_stat <- btd_foot(
 )
 
 
-## ----BTD_model_1_stat_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------------------
+## ----BTD_model_1_stat_print, message = FALSE, echo = TRUE, eval = TRUE--------------------------------------
 print(fit_result_stat,
   pars = c("logStrength", "logTie"),
   teams = c("AC Milan", "AS Roma")
 )
 
 
-## ----BTD_model_2, message = FALSE, results='hide', echo = TRUE, eval = TRUE----------------------------------
+## ----BTD_model_2, message = FALSE, results='hide', echo = TRUE, eval = TRUE---------------------------------
 # Dynamic Ranking Example with Median Rank Measure
 fit_result_dyn_2 <- btd_foot(
   data = italy_2020_2021,
@@ -129,14 +130,14 @@ fit_result_dyn_2 <- btd_foot(
 )
 
 
-## ----BTD_model_2_dyn_print, message = FALSE, echo = TRUE, eval = TRUE----------------------------------------
+## ----BTD_model_2_dyn_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------------------
 print(fit_result_dyn_2,
   display = "parameters",
   pars = c("logTie", "home")
 )
 
 
-## ----BTD_model_2_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------------------
+## ----BTD_model_2_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE----------------------------
 # Static Ranking Example with MAP Rank Measure
 fit_result_stat_2 <- btd_foot(
   data = italy_2020_2021,
@@ -154,13 +155,13 @@ fit_result_stat_2 <- btd_foot(
 )
 
 
-## ----BTD_model_2_stat_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------------------
+## ----BTD_model_2_stat_print, message = FALSE, echo = TRUE, eval = TRUE--------------------------------------
 print(fit_result_stat_2,
   pars = c("logTie", "home")
 )
 
 
-## ----BTD_model_vi, message = FALSE, results='hide', echo = TRUE, eval = TRUE---------------------------------
+## ----BTD_model_vi, message = FALSE, results='hide', echo = TRUE, eval = TRUE--------------------------------
 # Variational Inference Example
 fit_result_vi <- btd_foot(
   data = italy_2020_2021,
@@ -171,19 +172,19 @@ fit_result_vi <- btd_foot(
 
 
 
-## ----plot_btdPosterior_dyn, echo = TRUE, eval = TRUE, fig.show="hold"----------------------------------------
+## ----plot_btdPosterior_dyn, echo = TRUE, eval = TRUE, fig.show="hold"---------------------------------------
 # Dynamic Ranking
 
 plot_btdPosterior(fit_result_dyn)
 
 
-## ----plot_btdPosterior_stat, echo = TRUE, eval = TRUE, fig.show="hold"---------------------------------------
+## ----plot_btdPosterior_stat, echo = TRUE, eval = TRUE, fig.show="hold"--------------------------------------
 # Static Ranking
 
 plot_btdPosterior(fit_result_stat)
 
 
-## ----plot_btdPosterior_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"----------------------------------
+## ----plot_btdPosterior_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"---------------------------------
 # Dynamic Ranking
 
 plot_btdPosterior(fit_result_dyn,
@@ -192,7 +193,7 @@ plot_btdPosterior(fit_result_dyn,
 )
 
 
-## ----plot_btdPosterior_teams_stat, echo = TRUE, eval = TRUE, fig.show="hold"---------------------------------
+## ----plot_btdPosterior_teams_stat, echo = TRUE, eval = TRUE, fig.show="hold"--------------------------------
 # Static Ranking
 
 plot_btdPosterior(fit_result_stat,
@@ -201,7 +202,7 @@ plot_btdPosterior(fit_result_stat,
 )
 
 
-## ----plot_btdPosterior_teams_dyn_dens, echo = TRUE, eval = TRUE, fig.show="hold"-----------------------------
+## ----plot_btdPosterior_teams_dyn_dens, echo = TRUE, eval = TRUE, fig.show="hold"----------------------------
 # Dynamic Ranking
 
 plot_btdPosterior(fit_result_dyn,
@@ -211,7 +212,7 @@ plot_btdPosterior(fit_result_dyn,
 )
 
 
-## ----plot_btdPosterior_teams_stat_dens, echo = TRUE, eval = TRUE, fig.show="hold"----------------------------
+## ----plot_btdPosterior_teams_stat_dens, echo = TRUE, eval = TRUE, fig.show="hold"---------------------------
 # Static Ranking
 
 plot_btdPosterior(fit_result_stat,
@@ -221,7 +222,7 @@ plot_btdPosterior(fit_result_stat,
 )
 
 
-## ----plot_logStrength_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"-----------------------------------
+## ----plot_logStrength_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"----------------------------------
 # Dynamic Ranking
 
 plot_logStrength(fit_result_dyn,
@@ -229,7 +230,7 @@ plot_logStrength(fit_result_dyn,
 )
 
 
-## ----static_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------------------------
+## ----static_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE----------------------------------
 ### Use Italian Serie A 2000/2001
 
 ## with 'dplyr' environment
@@ -267,7 +268,7 @@ fit1_stan <- stan_foot(
 ) # biv poisson
 
 
-## ----static_fit_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------------------------
+## ----static_fit_print, message = FALSE, echo = TRUE, eval = TRUE--------------------------------------------
 ## Print of model summary for parameters:
 
 print(fit1_stan,
@@ -279,7 +280,7 @@ print(fit1_stan,
 )
 
 
-## ----static_fit_corr, echo =TRUE, eval = TRUE----------------------------------------------------------------
+## ----static_fit_corr, echo =TRUE, eval = TRUE---------------------------------------------------------------
 ## Marginal posterior with bayesplot
 
 posterior1 <- fit1_stan$fit$draws(format = "matrix")
@@ -290,13 +291,13 @@ mcmc_areas(posterior1, pars = c(
   theme_bw()
 
 
-## ----stan_extract, echo = TRUE, eval = TRUE------------------------------------------------------------------
+## ----stan_extract, echo = TRUE, eval = TRUE-----------------------------------------------------------------
 ### Model's code extraction
 
 fit1_stan$stan_code
 
 
-## ----stan_foot_model_pth, message = FALSE, results='hide', echo = TRUE, eval = TRUE--------------------------
+## ----stan_foot_model_pth, message = FALSE, results='hide', echo = TRUE, eval = TRUE-------------------------
 # Pathfinder algorithm example
 fit1_stan_path <- stan_foot(
   data = italy_2000,
@@ -306,7 +307,7 @@ fit1_stan_path <- stan_foot(
 
 
 
-## ----static_fit2, echo = TRUE, eval = TRUE-------------------------------------------------------------------
+## ----static_fit2, echo = TRUE, eval = TRUE------------------------------------------------------------------
 ### Fit MLE models
 ## no dynamics, no predictions
 ## Wald intervals
@@ -319,7 +320,7 @@ fit1_mle <- mle_foot(
 fit1_mle$home_effect
 
 
-## ----static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = TRUE-----------------------------
+## ----static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = TRUE----------------------------
 ### Fit Stan models
 ## changing priors
 ## student-t for team-specific abilities, laplace for sds
@@ -338,7 +339,7 @@ fit1_stan_t <- stan_foot(
 ) # biv poisson
 
 
-## ----comparing_priors, eval = TRUE---------------------------------------------------------------------------
+## ----comparing_priors, eval = TRUE--------------------------------------------------------------------------
 ## comparing posteriors
 
 posterior1_t <- fit1_stan_t$fit$draws(format = "matrix")
@@ -358,7 +359,7 @@ mcmc_areas(gl_posterior, pars = c("sigma_att", "sigma_att_t")) +
   theme_bw()
 
 
-## ----dynamic_fit,message = FALSE, results='hide', echo =TRUE, eval = TRUE------------------------------------
+## ----dynamic_fit,message = FALSE, results='hide', echo =TRUE, eval = TRUE-----------------------------------
 ### Fit Stan models
 ## seasonal dynamics, no predictions
 ## 2 Markov chains, 'n_iter' iterations each
@@ -373,14 +374,14 @@ fit2_stan <- stan_foot(
 ) # biv poisson
 
 
-## ----dynamic_fit_print, message = FALSE, echo = TRUE, eval = TRUE--------------------------------------------
+## ----dynamic_fit_print, message = FALSE, echo = TRUE, eval = TRUE-------------------------------------------
 print(fit2_stan, pars = c(
   "home", "rho", "sigma_att",
   "sigma_def"
 ))
 
 
-## ----weekly_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------------------------
+## ----weekly_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE----------------------------------
 ### Fit Stan models
 ## weekly dynamics, no predictions
 ## 2 chains, 'n_iter' iterations each
@@ -395,14 +396,14 @@ fit3_stan <- stan_foot(
 ) # double poisson
 
 
-## ----weekly_fit_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------------------------
+## ----weekly_fit_print, message = FALSE, echo = TRUE, eval = TRUE--------------------------------------------
 print(fit3_stan, pars = c(
   "home", "sigma_att",
   "sigma_def"
 ))
 
 
-## ----weekly_fit_t, message = FALSE, results='hide', echo = TRUE, eval = TRUE---------------------------------
+## ----weekly_fit_t, message = FALSE, results='hide', echo = TRUE, eval = TRUE--------------------------------
 ### Fit Stan models
 ## weekly dynamics, no predictions
 ## 2 chains, 'n_iter' iterations each
@@ -422,14 +423,14 @@ fit3_stan_t <- stan_foot(
 ) # double poisson
 
 
-## ----weekly_fit_t_print, message = FALSE, echo = TRUE, eval = TRUE-------------------------------------------
+## ----weekly_fit_t_print, message = FALSE, echo = TRUE, eval = TRUE------------------------------------------
 print(fit3_stan_t, pars = c(
   "home", "sigma_att",
   "sigma_def"
 ))
 
 
-## ----btd_foot_and_stan_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------------
+## ----btd_foot_and_stan_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE----------------------
 # Dynamic Bradley-Terry-Davidson model
 
 data("italy")
@@ -501,26 +502,26 @@ fit_stan_rank <- stan_foot(
 )
 
 
-## ----btd_foot_and_stan_foot_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------------
+## ----btd_foot_and_stan_foot_print, message = FALSE, echo = TRUE, eval = TRUE--------------------------------
 print(fit_stan_rank,
   pars = c("home", "rho", "sigma_att", "sigma_def")
 )
 
 
-## ----abilities, echo = TRUE, eval = TRUE, fig.show="hold"----------------------------------------------------
+## ----abilities, echo = TRUE, eval = TRUE, fig.show="hold"---------------------------------------------------
 ## Plotting abilities: credible and confidence 95% intervals
 
 foot_abilities(object = fit1_stan, data = italy_2000)
 foot_abilities(object = fit1_mle, data = italy_2000)
 
 
-## ----abilities_dyn, echo = TRUE, eval = TRUE, fig.show="hold"------------------------------------------------
+## ----abilities_dyn, echo = TRUE, eval = TRUE, fig.show="hold"-----------------------------------------------
 ## Plotting abilities: credible and confidence 95% intervals
 
 foot_abilities(fit2_stan, italy_2000)
 
 
-## ----pp_foot, echo = TRUE, eval = TRUE-----------------------------------------------------------------------
+## ----pp_foot, echo = TRUE, eval = TRUE----------------------------------------------------------------------
 ## PP checks: aggregated goal's differences and ordered goal differences
 
 pp_foot(
@@ -534,7 +535,7 @@ pp_foot(
 )
 
 
-## ----pp_checks, echo = TRUE, eval = TRUE---------------------------------------------------------------------
+## ----pp_checks, echo = TRUE, eval = TRUE--------------------------------------------------------------------
 ## PPC densities overlay with the bayesplot package
 
 # extracting the replications
@@ -551,7 +552,7 @@ ppc_dens_overlay(goal_diff, sims$y_rep[, , 1] - sims$y_rep[, , 2], bw = 0.5) +
   theme_bw()
 
 
-## ----weekly_predict,message = FALSE, results='hide', echo=TRUE, eval = TRUE----------------------------------
+## ----weekly_predict,message = FALSE, results='hide', echo=TRUE, eval = TRUE---------------------------------
 ### Fit Stan models
 ## weekly dynamics, predictions of last four weeks
 ## 2 chains 'n_iter' iterations each
@@ -567,7 +568,7 @@ fit4_stan <- stan_foot(
 ) # biv poisson
 
 
-## ----foot_prob_weekly_predict, echo = TRUE, eval = TRUE, fig.show="hold"-------------------------------------
+## ----foot_prob_weekly_predict, echo = TRUE, eval = TRUE, fig.show="hold"------------------------------------
 foot_prob(
   object = fit4_stan, data = italy_2000,
   home_team = "Reggina Calcio",
@@ -575,13 +576,13 @@ foot_prob(
 )
 
 
-## ----foot_roundrobin, echo=TRUE, eval = TRUE-----------------------------------------------------------------
+## ----foot_roundrobin, echo=TRUE, eval = TRUE----------------------------------------------------------------
 ## Home win out-of-sample probabilities
 
 foot_round_robin(object = fit4_stan, data = italy_2000)
 
 
-## ----rank_pred1, echo=TRUE, eval = TRUE----------------------------------------------------------------------
+## ----rank_pred1, echo=TRUE, eval = TRUE---------------------------------------------------------------------
 ## Rank league reconstruction
 
 # aggregated plot
@@ -596,7 +597,7 @@ foot_rank(
 )
 
 
-## ----rank_pred2, echo=TRUE, eval = TRUE----------------------------------------------------------------------
+## ----rank_pred2, echo=TRUE, eval = TRUE---------------------------------------------------------------------
 ## Rank predictions for individual teams
 
 # aggregated plot
@@ -617,7 +618,7 @@ foot_rank(
 )
 
 
-## ----compare_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE---------------------------------
+## ----compare_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE--------------------------------
 italy_2020_2021_fit <- italy %>%
   dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
   dplyr::filter(Season == "2020" | Season == "2021") %>%
@@ -672,7 +673,7 @@ italy_2020_2021_test <- italy %>%
   )
 
 
-## ----compare_foot_print, message = FALSE, echo = TRUE, eval = TRUE-------------------------------------------
+## ----compare_foot_print, message = FALSE, echo = TRUE, eval = TRUE------------------------------------------
 compare_results_models <- compare_foot(
   source = list(
     biv_pois = fit_comp_1,
@@ -687,7 +688,7 @@ compare_results_models <- compare_foot(
 print(compare_results_models, digits = 3)
 
 
-## ----loo, echo = TRUE, eval = TRUE---------------------------------------------------------------------------
+## ----loo, echo = TRUE, eval = TRUE--------------------------------------------------------------------------
 ### Model comparisons
 ## LOOIC, loo function
 

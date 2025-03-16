@@ -344,6 +344,7 @@ library(loo)
 library(ggplot2)
 library(ggridges)
 library(dplyr)
+library(bayesplot)
 ```
 
 # Bradley-Terry-Davidson model fit
