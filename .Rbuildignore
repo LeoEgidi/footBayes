@@ -18,3 +18,4 @@
 ^logo\.png$
 
 ^\.github$
+^\.DS_Store
