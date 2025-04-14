@@ -1,7 +1,7 @@
-#' Fit football models  with Stan
+#' Fit football models using CmdStan
 #'
-#' Stan football modelling for the most famous models:
-#' double Poisson, bivariate Poisson, Skellam, student t, diagonal-inflated bivariate Poisson and zero-inflated Skellam.
+#' Fits football goal-based models using Stan via the CmdStan backend.
+#' Supported models include: double Poisson, bivariate Poisson, Skellam, Student's t, diagonal-inflated bivariate Poisson, and zero-inflated Skellam.
 #'
 #' @param data A data frame containing match data with columns:
 #'   \itemize{

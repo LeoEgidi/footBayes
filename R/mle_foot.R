@@ -1,7 +1,7 @@
 #' Fit football models with Maximum Likelihood
 #'
-#' ML football modelling for the most famous models:
-#' double Poisson, bivariate Poisson, Skellam and student t.
+#' Fits football goal-based models using maximum likelihood estimation.
+#' Supported models include: double Poisson, bivariate Poisson, Skellam, and Student's t.
 #'
 #' @param data A data frame containing match data with columns:
 #'   \itemize{
@@ -11,7 +11,7 @@
 #'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
 #'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 #'   }
-#' @param model A character string specifying the Stan model to fit. Options are:
+#' @param model A character string specifying the model to fit. Options are:
 #'   \itemize{
 #'     \item \code{"double_pois"}: Double Poisson model.
 #'     \item \code{"biv_pois"}: Bivariate Poisson model.
@@ -29,7 +29,6 @@
 #'
 #' @details
 #'
-#' See documentation of \code{stan_foot} function for model details.
 #' MLE can be obtained only for static models, with no time-dependence.
 #' Likelihood optimization is performed via the \code{BFGS} method
 #' of the \code{\link{optim}} function.

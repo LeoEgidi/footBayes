@@ -16,7 +16,7 @@ mle_foot(data, model, predict = 0, ...)
   \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 }}
 
-\item{model}{A character string specifying the Stan model to fit. Options are:
+\item{model}{A character string specifying the model to fit. Options are:
 \itemize{
   \item \code{"double_pois"}: Double Poisson model.
   \item \code{"biv_pois"}: Bivariate Poisson model.
@@ -33,11 +33,10 @@ MLE and 95\% profile likelihood deviance confidence intervals for the
 model's parameters: attack, defence, home effect and goals' correlation.
 }
 \description{
-ML football modelling for the most famous models:
-double Poisson, bivariate Poisson, Skellam and student t.
+Fits football goal-based models using maximum likelihood estimation.
+Supported models include: double Poisson, bivariate Poisson, Skellam, and Student's t.
 }
 \details{
-See documentation of \code{stan_foot} function for model details.
 MLE can be obtained only for static models, with no time-dependence.
 Likelihood optimization is performed via the \code{BFGS} method
 of the \code{\link{optim}} function.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/stan_foot.R
 \name{stan_foot}
 \alias{stan_foot}
-\title{Fit football models  with Stan}
+\title{Fit football models using CmdStan}
 \usage{
 stan_foot(
   data,
@@ -97,8 +97,8 @@ A list of class \code{"stanFoot"} containing:
   }
 }
 \description{
-Stan football modelling for the most famous models:
-double Poisson, bivariate Poisson, Skellam, student t, diagonal-inflated bivariate Poisson and zero-inflated Skellam.
+Fits football goal-based models using Stan via the CmdStan backend.
+Supported models include: double Poisson, bivariate Poisson, Skellam, Student's t, diagonal-inflated bivariate Poisson, and zero-inflated Skellam.
 }
 \details{
 Let \eqn{(y^{H}_{n}, y^{A}_{n})} denote the
