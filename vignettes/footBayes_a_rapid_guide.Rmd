@@ -1,7 +1,7 @@
 ---
 title: "Fitting football models and visualizing predictions with the `footBayes` package"
 author: "Leonardo Egidi, Roberto Macrì Demartino, and Vasilis Palaskas"
-date: "2025-03-16"
+date: "2025-04-16"
 output:
   rmarkdown::html_vignette:
     toc: yes
@@ -330,7 +330,7 @@ library(bayesplot)
 
 # Bradley-Terry-Davidson model fit
 
-The ```btd_foot``` function fits a Bayesian Bradley-Terry-Davidson (BTD) model by generating posterior samples using Hamiltonian Monte Carlo within the underlying ```rstan``` ecosystem. It supports both static and dynamic ranking models, allowing for the estimation of team strengths over time.
+The ```btd_foot``` function fits a Bayesian Bradley–Terry–Davidson (BTD) model by approximating the posterior distribution using one of the methods described above (HMC, ADVI, Pathfinder, or Laplace approximation), and supports both static and dynamic ranking models to estimate team strengths over time.
 
 ## Using ```btd_foot```
 In this section, we will walk through the steps to use the ```btd_foot``` function effectively, including preparing the data, choosing model options, and interpreting the results. Specifically the data must be in a specific format required by the ```btd_foot``` function. It should be a data frame with the following columns:
@@ -375,7 +375,7 @@ italy_2020_2021 <- italy %>%
 One of the most important features implemented in the ```btd_foot``` function is the possibility to choose between assuming that team strengths are constant over time or allowing team strengths to change across different time periods. Specifically, following the approach proposed by  <span style="color:red"> @owen2011dynamic </span>, <span style="color:red"> @egidi2018combining</span>, and <span style="color:red"> @demartino2024alternative</span> for the attack and defense abilities in goal-based models, we can assume that the log-strength parameters vary across a given number of weeks or seasons $1, \ldots, \mathcal{T}$. To capture these dynamics, we assign the priors for the log-strength parameters to be auto-regressive of order 1 for each time period $\tau=2,\ldots, \mathcal{T}$:
 
 \begin{align}
-\psi_{t,\tau} \sim \mathrm{N}(\mu_{\psi_{t-1,\tau}}, \sigma_\psi)
+\psi_{t,\tau} \sim \mathrm{N}(\mu_{\psi_{t,\tau-1}}, \sigma_\psi)
 \end{align}
 
 
@@ -427,17 +427,17 @@ print(fit_result_dyn,
 #> 
 #> Posterior summaries for model parameters:
 #> # A tibble: 9 × 10
-#>   variable                   mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
-#>   <chr>                     <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logStrength[1, AC Milan]  2.17   2.17  0.934 0.949  0.635 3.67   1.00    165.      351.
-#> 2 logStrength[2, AC Milan]  1.37   1.38  1.07  1.10  -0.411 3.15   1.01    103.      307.
-#> 3 logStrength[3, AC Milan]  2.37   2.4   1.25  1.23   0.22  4.38   1.00     72.0     201.
-#> 4 logStrength[4, AC Milan]  2.85   2.93  1.48  1.50   0.278 5.22   1.00     68.8     183.
-#> 5 logStrength[1, AS Roma]   1.48   1.47  0.921 0.937 -0.027 3.00   1.00    158.      633.
-#> 6 logStrength[2, AS Roma]  -0.04  -0.049 1.06  1.09  -1.83  1.78   1.01     91.7     289.
-#> 7 logStrength[3, AS Roma]   0.886  0.937 1.21  1.19  -1.24  2.80   1.00     73.5     174.
-#> 8 logStrength[4, AS Roma]   1.04   1.12  1.40  1.40  -1.40  3.31   1.01     60.2     174.
-#> 9 logTie                   -0.012 -0.014 0.085 0.083 -0.152 0.128  1.00   1343.     1570.
+#>   variable            mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
+#>   <chr>              <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
+#> 1 logStrength[1, A…  2.05   2.05  0.939 0.935  0.524 3.65   1.01    119.     507. 
+#> 2 logStrength[2, A…  1.19   1.13  1.06  1.05  -0.511 2.98   1.05     54.7    130. 
+#> 3 logStrength[3, A…  2.19   2.12  1.28  1.21   0.126 4.42   1.08     22.7     72.2
+#> 4 logStrength[4, A…  2.68   2.62  1.50  1.46   0.273 5.31   1.07     26.8     83.9
+#> 5 logStrength[1, A…  1.35   1.32  0.872 0.856 -0.099 2.79   1.01    126.     330. 
+#> 6 logStrength[2, A… -0.2   -0.228 1.03  1.06  -1.86  1.51   1.05     51.5    118. 
+#> 7 logStrength[3, A…  0.694  0.673 1.24  1.21  -1.26  2.77   1.08     26.5     60.0
+#> 8 logStrength[4, A…  0.89   0.813 1.42  1.35  -1.34  3.24   1.08     20.5     72.3
+#> 9 logTie            -0.01  -0.01  0.088 0.087 -0.149 0.137  1.00   1113.    1118.
 ```
 
 
@@ -465,24 +465,24 @@ print(fit_result_stat,
 #> 
 #> Top teams based on relative log-strengths:
 #>    periods            team log_strengths
-#> 11       1           Inter         2.358
-#> 7        1        AC Milan         2.086
-#> 6        1        Juventus         1.781
-#> 13       1      SSC Napoli         1.711
-#> 20       1        Atalanta         1.287
-#> 19       1      Lazio Roma         1.104
-#> 15       1         AS Roma         0.932
-#> 5        1 Sassuolo Calcio         0.815
-#> 1        1  ACF Fiorentina         0.239
-#> 2        1   Hellas Verona         0.160
+#> 11       1           Inter         2.433
+#> 7        1        AC Milan         2.149
+#> 13       1      SSC Napoli         1.605
+#> 6        1        Juventus         1.546
+#> 20       1        Atalanta         1.045
+#> 19       1      Lazio Roma         1.022
+#> 15       1         AS Roma         0.997
+#> 5        1 Sassuolo Calcio         0.602
+#> 1        1  ACF Fiorentina         0.276
+#> 2        1   Hellas Verona         0.198
 #> 
 #> Posterior summaries for model parameters:
 #> # A tibble: 3 × 10
-#>   variable                mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
-#>   <chr>                  <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logStrength[AC Milan]  2.00   2.02  0.71  0.734  0.778 3.13   1.01     117.     236.
-#> 2 logStrength[AS Roma]   0.818  0.846 0.682 0.724 -0.345 1.90   1.01     104.     219.
-#> 3 logTie                -0.114 -0.114 0.09  0.091 -0.265 0.031  1.00     951.     997.
+#>   variable            mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
+#>   <chr>              <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
+#> 1 logStrength[AC M…  1.95   2.01  0.709 0.703  0.688  3.07  1.00     99.1     139.
+#> 2 logStrength[AS R…  0.766  0.809 0.694 0.693 -0.465  1.81  1.00     93.2     171.
+#> 3 logTie            -0.117 -0.116 0.084 0.083 -0.256  0.02  1.00    952.     1120.
 ```
 
 Another significant feature implemented in the ```btd_foot``` function is the ability to account for the **home-field effect**. This effect represents the psychological or logistical benefits that the home team may have over the visiting team. This is modeled as a multiplicative order effect <span style="color:red"> @davidson_beaver_1977</span> in the Bayesian BTD framework. This multiplicative parameter becomes in the
@@ -541,8 +541,8 @@ print(fit_result_dyn_2,
 #> # A tibble: 2 × 10
 #>   variable  mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
 #>   <chr>    <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logTie   0.022  0.02  0.089 0.088 -0.127 0.168  1       2281.    1285.
-#> 2 home     0.232  0.234 0.111 0.112  0.048 0.414  1.00    2798.    1220.
+#> 1 logTie   0.025  0.027 0.091 0.09  -0.125 0.176  1       2180.    1259.
+#> 2 home     0.229  0.229 0.11  0.113  0.044 0.408  1.00    2445.    1329.
 ```
 
 
@@ -575,23 +575,23 @@ print(fit_result_stat_2,
 #> 
 #> Top teams based on relative log-strengths:
 #>    periods            team log_strengths
-#> 11       1           Inter          4.66
-#> 7        1        AC Milan          4.12
-#> 13       1      SSC Napoli          3.83
-#> 6        1        Juventus          3.64
-#> 20       1        Atalanta          3.35
-#> 19       1      Lazio Roma          3.05
-#> 15       1         AS Roma          3.03
-#> 5        1 Sassuolo Calcio          2.67
-#> 1        1  ACF Fiorentina          2.53
-#> 2        1   Hellas Verona          2.29
+#> 11       1           Inter          5.16
+#> 7        1        AC Milan          4.88
+#> 13       1      SSC Napoli          4.32
+#> 6        1        Juventus          4.24
+#> 20       1        Atalanta          3.90
+#> 19       1      Lazio Roma          3.75
+#> 15       1         AS Roma          3.53
+#> 5        1 Sassuolo Calcio          3.16
+#> 1        1  ACF Fiorentina          2.85
+#> 2        1   Hellas Verona          2.75
 #> 
 #> Posterior summaries for model parameters:
 #> # A tibble: 2 × 10
 #>   variable   mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
 #>   <chr>     <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logTie   -0.11  -0.112 0.089 0.084 -0.256 0.039  1.00     432.     447.
-#> 2 home      0.214  0.213 0.094 0.095  0.058 0.366  1.00     447.     518.
+#> 1 logTie   -0.112 -0.111 0.086 0.086 -0.252 0.03   1.00     513.     650.
+#> 2 home      0.206  0.204 0.096 0.099  0.044 0.364  1.00     481.     603.
 ```
 
 The `btd_foot` function offers flexibility in how the posterior distributions are obtained by allowing users to choose the estimation method via the `method` argument. This argument enables the user to balance computational efficiency with the precision of uncertainty estimates. The available options include:
@@ -807,14 +807,14 @@ print(fit1_stan,
 #> # A tibble: 8 × 10
 #>   variable        mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>          <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home           0.278  0.285 0.069 0.072  0.161  0.382  1.00     675.     561.
-#> 2 rho           -1.74  -1.70  0.32  0.313 -2.34  -1.31   1.01     847.     690.
-#> 3 sigma_att      0.219  0.211 0.069 0.065  0.12   0.342  1.00     415.     301.
-#> 4 sigma_def      0.227  0.219 0.077 0.072  0.121  0.359  1.00     339.     345.
-#> 5 att[AS Roma]   0.281  0.281 0.127 0.125  0.076  0.489  1.01     752.     700.
-#> 6 att[AC Milan]  0.134  0.133 0.123 0.124 -0.071  0.34   1.01    1409.     678.
-#> 7 def[AS Roma]  -0.203 -0.193 0.149 0.144 -0.474  0.029  1.00    1346.     523.
-#> 8 def[AC Milan] -0.001  0.005 0.135 0.119 -0.239  0.211  1.01    1691.     591.
+#> 1 home           0.283  0.283 0.069 0.068  0.172  0.395  1.01     904.     440.
+#> 2 rho           -1.77  -1.72  0.336 0.323 -2.40  -1.31   1.00     930.     634.
+#> 3 sigma_att      0.214  0.208 0.066 0.061  0.121  0.33   1.01     278.     323.
+#> 4 sigma_def      0.229  0.221 0.068 0.06   0.128  0.351  1.00     333.     341.
+#> 5 att[AS Roma]   0.277  0.276 0.128 0.139  0.075  0.484  1.01     685.     485.
+#> 6 att[AC Milan]  0.138  0.134 0.123 0.116 -0.063  0.348  1.00    1277.     624.
+#> 7 def[AS Roma]  -0.207 -0.2   0.138 0.136 -0.445  0.003  1.00     918.     552.
+#> 8 def[AC Milan]  0.005  0.011 0.129 0.131 -0.202  0.211  1.00     912.     579.
 ```
 
 The **Gelman-Rubin statistic** $\hat{R}$ (```Rhat```) is below the threshold 1.1 for all the parameters, whereas the **effective sample size** (```n_eff```), measuring the approximate number of iid replications from the Markov chains, does not appear to be problematic. Thus, HMC sampling reached the convergence.
@@ -1192,10 +1192,10 @@ print(fit2_stan, pars = c(
 #> # A tibble: 4 × 10
 #>   variable    mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>      <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home       0.277  0.279 0.068 0.067  0.172  0.385  1.01   583.      237. 
-#> 2 rho       -1.78  -1.74  0.34  0.283 -2.41  -1.27   1.00   452.      327. 
-#> 3 sigma_att  0.046  0.044 0.012 0.011  0.03   0.069  1.54     3.78     21.5
-#> 4 sigma_def  0.058  0.056 0.014 0.013  0.036  0.084  1.62     3.49     12.1
+#> 1 home       0.279  0.278 0.071 0.069  0.155  0.387  1.01   336.      270. 
+#> 2 rho       -1.74  -1.71  0.34  0.321 -2.41  -1.26   1.02   384.      282. 
+#> 3 sigma_att  0.045  0.043 0.013 0.012  0.029  0.074  1.89     2.92     18.2
+#> 4 sigma_def  0.059  0.056 0.017 0.015  0.036  0.091  2.05     2.75     29.7
 ```
 
 From the printed summary, we may note that the degree of goals' correlation seems to be again very small here. Moreover, the Gelman-Rubin statistic for $\sigma_{\text{att}}$ is relatively high, whereas the effective sample sizes for $\sigma_{\text{att}}$ and $\sigma_{\text{def}}$ are quite low. This is suggesting possible inefficiencies during the HMC sampling and that a *model-reparametrization* could be suited and effective at this stage.  Another option is to play a bit with the prior specification for $\sigma_{\text{att}}$ and $\sigma_{\text{def}}$, for instance by specifying a prior inducing less shrinkage in the team-specific abilities.
@@ -1231,9 +1231,9 @@ print(fit3_stan, pars = c(
 #> # A tibble: 3 × 10
 #>   variable   mean median    sd   mad    q5   q95  rhat ess_bulk ess_tail
 #>   <chr>     <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home      0.413  0.414 0.04  0.041 0.352 0.478  1.02   418.      359. 
-#> 2 sigma_att 0.04   0.039 0.007 0.006 0.029 0.054  1.69     3.50     22.1
-#> 3 sigma_def 0.055  0.052 0.013 0.012 0.037 0.08   1.61     3.54     21.6
+#> 1 home      0.414  0.415 0.046 0.046 0.335 0.491  1.03    84.9     277. 
+#> 2 sigma_att 0.029  0.029 0.011 0.013 0.014 0.049  2.43     2.55     18.7
+#> 3 sigma_def 0.057  0.057 0.014 0.014 0.035 0.08   1.66     3.39     15.1
 ```
 
 
@@ -1279,9 +1279,9 @@ print(fit3_stan_t, pars = c(
 #> # A tibble: 3 × 10
 #>   variable   mean median    sd   mad    q5   q95  rhat ess_bulk ess_tail
 #>   <chr>     <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home      0.398  0.402 0.05  0.051 0.32  0.474  1.03    74.4     202. 
-#> 2 sigma_att 0.034  0.031 0.01  0.011 0.021 0.053  1.82     3.21     39.2
-#> 3 sigma_def 0.055  0.053 0.011 0.01  0.04  0.077  1.21     7.25     62.5
+#> 1 home      0.396  0.396 0.053 0.051 0.317 0.487  1.00   434.      220. 
+#> 2 sigma_att 0.049  0.05  0.014 0.018 0.027 0.07   1.68     3.24     17.5
+#> 3 sigma_def 0.051  0.048 0.013 0.01  0.036 0.076  1.34     5.15     44.7
 ```
 
 As we may conclude, the situation has been only slightly improved.
@@ -1391,10 +1391,10 @@ print(fit_stan_rank,
 #> # A tibble: 4 × 10
 #>   variable    mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>      <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home       0.163  0.164 0.07  0.066  0.044  0.282  1.01   692.      378. 
-#> 2 rho       -1.10  -1.1   0.16  0.151 -1.38  -0.856  1.00  1202.      728. 
-#> 3 sigma_att  0.035  0.03  0.023 0.023  0.006  0.079  1.20     7.29     33.7
-#> 4 sigma_def  0.029  0.022 0.021 0.018  0.006  0.07   1.18     8.23     53.5
+#> 1 home       0.159  0.159 0.067 0.069  0.05   0.267  1.00   1138.    1377. 
+#> 2 rho       -1.10  -1.10  0.163 0.154 -1.39  -0.853  1.00    914.     516. 
+#> 3 sigma_att  0.039  0.034 0.021 0.021  0.014  0.079  1.02     25.4     81.6
+#> 4 sigma_def  0.032  0.027 0.019 0.017  0.01   0.07   1.09     20.5     84.3
 ```
 
 
@@ -1472,13 +1472,13 @@ pp_foot(
 #> 
 #> $pp_table
 #>   goal diff. Bayesian p-value
-#> 1         -3            0.356
-#> 2         -2            0.879
-#> 3         -1            0.985
-#> 4          0            0.040
-#> 5          1            0.209
-#> 6          2            0.098
-#> 7          3            0.925
+#> 1         -3            0.311
+#> 2         -2            0.885
+#> 3         -1            0.980
+#> 4          0            0.030
+#> 5          1            0.244
+#> 6          2            0.094
+#> 7          3            0.912
 
 pp_foot(
   object = fit1_stan, data = italy_2000,
@@ -1577,7 +1577,7 @@ foot_prob(
 )
 #> $prob_table
 #>        home_team away_team prob_h prob_d prob_a         mlo
-#> 1 Reggina Calcio  AC Milan  0.331  0.258  0.411 1-1 (0.131)
+#> 1 Reggina Calcio  AC Milan  0.351  0.245  0.405 0-0 (0.088)
 #> 
 #> $prob_plot
 ```
@@ -1613,16 +1613,16 @@ foot_round_robin(object = fit4_stan, data = italy_2000)
 #> # A tibble: 36 × 4
 #>    Home           Away           Home_prob Observed
 #>    <chr>          <chr>          <chr>     <chr>   
-#>  1 Hellas Verona  Bologna FC     0.338     -       
-#>  2 Inter          Bologna FC     0.428     -       
-#>  3 Udinese Calcio SSC Napoli     0.5       -       
-#>  4 ACF Fiorentina SSC Napoli     0.552     -       
-#>  5 US Lecce       Lazio Roma     0.282     -       
-#>  6 Inter          Lazio Roma     0.292     -       
-#>  7 Brescia Calcio AS Bari        0.655     -       
-#>  8 Reggina Calcio AS Bari        0.627     -       
-#>  9 Udinese Calcio Vicenza Calcio 0.405     -       
-#> 10 Brescia Calcio Vicenza Calcio 0.478     -       
+#>  1 Hellas Verona  Bologna FC     0.352     -       
+#>  2 Inter          Bologna FC     0.435     -       
+#>  3 Udinese Calcio SSC Napoli     0.505     -       
+#>  4 ACF Fiorentina SSC Napoli     0.52      -       
+#>  5 US Lecce       Lazio Roma     0.27      -       
+#>  6 Inter          Lazio Roma     0.322     -       
+#>  7 Brescia Calcio AS Bari        0.62      -       
+#>  8 Reggina Calcio AS Bari        0.57      -       
+#>  9 Udinese Calcio Vicenza Calcio 0.418     -       
+#> 10 Brescia Calcio Vicenza Calcio 0.527     -       
 #> # ℹ 26 more rows
 #> 
 #> $round_plot
@@ -1800,25 +1800,25 @@ compare_results_models <- compare_foot(
 print(compare_results_models, digits = 3)
 #> Predictive Performance Metrics
 #>        Model   RPS accuracy brier pseudoR2   ACP
-#>     biv_pois 0.255    0.342 0.719    0.309 0.347
-#>  double_pois 0.255    0.358 0.714    0.308 0.361
+#>     biv_pois 0.253    0.347 0.713    0.312 0.348
+#>  double_pois 0.256    0.379 0.718    0.306 0.359
 #> 
 #> Confusion Matrices
 #> Model: biv_pois 
 #> 
 #>           Actual
 #> Predicted  Home Win Draw Away Win
-#>   Home Win       49   26       32
+#>   Home Win       49   28       31
 #>   Draw            0    0        0
-#>   Away Win       40   27       16
+#>   Away Win       40   25       17
 #> 
 #> Model: double_pois 
 #> 
 #>           Actual
 #> Predicted  Home Win Draw Away Win
-#>   Home Win       56   35       36
+#>   Home Win       59   35       35
 #>   Draw            0    0        0
-#>   Away Win       33   18       12
+#>   Away Win       30   18       13
 ```
 
 
@@ -1864,10 +1864,10 @@ loo3_t <- fit3_stan_t$fit$loo()
 loo_compare(loo1, loo1_t, loo2, loo3, loo3_t)
 #>        elpd_diff se_diff
 #> model1  0.0       0.0   
-#> model2 -0.7       0.5   
-#> model3 -3.5       2.5   
-#> model4 -5.0       4.2   
-#> model5 -6.1       4.4
+#> model2 -1.0       0.5   
+#> model3 -3.6       2.5   
+#> model4 -6.7       4.5   
+#> model5 -8.6       4.1
 ```
 
 According to the above model LOOIC comparisons, the weekly-dynamic double Poisson models  attain the lowest LOOIC values and are then the favored models in terms of predictive accuracy. The static model's ```fit1_stan``` final looic is suggesting that the assumption of static team-specific parameters is too restrictive and oversimplified to capture teams' skills over time and make reliable predictions. Anyway, from model checking we have the suggestion that even the static model has a reliable goodness of fit and could be used for some simplified analysis not requiring complex dynamic patterns.

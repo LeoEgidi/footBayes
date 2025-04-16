@@ -349,7 +349,7 @@ library(bayesplot)
 
 # Bradley-Terry-Davidson model fit
 
-The ```btd_foot``` function fits a Bayesian Bradley-Terry-Davidson (BTD) model by generating posterior samples using Hamiltonian Monte Carlo within the underlying ```rstan``` ecosystem. It supports both static and dynamic ranking models, allowing for the estimation of team strengths over time.
+The ```btd_foot``` function fits a Bayesian Bradley–Terry–Davidson (BTD) model by approximating the posterior distribution using one of the methods described above (HMC, ADVI, Pathfinder, or Laplace approximation), and supports both static and dynamic ranking models to estimate team strengths over time.
 
 ## Using ```btd_foot```
 In this section, we will walk through the steps to use the ```btd_foot``` function effectively, including preparing the data, choosing model options, and interpreting the results. Specifically the data must be in a specific format required by the ```btd_foot``` function. It should be a data frame with the following columns:
@@ -393,7 +393,7 @@ italy_2020_2021 <- italy %>%
 One of the most important features implemented in the ```btd_foot``` function is the possibility to choose between assuming that team strengths are constant over time or allowing team strengths to change across different time periods. Specifically, following the approach proposed by  <span style="color:red"> @owen2011dynamic </span>, <span style="color:red"> @egidi2018combining</span>, and <span style="color:red"> @demartino2024alternative</span> for the attack and defense abilities in goal-based models, we can assume that the log-strength parameters vary across a given number of weeks or seasons $1, \ldots, \mathcal{T}$. To capture these dynamics, we assign the priors for the log-strength parameters to be auto-regressive of order 1 for each time period $\tau=2,\ldots, \mathcal{T}$:
 
 \begin{align}
-\psi_{t,\tau} \sim \mathrm{N}(\mu_{\psi_{t-1,\tau}}, \sigma_\psi)
+\psi_{t,\tau} \sim \mathrm{N}(\mu_{\psi_{t,\tau-1}}, \sigma_\psi)
 \end{align}
 
 
