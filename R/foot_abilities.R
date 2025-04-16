@@ -629,6 +629,7 @@ foot_abilities <- function(object, data,
         df <- rbind(df_att, df_def)
         df$team <- factor(df$team, levels = sel_teams[order(att[, 2])])
         p <- ggplot(df, aes(x = .data$mean, y = .data$team, color = .data$effect)) +
+          geom_vline(xintercept = 0, linetype = "twodash", color = "grey20") +
           geom_errorbarh(aes(xmin = .data$lower, xmax = .data$upper),
             height = 0.2, position = position_dodge(width = 0.3)
           ) +
@@ -662,6 +663,7 @@ foot_abilities <- function(object, data,
         )
         df_att$team <- factor(df_att$team, levels = sel_teams[order(att[, 2])])
         p <- ggplot(df_att, aes(x = .data$mean, y = .data$team, color = "Attack Effects")) +
+          geom_vline(xintercept = 0, linetype = "twodash", color = "grey20") +
           geom_errorbarh(aes(xmin = .data$lower, xmax = .data$upper), height = 0.5) +
           geom_point(size = 2.3) +
           labs(
@@ -690,6 +692,7 @@ foot_abilities <- function(object, data,
         )
         df_def$team <- factor(df_def$team, levels = sel_teams[order(-def[, 2])])
         p <- ggplot(df_def, aes(x = .data$mean, y = .data$team, color = "Defense Effects")) +
+          geom_vline(xintercept = 0, linetype = "twodash", color = "grey20") +
           geom_errorbarh(aes(xmin = .data$lower, xmax = .data$upper), height = 0.5) +
           geom_point(size = 2.3) +
           labs(
@@ -724,6 +727,7 @@ foot_abilities <- function(object, data,
       )
       df_ability$team <- factor(df_ability$team, levels = sel_teams[order(ability[, 2])])
       p <- ggplot(df_ability, aes(x = .data$mean, y = .data$team, color = "Global Effects")) +
+        geom_vline(xintercept = 0, linetype = "twodash", color = "grey20") +
         geom_errorbarh(aes(xmin = .data$lower, xmax = .data$upper), height = 0.5) +
         geom_point(size = 2.3) +
         labs(
