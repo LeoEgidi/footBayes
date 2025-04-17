@@ -477,7 +477,7 @@ The ```prior_par``` argument allows the user to specify a list of prior distribu
     \text{home} & \sim \mathrm{N}(0,5)
 \end{align}
 
-Below is an example of how to incorporate the home-field effect into the ```btd_foot``` function by modifying the priors and enabling the home_effect parameter.
+Below is an example of how to incorporate the home-field effect into the ```btd_foot``` function by modifying the priors and enabling the ```home_effect``` parameter.
 
 ```{r BTD_model_2, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 # Dynamic Ranking Example with Median Rank Measure
