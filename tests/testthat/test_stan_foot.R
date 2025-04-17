@@ -572,6 +572,27 @@ test_that("integration between btd_foot and stan_foot", {
     chains = 2,
     seed = 433
   ), NA)
+
+
+  expect_error(fit_with_ranking2 <- stan_foot(
+    data = england_2004,
+    model = "double_pois",
+    ranking = fit_btd_PL,
+    norm_method = "min_max",
+    iter_sampling = 200,
+    chains = 2,
+    seed = 433
+  ), NA)
+
+  expect_error(fit_with_ranking3 <- stan_foot(
+    data = england_2004,
+    model = "double_pois",
+    ranking = fit_btd_PL,
+    norm_method = "standard",
+    iter_sampling = 200,
+    chains = 2,
+    seed = 433
+  ), NA)
 })
 
 test_that("ranking with extra columns triggers warning and subsets to first three columns", {
