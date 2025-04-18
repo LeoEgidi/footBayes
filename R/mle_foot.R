@@ -24,17 +24,17 @@
 #'
 #' @return A named list containing:
 #' \itemize{
-#'   \item{\code{att}}(for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models) A matrix of attack ratings, with MLE and 95\% confidence intervals.
-#'   \item{\code{def}}(for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models): A matrix of defence ratings, with MLE and 95\% confidence intervals.
-#'   \item{\code{abilities}}(for \code{"student_t"} only): A matrix of combined ability, with MLE and 95\% confidence intervals.
-#'   \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals. for the home‐field advantage estimate.
-#'   \item{\code{corr}}(for \code{"biv_pois"} only): A matrix with MLE and 95\% confidence intervals for the bivariate‐Poisson correlation parameter.
+#'   \item{\code{att}}: A matrix of attack ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
+#'   \item{\code{def}}: A matrix of defence ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
+#'   \item{\code{abilities}}: A matrix of combined ability, with MLE and 95\% confidence intervals (for \code{"student_t"} only).
+#'   \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals for the home‐field advantage estimate.
+#'   \item{\code{corr}}: A matrix with MLE and 95\% confidence intervals for the bivariate‐Poisson correlation parameter (for \code{"biv_pois"} only).
 #'   \item{\code{model}}: The name of the fitted model (character).
-#'   \item{\code{predict}}: The number of held‐out matches used for prediction (integer).
-#'   \item{\code{n.iter}}the number of optimizer iterations requested (integer).
-#'   \item{\code{sigma_y}}(for \code{"student_t"} only): The scale parameter used in the Student’s t likelihood (numeric).
-#'   \item{\code{team1_prev}}(if \code{predict > 0}): Integer indices of home teams in the out-of-sample matches.
-#'   \item{\code{team2_prev}}(if \code{predict > 0}): Integer indices of away teams in the out-of-sample matches.
+#'   \item{\code{predict}}: The number of out-of-sample matches used for prediction (integer).
+#'   \item{\code{n.iter}}: The number of optimizer iterations requested (integer).
+#'   \item{\code{sigma_y}}: The scale parameter used in the Student’s t likelihood (for \code{"student_t"} only).
+#'   \item{\code{team1_prev}}: Integer indices of home teams in the out-of-sample matches (if \code{predict > 0}).
+#'   \item{\code{team2_prev}}: Integer indices of away teams in the out-of-sample matches (if \code{predict > 0}).
 #'   \item{\code{logLik}}: The maximized log‐likelihood (numeric).
 #'   \item{\code{aic}}: Akaike Information Criterion (numeric).
 #'   \item{\code{bic}}: Bayesian Information Criterion (numeric).

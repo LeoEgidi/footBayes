@@ -15,7 +15,17 @@
 #' @param type  Type of plots, one among \code{"aggregated"} or \code{"matches"}. Default is \code{"aggregated"}.
 #' @param coverage Argument to specify the width \eqn{1-\alpha} of posterior probability intervals. Default is 0.95.
 #'
-#' @return
+#' @return A list with elements:
+#' \itemize{
+#'   \item{\code{pp_plot}}: A \code{ggplot} object for the selected \code{type} of plot.
+#'   \item{\code{pp_table}}: A data frame of summary statistics:
+#'     \itemize{
+#'       \item For \code{"aggregated"}: Goal differences and their Bayesian p‑values.
+#'       \item For \code{"matches"}: Nominal \code{1-alpha} and observed empirical Bayesian coverage.
+#'     }
+#' }
+#'
+#' @details
 #'
 #' Posterior predictive plots: when \code{"aggregated"} (default) is selected, the function
 #' returns a frequency plot for some pre-selected goal-difference values,

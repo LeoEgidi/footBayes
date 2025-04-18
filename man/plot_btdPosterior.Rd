@@ -37,7 +37,15 @@ Options include \code{"free"}, \code{"fixed"}, \code{"free_x"}, and \code{"free_
 Default is \code{"free_x"}.}
 }
 \value{
-A \code{ggplot} object representing the posterior distributions plot.
+A \code{ggplot} object displaying:
+\itemize{
+  \item For \code{pars="logStrength"}:
+    \itemize{
+      \item Dynamic BTD: Faceted boxplot or density plot by team and period, showing posterior summaries.
+      \item Static BTD: A boxplot or density plot per team.
+    }
+  \item For \code{pars="logTie"} or \code{pars="home"}: A single boxplot or density plot with 95\% credible interval.
+}
 }
 \description{
 Plots for the posterior distributions of team log-strengths and other parameters with customizable plot types and facets.

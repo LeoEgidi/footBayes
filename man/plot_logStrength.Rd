@@ -12,7 +12,11 @@ plot_logStrength(x, teams = NULL)
 \item{teams}{An optional character vector specifying team names to include in the rankings plot. If \code{NULL}, all teams are included.}
 }
 \value{
-A ggplot object representing the rankings plot.
+A \code{ggplot} object:
+\itemize{
+  \item Dynamic BTD: A lineplot for the \code{log_strengths} over each period, colored by team.
+  \item Static BTD: An horizontal barplot for each team.
+}
 }
 \description{
 Visualizes team rankings based on whether the ranking is dynamic or static.

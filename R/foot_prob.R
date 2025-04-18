@@ -18,19 +18,19 @@
 #' @param away_team The away team(s) for the predicted matches.
 #'
 #' @return
-#'
-#' A \code{\link{data.frame}} containing the number of out-of-sample matches specified through the
-#' argument \code{predict}  passed either in the \code{mle_foot} or in the \code{stan_foot} function.
-#' For Bayesian Poisson models the function returns also the most likely outcome (mlo) and a posterior
-#' probability plot for the exact results, where matches are sorted by the degree of favoritism.
-#' Specifically, matches are ordered from those in which the favorite team has the highest posterior probability
-#' of winning to those where the underdog is more likely to win.
-#'
+#' A list with components:
+#'  \itemize{
+#'  \item \code{prob_table}: A data frame containing the results probabilities of the out-of-sample matches.
+#'  \item \code{prob_plot}: A \code{ggplot} object for Bayesian models only showing the posterior predictive heatmap
+#'   of exact score probabilities, with the true result highlighted.
+#' }
 #'
 #' @details
 #'
-#' For Bayesian models fitted via \code{stan_foot} the results probabilities are computed according to the
-#' simulation from the posterior predictive distribution of future (out-of-sample) matches. For MLE models
+#' For Bayesian models the results probabilities are computed according to the
+#' simulation from the posterior predictive distribution of future (out-of-sample) matches.
+#' Specifically, matches are ordered from those in which the favorite team has the highest posterior probability
+#' of winning to those where the underdog is more likely to win. For MLE models
 #' fitted via the \code{mle_foot} the probabilities are computed by simulating from the MLE estimates.
 #'
 #'

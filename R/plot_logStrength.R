@@ -10,7 +10,11 @@
 #' @param x An object of class \code{btdFoot}.
 #' @param teams An optional character vector specifying team names to include in the rankings plot. If \code{NULL}, all teams are included.
 #'
-#' @return A ggplot object representing the rankings plot.
+#' @return A \code{ggplot} object:
+#' \itemize{
+#'   \item Dynamic BTD: A lineplot for the \code{log_strengths} over each period, colored by team.
+#'   \item Static BTD: An horizontal barplot for each team.
+#' }
 #'
 #' @author Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}.
 #'

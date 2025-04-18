@@ -23,6 +23,21 @@ pp_foot(object, data, type = "aggregated", coverage = 0.95)
 \item{coverage}{Argument to specify the width \eqn{1-\alpha} of posterior probability intervals. Default is 0.95.}
 }
 \value{
+A list with elements:
+\itemize{
+  \item{\code{pp_plot}}: A \code{ggplot} object for the selected \code{type} of plot.
+  \item{\code{pp_table}}: A data frame of summary statistics:
+    \itemize{
+      \item For \code{"aggregated"}: Goal differences and their Bayesian p‑values.
+      \item For \code{"matches"}: Nominal \code{1-alpha} and observed empirical Bayesian coverage.
+    }
+}
+}
+\description{
+The function provides posterior predictive plots to check the adequacy of the Bayesian models as
+returned by the \code{stan_foot} function.
+}
+\details{
 Posterior predictive plots: when \code{"aggregated"} (default) is selected, the function
 returns a frequency plot for some pre-selected goal-difference values,
 along with their correspondent Bayesian p-values, computed as
@@ -34,10 +49,6 @@ possible model misfits.
 When \code{"matches"} is selected an ordered-frequency plot for all the
 goal-differences in the considered matches is provided, along with the
 empirical Bayesian coverage at level \eqn{1-\alpha}.
-}
-\description{
-The function provides posterior predictive plots to check the adequacy of the Bayesian models as
-returned by the \code{stan_foot} function.
 }
 \examples{
 \dontrun{

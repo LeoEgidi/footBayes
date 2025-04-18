@@ -55,9 +55,9 @@ Only normal priors are allowed for this model.}
 \item{...}{Additional arguments passed to \code{\link[cmdstanr]{cmdstanr}} (e.g., \code{iter_sampling}, \code{chains}, \code{parallel_chains}).}
 }
 \value{
-A list of class \code{"btdFoot"} containing:
+An object of class \code{"btdFoot"}, which is a list containing:
   \itemize{
-    \item \code{fit}: The fitted \code{stanfit} object returned by \code{\link[cmdstanr]{cmdstanr}}.
+    \item \code{fit}: The fitted \code{CmdStanFit} object returned by \code{\link[cmdstanr]{cmdstanr}}.
     \item \code{rank}: A data frame with the rankings, including columns:
       \itemize{
         \item \code{periods}: The time period.
@@ -65,11 +65,11 @@ A list of class \code{"btdFoot"} containing:
         \item \code{rank_points}: The estimated strength of the team based on the chosen \code{rank_measure}.
       }
     \item \code{data}: The input data.
-    \item \code{stan_data}: The data list prepared for Stan.
-    \item \code{stan_code}: The path to the Stan model code used.
-    \item \code{stan_args}: The optional parameters passed to (\code{...}).
-    \item \code{rank_measure}: The method used to compute the rankings.
-    \item \code{alg_method}: The method used to obtain the Bayesian estimates.
+    \item \code{stan_data}: The data list passed to Stan.
+    \item \code{stan_code}: The Stan code of the underline model.
+    \item \code{stan_args}: The optional \code{\link[cmdstanr]{cmdstanr}} parameters passed to (\code{...}).
+    \item \code{rank_measure}: The summary statistic used to compute the rankings.
+    \item \code{alg_method}: The inference algorithm used to obtain the Bayesian estimates.
   }
 }
 \description{

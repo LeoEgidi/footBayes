@@ -18,9 +18,11 @@
 #' @param type Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}. Default is \code{"both"}.
 #' @param teams  An optional character vector specifying team names to include. If \code{NULL}, all teams are included.
 #'
-#' @return
-#'
-#' Abilities plots for the selected teams.
+#' @return A \code{ggplot} object showing each selected team’s ability estimates:
+#' \itemize{
+#'   \item For static Bayesian or MLE fits, horizontal error bars (95% intervals) and point estimates.
+#'   \item For dynamic Bayesian fits, ribbon and line plots over \code{periods}.
+#' }
 #'
 #' @author Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}.
 #'

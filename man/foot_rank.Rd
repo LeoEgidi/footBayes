@@ -23,8 +23,14 @@ foot_rank(object, data, teams = NULL, visualize = "individual")
 \item{visualize}{Type of plots, one among \code{"aggregated"} or \code{"individual"}. Default is \code{"individual"}.}
 }
 \value{
-Final rank tables and plots with the predicted points for the selected teams as given by an object of class
-\code{stanFoot}, \code{CmdStanFit}, or \code{stanfit}.
+If \code{visualize = "aggregated"}: a list with
+\itemize{
+  \item{\code{rank_table}}: A data frame of observed and simulated final points (median, 25\%/75\% quantiles).
+  \item{\code{rank_plot}}: A \code{ggplot} comparing observed vs simulated final points for each team.
+}
+
+If \code{visualize = "individual"}: A \code{ggplot} showing, for each selected team, the observed and
+simulated cumulative points over match‑days.
 }
 \description{
 Posterior predictive plots and final rank table for football seasons.

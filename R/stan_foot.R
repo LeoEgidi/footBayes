@@ -58,14 +58,14 @@
 #'   }
 #' @param ... Additional arguments passed to \code{\link[cmdstanr]{cmdstanr}} (e.g., \code{iter_sampling}, \code{chains}, \code{parallel_chains}).
 #'
-#' @return A list of class \code{"stanFoot"} containing:
+#' @return An object of class \code{"stanFoot"}, which is a list containing:
 #'   \itemize{
-#'     \item \code{fit}: The fitted object returned by \code{\link[cmdstanr]{cmdstanr}}.
+#'     \item \code{fit}: The \code{CmdStanFit} object returned by \code{\link[cmdstanr]{cmdstanr}}.
 #'     \item \code{data}: The input data.
-#'     \item \code{stan_data}: The data list for Stan.
+#'     \item \code{stan_data}: The data list passed to Stan.
 #'     \item \code{stan_code}: The Stan code of the underline model.
-#'     \item \code{stan_args}: The optional parameters passed to (\code{...}).
-#'     \item \code{alg_method}: The method used to obtain the Bayesian estimates.
+#'     \item \code{stan_args}: The optional \code{\link[cmdstanr]{cmdstanr}} parameters passed to (\code{...}).
+#'     \item \code{alg_method}: The inference algorithm used to obtain the Bayesian estimates.
 #'   }
 #'
 #'
@@ -1046,7 +1046,7 @@ stan_foot <- function(data,
     fit = fit,
     data = data,
     stan_data = data_stan,
-    stan_code_path = fit$code(),
+    stan_code = fit$code(),
     stan_args = args,
     alg_method = method
   )
