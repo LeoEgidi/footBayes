@@ -20,7 +20,8 @@
 #'
 #' @return A \code{ggplot} object showing each selected team’s ability estimates:
 #' \itemize{
-#'   \item For static Bayesian or MLE fits, horizontal error bars (95% intervals) and point estimates.
+#'   \item For static Bayesian or MLE fits, horizontal error bars
+#'    (95\% intervals) and point estimates.
 #'   \item For dynamic Bayesian fits, ribbon and line plots over \code{periods}.
 #' }
 #'

@@ -41,20 +41,14 @@ A \code{ggplot} object displaying:
 \itemize{
   \item For \code{pars="logStrength"}:
     \itemize{
-      \item Dynamic BTD: Faceted boxplot or density plot by team and period, showing posterior summaries.
-      \item Static BTD: A boxplot or density plot per team.
+      \item Dynamic BTD: Faceted boxplots or density plots (including the 95\% credible interval) of posterior log-strengths by team and period.
+      \item Static BTD: Boxplots or density plots (including the 95\% credible interval) of posterior log-strengths for each team.
     }
   \item For \code{pars="logTie"} or \code{pars="home"}: A single boxplot or density plot with 95\% credible interval.
 }
 }
 \description{
 Plots for the posterior distributions of team log-strengths and other parameters with customizable plot types and facets.
-}
-\details{
-\itemize{
-  \item \strong{Dynamic Ranking}: Faceted boxplots or density plots (including the 95\% credible interval) of posterior log-strengths by team and period.
-  \item \strong{Static Ranking}: Boxplots or density plots (including the 95\% credible interval) of posterior log-strengths for each team.
-}
 }
 \examples{
 \dontrun{

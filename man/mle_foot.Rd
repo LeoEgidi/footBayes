@@ -96,5 +96,5 @@ of football match outcomes with estimation of the
 evolution variance parameter. IMA Journal of Management Mathematics, 22(2), 99-113.
 }
 \author{
-Leonardo Egidi \email{legidi@units.it}, Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
+Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 }

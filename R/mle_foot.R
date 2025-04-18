@@ -46,7 +46,7 @@
 #' Likelihood optimization is performed via the \code{BFGS} method
 #' of the \code{\link{optim}} function.
 #'
-#' @author Leonardo Egidi \email{legidi@units.it}, Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
+#' @author Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 #'
 #' @references
 #' Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
