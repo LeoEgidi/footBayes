@@ -22,7 +22,12 @@
 #'
 #' @return
 #'
-#' Round-robin plot with the home-win posterior probabilities computed from the posterior predictive distribution of the fitted model.
+#' If \code{output = "both"} a list with:
+#' \itemize{
+#'   \item{\code{round_table}}: A data frame of matchups (\code{Home}, \code{Away}), observed scores, and \code{Home_prob} (median posterior probability of a home win).
+#'   \item{\code{round_plot}}: A \code{ggplot} heatmap of home‑win probabilities with observed scores overlaid.
+#' }
+#' If \code{output = "table"} or \code{"plot"}, returns only that component.
 #'
 #'
 #' @author Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
@@ -47,7 +52,6 @@
 #' }
 #' @importFrom ggplot2 ggplot aes geom_tile geom_text geom_rect scale_fill_gradient
 #'   scale_x_continuous scale_y_continuous theme_bw theme element_text ggtitle rel
-#' @importFrom dplyr as_tibble
 #' @export
 
 
@@ -254,16 +258,30 @@ foot_round_robin <- function(object, data, teams = NULL, output = "both") {
     ggtitle("Home win posterior probabilities")
 
   if (sum(data_ex$prob) == 0) {
-    tbl <- cbind(teams[data_ex$Home], teams[data_ex$Away], as.vector(punt[team_index, team_index]))
-    colnames(tbl) <- c("Home", "Away", "Observed")
-    tbl <- dplyr::as_tibble(tbl) %>% dplyr::filter(Home != Away)
-  } else {
-    tbl <- cbind(
-      teams[data_ex$Home], teams[data_ex$Away], round(data_ex$prob, 3),
-      as.vector(punt[team_index, team_index])
+    # build a data.frame with Home, Away and Observed
+    tbl <- data.frame(
+      Home     = teams[data_ex$Home],
+      Away     = teams[data_ex$Away],
+      Observed = as.vector(punt[team_index, team_index]),
+      stringsAsFactors = FALSE
     )
-    colnames(tbl) <- c("Home", "Away", "Home_prob", "Observed")
-    tbl <- dplyr::as_tibble(tbl) %>% dplyr::filter(Home != Away & Home_prob != 0)
+
+    # keep only rows where Home ≠ Away
+    tbl <- tbl[tbl$Home != tbl$Away, ]
+    rownames(tbl) <- NULL
+  } else {
+    # build a data.frame with Home, Away, Home_prob and Observed
+    tbl <- data.frame(
+      Home      = teams[data_ex$Home],
+      Away      = teams[data_ex$Away],
+      Home_prob = round(data_ex$prob, 3),
+      Observed  = as.vector(punt[team_index, team_index]),
+      stringsAsFactors = FALSE
+    )
+
+    # keep only rows where Home ≠ Away AND Home_prob ≠ 0
+    tbl <- tbl[tbl$Home != tbl$Away & tbl$Home_prob != 0, ]
+    rownames(tbl) <- NULL
   }
 
   result <- list(round_table = tbl, round_plot = round_plot)
