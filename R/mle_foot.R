@@ -22,10 +22,23 @@
 #'
 #' @param ... Optional arguments for MLE fit algorithms.
 #'
-#' @return
-#'
-#' MLE and 95\% profile likelihood deviance confidence intervals for the
-#' model's parameters: attack, defence, home effect and goals' correlation.
+#' @return A named list containing:
+#' \itemize{
+#'   \item{\code{att}}(for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models) A matrix of attack ratings, with MLE and 95\% confidence intervals.
+#'   \item{\code{def}}(for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models): A matrix of defence ratings, with MLE and 95\% confidence intervals.
+#'   \item{\code{abilities}}(for \code{"student_t"} only): A matrix of combined ability, with MLE and 95\% confidence intervals.
+#'   \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals. for the home‐field advantage estimate.
+#'   \item{\code{corr}}(for \code{"biv_pois"} only): A matrix with MLE and 95\% confidence intervals for the bivariate‐Poisson correlation parameter.
+#'   \item{\code{model}}: The name of the fitted model (character).
+#'   \item{\code{predict}}: The number of held‐out matches used for prediction (integer).
+#'   \item{\code{n.iter}}the number of optimizer iterations requested (integer).
+#'   \item{\code{sigma_y}}(for \code{"student_t"} only): The scale parameter used in the Student’s t likelihood (numeric).
+#'   \item{\code{team1_prev}}(if \code{predict > 0}): Integer indices of home teams in the out-of-sample matches.
+#'   \item{\code{team2_prev}}(if \code{predict > 0}): Integer indices of away teams in the out-of-sample matches.
+#'   \item{\code{logLik}}: The maximized log‐likelihood (numeric).
+#'   \item{\code{aic}}: Akaike Information Criterion (numeric).
+#'   \item{\code{bic}}: Bayesian Information Criterion (numeric).
+#' }
 #'
 #' @details
 #'
@@ -33,7 +46,7 @@
 #' Likelihood optimization is performed via the \code{BFGS} method
 #' of the \code{\link{optim}} function.
 #'
-#' @author Leonardo Egidi \email{legidi@units.it}
+#' @author Leonardo Egidi \email{legidi@units.it}, Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 #'
 #' @references
 #' Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
@@ -476,6 +489,18 @@ mle_foot <- function(data, model, predict = 0, ...) {
   colnames(home_est) <- c("2.5%", "mle", "97.5%")
 
 
+
+#   ____________________________________________________________________________
+#   Compute AIC and BIC                                                     ####
+
+  logLik <- -mle_fit$value
+  k <- length(mle_fit$par)
+
+  AIC <- 2 * k - 2 * logLik
+  BIC <- k * log(N) - 2 * logLik
+
+
+
   if (model == "student_t") {
     return(list(
       abilities = abilities_est,
@@ -485,7 +510,10 @@ mle_foot <- function(data, model, predict = 0, ...) {
       n.iter = user_dots$n.iter,
       sigma_y = user_dots$sigma_y,
       team1_prev = team1_prev,
-      team2_prev = team2_prev
+      team2_prev = team2_prev,
+      logLik = logLik,
+      aic = AIC,
+      bic = BIC
     ))
   } else if (model == "biv_pois") {
     return(list(
@@ -497,7 +525,10 @@ mle_foot <- function(data, model, predict = 0, ...) {
       predict = predict,
       n.iter = user_dots$n.iter,
       team1_prev = team1_prev,
-      team2_prev = team2_prev
+      team2_prev = team2_prev,
+      logLik = logLik,
+      aic = AIC,
+      bic = BIC
     ))
   } else {
     return(list(
@@ -508,7 +539,10 @@ mle_foot <- function(data, model, predict = 0, ...) {
       predict = predict,
       n.iter = user_dots$n.iter,
       team1_prev = team1_prev,
-      team2_prev = team2_prev
+      team2_prev = team2_prev,
+      logLik = logLik,
+      aic = AIC,
+      bic = BIC
     ))
   }
 }

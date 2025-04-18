@@ -29,8 +29,23 @@ mle_foot(data, model, predict = 0, ...)
 \item{...}{Optional arguments for MLE fit algorithms.}
 }
 \value{
-MLE and 95\% profile likelihood deviance confidence intervals for the
-model's parameters: attack, defence, home effect and goals' correlation.
+A named list containing:
+\itemize{
+  \item{\code{att}}(for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models) A matrix of attack ratings, with MLE and 95\% confidence intervals.
+  \item{\code{def}}(for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models): A matrix of defence ratings, with MLE and 95\% confidence intervals.
+  \item{\code{abilities}}(for \code{"student_t"} only): A matrix of combined ability, with MLE and 95\% confidence intervals.
+  \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals. for the home‐field advantage estimate.
+  \item{\code{corr}}(for \code{"biv_pois"} only): A matrix with MLE and 95\% confidence intervals for the bivariate‐Poisson correlation parameter.
+  \item{\code{model}}: The name of the fitted model (character).
+  \item{\code{predict}}: The number of held‐out matches used for prediction (integer).
+  \item{\code{n.iter}}the number of optimizer iterations requested (integer).
+  \item{\code{sigma_y}}(for \code{"student_t"} only): The scale parameter used in the Student’s t likelihood (numeric).
+  \item{\code{team1_prev}}(if \code{predict > 0}): Integer indices of home teams in the out-of-sample matches.
+  \item{\code{team2_prev}}(if \code{predict > 0}): Integer indices of away teams in the out-of-sample matches.
+  \item{\code{logLik}}: The maximized log‐likelihood (numeric).
+  \item{\code{aic}}: Akaike Information Criterion (numeric).
+  \item{\code{bic}}: Bayesian Information Criterion (numeric).
+}
 }
 \description{
 Fits football goal-based models using maximum likelihood estimation.
@@ -81,5 +96,5 @@ of football match outcomes with estimation of the
 evolution variance parameter. IMA Journal of Management Mathematics, 22(2), 99-113.
 }
 \author{
-Leonardo Egidi \email{legidi@units.it}
+Leonardo Egidi \email{legidi@units.it}, Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 }
