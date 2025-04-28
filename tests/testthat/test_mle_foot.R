@@ -6,7 +6,7 @@
 test_that("errors if data is not a matrix or data frame", {
   expect_error(
     mle_foot(123, model = "double_pois"),
-    "Data are not stored in matrix/data frame"
+    "Input data must be a data.frame with columns: periods, home_team, away_team, home_goals, away_goals."
   )
 })
 
@@ -177,7 +177,8 @@ test_that("output structure for skellam with out-of-sample prediction", {
   ##  ............................................................................
   ##  Tests                                                                   ####
   result <- mle_foot(valid_data, model = "skellam", predict = 2)
-  expect_true(all(c("att", "def", "home_effect", "model", "predict", "n.iter", "team1_prev", "team2_prev") %in% names(result)))
+  expect_true(all(c("att", "def", "home_effect", "model", "predict", "team1_prev", "team2_prev",
+                    "logLik", "aic", "bic") %in% names(result)))
   expect_equal(result$predict, 2)
   expect_equal(length(result$team1_prev), 2)
   expect_equal(length(result$team2_prev), 2)

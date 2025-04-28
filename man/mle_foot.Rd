@@ -4,7 +4,16 @@
 \alias{mle_foot}
 \title{Fit football models with Maximum Likelihood}
 \usage{
-mle_foot(data, model, predict = 0, ...)
+mle_foot(
+  data,
+  model,
+  predict = 0,
+  maxit = 1000,
+  method = "BFGS",
+  interval = "profile",
+  hessian = FALSE,
+  sigma_y = 1
+)
 }
 \arguments{
 \item{data}{A data frame containing match data with columns:
@@ -16,7 +25,7 @@ mle_foot(data, model, predict = 0, ...)
   \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 }}
 
-\item{model}{A character string specifying the model to fit. Options are:
+\item{model}{A character specifying the model to fit. Options are:
 \itemize{
   \item \code{"double_pois"}: Double Poisson model.
   \item \code{"biv_pois"}: Bivariate Poisson model.
@@ -26,7 +35,28 @@ mle_foot(data, model, predict = 0, ...)
 
 \item{predict}{An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.}
 
-\item{...}{Optional arguments for MLE fit algorithms.}
+\item{maxit}{An integer specifying the maximum number of optimizer iterations  default is 1000).}
+
+\item{method}{A character specifying the optimization method. Options are
+  \itemize{
+    \item \code{"Nelder-Mead"}.
+    \item \code{"BFGS"} (default).
+    \item \code{"CG"}.
+    \item \code{"L-BFGS-B"}.
+    \item \code{"SANN"}.
+    \item \code{"Brent"}.
+  }
+For further details see \code{{optim}} function in \code{\link[stats]{stats}} package.}
+
+\item{interval}{A character specifying the interval type for confidence intervals. Options are
+\itemize{
+  \item \code{"profile"} (default).
+  \item \code{"Wald"}.
+  }}
+
+\item{hessian}{A logical value indicating to include the computation of the Hessian (default FALSE).}
+
+\item{sigma_y}{A positive numeric value indicating the scale parameter for Student t likelihood (default 1).}
 }
 \value{
 A named list containing:
@@ -34,15 +64,14 @@ A named list containing:
   \item{\code{att}}: A matrix of attack ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
   \item{\code{def}}: A matrix of defence ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
   \item{\code{abilities}}: A matrix of combined ability, with MLE and 95\% confidence intervals (for \code{"student_t"} only).
-  \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals for the home‐field advantage estimate.
-  \item{\code{corr}}: A matrix with MLE and 95\% confidence intervals for the bivariate‐Poisson correlation parameter (for \code{"biv_pois"} only).
+  \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals for the home effect estimate.
+  \item{\code{corr}}: A matrix with MLE and 95\% confidence intervals for the bivariate Poisson correlation parameter (for \code{"biv_pois"} only).
   \item{\code{model}}: The name of the fitted model (character).
   \item{\code{predict}}: The number of out-of-sample matches used for prediction (integer).
-  \item{\code{n.iter}}: The number of optimizer iterations requested (integer).
-  \item{\code{sigma_y}}: The scale parameter used in the Student’s t likelihood (for \code{"student_t"} only).
+  \item{\code{sigma_y}}: The scale parameter used in the Student t likelihood (for \code{"student_t"} only).
   \item{\code{team1_prev}}: Integer indices of home teams in the out-of-sample matches (if \code{predict > 0}).
   \item{\code{team2_prev}}: Integer indices of away teams in the out-of-sample matches (if \code{predict > 0}).
-  \item{\code{logLik}}: The maximized log‐likelihood (numeric).
+  \item{\code{logLik}}: The maximized log likelihood (numeric).
   \item{\code{aic}}: Akaike Information Criterion (numeric).
   \item{\code{bic}}: Bayesian Information Criterion (numeric).
 }
@@ -54,7 +83,7 @@ Supported models include: double Poisson, bivariate Poisson, Skellam, and Studen
 \details{
 MLE can be obtained only for static models, with no time-dependence.
 Likelihood optimization is performed via the \code{BFGS} method
-of the \code{\link{optim}} function.
+of the \code{{optim}} function in \code{\link[stats]{stats}} package.
 }
 \examples{
 \dontrun{

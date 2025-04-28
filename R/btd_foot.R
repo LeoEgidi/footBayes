@@ -138,7 +138,7 @@ btd_foot <- function(data,
 
   # Check that data is a data frame
   if (!is.data.frame(data)) {
-    stop("Data must be a data frame.")
+    stop("Input data must be a data.frame with columns: periods, home_team, away_team, match_outcome.")
   }
 
   # Check that required columns are present

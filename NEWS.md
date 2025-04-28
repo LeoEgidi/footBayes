@@ -2,7 +2,9 @@
 
 * Migration from `rstan` interface to `CmdStanR` interface.
 * Add support for the `VI`, `pathfinder` and `laplace` algorithms.
-* Add pre-compiled CmdStan models using the package `instantiate`. 
+* Add pre-compiled CmdStan models using the package `instantiate`.
+* Add AIC and BIC output elements in `mle_foot()`.
+* Add Bayesian static/dynamic Negative Binomial model in `stan_foot()`.
 * Minor `ggplot2` edits on `foot_rank()`, `foot_abilities()` and `pp_foot()`.
 * Updated vignette.
 

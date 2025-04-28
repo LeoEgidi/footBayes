@@ -1,6 +1,6 @@
 data{
       int N;   // number of games
-      int N_prev;
+      int<lower=0> N_prev;
       array[N,2] int y;
       int nteams;
       array[N] int team1;
@@ -148,16 +148,18 @@ data{
         log_lik[n] =poisson_lpmf(y[n,1]| theta_home[n])+
           poisson_lpmf(y[n,2]| theta_away[n]);
       }
-      //out-of-sample predictions
-      for (n in 1:N_prev){
-        theta_home_prev[n] = exp(adj_h_eff+att[instants_prev[n],team1_prev[n]]+
-                                   def[instants_prev[n], team2_prev[n]]+
-                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
-        theta_away_prev[n] = exp(att[instants_prev[n],team2_prev[n]]+
-                                   def[instants_prev[n], team1_prev[n]]-
-                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+    //out-of-sample predictions
+      if (N_prev > 0) {
+        for (n in 1:N_prev){
+          theta_home_prev[n] = exp(adj_h_eff+att[instants_prev[n],team1_prev[n]]+
+                                     def[instants_prev[n], team2_prev[n]]+
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+          theta_away_prev[n] = exp(att[instants_prev[n],team2_prev[n]]+
+                                     def[instants_prev[n], team1_prev[n]]-
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
 
-        y_prev[n,1] = poisson_rng(theta_home_prev[n]);
-        y_prev[n,2] = poisson_rng(theta_away_prev[n]);
+          y_prev[n,1] = poisson_rng(theta_home_prev[n]);
+          y_prev[n,2] = poisson_rng(theta_away_prev[n]);
+        }
       }
     }

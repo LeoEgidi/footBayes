@@ -1,7 +1,7 @@
 ---
 title: "Fitting football models and visualizing predictions with the `footBayes` package"
 author: "Leonardo Egidi, Roberto Macrì Demartino, and Vasilis Palaskas"
-date: "2025-04-16"
+date: "2025-04-22"
 output:
   rmarkdown::html_vignette:
     toc: yes
@@ -24,15 +24,17 @@ Modeling football outcomes became incredibly popular over the last years. Howeve
 
 With the ```footBayes``` package we want to fill the gap and to give the possibility to **fit, interpret and graphically explore** the following goal-based Bayesian football models using the underlying Stan <span style="color:red"> [@rstan2020]</span> environment using the CmdStanR <span style="color:red"> [@cmdstanr_2024]</span> interface:
 
-- <span style="color:green">Double Poisson</span>: <span style="color:red"> @baio2010bayesian, @groll2015prediction, @egidi2018combining </span>
+- <span style="color:green">Double Poisson</span>: <span style="color:red"> @baio2010bayesian, @groll2015prediction, @egidi2018combining </span>;
 
-- <span style="color:green">Bivariate Poisson</span>: <span style="color:red"> @karlis2003analysis </span>
+- <span style="color:green">Bivariate Poisson</span>: <span style="color:red"> @karlis2003analysis </span>;
 
-- <span style="color:green">Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>
+- <span style="color:green">Negative Binomial</span>: <span style="color:red"> @reep_1971 </span>;
 
-- <span style="color:green">Zero-Inflated Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>
+- <span style="color:green">Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>;
 
-- <span style="color:green">Student-$t$</span> for goals' differences: <span style="color:red"> @gelman2014stan </span>
+- <span style="color:green">Zero-Inflated Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>;
+
+- <span style="color:green">Student-$t$</span> for goals' differences: <span style="color:red"> @gelman2014stan </span>;
 
 - <span style="color:green">Diagonal-Inflated Bivariate Poisson</span>: <span style="color:red">@karlis2003analysis </span>.
 
@@ -427,17 +429,17 @@ print(fit_result_dyn,
 #> 
 #> Posterior summaries for model parameters:
 #> # A tibble: 9 × 10
-#>   variable            mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
-#>   <chr>              <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logStrength[1, A…  2.05   2.05  0.939 0.935  0.524 3.65   1.01    119.     507. 
-#> 2 logStrength[2, A…  1.19   1.13  1.06  1.05  -0.511 2.98   1.05     54.7    130. 
-#> 3 logStrength[3, A…  2.19   2.12  1.28  1.21   0.126 4.42   1.08     22.7     72.2
-#> 4 logStrength[4, A…  2.68   2.62  1.50  1.46   0.273 5.31   1.07     26.8     83.9
-#> 5 logStrength[1, A…  1.35   1.32  0.872 0.856 -0.099 2.79   1.01    126.     330. 
-#> 6 logStrength[2, A… -0.2   -0.228 1.03  1.06  -1.86  1.51   1.05     51.5    118. 
-#> 7 logStrength[3, A…  0.694  0.673 1.24  1.21  -1.26  2.77   1.08     26.5     60.0
-#> 8 logStrength[4, A…  0.89   0.813 1.42  1.35  -1.34  3.24   1.08     20.5     72.3
-#> 9 logTie            -0.01  -0.01  0.088 0.087 -0.149 0.137  1.00   1113.    1118.
+#>   variable               mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
+#>   <chr>                 <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
+#> 1 logStrength[1, AC M…  2.14   2.11  0.934 0.929  0.651 3.69   1.00    338.      651.
+#> 2 logStrength[2, AC M…  1.36   1.32  1.05  1.05  -0.284 3.15   1.01    148.      393.
+#> 3 logStrength[3, AC M…  2.38   2.35  1.29  1.34   0.306 4.52   1.01     97.2     374.
+#> 4 logStrength[4, AC M…  2.84   2.85  1.50  1.55   0.407 5.27   1.03     75.6     347.
+#> 5 logStrength[1, AS R…  1.45   1.43  0.898 0.918 -0.024 2.93   1.00    292.      723.
+#> 6 logStrength[2, AS R… -0.032 -0.052 1.05  1.06  -1.72  1.73   1.01    159.      498.
+#> 7 logStrength[3, AS R…  0.869  0.874 1.22  1.27  -1.10  2.84   1.02     87.1     246.
+#> 8 logStrength[4, AS R…  1.06   1.06  1.43  1.49  -1.25  3.38   1.02     68.3     326.
+#> 9 logTie               -0.011 -0.012 0.084 0.083 -0.154 0.127  1.00   1547.     1418.
 ```
 
 
@@ -465,24 +467,24 @@ print(fit_result_stat,
 #> 
 #> Top teams based on relative log-strengths:
 #>    periods            team log_strengths
-#> 11       1           Inter         2.433
-#> 7        1        AC Milan         2.149
-#> 13       1      SSC Napoli         1.605
-#> 6        1        Juventus         1.546
-#> 20       1        Atalanta         1.045
-#> 19       1      Lazio Roma         1.022
-#> 15       1         AS Roma         0.997
-#> 5        1 Sassuolo Calcio         0.602
-#> 1        1  ACF Fiorentina         0.276
-#> 2        1   Hellas Verona         0.198
+#> 11       1           Inter        2.0881
+#> 7        1        AC Milan        1.8841
+#> 13       1      SSC Napoli        1.3770
+#> 6        1        Juventus        1.2338
+#> 20       1        Atalanta        1.0132
+#> 15       1         AS Roma        0.6685
+#> 19       1      Lazio Roma        0.6629
+#> 5        1 Sassuolo Calcio        0.3917
+#> 1        1  ACF Fiorentina        0.0433
+#> 2        1   Hellas Verona       -0.1084
 #> 
 #> Posterior summaries for model parameters:
 #> # A tibble: 3 × 10
-#>   variable            mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
-#>   <chr>              <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logStrength[AC M…  1.95   2.01  0.709 0.703  0.688  3.07  1.00     99.1     139.
-#> 2 logStrength[AS R…  0.766  0.809 0.694 0.693 -0.465  1.81  1.00     93.2     171.
-#> 3 logTie            -0.117 -0.116 0.084 0.083 -0.256  0.02  1.00    952.     1120.
+#>   variable               mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
+#>   <chr>                 <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
+#> 1 logStrength[AC Mila…  1.92   1.92  0.689 0.741  0.788  3.02  1.01     164.     335.
+#> 2 logStrength[AS Roma]  0.725  0.722 0.67  0.704 -0.384  1.81  1.01     165.     295.
+#> 3 logTie               -0.111 -0.112 0.083 0.082 -0.251  0.03  1.00     884.    1192.
 ```
 
 Another significant feature implemented in the ```btd_foot``` function is the ability to account for the **home-field effect**. This effect represents the psychological or logistical benefits that the home team may have over the visiting team. This is modeled as a multiplicative order effect <span style="color:red"> @davidson_beaver_1977</span> in the Bayesian BTD framework. This multiplicative parameter becomes in the
@@ -541,8 +543,8 @@ print(fit_result_dyn_2,
 #> # A tibble: 2 × 10
 #>   variable  mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
 #>   <chr>    <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logTie   0.025  0.027 0.091 0.09  -0.125 0.176  1       2180.    1259.
-#> 2 home     0.229  0.229 0.11  0.113  0.044 0.408  1.00    2445.    1329.
+#> 1 logTie   0.024  0.027 0.092 0.091 -0.132 0.167  1       2180.    1373.
+#> 2 home     0.239  0.239 0.111 0.109  0.055 0.414  1.00    2549.    1305.
 ```
 
 
@@ -575,23 +577,23 @@ print(fit_result_stat_2,
 #> 
 #> Top teams based on relative log-strengths:
 #>    periods            team log_strengths
-#> 11       1           Inter          5.16
-#> 7        1        AC Milan          4.88
-#> 13       1      SSC Napoli          4.32
-#> 6        1        Juventus          4.24
-#> 20       1        Atalanta          3.90
-#> 19       1      Lazio Roma          3.75
-#> 15       1         AS Roma          3.53
-#> 5        1 Sassuolo Calcio          3.16
-#> 1        1  ACF Fiorentina          2.85
-#> 2        1   Hellas Verona          2.75
+#> 11       1           Inter          3.90
+#> 7        1        AC Milan          3.53
+#> 13       1      SSC Napoli          3.12
+#> 6        1        Juventus          3.04
+#> 20       1        Atalanta          2.69
+#> 19       1      Lazio Roma          2.54
+#> 15       1         AS Roma          2.38
+#> 5        1 Sassuolo Calcio          1.97
+#> 1        1  ACF Fiorentina          1.57
+#> 2        1   Hellas Verona          1.56
 #> 
 #> Posterior summaries for model parameters:
 #> # A tibble: 2 × 10
 #>   variable   mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
 #>   <chr>     <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logTie   -0.112 -0.111 0.086 0.086 -0.252 0.03   1.00     513.     650.
-#> 2 home      0.206  0.204 0.096 0.099  0.044 0.364  1.00     481.     603.
+#> 1 logTie   -0.118 -0.119 0.092 0.092 -0.27  0.028  1.03     329.     395.
+#> 2 home      0.208  0.208 0.106 0.108  0.037 0.381  1.00     368.     545.
 ```
 
 The `btd_foot` function offers flexibility in how the posterior distributions are obtained by allowing users to choose the estimation method via the `method` argument. This argument enables the user to balance computational efficiency with the precision of uncertainty estimates. The available options include:
@@ -807,14 +809,14 @@ print(fit1_stan,
 #> # A tibble: 8 × 10
 #>   variable        mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>          <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home           0.283  0.283 0.069 0.068  0.172  0.395  1.01     904.     440.
-#> 2 rho           -1.77  -1.72  0.336 0.323 -2.40  -1.31   1.00     930.     634.
-#> 3 sigma_att      0.214  0.208 0.066 0.061  0.121  0.33   1.01     278.     323.
-#> 4 sigma_def      0.229  0.221 0.068 0.06   0.128  0.351  1.00     333.     341.
-#> 5 att[AS Roma]   0.277  0.276 0.128 0.139  0.075  0.484  1.01     685.     485.
-#> 6 att[AC Milan]  0.138  0.134 0.123 0.116 -0.063  0.348  1.00    1277.     624.
-#> 7 def[AS Roma]  -0.207 -0.2   0.138 0.136 -0.445  0.003  1.00     918.     552.
-#> 8 def[AC Milan]  0.005  0.011 0.129 0.131 -0.202  0.211  1.00     912.     579.
+#> 1 home           0.284  0.289 0.068 0.067  0.166  0.389 1.00      761.     597.
+#> 2 rho           -1.76  -1.74  0.317 0.3   -2.29  -1.32  1.00      854.     560.
+#> 3 sigma_att      0.205  0.204 0.073 0.067  0.086  0.325 1.02      151.     111.
+#> 4 sigma_def      0.219  0.212 0.068 0.066  0.122  0.34  1.00      367.     342.
+#> 5 att[AS Roma]   0.266  0.266 0.133 0.136  0.035  0.488 1.01      391.     390.
+#> 6 att[AC Milan]  0.132  0.129 0.13  0.133 -0.065  0.35  1.01      774.     474.
+#> 7 def[AS Roma]  -0.195 -0.193 0.144 0.142 -0.442  0.038 0.999    1036.     759.
+#> 8 def[AC Milan]  0.003  0     0.141 0.126 -0.23   0.246 1.01     1612.     445.
 ```
 
 The **Gelman-Rubin statistic** $\hat{R}$ (```Rhat```) is below the threshold 1.1 for all the parameters, whereas the **effective sample size** (```n_eff```), measuring the approximate number of iid replications from the Markov chains, does not appear to be problematic. Thus, HMC sampling reached the convergence.
@@ -857,157 +859,176 @@ We can also access the original BP Stan code by typing:
 ### Model's code extraction
 
 fit1_stan$stan_code
-#>   [1] "functions{"                                                                                                    
-#>   [2] ""                                                                                                              
-#>   [3] "      real bipois_lpmf(array[] int r , real mu1,real mu2,real mu3) {"                                          
-#>   [4] "        real ss;"                                                                                              
-#>   [5] "        real log_s;"                                                                                           
-#>   [6] "        real mus;"                                                                                             
-#>   [7] "        int  miny;"                                                                                            
-#>   [8] ""                                                                                                              
-#>   [9] "        miny = min(r[1], r[2]);"                                                                               
-#>  [10] ""                                                                                                              
-#>  [11] "        ss = poisson_lpmf(r[1] | mu1) + poisson_lpmf(r[2] | mu2) -"                                            
-#>  [12] "          exp(mu3);"                                                                                           
-#>  [13] "        if(miny > 0) {"                                                                                        
-#>  [14] "          mus = -mu1-mu2+mu3;"                                                                                 
-#>  [15] "          log_s = ss;"                                                                                         
-#>  [16] ""                                                                                                              
-#>  [17] "          for(k in 1:miny) {"                                                                                  
-#>  [18] "            log_s = log_s + log(r[1] - k + 1) + mus"                                                           
-#>  [19] "            + log(r[2] - k + 1)"                                                                               
-#>  [20] "            - log(k);"                                                                                         
-#>  [21] "            ss = log_sum_exp(ss, log_s);"                                                                      
-#>  [22] "          }"                                                                                                   
-#>  [23] "        }"                                                                                                     
-#>  [24] "        return(ss);"                                                                                           
-#>  [25] "      }"                                                                                                       
-#>  [26] ""                                                                                                              
-#>  [27] "    }"                                                                                                         
-#>  [28] "    data{"                                                                                                     
-#>  [29] "      int N;   // number of games"                                                                             
-#>  [30] "      array[N,2] int y;"                                                                                       
-#>  [31] "      int nteams;"                                                                                             
-#>  [32] "      array[N]int instants_rank;"                                                                              
-#>  [33] "      int ntimes_rank;                 // dynamic periods for ranking"                                         
-#>  [34] "      array[N] int team1;"                                                                                     
-#>  [35] "      array[N] int team2;"                                                                                     
-#>  [36] "      matrix[ntimes_rank,nteams] ranking;"                                                                     
-#>  [37] "      int<lower=0, upper=1> ind_home;"                                                                         
-#>  [38] "      real mean_home;              // Mean for home effect"                                                    
-#>  [39] "      real<lower=0> sd_home;      // Standard deviation for home effect"                                       
-#>  [40] ""                                                                                                              
-#>  [41] "      // priors part"                                                                                          
-#>  [42] "      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace"                         
-#>  [43] "      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace"                         
-#>  [44] ""                                                                                                              
-#>  [45] "      real hyper_df;"                                                                                          
-#>  [46] "      real hyper_location;"                                                                                    
-#>  [47] ""                                                                                                              
-#>  [48] "      real hyper_sd_df;"                                                                                       
-#>  [49] "      real hyper_sd_location;"                                                                                 
-#>  [50] "      real hyper_sd_scale;"                                                                                    
-#>  [51] "    }"                                                                                                         
-#>  [52] "    parameters{"                                                                                               
-#>  [53] "      vector[nteams] att_raw;"                                                                                 
-#>  [54] "      vector[nteams] def_raw;"                                                                                 
-#>  [55] "      real<lower=0> sigma_att;"                                                                                
-#>  [56] "      real<lower=0> sigma_def;"                                                                                
-#>  [57] "      //real beta;"                                                                                            
-#>  [58] "      real rho;"                                                                                               
-#>  [59] "      real home;"                                                                                              
-#>  [60] "      real gamma;"                                                                                             
-#>  [61] "    }"                                                                                                         
-#>  [62] "    transformed parameters{"                                                                                   
-#>  [63] "      real adj_h_eff;                   // Adjusted home effect"                                               
-#>  [64] "      vector[nteams] att;"                                                                                     
-#>  [65] "      vector[nteams] def;"                                                                                     
-#>  [66] "      array[N] vector[3] theta;"                                                                               
-#>  [67] ""                                                                                                              
-#>  [68] "      for (t in 1:nteams){"                                                                                    
-#>  [69] "        att[t] = att_raw[t]-mean(att_raw);"                                                                    
-#>  [70] "        def[t] = def_raw[t]-mean(def_raw);"                                                                    
-#>  [71] "      }"                                                                                                       
-#>  [72] ""                                                                                                              
-#>  [73] "      adj_h_eff = home * ind_home;"                                                                            
-#>  [74] ""                                                                                                              
-#>  [75] "      for (n in 1:N){"                                                                                         
-#>  [76] "        theta[n,1] = exp(adj_h_eff+att[team1[n]]+def[team2[n]]+"                                               
-#>  [77] "                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));"
-#>  [78] "        theta[n,2] = exp(att[team2[n]]+def[team1[n]]-"                                                         
-#>  [79] "                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));"
-#>  [80] "        theta[n,3] = exp(rho);"                                                                                
-#>  [81] "      }"                                                                                                       
-#>  [82] "    }"                                                                                                         
-#>  [83] "    model{"                                                                                                    
-#>  [84] "      // log-priors for team-specific abilities"                                                               
-#>  [85] "      for (t in 1:(nteams)){"                                                                                  
-#>  [86] "        if (prior_dist_num == 1){"                                                                             
-#>  [87] "          target+= normal_lpdf(att_raw[t]|hyper_location, sigma_att);"                                         
-#>  [88] "          target+= normal_lpdf(def_raw[t]|hyper_location, sigma_def);"                                         
-#>  [89] "        }"                                                                                                     
-#>  [90] "        else if (prior_dist_num == 2){"                                                                        
-#>  [91] "          target+= student_t_lpdf(att_raw[t]|hyper_df, hyper_location, sigma_att);"                            
-#>  [92] "          target+= student_t_lpdf(def_raw[t]|hyper_df, hyper_location, sigma_def);"                            
-#>  [93] "        }"                                                                                                     
-#>  [94] "        else if (prior_dist_num == 3){"                                                                        
-#>  [95] "          target+= cauchy_lpdf(att_raw[t]|hyper_location, sigma_att);"                                         
-#>  [96] "          target+= cauchy_lpdf(def_raw[t]|hyper_location, sigma_def);"                                         
-#>  [97] "        }"                                                                                                     
-#>  [98] "        else if (prior_dist_num == 4){"                                                                        
-#>  [99] "          target+= double_exponential_lpdf(att_raw[t]|hyper_location, sigma_att);"                             
-#> [100] "          target+= double_exponential_lpdf(def_raw[t]|hyper_location, sigma_def);"                             
-#> [101] "        }"                                                                                                     
-#> [102] "      }"                                                                                                       
-#> [103] ""                                                                                                              
-#> [104] ""                                                                                                              
-#> [105] "      // log-hyperpriors for sd parameters"                                                                    
-#> [106] "      if (prior_dist_sd_num == 1 ){"                                                                           
-#> [107] "        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);"                                     
-#> [108] "        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);"                                     
-#> [109] "      }"                                                                                                       
-#> [110] "      else if (prior_dist_sd_num == 2){"                                                                       
-#> [111] "        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);"                     
-#> [112] "        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);"                     
-#> [113] "      }"                                                                                                       
-#> [114] "      else if (prior_dist_sd_num == 3){"                                                                       
-#> [115] "        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);"                                     
-#> [116] "        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);"                                     
-#> [117] "      }"                                                                                                       
-#> [118] "      else if (prior_dist_sd_num == 4){"                                                                       
-#> [119] "        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);"                         
-#> [120] "        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);"                         
-#> [121] "      }"                                                                                                       
-#> [122] ""                                                                                                              
-#> [123] "      // log-priors fixed effects"                                                                             
-#> [124] "      target+=normal_lpdf(rho|0,1);"                                                                           
-#> [125] "      target+=normal_lpdf(home|mean_home,sd_home);"                                                            
-#> [126] "      target+=normal_lpdf(gamma|0,1);"                                                                         
-#> [127] ""                                                                                                              
-#> [128] "      // likelihood"                                                                                           
-#> [129] "      for (n in 1:N){"                                                                                         
-#> [130] "         target+=poisson_lpmf(y[n,1]|theta[n,1]+theta[n,3]);"                                                  
-#> [131] "         target+=poisson_lpmf(y[n,2]|theta[n,2]+theta[n,3]);"                                                  
-#> [132] "       //  target+=bipois_lpmf(y[n,]| theta[n,1],"                                                             
-#> [133] "          //                   theta[n,2], theta[n,3]);"                                                       
-#> [134] "      }"                                                                                                       
-#> [135] "    }"                                                                                                         
-#> [136] "    generated quantities{"                                                                                     
-#> [137] "      array[N,2] int y_rep;"                                                                                   
-#> [138] "      vector[N] log_lik;"                                                                                      
-#> [139] "      array[N] int diff_y_rep;"                                                                                
-#> [140] ""                                                                                                              
-#> [141] "      //in-sample replications"                                                                                
-#> [142] "      for (n in 1:N){"                                                                                         
-#> [143] "        y_rep[n,1] = poisson_rng(theta[n,1]+theta[n,3]);"                                                      
-#> [144] "        y_rep[n,2] = poisson_rng(theta[n,2]+theta[n,3]);"                                                      
-#> [145] "        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];"                                                              
-#> [146] "        log_lik[n] = poisson_lpmf(y[n,1]|theta[n,1]+theta[n,3])+"                                              
-#> [147] "                     poisson_lpmf(y[n,2]|theta[n,2]+theta[n,3]);"                                              
-#> [148] "       //log_lik[n] =bipois_lpmf(y[n,]| theta[n,1],"                                                           
-#> [149] "                //                 theta[n,2], theta[n,3]);"                                                   
-#> [150] "      }"                                                                                                       
-#> [151] "    }"
+#>   [1] "functions{"                                                                                                              
+#>   [2] ""                                                                                                                        
+#>   [3] "      real bipois_lpmf(array[] int r , real mu1,real mu2,real mu3) {"                                                    
+#>   [4] "        real ss;"                                                                                                        
+#>   [5] "        real log_s;"                                                                                                     
+#>   [6] "        real mus;"                                                                                                       
+#>   [7] "        int  miny;"                                                                                                      
+#>   [8] ""                                                                                                                        
+#>   [9] "        miny = min(r[1], r[2]);"                                                                                         
+#>  [10] ""                                                                                                                        
+#>  [11] "        ss = poisson_lpmf(r[1] | mu1) + poisson_lpmf(r[2] | mu2) -"                                                      
+#>  [12] "          exp(mu3);"                                                                                                     
+#>  [13] "        if(miny > 0) {"                                                                                                  
+#>  [14] "          mus = -mu1-mu2+mu3;"                                                                                           
+#>  [15] "          log_s = ss;"                                                                                                   
+#>  [16] ""                                                                                                                        
+#>  [17] "          for(k in 1:miny) {"                                                                                            
+#>  [18] "            log_s = log_s + log(r[1] - k + 1) + mus"                                                                     
+#>  [19] "            + log(r[2] - k + 1)"                                                                                         
+#>  [20] "            - log(k);"                                                                                                   
+#>  [21] "            ss = log_sum_exp(ss, log_s);"                                                                                
+#>  [22] "          }"                                                                                                             
+#>  [23] "        }"                                                                                                               
+#>  [24] "        return(ss);"                                                                                                     
+#>  [25] "      }"                                                                                                                 
+#>  [26] ""                                                                                                                        
+#>  [27] "    }"                                                                                                                   
+#>  [28] "    data{"                                                                                                               
+#>  [29] "      int N;   // number of games"                                                                                       
+#>  [30] "      int<lower=0> N_prev;"                                                                                              
+#>  [31] "      array[N,2] int y;"                                                                                                 
+#>  [32] "      int nteams;"                                                                                                       
+#>  [33] "      array[N] int instants_rank;"                                                                                       
+#>  [34] "      int ntimes_rank;                 // dynamic periods for ranking"                                                   
+#>  [35] "      array[N] int team1;"                                                                                               
+#>  [36] "      array[N] int team2;"                                                                                               
+#>  [37] "      array[N_prev]int team1_prev;"                                                                                      
+#>  [38] "      array[N_prev] int team2_prev;"                                                                                     
+#>  [39] "      matrix[ntimes_rank,nteams] ranking;"                                                                               
+#>  [40] "      int<lower=0, upper=1> ind_home;"                                                                                   
+#>  [41] "      real mean_home;              // Mean for home effect"                                                              
+#>  [42] "      real<lower=0> sd_home;      // Standard deviation for home effect"                                                 
+#>  [43] ""                                                                                                                        
+#>  [44] "      // priors part"                                                                                                    
+#>  [45] "      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace"                                   
+#>  [46] "      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace"                                   
+#>  [47] ""                                                                                                                        
+#>  [48] "      real hyper_df;"                                                                                                    
+#>  [49] "      real hyper_location;"                                                                                              
+#>  [50] ""                                                                                                                        
+#>  [51] "      real hyper_sd_df;"                                                                                                 
+#>  [52] "      real hyper_sd_location;"                                                                                           
+#>  [53] "      real hyper_sd_scale;"                                                                                              
+#>  [54] "    }"                                                                                                                   
+#>  [55] "    parameters{"                                                                                                         
+#>  [56] "      vector[nteams] att_raw;"                                                                                           
+#>  [57] "      vector[nteams] def_raw;"                                                                                           
+#>  [58] "      real<lower=0> sigma_att;"                                                                                          
+#>  [59] "      real<lower=0> sigma_def;"                                                                                          
+#>  [60] "      real home;"                                                                                                        
+#>  [61] "      real rho;"                                                                                                         
+#>  [62] "      real gamma;"                                                                                                       
+#>  [63] "    }"                                                                                                                   
+#>  [64] "    transformed parameters{"                                                                                             
+#>  [65] "      real adj_h_eff;                   // Adjusted home effect"                                                         
+#>  [66] "      vector[nteams] att;"                                                                                               
+#>  [67] "      vector[nteams] def;"                                                                                               
+#>  [68] "      array[N] vector[3] theta;"                                                                                         
+#>  [69] ""                                                                                                                        
+#>  [70] "      for (t in 1:nteams){"                                                                                              
+#>  [71] "        att[t] = att_raw[t]-mean(att_raw);"                                                                              
+#>  [72] "        def[t] = def_raw[t]-mean(def_raw);"                                                                              
+#>  [73] "      }"                                                                                                                 
+#>  [74] ""                                                                                                                        
+#>  [75] "      adj_h_eff = home * ind_home;"                                                                                      
+#>  [76] ""                                                                                                                        
+#>  [77] "      for (n in 1:N){"                                                                                                   
+#>  [78] "        theta[n,1] = exp(adj_h_eff+att[team1[n]]+def[team2[n]]+"                                                         
+#>  [79] "                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));"          
+#>  [80] "        theta[n,2] = exp(att[team2[n]]+def[team1[n]]-"                                                                   
+#>  [81] "                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));"          
+#>  [82] "        theta[n,3] = exp(rho);"                                                                                          
+#>  [83] "      }"                                                                                                                 
+#>  [84] "    }"                                                                                                                   
+#>  [85] "    model{"                                                                                                              
+#>  [86] "      // log-priors for team-specific abilities"                                                                         
+#>  [87] "      for (t in 1:(nteams)){"                                                                                            
+#>  [88] "        if (prior_dist_num == 1){"                                                                                       
+#>  [89] "          target+= normal_lpdf(att_raw[t]|hyper_location, sigma_att);"                                                   
+#>  [90] "          target+= normal_lpdf(def_raw[t]|hyper_location, sigma_def);"                                                   
+#>  [91] "        }"                                                                                                               
+#>  [92] "        else if (prior_dist_num == 2){"                                                                                  
+#>  [93] "          target+= student_t_lpdf(att_raw[t]|hyper_df, hyper_location, sigma_att);"                                      
+#>  [94] "          target+= student_t_lpdf(def_raw[t]|hyper_df, hyper_location, sigma_def);"                                      
+#>  [95] "        }"                                                                                                               
+#>  [96] "        else if (prior_dist_num == 3){"                                                                                  
+#>  [97] "          target+= cauchy_lpdf(att_raw[t]|hyper_location, sigma_att);"                                                   
+#>  [98] "          target+= cauchy_lpdf(def_raw[t]|hyper_location, sigma_def);"                                                   
+#>  [99] "        }"                                                                                                               
+#> [100] "        else if (prior_dist_num == 4){"                                                                                  
+#> [101] "          target+= double_exponential_lpdf(att_raw[t]|hyper_location, sigma_att);"                                       
+#> [102] "          target+= double_exponential_lpdf(def_raw[t]|hyper_location, sigma_def);"                                       
+#> [103] "        }"                                                                                                               
+#> [104] "      }"                                                                                                                 
+#> [105] ""                                                                                                                        
+#> [106] ""                                                                                                                        
+#> [107] "      // log-hyperpriors for sd parameters"                                                                              
+#> [108] "      if (prior_dist_sd_num == 1 ){"                                                                                     
+#> [109] "        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);"                                               
+#> [110] "        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);"                                               
+#> [111] "      }"                                                                                                                 
+#> [112] "      else if (prior_dist_sd_num == 2){"                                                                                 
+#> [113] "        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);"                               
+#> [114] "        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);"                               
+#> [115] "      }"                                                                                                                 
+#> [116] "      else if (prior_dist_sd_num == 3){"                                                                                 
+#> [117] "        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);"                                               
+#> [118] "        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);"                                               
+#> [119] "      }"                                                                                                                 
+#> [120] "      else if (prior_dist_sd_num == 4){"                                                                                 
+#> [121] "        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);"                                   
+#> [122] "        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);"                                   
+#> [123] "      }"                                                                                                                 
+#> [124] ""                                                                                                                        
+#> [125] "      // log-priors fixed effects"                                                                                       
+#> [126] "      target+=normal_lpdf(home|mean_home,sd_home);"                                                                      
+#> [127] "      target+=normal_lpdf(rho|0,1);"                                                                                     
+#> [128] "      target+=normal_lpdf(gamma|0,1);"                                                                                   
+#> [129] ""                                                                                                                        
+#> [130] "      // likelihood"                                                                                                     
+#> [131] "      for (n in 1:N){"                                                                                                   
+#> [132] "        //target+=bipois_lpmf(y[n,]| theta[n,1],"                                                                        
+#> [133] "        //                    theta[n,2], theta[n,3]);"                                                                  
+#> [134] "        target+=poisson_lpmf(y[n,1]| theta[n,1]+theta[n,3]);"                                                            
+#> [135] "        target+=poisson_lpmf(y[n,2]| theta[n,2]+theta[n,3]);"                                                            
+#> [136] "      }"                                                                                                                 
+#> [137] "    }"                                                                                                                   
+#> [138] "    generated quantities{"                                                                                               
+#> [139] "      array[N,2]int y_rep;"                                                                                              
+#> [140] "      array[N_prev,2] int y_prev;"                                                                                       
+#> [141] "      array[N_prev] vector[3] theta_prev;"                                                                               
+#> [142] "      vector[N] log_lik;"                                                                                                
+#> [143] "      array[N] int diff_y_rep;"                                                                                          
+#> [144] ""                                                                                                                        
+#> [145] "      //in-sample replications"                                                                                          
+#> [146] "      for (n in 1:N){"                                                                                                   
+#> [147] "        y_rep[n,1] = poisson_rng(theta[n,1]+theta[n,3]);"                                                                
+#> [148] "        y_rep[n,2] = poisson_rng(theta[n,2]+theta[n,3]);"                                                                
+#> [149] "        diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];"                                                                        
+#> [150] "        log_lik[n] = poisson_lpmf(y[n,1]| theta[n,1]+theta[n,3])+"                                                       
+#> [151] "                     poisson_lpmf(y[n,2]| theta[n,2]+theta[n,3]);"                                                       
+#> [152] "        //bipois_lpmf(y[n,]| theta[n,1],"                                                                                
+#> [153] "        //                        theta[n,2], theta[n,3]);"                                                              
+#> [154] "      }"                                                                                                                 
+#> [155] ""                                                                                                                        
+#> [156] "      //out-of-sample predictions"                                                                                       
+#> [157] "      if (N_prev > 0) {"                                                                                                 
+#> [158] "        for (n in 1:N_prev){"                                                                                            
+#> [159] "          theta_prev[n,1] = exp(adj_h_eff+att[team1_prev[n]]+"                                                           
+#> [160] "                                  def[team2_prev[n]]+"                                                                   
+#> [161] "                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));"
+#> [162] "          theta_prev[n,2] = exp(att[team2_prev[n]]+"                                                                     
+#> [163] "                                  def[team1_prev[n]]-"                                                                   
+#> [164] "                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));"
+#> [165] "          theta_prev[n,3] = exp(rho);"                                                                                   
+#> [166] "          y_prev[n,1] = poisson_rng(theta_prev[n,1]+theta_prev[n,3]);"                                                   
+#> [167] "          y_prev[n,2] = poisson_rng(theta_prev[n,2]+theta_prev[n,3]);"                                                   
+#> [168] "        }"                                                                                                               
+#> [169] "      }"                                                                                                                 
+#> [170] "    }"
 ```
 
 
@@ -1192,10 +1213,10 @@ print(fit2_stan, pars = c(
 #> # A tibble: 4 × 10
 #>   variable    mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>      <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home       0.279  0.278 0.071 0.069  0.155  0.387  1.01   336.      270. 
-#> 2 rho       -1.74  -1.71  0.34  0.321 -2.41  -1.26   1.02   384.      282. 
-#> 3 sigma_att  0.045  0.043 0.013 0.012  0.029  0.074  1.89     2.92     18.2
-#> 4 sigma_def  0.059  0.056 0.017 0.015  0.036  0.091  2.05     2.75     29.7
+#> 1 home       0.279  0.283 0.063 0.064  0.167  0.383  1.02   360.      401. 
+#> 2 rho       -1.74  -1.68  0.318 0.302 -2.34  -1.28   1.01   387.      367. 
+#> 3 sigma_att  0.043  0.04  0.01  0.01   0.03   0.063  1.63     3.54     32.4
+#> 4 sigma_def  0.056  0.054 0.017 0.015  0.032  0.087  2.24     2.65     15.0
 ```
 
 From the printed summary, we may note that the degree of goals' correlation seems to be again very small here. Moreover, the Gelman-Rubin statistic for $\sigma_{\text{att}}$ is relatively high, whereas the effective sample sizes for $\sigma_{\text{att}}$ and $\sigma_{\text{def}}$ are quite low. This is suggesting possible inefficiencies during the HMC sampling and that a *model-reparametrization* could be suited and effective at this stage.  Another option is to play a bit with the prior specification for $\sigma_{\text{att}}$ and $\sigma_{\text{def}}$, for instance by specifying a prior inducing less shrinkage in the team-specific abilities.
@@ -1231,9 +1252,9 @@ print(fit3_stan, pars = c(
 #> # A tibble: 3 × 10
 #>   variable   mean median    sd   mad    q5   q95  rhat ess_bulk ess_tail
 #>   <chr>     <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home      0.414  0.415 0.046 0.046 0.335 0.491  1.03    84.9     277. 
-#> 2 sigma_att 0.029  0.029 0.011 0.013 0.014 0.049  2.43     2.55     18.7
-#> 3 sigma_def 0.057  0.057 0.014 0.014 0.035 0.08   1.66     3.39     15.1
+#> 1 home      0.413  0.412 0.042 0.043 0.343 0.482  1.01   388.      270. 
+#> 2 sigma_att 0.045  0.044 0.007 0.006 0.037 0.058  1.32     5.03     29.1
+#> 3 sigma_def 0.047  0.047 0.005 0.006 0.039 0.055  1.54     3.73     20.6
 ```
 
 
@@ -1279,9 +1300,9 @@ print(fit3_stan_t, pars = c(
 #> # A tibble: 3 × 10
 #>   variable   mean median    sd   mad    q5   q95  rhat ess_bulk ess_tail
 #>   <chr>     <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home      0.396  0.396 0.053 0.051 0.317 0.487  1.00   434.      220. 
-#> 2 sigma_att 0.049  0.05  0.014 0.018 0.027 0.07   1.68     3.24     17.5
-#> 3 sigma_def 0.051  0.048 0.013 0.01  0.036 0.076  1.34     5.15     44.7
+#> 1 home      0.41   0.413 0.044 0.04  0.34  0.48   1.01   180.      173. 
+#> 2 sigma_att 0.034  0.033 0.01  0.013 0.019 0.051  1.47     4.15     23.9
+#> 3 sigma_def 0.046  0.044 0.015 0.018 0.026 0.07   1.99     2.82     20.3
 ```
 
 As we may conclude, the situation has been only slightly improved.
@@ -1391,10 +1412,10 @@ print(fit_stan_rank,
 #> # A tibble: 4 × 10
 #>   variable    mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>      <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home       0.159  0.159 0.067 0.069  0.05   0.267  1.00   1138.    1377. 
-#> 2 rho       -1.10  -1.10  0.163 0.154 -1.39  -0.853  1.00    914.     516. 
-#> 3 sigma_att  0.039  0.034 0.021 0.021  0.014  0.079  1.02     25.4     81.6
-#> 4 sigma_def  0.032  0.027 0.019 0.017  0.01   0.07   1.09     20.5     84.3
+#> 1 home       0.158  0.161 0.068 0.067  0.046  0.265  1.00  1693.     1385. 
+#> 2 rho       -1.10  -1.09  0.163 0.159 -1.38  -0.848  1.00  1676.     1630. 
+#> 3 sigma_att  0.035  0.03  0.023 0.02   0.006  0.079  1.26     6.25     40.0
+#> 4 sigma_def  0.033  0.031 0.025 0.028  0.002  0.077  1.22     6.88     51.6
 ```
 
 
@@ -1472,13 +1493,13 @@ pp_foot(
 #> 
 #> $pp_table
 #>   goal diff. Bayesian p-value
-#> 1         -3            0.311
-#> 2         -2            0.885
-#> 3         -1            0.980
-#> 4          0            0.030
-#> 5          1            0.244
-#> 6          2            0.094
-#> 7          3            0.912
+#> 1         -3            0.334
+#> 2         -2            0.861
+#> 3         -1            0.991
+#> 4          0            0.046
+#> 5          1            0.245
+#> 6          2            0.079
+#> 7          3            0.932
 
 pp_foot(
   object = fit1_stan, data = italy_2000,
@@ -1576,8 +1597,8 @@ foot_prob(
   away_team = "AC Milan"
 )
 #> $prob_table
-#>        home_team away_team prob_h prob_d prob_a         mlo
-#> 1 Reggina Calcio  AC Milan  0.351  0.245  0.405 0-0 (0.088)
+#>        home_team away_team prob_h prob_d prob_a        mlo
+#> 1 Reggina Calcio  AC Milan   0.35  0.247  0.403 1-1 (0.11)
 #> 
 #> $prob_plot
 ```
@@ -1610,20 +1631,43 @@ where $(\tilde{x}^{(s)}, \tilde{y}^{(s)})$ represents the $s$-th MCMC pair of th
 
 foot_round_robin(object = fit4_stan, data = italy_2000)
 #> $round_table
-#> # A tibble: 36 × 4
-#>    Home           Away           Home_prob Observed
-#>    <chr>          <chr>          <chr>     <chr>   
-#>  1 Hellas Verona  Bologna FC     0.352     -       
-#>  2 Inter          Bologna FC     0.435     -       
-#>  3 Udinese Calcio SSC Napoli     0.505     -       
-#>  4 ACF Fiorentina SSC Napoli     0.52      -       
-#>  5 US Lecce       Lazio Roma     0.27      -       
-#>  6 Inter          Lazio Roma     0.322     -       
-#>  7 Brescia Calcio AS Bari        0.62      -       
-#>  8 Reggina Calcio AS Bari        0.57      -       
-#>  9 Udinese Calcio Vicenza Calcio 0.418     -       
-#> 10 Brescia Calcio Vicenza Calcio 0.527     -       
-#> # ℹ 26 more rows
+#>              Home           Away Home_prob Observed
+#> 1   Hellas Verona     Bologna FC     0.372        -
+#> 2           Inter     Bologna FC     0.460        -
+#> 3  Udinese Calcio     SSC Napoli     0.472        -
+#> 4  ACF Fiorentina     SSC Napoli     0.522        -
+#> 5        US Lecce     Lazio Roma     0.320        -
+#> 6           Inter     Lazio Roma     0.335        -
+#> 7  Brescia Calcio        AS Bari     0.627        -
+#> 8  Reggina Calcio        AS Bari     0.575        -
+#> 9  Udinese Calcio Vicenza Calcio     0.448        -
+#> 10 Brescia Calcio Vicenza Calcio     0.468        -
+#> 11        AS Roma       Parma AC     0.372        -
+#> 12       US Lecce       Parma AC     0.260        -
+#> 13        AS Roma       AC Milan     0.495        -
+#> 14 Reggina Calcio       AC Milan     0.350        -
+#> 15  Hellas Verona     AC Perugia     0.410        -
+#> 16       Juventus     AC Perugia     0.598        -
+#> 17 ACF Fiorentina       Atalanta     0.412        -
+#> 18       Juventus       Atalanta     0.517        -
+#> 19     SSC Napoli        AS Roma     0.290        -
+#> 20        AS Bari        AS Roma     0.260        -
+#> 21     Lazio Roma Udinese Calcio     0.688        -
+#> 22       Atalanta Udinese Calcio     0.598        -
+#> 23     Bologna FC       US Lecce     0.547        -
+#> 24 Vicenza Calcio       US Lecce     0.522        -
+#> 25       AC Milan Brescia Calcio     0.425        -
+#> 26     AC Perugia Brescia Calcio     0.385        -
+#> 27     SSC Napoli  Hellas Verona     0.415        -
+#> 28       Parma AC  Hellas Verona     0.608        -
+#> 29     AC Perugia Reggina Calcio     0.522        -
+#> 30       Atalanta Reggina Calcio     0.470        -
+#> 31     Lazio Roma ACF Fiorentina     0.630        -
+#> 32       AC Milan ACF Fiorentina     0.562        -
+#> 33     Bologna FC       Juventus     0.322        -
+#> 34 Vicenza Calcio       Juventus     0.338        -
+#> 35        AS Bari          Inter     0.375        -
+#> 36       Parma AC          Inter     0.600        -
 #> 
 #> $round_plot
 ```
@@ -1800,25 +1844,25 @@ compare_results_models <- compare_foot(
 print(compare_results_models, digits = 3)
 #> Predictive Performance Metrics
 #>        Model   RPS accuracy brier pseudoR2   ACP
-#>     biv_pois 0.253    0.347 0.713    0.312 0.348
-#>  double_pois 0.256    0.379 0.718    0.306 0.359
+#>     biv_pois 0.255    0.347 0.717    0.311 0.348
+#>  double_pois 0.255    0.384 0.717    0.307 0.360
 #> 
 #> Confusion Matrices
 #> Model: biv_pois 
 #> 
 #>           Actual
 #> Predicted  Home Win Draw Away Win
-#>   Home Win       49   28       31
+#>   Home Win       50   28       32
 #>   Draw            0    0        0
-#>   Away Win       40   25       17
+#>   Away Win       39   25       16
 #> 
 #> Model: double_pois 
 #> 
 #>           Actual
 #> Predicted  Home Win Draw Away Win
-#>   Home Win       59   35       35
+#>   Home Win       60   35       35
 #>   Draw            0    0        0
-#>   Away Win       30   18       13
+#>   Away Win       29   18       13
 ```
 
 
@@ -1864,10 +1908,10 @@ loo3_t <- fit3_stan_t$fit$loo()
 loo_compare(loo1, loo1_t, loo2, loo3, loo3_t)
 #>        elpd_diff se_diff
 #> model1  0.0       0.0   
-#> model2 -1.0       0.5   
-#> model3 -3.6       2.5   
-#> model4 -6.7       4.5   
-#> model5 -8.6       4.1
+#> model2 -0.4       0.4   
+#> model3 -2.7       2.4   
+#> model4 -4.1       4.0   
+#> model5 -6.9       4.0
 ```
 
 According to the above model LOOIC comparisons, the weekly-dynamic double Poisson models  attain the lowest LOOIC values and are then the favored models in terms of predictive accuracy. The static model's ```fit1_stan``` final looic is suggesting that the assumption of static team-specific parameters is too restrictive and oversimplified to capture teams' skills over time and make reliable predictions. Anyway, from model checking we have the suggestion that even the static model has a reliable goodness of fit and could be used for some simplified analysis not requiring complex dynamic patterns.

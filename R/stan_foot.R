@@ -15,6 +15,7 @@
 #'   \itemize{
 #'     \item \code{"double_pois"}: Double Poisson model.
 #'     \item \code{"biv_pois"}: Bivariate Poisson model.
+#'     \item \code{"neg_bin"}: Negative Binomial model.
 #'     \item \code{"skellam"}: Skellam model.
 #'     \item \code{"student_t"}: Student's t model.
 #'     \item \code{"diag_infl_biv_pois"}: Diagonal-inflated bivariate Poisson model.
@@ -127,7 +128,7 @@
 #'
 #' These model rely on the assumption of static parameters.
 #' However, we could assume dynamics in the attach/defence
-#' abilities (Owen, 2011; Egidi et al., 2018) in terms of weeks or seasons through the argument
+#' abilities (Owen, 2011; Egidi et al., 2018, Macrì Demartino et al., 2024) in terms of weeks or seasons through the argument
 #' \code{dynamic_type}. In such a framework, for a given
 #' number of times \eqn{1, \ldots, \mathcal{T}}, the models
 #' above would be unchanged, but the priors for the abilities
@@ -159,6 +160,9 @@
 #'
 #' Gelman, A. (2014). Stan goes to the World Cup. From
 #' "Statistical Modeling, Causal Inference, and Social Science" blog.
+#'
+#' Macrì Demartino, R., Egidi, L. and Torelli, N. Alternative ranking measures to predict
+#' international football results. Computational Statistics (2024), 1-19.
 #'
 #' Karlis, D. and Ntzoufras, I. (2003). Analysis of sports data by using bivariate poisson models.
 #' Journal of the Royal Statistical Society: Series D (The Statistician) 52(3), 381-393.
@@ -211,10 +215,11 @@
 #'       home = normal(1, 10)
 #'     ),
 #'     norm_method = "mad",
-#'     iter = 1000,
+#'     iter_sampling = 1000,
 #'     chains = 2,
-#'     cores = 2,
-#'     control = list(adapt_delta = 0.95, max_treedepth = 15)
+#'     parallel_chains = 2,
+#'     adapt_delta = 0.95,
+#'     max_treedepth = 15
 #'   )
 #'
 #'   # Print a summary of the model fit
@@ -340,9 +345,8 @@ stan_foot <- function(data,
   #   Data Checks                                                             ####
 
 
-  if (!is.matrix(data) && !is.data.frame(data)) {
-    stop("Data are not stored in matrix/data frame
-         structure. Pleasy, provide data correctly.")
+  if (!is.data.frame(data)) {
+    stop("Input data must be a data.frame with columns: periods, home_team, away_team, home_goals, away_goals.")
   }
 
 
@@ -376,6 +380,7 @@ stan_foot <- function(data,
   allowed_model_names <- c(
     "double_pois",
     "biv_pois",
+    "neg_bin",
     "skellam",
     "student_t",
     "diag_infl_biv_pois",
@@ -447,11 +452,11 @@ stan_foot <- function(data,
     predict <- 0
     N <- dim(data)[1]
     N_prev <- 0
-    type <- "fit"
+    # type <- "fit"
   } else if (is.numeric(predict)) {
     N <- dim(data)[1] - predict
     N_prev <- predict
-    type <- "prev"
+    # type <- "prev"
   }
 
   if (predict >= dim(data)[1]) {
@@ -851,12 +856,13 @@ stan_foot <- function(data,
     data_stan$ntimes <- ntimes
     data_stan$instants <- instants
     data_stan$time <- time
-    data_stan$instants_prev <- if (N_prev > 0) instants_prev else NULL
+    data_stan$instants_prev <- if (N_prev > 0) instants_prev else integer(0)
   }
 
   # Construct the final Stan model filename
-  dyn <- if (!missing(dynamic_type)) "dynamic_" else ""
-  type <- if (predict == 0) "fit" else "prev"
+  dyn <- if (!missing(dynamic_type)) "_dynamic" else ""
+
+  # type <- if (predict == 0) "fit" else "prev"
   # stan_model_filename <- paste0(model, "_", dyn, type, ".stan")
   # stan_model_path <- system.file("src/stan", stan_model_filename, package = "footBayes")
   #
@@ -865,7 +871,7 @@ stan_foot <- function(data,
   # }
 
   # Compile the model with cmdstanr
-  model_name <- paste0(model, "_", dyn, type)
+  model_name <- paste0(model, dyn)
   model_stan <- instantiate::stan_package_model(name = model_name, package = "footBayes")
 
 

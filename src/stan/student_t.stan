@@ -1,6 +1,6 @@
 data {
     int N;                      // Number of observed matches
-    int N_prev;                 // Number of predicted matches
+    int<lower=0> N_prev;                 // Number of predicted matches
     int nteams;                 // Number of teams
     int ntimes_rank;            // Number of dynamic periods for rankings
     matrix[ntimes_rank, nteams] ranking; // Rankings over time
@@ -112,12 +112,14 @@ generated quantities {
         );
     }
 
-    for (n in 1:N_prev) {
-        diff_y_prev[n] = student_t_rng(
-            nu,
-            adj_h_eff+
-            ability[instants_rank[N], team1_prev[n]] - ability[instants_rank[N], team2_prev[n]],
-            sigma_y
-        );
+    if (N_prev > 0) {
+        for (n in 1:N_prev) {
+            diff_y_prev[n] = student_t_rng(
+                nu,
+                adj_h_eff+
+                ability[instants_rank[N], team1_prev[n]] - ability[instants_rank[N], team2_prev[n]],
+                sigma_y
+            );
+        }
     }
 }

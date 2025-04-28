@@ -11,7 +11,7 @@
 #'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
 #'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 #'   }
-#' @param model A character string specifying the model to fit. Options are:
+#' @param model A character specifying the model to fit. Options are:
 #'   \itemize{
 #'     \item \code{"double_pois"}: Double Poisson model.
 #'     \item \code{"biv_pois"}: Bivariate Poisson model.
@@ -20,22 +20,39 @@
 #'     }
 #' @param predict An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.
 #'
-#' @param ... Optional arguments for MLE fit algorithms.
+#' @param maxit An integer specifying the maximum number of optimizer iterations  default is 1000).
+#' @param method A character specifying the optimization method. Options are
+#'   \itemize{
+#'     \item \code{"Nelder-Mead"}.
+#'     \item \code{"BFGS"} (default).
+#'     \item \code{"CG"}.
+#'     \item \code{"L-BFGS-B"}.
+#'     \item \code{"SANN"}.
+#'     \item \code{"Brent"}.
+
+#'   }
+#' For further details see \code{{optim}} function in \code{\link[stats]{stats}} package.
+#' @param interval A character specifying the interval type for confidence intervals. Options are
+#'   \itemize{
+#'     \item \code{"profile"} (default).
+#'     \item \code{"Wald"}.
+#'     }
+#' @param hessian A logical value indicating to include the computation of the Hessian (default FALSE).
+#' @param sigma_y A positive numeric value indicating the scale parameter for Student t likelihood (default 1).
 #'
 #' @return A named list containing:
 #' \itemize{
 #'   \item{\code{att}}: A matrix of attack ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
 #'   \item{\code{def}}: A matrix of defence ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
 #'   \item{\code{abilities}}: A matrix of combined ability, with MLE and 95\% confidence intervals (for \code{"student_t"} only).
-#'   \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals for the home‐field advantage estimate.
-#'   \item{\code{corr}}: A matrix with MLE and 95\% confidence intervals for the bivariate‐Poisson correlation parameter (for \code{"biv_pois"} only).
+#'   \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals for the home effect estimate.
+#'   \item{\code{corr}}: A matrix with MLE and 95\% confidence intervals for the bivariate Poisson correlation parameter (for \code{"biv_pois"} only).
 #'   \item{\code{model}}: The name of the fitted model (character).
 #'   \item{\code{predict}}: The number of out-of-sample matches used for prediction (integer).
-#'   \item{\code{n.iter}}: The number of optimizer iterations requested (integer).
-#'   \item{\code{sigma_y}}: The scale parameter used in the Student’s t likelihood (for \code{"student_t"} only).
+#'   \item{\code{sigma_y}}: The scale parameter used in the Student t likelihood (for \code{"student_t"} only).
 #'   \item{\code{team1_prev}}: Integer indices of home teams in the out-of-sample matches (if \code{predict > 0}).
 #'   \item{\code{team2_prev}}: Integer indices of away teams in the out-of-sample matches (if \code{predict > 0}).
-#'   \item{\code{logLik}}: The maximized log‐likelihood (numeric).
+#'   \item{\code{logLik}}: The maximized log likelihood (numeric).
 #'   \item{\code{aic}}: Akaike Information Criterion (numeric).
 #'   \item{\code{bic}}: Bayesian Information Criterion (numeric).
 #' }
@@ -44,7 +61,7 @@
 #'
 #' MLE can be obtained only for static models, with no time-dependence.
 #' Likelihood optimization is performed via the \code{BFGS} method
-#' of the \code{\link{optim}} function.
+#' of the \code{{optim}} function in \code{\link[stats]{stats}} package.
 #'
 #' @author Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}
 #'
@@ -94,13 +111,19 @@
 #' @export
 #'
 
-mle_foot <- function(data, model, predict = 0, ...) {
+mle_foot <- function(data,
+                     model,
+                     predict = 0,
+                     maxit = 1000,
+                     method = "BFGS",
+                     interval = "profile",
+                     hessian = FALSE,
+                     sigma_y = 1) {
   #   ____________________________________________________________________________
   #   Data Checks                                                             ####
 
-  if (!is.matrix(data) & !is.data.frame(data)) {
-    stop("Data are not stored in matrix/data frame
-         structure. Pleasy, provide data correctly.")
+  if (!is.data.frame(data)) {
+    stop("Input data must be a data.frame with columns: periods, home_team, away_team, home_goals, away_goals.")
   }
 
 
@@ -127,43 +150,42 @@ mle_foot <- function(data, model, predict = 0, ...) {
 
 
   #   ____________________________________________________________________________
-  #   Optional arguments checks                                               ####
+  #   Tuning arguments checks                                               ####
 
 
-  user_dots <- list(
-    maxit = 1000,
-    method = "BFGS",
-    interval = "profile",
-    hessian = FALSE,
-    n.iter = 200,
-    sigma_y = 1 # for student-t
-  )
-
-  if (missing(...)) {
-    user_dots <- user_dots
-  } else {
-    user_dots_prel <- list(...)
-    names_prel <- names(user_dots_prel)
-    names_dots <- names(user_dots)
-    for (u in 1:length(names_prel)) {
-      user_dots[names_prel[u] == names_dots] <- user_dots_prel[u]
-    }
+  if (!(is.numeric(maxit) && length(maxit) == 1 && maxit >= 1 && maxit == as.integer(maxit))) {
+    stop("`maxit` must be a single positive integer.")
   }
-  if (user_dots$interval == "Wald") {
-    user_dots$hessian <- TRUE
+
+  method <- match.arg(method, c(
+    "Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN",
+    "Brent"
+  ))
+
+  interval <- match.arg(interval, c("profile", "Wald"))
+
+  if (!(is.logical(hessian) && length(hessian) == 1)) {
+    stop("`hessian` must be a single TRUE or FALSE.")
+  }
+
+  if (!(is.numeric(sigma_y) && length(sigma_y) == 1 && sigma_y > 0)) {
+    stop("`sigma_y` must be a single positive number.")
+  }
+
+  if (interval == "Wald") {
+    hessian <- TRUE
     # stop("Select 'hessian=TRUE' to compute Wald intervals")
   }
 
   #   ____________________________________________________________________________
   #   Models' Name Checks                                                     ####
 
-  good_names <- c(
+  model <- match.arg(model, c(
     "double_pois",
     "biv_pois",
     "skellam",
     "student_t"
-  )
-  model <- match.arg(model, good_names)
+  ))
 
 
 
@@ -266,80 +288,68 @@ mle_foot <- function(data, model, predict = 0, ...) {
   # double poisson
   double_pois_lik <- function(parameters, y1, y2, team1, team2) {
     param_list <- relist_params(parameters)
-    home_log_lik <- away_log_lik <- c()
-    theta <- matrix(NA, N, 2)
     att <- param_list$att
     def <- param_list$def
     home <- param_list$home
 
-    for (n in 1:N) {
-      theta[n, 1] <- exp(home + att[team1[n]] + def[team2[n]])
-      theta[n, 2] <- exp(att[team2[n]] + def[team1[n]])
-      home_log_lik[n] <- dpois(y1[n], lambda = theta[n, 1], log = TRUE)
-      away_log_lik[n] <- dpois(y2[n], lambda = theta[n, 2], log = TRUE)
-    }
+    theta_1 <- exp(home + att[team1] + def[team2])
+    theta_2 <- exp(att[team2] + def[team1])
+    home_log_lik <- dpois(y1, lambda = theta_1, log = TRUE)
+    away_log_lik <- dpois(y2, lambda = theta_2, log = TRUE)
     return(-sum(home_log_lik + away_log_lik))
   }
 
   # bivariate poisson
   biv_pois_lik <- function(parameters, y1, y2, team1, team2) {
     param_list <- relist_params(parameters)
-    log_lik <- c()
-    theta <- matrix(NA, N, 3)
     att <- param_list$att
     def <- param_list$def
     home <- param_list$home
     const <- param_list$const
 
-    for (n in 1:N) {
-      theta[n, 1] <- exp(home + att[team1[n]] + def[team2[n]])
-      theta[n, 2] <- exp(att[team2[n]] + def[team1[n]])
-      theta[n, 3] <- exp(const)
-      log_lik[n] <- dbvpois(y1[n], y2[n],
-        a = theta[n, 1],
-        b = theta[n, 2], c = theta[n, 3],
-        log = TRUE
-      )
-    }
+    theta_1 <- exp(home + att[team1] + def[team2])
+    theta_2 <- exp(att[team2] + def[team1])
+    theta_3 <- exp(const)
+    log_lik <- dbvpois(y1, y2,
+      a = theta_1,
+      b = theta_2, c = theta_3,
+      log = TRUE
+    )
+
     return(-sum(log_lik))
   }
 
   # skellam
   skellam_lik <- function(parameters, y1, y2, team1, team2) {
     param_list <- relist_params(parameters)
-    log_lik <- c()
-    theta <- matrix(NA, N, 2)
     att <- param_list$att
     def <- param_list$def
     home <- param_list$home
 
-    for (n in 1:N) {
-      theta[n, 1] <- exp(home + att[team1[n]] + def[team2[n]])
-      theta[n, 2] <- exp(att[team2[n]] + def[team1[n]])
-      log_lik[n] <- dskellam(y1[n] - y2[n],
-        mu1 = theta[n, 1],
-        mu2 = theta[n, 2], log = TRUE
-      )
-    }
+    theta_1 <- exp(home + att[team1] + def[team2])
+    theta_2 <- exp(att[team2] + def[team1])
+    log_lik <- dskellam(y1 - y2,
+      mu1 = theta_1,
+      mu2 = theta_2, log = TRUE
+    )
+
     return(-sum(log_lik))
   }
 
   # student t
   student_t_lik <- function(parameters, y1, y2, team1, team2) {
     param_list <- relist_params(parameters)
-    log_lik <- c()
     ability <- param_list$att + param_list$def
     home <- param_list$home
     sigma_y <- as.numeric(param_list$sigma_y)
 
-    for (n in 1:N) {
-      log_lik[n] <- dt.scaled(
-        x = y1[n] - y2[n], df = 7,
-        mean = home + ability[team1[n]] - ability[team2[n]],
-        sd = sigma_y,
-        log = TRUE
-      )
-    }
+    log_lik <- dt.scaled(
+      x = y1 - y2, df = 7,
+      mean = home + ability[team1] - ability[team2],
+      sd = sigma_y,
+      log = TRUE
+    )
+
     return(-sum(log_lik))
   }
 
@@ -354,23 +364,31 @@ mle_foot <- function(data, model, predict = 0, ...) {
     def = rep(0, length(teams) - 1) %>% `names<-`(teams[2:length(teams)]),
     home = 2,
     const = 1, # for bivariate poisson
-    sigma_y = user_dots$sigma_y # for student_t
+    sigma_y = sigma_y # for student_t
   )
 
 
   # MLE fit
+
+  likelihoods <- list(
+    double_pois = double_pois_lik,
+    biv_pois    = biv_pois_lik,
+    skellam     = skellam_lik,
+    student_t   = student_t_lik
+  )
+
   mle_fit <- optim(
     par = unlist(equal_parameters),
-    fn = eval(parse(text = paste(model, "_lik", sep = ""))),
+    fn = likelihoods[[model]],
     team1 = team1, team2 = team2,
     y1 = y1, y2 = y2,
-    method = user_dots$method,
-    hessian = user_dots$hessian,
-    control = list(maxit = user_dots$maxit)
+    method = method,
+    hessian = hessian,
+    control = list(maxit = maxit)
   )
 
   # Compute likelihood confidence intervals
-  fn <- eval(parse(text = paste(model, "_lik", sep = "")))
+  fn <- likelihoods[[model]]
   mle_value <- -fn(mle_fit$par,
     team1 = team1,
     team2 = team2,
@@ -379,7 +397,7 @@ mle_foot <- function(data, model, predict = 0, ...) {
 
   ci <- matrix(NA, (2 * nteams), 2)
   # Profile likelihood intervals (default)
-  if (user_dots$interval == "profile") {
+  if (interval == "profile") {
     index <- function(j) {
       profile <- function(x) {
         parameters <- mle_fit$par
@@ -404,7 +422,7 @@ mle_foot <- function(data, model, predict = 0, ...) {
     ci <- t(ci_out)
 
     # Wald-type intervals (only if hessian = TRUE)
-  } else if (user_dots$interval == "Wald") {
+  } else if (interval == "Wald") {
     ci[1:(2 * nteams - 2), 1] <- round(mle_fit$par[1:(2 * nteams - 2)] - 1.96 * sqrt(diag(solve(mle_fit$hessian[1:(2 * nteams - 2), 1:(2 * nteams - 2)]))), 2)
     ci[1:(2 * nteams - 2), 2] <- round(mle_fit$par[1:(2 * nteams - 2)] + 1.96 * sqrt(diag(solve(mle_fit$hessian[1:(2 * nteams - 2), 1:(2 * nteams - 2)]))), 2)
     ci[2 * nteams - 1, 1] <- round(mle_fit$par[2 * nteams - 1] - 1.96 * sqrt(solve(mle_fit$hessian[2 * nteams - 1, 2 * nteams - 1])), 2)
@@ -490,8 +508,8 @@ mle_foot <- function(data, model, predict = 0, ...) {
 
 
 
-#   ____________________________________________________________________________
-#   Compute AIC and BIC                                                     ####
+  #   ____________________________________________________________________________
+  #   Compute AIC and BIC                                                     ####
 
   logLik <- -mle_fit$value
   k <- length(mle_fit$par)
@@ -500,6 +518,9 @@ mle_foot <- function(data, model, predict = 0, ...) {
   BIC <- k * log(N) - 2 * logLik
 
 
+  #   ____________________________________________________________________________
+  #   Output                                                                  ####
+
 
   if (model == "student_t") {
     return(list(
@@ -507,8 +528,7 @@ mle_foot <- function(data, model, predict = 0, ...) {
       home_effect = home_est,
       model = model,
       predict = predict,
-      n.iter = user_dots$n.iter,
-      sigma_y = user_dots$sigma_y,
+      sigma_y = sigma_y,
       team1_prev = team1_prev,
       team2_prev = team2_prev,
       logLik = logLik,
@@ -523,7 +543,6 @@ mle_foot <- function(data, model, predict = 0, ...) {
       corr = corr_est,
       model = model,
       predict = predict,
-      n.iter = user_dots$n.iter,
       team1_prev = team1_prev,
       team2_prev = team2_prev,
       logLik = logLik,
@@ -537,7 +556,6 @@ mle_foot <- function(data, model, predict = 0, ...) {
       home_effect = home_est,
       model = model,
       predict = predict,
-      n.iter = user_dots$n.iter,
       team1_prev = team1_prev,
       team2_prev = team2_prev,
       logLik = logLik,

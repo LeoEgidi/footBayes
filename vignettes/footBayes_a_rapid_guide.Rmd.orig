@@ -46,15 +46,17 @@ Modeling football outcomes became incredibly popular over the last years. Howeve
 
 With the ```footBayes``` package we want to fill the gap and to give the possibility to **fit, interpret and graphically explore** the following goal-based Bayesian football models using the underlying Stan <span style="color:red"> [@rstan2020]</span> environment using the CmdStanR <span style="color:red"> [@cmdstanr_2024]</span> interface:
 
-- <span style="color:green">Double Poisson</span>: <span style="color:red"> @baio2010bayesian, @groll2015prediction, @egidi2018combining </span>
+- <span style="color:green">Double Poisson</span>: <span style="color:red"> @baio2010bayesian, @groll2015prediction, @egidi2018combining </span>;
 
-- <span style="color:green">Bivariate Poisson</span>: <span style="color:red"> @karlis2003analysis </span>
+- <span style="color:green">Bivariate Poisson</span>: <span style="color:red"> @karlis2003analysis </span>;
 
-- <span style="color:green">Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>
+- <span style="color:green">Negative Binomial</span>: <span style="color:red"> @reep_1971 </span>;
 
-- <span style="color:green">Zero-Inflated Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>
+- <span style="color:green">Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>;
 
-- <span style="color:green">Student-$t$</span> for goals' differences: <span style="color:red"> @gelman2014stan </span>
+- <span style="color:green">Zero-Inflated Skellam</span> for goals' differences: <span style="color:red"> @karlis2009bayesian </span>;
+
+- <span style="color:green">Student-$t$</span> for goals' differences: <span style="color:red"> @gelman2014stan </span>;
 
 - <span style="color:green">Diagonal-Inflated Bivariate Poisson</span>: <span style="color:red">@karlis2003analysis </span>.
 

@@ -155,6 +155,15 @@ test_that("Static models predictions errors", {
 
   # Correct model
   expect_error(stan_foot(england_2004,
+                         model = "neg_bin",
+                         predict = 10,
+                         iter_sampling = 200,
+                         chains = 2,
+                         seed = 433
+  ), NA)
+
+
+  expect_error(stan_foot(england_2004,
                          model = "student_t",
                          predict = 10,
                          iter_sampling = 200,

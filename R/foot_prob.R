@@ -444,7 +444,7 @@ foot_prob <- function(object, data, home_team, away_team) {
   } else if (inherits(object, "list")) {
     model <- object$model
     predict <- object$predict
-    n.iter <- object$n.iter
+    n.iter <- 200
     team1_prev <- object$team1_prev
     team2_prev <- object$team2_prev
     N_prev <- predict

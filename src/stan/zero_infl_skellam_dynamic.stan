@@ -1,41 +1,46 @@
 functions{
-
-      real bipois_lpmf(array[] int r , real mu1,real mu2,real mu3) {
-        real ss;
-        real log_s;
-        real mus;
-        int  miny;
-
-        miny = min(r[1], r[2]);
-
-        ss = poisson_lpmf(r[1] | mu1) + poisson_lpmf(r[2] | mu2) -
-          exp(mu3);
-        if(miny > 0) {
-          mus = -mu1-mu2+mu3;
-          log_s = ss;
-
-          for(k in 1:miny) {
-            log_s = log_s + log(r[1] - k + 1) + mus
-            + log(r[2] - k + 1)
-            - log(k);
-            ss = log_sum_exp(ss, log_s);
-          }
-        }
-        return(ss);
+      real skellam_lpmf(int k, real lambda1, real lambda2) {
+        //real r = k;
+        return -(lambda1 + lambda2) + (k/2) * log(lambda1/lambda2) +
+          log_modified_bessel_first_kind(abs(k), 2 * sqrt(lambda1 * lambda2));
       }
+
+       real zero_infl_skellam_lpmf(int k, real lambda1, real lambda2, real p) {
+    // This way is the easiest and proposed by https://github.com/Torvaney/karlis-ntzoufras-reproduction.
+    // However, within model block, we propose in a comment the alternative way that Stan proposes in their documentation for zero inflated models
+      real base_prob;
+      real prob;
+      real log_prob;
+
+      base_prob = exp(skellam_lpmf(k| lambda1,lambda2));
+
+      if (k== 0)
+        prob = p + (1 - p) * base_prob;
+      else
+        prob = (1 - p) * base_prob;
+
+      log_prob = log(prob);
+
+      return log_prob;
     }
-    data{
-      int N;   // number of games
-      array[N,2] int y;
+
+}
+data{
+      int N;
+      int<lower=0> N_prev;
+      array[N] int diff_y;
       int nteams;
       array[N] int team1;
       array[N] int team2;
-      int ntimes_rank;             // ranking periods
+      array[N_prev] int team1_prev;
+      array[N_prev] int team2_prev;
       int ntimes;                 // dynamic periods
       array[ntimes] int time;
-      array[N] int instants_rank;       // ranking instants
       array[N] int instants;
-      matrix[ntimes_rank,nteams] ranking;
+      array[N_prev] int instants_prev;
+      array[N] int instants_rank;
+      int ntimes_rank;                 // dynamic periods for ranking
+      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
       int<lower=0, upper=1> ind_home;
       real mean_home;              // Mean for home effect
       real<lower=0> sd_home;      // Standard deviation for home effect
@@ -54,32 +59,32 @@ functions{
     parameters{
       matrix[ntimes, nteams] att_raw;        // raw attack ability
       matrix[ntimes, nteams] def_raw;        // raw defense ability
-      real rho;
       real home;
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real gamma;
-    }
-    transformed parameters{
+      real <lower=0,upper=1> prob_of_draws;// excessive probability of draws
+
+}
+
+transformed parameters{
       real adj_h_eff;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
       matrix[ntimes, nteams] def;            // defense abilities
-      // cov_matrix[ntimes] Sigma_att;         // Gaussian process attack cov. funct.
-      // cov_matrix[ntimes] Sigma_def;        // Gaussian process defense cov.funct.
+      // cov_matrix[ntimes] Sigma_att;          // Gaussian process attack cov. funct.
+      // cov_matrix[ntimes] Sigma_def;          // Gaussian process defense cov.funct.
       matrix[ntimes, nteams] mu_att;         // attack hyperparameter
       matrix[ntimes, nteams] mu_def;         // defense hyperparameter
-      vector[N] theta_home;                 // exponentiated linear pred.
+      vector[N] theta_home;                    // exponentiated linear pred.
       vector[N] theta_away;
-      vector[N] theta_corr;
 
-      // Gaussian process covariance functions
       // for (i in 1:(ntimes)){
-        //   for (j in 1:(ntimes)){
-          //     Sigma_att[i, j] = exp(-pow(time[i] - time[j], 2))
-          //     + (i == j ? 0.1 : 0.0);
-          //     Sigma_def[i, j] = exp(-pow(time[i] - time[j], 2))
-          //                 + (i == j ? 0.1 : 0.0);
-          //   }}
+        //     for (j in 1:(ntimes)){
+          //       Sigma_att[i, j] = exp(-pow(time[i] - time[j], 2))
+          //       + (i == j ? 0.1 : 0.0);
+          //       Sigma_def[i, j] = exp(-pow(time[i] - time[j], 2))
+          //                   + (i == j ? 0.1 : 0.0);
+          //     }}
 
       // Sum-to-zero constraint for attack/defense parameters
       att[1]=att_raw[1]-mean(att_raw[1]);
@@ -92,29 +97,23 @@ functions{
       // Lagged prior mean for attack/defense parameters
       for (t in 2:(ntimes)){
         mu_att[1]=rep_row_vector(hyper_location,nteams);
-        mu_att[t]= att[t-1];
+        mu_att[t]=att[t-1];
         //rep_row_vector(0,nteams);
 
-        mu_def[1]=rep_row_vector(hyper_location, nteams);
-        mu_def[t]= def[t-1];
+        mu_def[1]=rep_row_vector(hyper_location,nteams);
+        mu_def[t]=def[t-1];
         //rep_row_vector(0,nteams);
 
       }
-
 
       adj_h_eff = home * ind_home;
 
-
       for (n in 1:N){
         theta_home[n] = exp(adj_h_eff+att[instants[n], team1[n]]+def[instants[n], team2[n]]+
-                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
-        theta_away[n] = exp(att[instants[n], team2[n]]+def[instants[n], team1[n]]-
-                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
-        theta_corr[n] = exp(rho);
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
+        theta_away[n] = exp(att[instants[n],team2[n]]+def[instants[n], team1[n]]-
+                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
       }
-
-
-
     }
     model{
       // log-priors for team-specific abilities
@@ -153,32 +152,46 @@ functions{
 
       // log-priors fixed effects
       target+=normal_lpdf(home|mean_home,sd_home);
-      target+=normal_lpdf(rho|0,1);
       target+=normal_lpdf(gamma|0,1);
+      target+=uniform_lpdf(prob_of_draws|0,1);
+
 
       // likelihood
-
       for (n in 1:N){
-        //target+=bipois_lpmf(y[n,]| theta_home[n],
-        //                    theta_away[n], theta_corr[n]);
-          target+=poisson_lpmf(y[n,1]|theta_home[n]+theta_corr[n]);
-          target+=poisson_lpmf(y[n,2]|theta_away[n]+theta_corr[n]);
 
+        target+=zero_infl_skellam_lpmf(diff_y[n]| theta_home[n],
+        theta_away[n],prob_of_draws);
       }
     }
     generated quantities{
       array[N,2] int y_rep;
-      vector[N] log_lik;
       array[N] int diff_y_rep;
+      vector[N] log_lik;
+      vector[N_prev] theta_home_prev;
+      vector[N_prev] theta_away_prev;
+      array[N_prev,2] int y_prev;
+      array[N_prev] int diff_y_prev;
 
       //in-sample replications
       for (n in 1:N){
-        y_rep[n,1] = poisson_rng(theta_home[n]+theta_corr[n]);
-        y_rep[n,2] = poisson_rng(theta_away[n]+theta_corr[n]);
+        y_rep[n,1] = poisson_rng(theta_home[n]);
+        y_rep[n,2] = poisson_rng(theta_away[n]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-        log_lik[n] = poisson_lpmf(y[n,1]|theta_home[n]+theta_corr[n])+
-                     poisson_lpmf(y[n,2]|theta_away[n]+theta_corr[n]);
-       //bipois_lpmf(y[n,]| theta_home[n],
-       //                          theta_away[n], theta_corr[n]);
+        log_lik[n] =zero_infl_skellam_lpmf(diff_y[n]| theta_home[n],
+        theta_away[n],prob_of_draws);
+        }
+      //out-of-sample predictions
+      if (N_prev > 0) {
+        for (n in 1:N_prev){
+          theta_home_prev[n] = exp(adj_h_eff+att[instants_prev[n], team1_prev[n]]+
+                                     def[instants_prev[n], team2_prev[n]]+
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+          theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]]+
+                                     def[instants_prev[n], team1_prev[n]]-
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+          y_prev[n,1] = poisson_rng(theta_home_prev[n]);
+          y_prev[n,2] = poisson_rng(theta_away_prev[n]);
+          diff_y_prev[n] = y_prev[n,1] - y_prev[n,2];
+        }
       }
     }

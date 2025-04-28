@@ -1,7 +1,7 @@
 ## Test environments
 * win-builder (devel and release)
-* local OS X install, R 4.4.2
-* local Linux, R 4.4.2
+* local OS X install, R 4.4.3
+* local Linux, R 4.4.3
 
 ## R CMD check results
 0 errors | 0 warnings | 1 notes

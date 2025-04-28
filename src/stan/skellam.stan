@@ -7,7 +7,7 @@ functions{
     }
     data{
       int N;
-      int N_prev;
+      int<lower=0> N_prev;
       array[N] int diff_y;
       int nteams;
       array[N] int team1;
@@ -126,15 +126,17 @@ functions{
         log_lik[n] =skellam_lpmf(diff_y[n]| theta[n,1], theta[n,2]);
       }
       //out-of-sample predictions
+      if (N_prev > 0) {
       for (n in 1:N_prev){
-        theta_prev[n,1] = exp(adj_h_eff+att[team1_prev[n]]+
-                                def[team2_prev[n]]+
-                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
-        theta_prev[n,2] = exp(att[team2_prev[n]]+
-                                def[team1_prev[n]]-
-                         (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
-        y_prev[n,1] = poisson_rng(theta_prev[n,1]);
-        y_prev[n,2] = poisson_rng(theta_prev[n,2]);
-        diff_y_prev[n] = y_prev[n,1] - y_prev[n,2];
+          theta_prev[n,1] = exp(adj_h_eff+att[team1_prev[n]]+
+                                  def[team2_prev[n]]+
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+          theta_prev[n,2] = exp(att[team2_prev[n]]+
+                                  def[team1_prev[n]]-
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+          y_prev[n,1] = poisson_rng(theta_prev[n,1]);
+          y_prev[n,2] = poisson_rng(theta_prev[n,2]);
+          diff_y_prev[n] = y_prev[n,1] - y_prev[n,2];
+        }
       }
     }

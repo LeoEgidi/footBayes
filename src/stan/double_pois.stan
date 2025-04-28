@@ -1,16 +1,12 @@
-functions{
-      real skellam_lpmf(int k, real lambda1, real lambda2) {
-        //real r = k;
-        return -(lambda1 + lambda2) + (k/2) * log(lambda1/lambda2) +
-          log_modified_bessel_first_kind(abs(k), 2 * sqrt(lambda1 * lambda2));
-      }
-    }
-    data{
-      int N;
-      array[N] int diff_y;
-      int nteams;
-      array[N] int team1;
-      array[N] int team2;
+data{
+      int N;                      // number of games
+      int<lower=0> N_prev;                 // number of predicted games
+      array[N,2] int y;                 // scores
+      int nteams;                 // number of teams
+      array[N] int team1;               // home team index
+      array[N] int team2;               // away team index
+      array[N_prev] int team1_prev;     // home team for pred.
+      array[N_prev] int team2_prev;     // away team for pred.
       array[N] int instants_rank;
       int ntimes_rank;                 // dynamic periods for ranking
       matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
@@ -39,9 +35,9 @@ functions{
     }
     transformed parameters{
       real adj_h_eff;                   // Adjusted home effect
-      vector[nteams] att;
-      vector[nteams] def;
-      array[N,2] real theta;
+      vector[nteams] att;        // attack parameters
+      vector[nteams] def;        // defence parameters
+      array[N] vector[2] theta;        // exponentiated linear pred.
 
       for (t in 1:nteams){
         att[t] = att_raw[t]-mean(att_raw);
@@ -102,20 +98,35 @@ functions{
       target+=normal_lpdf(gamma|0,1);
 
       // likelihood
-      for (n in 1:N){
-        target+=skellam_lpmf(diff_y[n]| theta[n,1],theta[n,2]);
-      }
+
+      target+=poisson_lpmf(y[,1]| theta[,1]);
+      target+=poisson_lpmf(y[,2]| theta[,2]);
+
     }
     generated quantities{
       array[N,2] int y_rep;
-      array[N] int diff_y_rep;
+      array[N_prev,2] int y_prev;
+      array[N_prev] vector[2] theta_prev;
       vector[N] log_lik;
+      array[N] int diff_y_rep;
 
       //in-sample replications
       for (n in 1:N){
         y_rep[n,1] = poisson_rng(theta[n,1]);
         y_rep[n,2] = poisson_rng(theta[n,2]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-        log_lik[n] =skellam_lpmf(diff_y[n]| theta[n,1], theta[n,2]);
+        log_lik[n] =poisson_lpmf(y[n,1]| theta[n,1])+
+          poisson_lpmf(y[n,2]| theta[n,2]);
+      }
+      //out-of-sample predictions
+      if (N_prev > 0) {
+        for (n in 1:N_prev){
+          theta_prev[n,1] = exp(adj_h_eff+att[team1_prev[n]]+def[team2_prev[n]]+
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+          theta_prev[n,2] = exp(att[team2_prev[n]]+def[team1_prev[n]]-
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+          y_prev[n,1] = poisson_rng(theta_prev[n,1]);
+          y_prev[n,2] = poisson_rng(theta_prev[n,2]);
+        }
       }
     }

@@ -1,39 +1,42 @@
 functions{
-      real skellam_lpmf(int k, real lambda1, real lambda2) {
-        //real r = k;
-        return -(lambda1 + lambda2) + (k/2) * log(lambda1/lambda2) +
-          log_modified_bessel_first_kind(abs(k), 2 * sqrt(lambda1 * lambda2));
+
+      real bipois_lpmf(array[] int r , real mu1,real mu2,real mu3) {
+        real ss;
+        real log_s;
+        real mus;
+        int  miny;
+
+        miny = min(r[1], r[2]);
+
+        ss = poisson_lpmf(r[1] | mu1) + poisson_lpmf(r[2] | mu2) -
+          exp(mu3);
+        if(miny > 0) {
+          mus = -mu1-mu2+mu3;
+          log_s = ss;
+
+          for(k in 1:miny) {
+            log_s = log_s + log(r[1] - k + 1) + mus
+            + log(r[2] - k + 1)
+            - log(k);
+            ss = log_sum_exp(ss, log_s);
+          }
+        }
+        return(ss);
       }
 
-       real zero_infl_skellam_lpmf(int k, real lambda1, real lambda2, real p) {
-    // This way is the easiest and proposed by https://github.com/Torvaney/karlis-ntzoufras-reproduction.
-    // However, within model block, we propose in a comment the alternative way that Stan proposes in their documentation for zero inflated models
-      real base_prob;
-      real prob;
-      real log_prob;
-
-      base_prob = exp(skellam_lpmf(k| lambda1,lambda2));
-
-      if (k== 0)
-        prob = p + (1 - p) * base_prob;
-      else
-        prob = (1 - p) * base_prob;
-
-      log_prob = log(prob);
-
-      return log_prob;
     }
-
-}
     data{
-      int N;
-      array[N] int diff_y;
+      int N;   // number of games
+      int<lower=0> N_prev;
+      array[N,2] int y;
       int nteams;
-      array[N] int team1;
-      array[N] int team2;
       array[N] int instants_rank;
       int ntimes_rank;                 // dynamic periods for ranking
-      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
+      array[N] int team1;
+      array[N] int team2;
+      array[N_prev]int team1_prev;
+      array[N_prev] int team2_prev;
+      matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
       real mean_home;              // Mean for home effect
       real<lower=0> sd_home;      // Standard deviation for home effect
@@ -55,15 +58,14 @@ functions{
       real<lower=0> sigma_att;
       real<lower=0> sigma_def;
       real home;
+      real rho;
       real gamma;
-      real <lower=0,upper=1> prob_of_draws;// excessive probability of draws
-
     }
     transformed parameters{
       real adj_h_eff;                   // Adjusted home effect
       vector[nteams] att;
       vector[nteams] def;
-      array[N,2] real theta;
+      array[N] vector[3] theta;
 
       for (t in 1:nteams){
         att[t] = att_raw[t]-mean(att_raw);
@@ -74,9 +76,10 @@ functions{
 
       for (n in 1:N){
         theta[n,1] = exp(adj_h_eff+att[team1[n]]+def[team2[n]]+
-                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta[n,2] = exp(att[team2[n]]+def[team1[n]]-
-                         (gamma/2)*(ranking[instants_rank[n],team1[n]]-ranking[instants_rank[n],team2[n]]));
+                         (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
+        theta[n,3] = exp(rho);
       }
     }
     model{
@@ -121,26 +124,47 @@ functions{
 
       // log-priors fixed effects
       target+=normal_lpdf(home|mean_home,sd_home);
+      target+=normal_lpdf(rho|0,1);
       target+=normal_lpdf(gamma|0,1);
-      target+=uniform_lpdf(prob_of_draws|0,1);
 
       // likelihood
       for (n in 1:N){
-        target+=zero_infl_skellam_lpmf(diff_y[n]| theta[n,1],theta[n,2],
-        prob_of_draws);
+        //target+=bipois_lpmf(y[n,]| theta[n,1],
+        //                    theta[n,2], theta[n,3]);
+        target+=poisson_lpmf(y[n,1]| theta[n,1]+theta[n,3]);
+        target+=poisson_lpmf(y[n,2]| theta[n,2]+theta[n,3]);
       }
-}
+    }
     generated quantities{
-      array[N,2] int y_rep;
-      array[N] int diff_y_rep;
+      array[N,2]int y_rep;
+      array[N_prev,2] int y_prev;
+      array[N_prev] vector[3] theta_prev;
       vector[N] log_lik;
+      array[N] int diff_y_rep;
 
       //in-sample replications
       for (n in 1:N){
-        y_rep[n,1] = poisson_rng(theta[n,1]);
-        y_rep[n,2] = poisson_rng(theta[n,2]);
+        y_rep[n,1] = poisson_rng(theta[n,1]+theta[n,3]);
+        y_rep[n,2] = poisson_rng(theta[n,2]+theta[n,3]);
         diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-        log_lik[n] =zero_infl_skellam_lpmf(diff_y[n]| theta[n,1],theta[n,2],
-        prob_of_draws);
+        log_lik[n] = poisson_lpmf(y[n,1]| theta[n,1]+theta[n,3])+
+                     poisson_lpmf(y[n,2]| theta[n,2]+theta[n,3]);
+        //bipois_lpmf(y[n,]| theta[n,1],
+        //                        theta[n,2], theta[n,3]);
       }
-}
+
+      //out-of-sample predictions
+      if (N_prev > 0) {
+        for (n in 1:N_prev){
+          theta_prev[n,1] = exp(adj_h_eff+att[team1_prev[n]]+
+                                  def[team2_prev[n]]+
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+          theta_prev[n,2] = exp(att[team2_prev[n]]+
+                                  def[team1_prev[n]]-
+                           (gamma/2)*(ranking[instants_rank[N],team1_prev[n]]-ranking[instants_rank[N],team2_prev[n]]));
+          theta_prev[n,3] = exp(rho);
+          y_prev[n,1] = poisson_rng(theta_prev[n,1]+theta_prev[n,3]);
+          y_prev[n,2] = poisson_rng(theta_prev[n,2]+theta_prev[n,3]);
+        }
+      }
+    }
