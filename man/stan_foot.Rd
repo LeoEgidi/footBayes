@@ -99,7 +99,7 @@ An object of class \code{"stanFoot"}, which is a list containing:
 }
 \description{
 Fits football goal-based models using Stan via the CmdStan backend.
-Supported models include: double Poisson, bivariate Poisson, Skellam, Student's t, diagonal-inflated bivariate Poisson, and zero-inflated Skellam.
+Supported models include: double Poisson, bivariate Poisson, Skellam, Student's t, diagonal-inflated bivariate Poisson, zero-inflated Skellam, and negative Binomial.
 }
 \details{
 Let \eqn{(y^{H}_{n}, y^{A}_{n})} denote the
