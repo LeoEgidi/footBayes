@@ -159,8 +159,8 @@ foot_prob <- function(object, data, home_team, away_team) {
   }
 
 
-  true_gol_home <- data_prev$home_goals[find_match]
-  true_gol_away <- data_prev$away_goals[find_match]
+  true_goal_home <- data_prev$home_goals[find_match]
+  true_goal_away <- data_prev$away_goals[find_match]
 
   if (length(find_match) == 0) {
     stop(paste("There is not any out-of-sample match:",
@@ -208,16 +208,16 @@ foot_prob <- function(object, data, home_team, away_team) {
         Away = numeric(0),
         Prob = numeric(0),
         matches = character(0),
-        true_gol_home = numeric(0),
-        true_gol_away = numeric(0)
+        true_goal_home = numeric(0),
+        true_goal_away = numeric(0)
       )
 
       if (length(find_match) == 1) {
         posterior_prop1 <- table(subset(prediction1, prediction1 < 15))
         posterior_prop2 <- table(subset(prediction2, prediction2 < 15))
 
-        teamaa <- home_team
-        teamab <- away_team
+        team_a <- home_team
+        team_b <- away_team
 
         x_min <- y_min <- min(
           length(posterior_prop1),
@@ -238,9 +238,9 @@ foot_prob <- function(object, data, home_team, away_team) {
         y_seq <- seq(0, dim2 - 1, length.out = dim2)
         data_exp <- expand.grid(Home = x_seq, Away = y_seq)
         data_exp$Prob <- as.double(counts_mix / (M * M))
-        data_exp$matches <- paste(teamaa, "-", teamab)
-        data_exp$true_gol_home <- true_gol_home
-        data_exp$true_gol_away <- true_gol_away
+        data_exp$matches <- paste(team_a, "-", team_b)
+        data_exp$true_goal_home <- true_goal_home
+        data_exp$true_goal_away <- true_goal_away
 
         # Overall "adjusted" probabilities
         prob_h_val <- sum(counts_mix[lower.tri(counts_mix)] / (M * M)) / sum(data_exp$Prob)
@@ -274,10 +274,10 @@ foot_prob <- function(object, data, home_team, away_team) {
           scale_fill_gradient(low = "white", high = "black") +
           geom_rect(
             aes(
-              xmin = as.numeric(as.vector(true_gol_home)) - 0.5,
-              xmax = as.numeric(as.vector(true_gol_home)) + 0.5,
-              ymin = as.numeric(as.vector(true_gol_away)) - 0.5,
-              ymax = as.numeric(as.vector(true_gol_away)) + 0.5,
+              xmin = as.numeric(as.vector(true_goal_home)) - 0.5,
+              xmax = as.numeric(as.vector(true_goal_home)) + 0.5,
+              ymin = as.numeric(as.vector(true_goal_away)) - 0.5,
+              ymax = as.numeric(as.vector(true_goal_away)) + 0.5,
               color = "True Result"
             ),
             fill = "transparent", linewidth = 1.5
@@ -298,13 +298,13 @@ foot_prob <- function(object, data, home_team, away_team) {
           scale_color_manual(name = "", values = c("True Result" = "red")) +
           guides(color = guide_legend(override.aes = list(fill = NA)))
       } else {
-        teamaa <- teamab <- c()
+        team_a <- team_b <- c()
         for (i in 1:length(find_match)) {
           posterior_prop1 <- table(prediction1[, i])
           posterior_prop2 <- table(prediction2[, i])
 
-          teamaa[i] <- home_team[i]
-          teamab[i] <- away_team[i]
+          team_a[i] <- home_team[i]
+          team_b[i] <- away_team[i]
 
           x_min <- y_min <- 5
 
@@ -323,9 +323,9 @@ foot_prob <- function(object, data, home_team, away_team) {
           y_seq <- seq(0, dim2 - 1, length.out = dim2)
           data_exp <- expand.grid(Home = x_seq, Away = y_seq)
           data_exp$Prob <- as.double(counts_mix / (M * M))
-          data_exp$matches <- paste(teamaa[i], "-", teamab[i])
-          data_exp$true_gol_home <- true_gol_home[i]
-          data_exp$true_gol_away <- true_gol_away[i]
+          data_exp$matches <- paste(team_a[i], "-", team_b[i])
+          data_exp$true_goal_home <- true_goal_home[i]
+          data_exp$true_goal_away <- true_goal_away[i]
 
           # overall "adjusted" probabilities
           prob_h[i] <- sum(counts_mix[lower.tri(counts_mix)] / (M * M)) / sum(data_exp$Prob)
@@ -363,8 +363,8 @@ foot_prob <- function(object, data, home_team, away_team) {
             prob_a = sum(Prob[Home < Away])
           )
 
-        data_exp_tot$favorite <- rep(teamaa, each = x_min * y_min)
-        data_exp_tot$underdog <- rep(teamab, each = x_min * y_min)
+        data_exp_tot$favorite <- rep(team_a, each = x_min * y_min)
+        data_exp_tot$underdog <- rep(team_b, each = x_min * y_min)
 
         # Use which() to avoid NA values in indexes
         indexes <- which(data_exp_tot$prob_h < data_exp_tot$prob_a)
@@ -383,10 +383,10 @@ foot_prob <- function(object, data, home_team, away_team) {
         data_exp_tot$Home[indexes] <- temp_coord2
         data_exp_tot$Away[indexes] <- temp_coord1
 
-        temp_tg1 <- data_exp_tot$true_gol_home[indexes]
-        temp_tg2 <- data_exp_tot$true_gol_away[indexes]
-        data_exp_tot$true_gol_home[indexes] <- temp_tg2
-        data_exp_tot$true_gol_away[indexes] <- temp_tg1
+        temp_tg1 <- data_exp_tot$true_goal_home[indexes]
+        temp_tg2 <- data_exp_tot$true_goal_away[indexes]
+        data_exp_tot$true_goal_home[indexes] <- temp_tg2
+        data_exp_tot$true_goal_away[indexes] <- temp_tg1
 
         data_exp_tot <- dplyr::arrange(data_exp_tot, prob_h)
         fav_teams <- data_exp_tot %>% distinct(favorite)
@@ -413,10 +413,10 @@ foot_prob <- function(object, data, home_team, away_team) {
           ) +
           geom_rect(
             aes(
-              xmin = as.numeric(as.vector(true_gol_home)) - 0.5,
-              xmax = as.numeric(as.vector(true_gol_home)) + 0.5,
-              ymin = as.numeric(as.vector(true_gol_away)) - 0.5,
-              ymax = as.numeric(as.vector(true_gol_away)) + 0.5,
+              xmin = as.numeric(as.vector(true_goal_home)) - 0.5,
+              xmax = as.numeric(as.vector(true_goal_home)) + 0.5,
+              ymin = as.numeric(as.vector(true_goal_away)) - 0.5,
+              ymax = as.numeric(as.vector(true_goal_away)) + 0.5,
               color = "True Result"
             ),
             fill = "transparent", linewidth = 1.5
