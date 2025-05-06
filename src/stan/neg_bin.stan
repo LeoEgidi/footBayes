@@ -12,7 +12,7 @@ data {
   matrix[ntimes_rank, nteams] ranking;
   int<lower=0, upper=1> ind_home;
   real mean_home;                          // prior mean for home effect
-  real<lower=0> sd_home;                  // prior sd for home effect
+  real<lower=1e-8> sd_home;                  // prior sd for home effect
 
   // choice of prior distributions for att/def
   int<lower=1,upper=4> prior_dist_num;     // 1=normal,2=t,3=cauchy,4=laplace
@@ -23,14 +23,14 @@ data {
 
   real<lower=0> hyper_sd_df;               // d.f. for t‑prior on sds
   real hyper_sd_location;                  // location for sd priors
-  real<lower=0> hyper_sd_scale;            // scale for sd priors
+  real<lower=1e-8> hyper_sd_scale;            // scale for sd priors
 }
 
 parameters {
   vector[nteams] att_raw;
   vector[nteams] def_raw;
-  real<lower=0> sigma_att;
-  real<lower=0> sigma_def;
+  real<lower=1e-8> sigma_att;
+  real<lower=1e-8> sigma_def;
   real home;
   real gamma;
 

@@ -4,13 +4,13 @@ data {
       array[N] int<lower=1, upper=nteams> team1;  // Index of team1 in each observation
       array[N] int<lower=1, upper=nteams> team2;  // Index of team2 in each observation
       real mean_logStrength;                // Initial mean for logStrength
-      real<lower=0> sd_logStrength;         // Standard deviation for logStrength
+      real<lower=1e-8> sd_logStrength;         // Standard deviation for logStrength
       real mean_logTie;
-      real<lower=0> sd_logTie;
+      real<lower=1e-8> sd_logTie;
       array[N] int<lower=1, upper=3> y;      // Outcome: 1 if team1 beats team2, 3 if team2 beats team1, 2 for tie
       int<lower=0, upper=1> ind_home;        // Home effect indicator
       real mean_home;              // Mean for home effect
-      real<lower=0> sd_home;      // Standard deviation for home effect
+      real<lower=1e-8> sd_home;      // Standard deviation for home effect
     }
     parameters {
       vector[nteams] logStrength;          // Log strength parameters for each team (static)

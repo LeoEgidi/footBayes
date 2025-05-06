@@ -61,26 +61,26 @@ data{
   array[N_prev] int instants_prev;
   int<lower=0, upper=1> ind_home;
   real mean_home;              // Mean for home effect
-  real<lower=0> sd_home;      // Standard deviation for home effect
+  real<lower=1e-8> sd_home;      // Standard deviation for home effect
 
   // priors part
   int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace
   int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace
 
-  real hyper_df;
+  real<lower=0> hyper_df;
   real hyper_location;
 
-  real hyper_sd_df;
+  real<lower=0> hyper_sd_df;
   real hyper_sd_location;
-  real hyper_sd_scale;
+  real<lower=1e-8> hyper_sd_scale;
 }
 parameters{
   matrix[ntimes, nteams] att_raw;        // raw attack ability
   matrix[ntimes, nteams] def_raw;        // raw defense ability
   real rho;
   real home;
-  real<lower=0> sigma_att;
-  real<lower=0> sigma_def;
+  real<lower=1e-8> sigma_att;
+  real<lower=1e-8> sigma_def;
   real gamma;
   real <lower=0,upper=1> prob_of_draws;// excessive probability of draws
 

@@ -13,19 +13,19 @@ data {
     real nu;                    // Degrees of freedom for the Student's t-distribution
     int<lower=0, upper=1> ind_home;
     real mean_home;              // Mean for home effect
-    real<lower=0> sd_home;      // Standard deviation for home effect
+    real<lower=1e-8> sd_home;      // Standard deviation for home effect
 
 
     // Priors part
     int<lower=1,upper=4> prior_dist_num;    // 1: Gaussian, 2: t, 3: Cauchy, 4: Laplace
     int<lower=1,upper=4> prior_dist_sd_num; // 1: Gaussian, 2: t, 3: Cauchy, 4: Laplace
 
-    real hyper_df;
+    real<lower=0> hyper_df;
     real hyper_location;
 
-    real hyper_sd_df;
+    real<lower=0> hyper_sd_df;
     real hyper_sd_location;
-    real hyper_sd_scale;
+    real<lower=1e-8> hyper_sd_scale;
 }
 transformed data {
     vector[N] diff_y = y[,1] - y[,2];  // Modeled data: score differences
@@ -33,9 +33,9 @@ transformed data {
 parameters {
     real beta;                      // Common coefficient for ranking
     vector[nteams] alpha;           // Per-team random effects
-    real<lower=0> sigma_a;          // Standard deviation for random effects
-    real<lower=0> sigma_y;          // Noise term in our estimate
-    real<lower=0> sigma_alpha;      // Standard deviation for alpha prior
+    real<lower=1e-8> sigma_a;          // Standard deviation for random effects
+    real<lower=1e-8> sigma_y;          // Noise term in our estimate
+    real<lower=1e-8> sigma_alpha;      // Standard deviation for alpha prior
     real home;                      // home effect
 }
 transformed parameters {

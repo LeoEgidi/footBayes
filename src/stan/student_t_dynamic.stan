@@ -17,19 +17,19 @@ data {
   matrix[ntimes_rank, nteams] ranking; // rankings over time
   int<lower=0, upper=1> ind_home;
   real mean_home;              // Mean for home effect
-  real<lower=0> sd_home;      // Standard deviation for home effect
+  real<lower=1e-8> sd_home;      // Standard deviation for home effect
 
 
   // priors part
   int<lower=1, upper=4> prior_dist_num;
   int<lower=1, upper=4> prior_dist_sd_num;
 
-  real hyper_df;
+  real<lower=0> hyper_df;
   real hyper_location;
 
-  real hyper_sd_df;
+  real<lower=0> hyper_sd_df;
   real hyper_sd_location;
-  real hyper_sd_scale;
+  real<lower=1e-8> hyper_sd_scale;
 }
 transformed data {
   vector[N] diff_y = y[,1] - y[,2];  // modeled data
@@ -37,9 +37,9 @@ transformed data {
 parameters {
   real beta;                        // common intercept
   matrix[ntimes, nteams] alpha;     // per-team weights over time
-  real<lower=0> sigma_a;            // common variance
-  real<lower=0> sigma_y;            // noise term
-  real<lower=0> sigma_alpha;
+  real<lower=1e-8> sigma_a;            // common variance
+  real<lower=1e-8> sigma_y;            // noise term
+  real<lower=1e-8> sigma_alpha;
   real home;                        // home effect
 }
 transformed parameters {
