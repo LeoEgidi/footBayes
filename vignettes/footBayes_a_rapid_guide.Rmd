@@ -1,7 +1,7 @@
 ---
 title: "Fitting football models and visualizing predictions with the `footBayes` package"
 author: "Leonardo Egidi, Roberto Macrì Demartino, and Vasilis Palaskas"
-date: "2025-05-06"
+date: "2025-05-15"
 output:
   rmarkdown::html_vignette:
     toc: yes
@@ -431,15 +431,15 @@ print(fit_result_dyn,
 #> # A tibble: 9 × 10
 #>   variable                   mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
 #>   <chr>                     <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logStrength[1, AC Milan]  2.13   2.12  0.916 0.915  0.642 3.66   1.01    316.      745.
-#> 2 logStrength[2, AC Milan]  1.29   1.33  1.10  1.07  -0.584 3.05   1.02    148.      173.
-#> 3 logStrength[3, AC Milan]  2.28   2.32  1.31  1.33   0.081 4.34   1.02    120.      133.
-#> 4 logStrength[4, AC Milan]  2.77   2.76  1.50  1.50   0.246 5.23   1.02    116.      117.
-#> 5 logStrength[1, AS Roma]   1.44   1.47  0.862 0.87   0.01  2.85   1.00    278.      682.
-#> 6 logStrength[2, AS Roma]  -0.116 -0.076 1.06  1.07  -1.95  1.56   1.02    144.      148.
-#> 7 logStrength[3, AS Roma]   0.779  0.805 1.27  1.30  -1.34  2.77   1.03    108.      108.
-#> 8 logStrength[4, AS Roma]   0.96   0.974 1.46  1.41  -1.52  3.30   1.03     93.3     109.
-#> 9 logTie                   -0.007 -0.007 0.086 0.081 -0.147 0.134  1      1746.     1526.
+#> 1 logStrength[1, AC Milan]  2.16   2.15  0.882 0.874  0.783 3.66   1.01     280.     852.
+#> 2 logStrength[2, AC Milan]  1.40   1.40  0.993 1.03  -0.212 3.05   1.01     174.     435.
+#> 3 logStrength[3, AC Milan]  2.43   2.44  1.16  1.18   0.437 4.33   1.03     134.     309.
+#> 4 logStrength[4, AC Milan]  2.91   2.86  1.35  1.40   0.766 5.14   1.03     131.     310.
+#> 5 logStrength[1, AS Roma]   1.48   1.49  0.839 0.831  0.068 2.84   1.00     261.     862.
+#> 6 logStrength[2, AS Roma]   0.018  0.011 0.972 0.956 -1.56  1.63   1.01     161.     364.
+#> 7 logStrength[3, AS Roma]   0.939  0.956 1.11  1.13  -0.939 2.74   1.03     123.     281.
+#> 8 logStrength[4, AS Roma]   1.1    1.04  1.29  1.33  -0.936 3.25   1.03     122.     318.
+#> 9 logTie                   -0.008 -0.009 0.087 0.087 -0.148 0.133  1.00    1230.    1339.
 ```
 
 
@@ -467,24 +467,24 @@ print(fit_result_stat,
 #> 
 #> Top teams based on relative log-strengths:
 #>    periods            team log_strengths
-#> 11       1           Inter        2.3683
-#> 7        1        AC Milan        1.9562
-#> 13       1      SSC Napoli        1.6682
-#> 6        1        Juventus        1.6284
-#> 20       1        Atalanta        1.2898
-#> 19       1      Lazio Roma        1.0702
-#> 15       1         AS Roma        0.7336
-#> 5        1 Sassuolo Calcio        0.4305
-#> 1        1  ACF Fiorentina        0.2399
-#> 8        1       Torino FC        0.0668
+#> 11       1           Inter        2.2973
+#> 7        1        AC Milan        2.0472
+#> 13       1      SSC Napoli        1.7988
+#> 6        1        Juventus        1.5070
+#> 20       1        Atalanta        1.2301
+#> 19       1      Lazio Roma        1.0167
+#> 15       1         AS Roma        0.9186
+#> 5        1 Sassuolo Calcio        0.5942
+#> 1        1  ACF Fiorentina        0.1174
+#> 2        1   Hellas Verona        0.0565
 #> 
 #> Posterior summaries for model parameters:
 #> # A tibble: 3 × 10
 #>   variable                mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
 #>   <chr>                  <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logStrength[AC Milan]  2.02   2.02  0.722 0.756  0.845 3.14   1.00     152.     242.
-#> 2 logStrength[AS Roma]   0.846  0.848 0.707 0.711 -0.331 1.99   1.00     145.     205.
-#> 3 logTie                -0.12  -0.118 0.084 0.087 -0.255 0.019  1        987.    1164.
+#> 1 logStrength[AC Milan]  1.92   1.95  0.729 0.735  0.714 3.12   1.02    109.      263.
+#> 2 logStrength[AS Roma]   0.735  0.765 0.706 0.699 -0.442 1.91   1.02     95.6     221.
+#> 3 logTie                -0.117 -0.116 0.087 0.087 -0.26  0.023  1.00   1229.     1265.
 ```
 
 Another significant feature implemented in the ```btd_foot``` function is the ability to account for the **home-field effect**. This effect represents the psychological or logistical benefits that the home team may have over the visiting team. This is modeled as a multiplicative order effect <span style="color:red"> @davidson_beaver_1977</span> in the Bayesian BTD framework. This multiplicative parameter becomes in the
@@ -543,8 +543,8 @@ print(fit_result_dyn_2,
 #> # A tibble: 2 × 10
 #>   variable  mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
 #>   <chr>    <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logTie   0.022  0.025 0.088 0.087 -0.123 0.165  1.00    1713.    1416.
-#> 2 home     0.231  0.23  0.106 0.106  0.063 0.401  1       2098.    1073.
+#> 1 logTie   0.025  0.028 0.093 0.092 -0.129 0.177  1.00    2076.    1335.
+#> 2 home     0.229  0.228 0.111 0.114  0.043 0.411  1       2434.    1115.
 ```
 
 
@@ -577,23 +577,23 @@ print(fit_result_stat_2,
 #> 
 #> Top teams based on relative log-strengths:
 #>    periods            team log_strengths
-#> 11       1           Inter          4.01
-#> 7        1        AC Milan          3.37
-#> 13       1      SSC Napoli          3.08
-#> 6        1        Juventus          2.99
-#> 20       1        Atalanta          2.65
-#> 19       1      Lazio Roma          2.46
-#> 15       1         AS Roma          2.31
-#> 5        1 Sassuolo Calcio          1.76
+#> 11       1           Inter          4.14
+#> 7        1        AC Milan          3.67
+#> 13       1      SSC Napoli          3.17
+#> 6        1        Juventus          3.13
+#> 20       1        Atalanta          2.56
+#> 15       1         AS Roma          2.42
+#> 19       1      Lazio Roma          2.27
+#> 5        1 Sassuolo Calcio          1.83
 #> 1        1  ACF Fiorentina          1.64
-#> 2        1   Hellas Verona          1.53
+#> 8        1       Torino FC          1.42
 #> 
 #> Posterior summaries for model parameters:
 #> # A tibble: 2 × 10
 #>   variable   mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
 #>   <chr>     <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 logTie   -0.118 -0.119 0.092 0.095 -0.271 0.033  1.01     513.     527.
-#> 2 home      0.216  0.217 0.098 0.101  0.052 0.37   1.00     458.     583.
+#> 1 logTie   -0.114 -0.114 0.09  0.09  -0.256 0.039  1.00     405.     458.
+#> 2 home      0.205  0.203 0.102 0.102  0.034 0.37   1.00     335.     366.
 ```
 
 The `btd_foot` function offers flexibility in how the posterior distributions are obtained by allowing users to choose the estimation method via the `method` argument. This argument enables the user to balance computational efficiency with the precision of uncertainty estimates. The available options include:
@@ -635,7 +635,7 @@ plot_btdPosterior(fit_result_dyn)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="plot_btdPosterior_dyn-1.png" alt="plot of chunk plot_btdPosterior_dyn" width="750px" />
+<img src="plot_btdPosterior_dyn-1.png" alt="plot of chunk plot_btdPosterior_dyn" width="700px" />
 <p class="caption">plot of chunk plot_btdPosterior_dyn</p>
 </div>
 
@@ -647,7 +647,7 @@ plot_btdPosterior(fit_result_stat)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="plot_btdPosterior_stat-1.png" alt="plot of chunk plot_btdPosterior_stat" width="750px" />
+<img src="plot_btdPosterior_stat-1.png" alt="plot of chunk plot_btdPosterior_stat" width="700px" />
 <p class="caption">plot of chunk plot_btdPosterior_stat</p>
 </div>
 
@@ -664,7 +664,7 @@ plot_btdPosterior(fit_result_dyn,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="plot_btdPosterior_teams_dyn-1.png" alt="plot of chunk plot_btdPosterior_teams_dyn" width="750px" />
+<img src="plot_btdPosterior_teams_dyn-1.png" alt="plot of chunk plot_btdPosterior_teams_dyn" width="700px" />
 <p class="caption">plot of chunk plot_btdPosterior_teams_dyn</p>
 </div>
 
@@ -680,7 +680,7 @@ plot_btdPosterior(fit_result_stat,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="plot_btdPosterior_teams_stat-1.png" alt="plot of chunk plot_btdPosterior_teams_stat" width="750px" />
+<img src="plot_btdPosterior_teams_stat-1.png" alt="plot of chunk plot_btdPosterior_teams_stat" width="700px" />
 <p class="caption">plot of chunk plot_btdPosterior_teams_stat</p>
 </div>
 
@@ -700,7 +700,7 @@ plot_btdPosterior(fit_result_dyn,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="plot_btdPosterior_teams_dyn_dens-1.png" alt="plot of chunk plot_btdPosterior_teams_dyn_dens" width="750px" />
+<img src="plot_btdPosterior_teams_dyn_dens-1.png" alt="plot of chunk plot_btdPosterior_teams_dyn_dens" width="700px" />
 <p class="caption">plot of chunk plot_btdPosterior_teams_dyn_dens</p>
 </div>
 
@@ -717,7 +717,7 @@ plot_btdPosterior(fit_result_stat,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="plot_btdPosterior_teams_stat_dens-1.png" alt="plot of chunk plot_btdPosterior_teams_stat_dens" width="750px" />
+<img src="plot_btdPosterior_teams_stat_dens-1.png" alt="plot of chunk plot_btdPosterior_teams_stat_dens" width="700px" />
 <p class="caption">plot of chunk plot_btdPosterior_teams_stat_dens</p>
 </div>
 
@@ -734,7 +734,7 @@ plot_logStrength(fit_result_dyn,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="plot_logStrength_teams_dyn-1.png" alt="plot of chunk plot_logStrength_teams_dyn" width="750px" />
+<img src="plot_logStrength_teams_dyn-1.png" alt="plot of chunk plot_logStrength_teams_dyn" width="700px" />
 <p class="caption">plot of chunk plot_logStrength_teams_dyn</p>
 </div>
 
@@ -809,14 +809,14 @@ print(fit1_stan,
 #> # A tibble: 8 × 10
 #>   variable        mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>          <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home           0.286  0.288 0.066 0.064  0.173  0.386 0.997    1181.     721.
-#> 2 rho           -1.77  -1.75  0.316 0.298 -2.32  -1.31  1.00     1110.     541.
-#> 3 sigma_att      0.207  0.202 0.071 0.063  0.098  0.331 1.01      192.     120.
-#> 4 sigma_def      0.225  0.218 0.07  0.066  0.126  0.347 1.01      331.     332.
-#> 5 att[AS Roma]   0.258  0.253 0.137 0.133  0.035  0.486 1.01      516.     579.
-#> 6 att[AC Milan]  0.123  0.12  0.121 0.13  -0.068  0.318 0.999     813.     705.
-#> 7 def[AS Roma]  -0.208 -0.197 0.142 0.139 -0.465  0.008 1.01     1000.     403.
-#> 8 def[AC Milan]  0.003  0.006 0.131 0.124 -0.217  0.212 1.01     1634.     699.
+#> 1 home           0.283  0.287 0.067 0.064  0.164  0.386  1.00     809.    579. 
+#> 2 rho           -1.75  -1.71  0.314 0.301 -2.34  -1.32   1.01     683.    380. 
+#> 3 sigma_att      0.207  0.201 0.065 0.061  0.108  0.318  1.02     240.    296. 
+#> 4 sigma_def      0.223  0.218 0.072 0.067  0.116  0.348  1.03     167.     72.9
+#> 5 att[AS Roma]   0.262  0.266 0.134 0.141  0.03   0.478  1.01     541.    558. 
+#> 6 att[AC Milan]  0.131  0.129 0.116 0.114 -0.042  0.327  1.01     844.    422. 
+#> 7 def[AS Roma]  -0.2   -0.187 0.147 0.14  -0.454  0.018  1.01     693.    303. 
+#> 8 def[AC Milan]  0      0.004 0.139 0.137 -0.239  0.227  1.00    1486.    633.
 ```
 
 The **Gelman-Rubin statistic** $\hat{R}$ (```Rhat```) is below the threshold 1.1 for all the parameters, whereas the **effective sample size** (```n_eff```), measuring the approximate number of iid replications from the Markov chains, does not appear to be problematic. Thus, HMC sampling reached the convergence.
@@ -848,7 +848,7 @@ mcmc_areas(posterior1, pars = c(
 ```
 
 <div class="figure" style="text-align: center">
-<img src="static_fit_corr-1.png" alt="plot of chunk static_fit_corr" width="750px" />
+<img src="static_fit_corr-1.png" alt="plot of chunk static_fit_corr" width="700px" />
 <p class="caption">plot of chunk static_fit_corr</p>
 </div>
 
@@ -900,24 +900,24 @@ fit1_stan$stan_code
 #>  [39] "      matrix[ntimes_rank,nteams] ranking;"                                                                               
 #>  [40] "      int<lower=0, upper=1> ind_home;"                                                                                   
 #>  [41] "      real mean_home;              // Mean for home effect"                                                              
-#>  [42] "      real<lower=0> sd_home;      // Standard deviation for home effect"                                                 
+#>  [42] "      real<lower=1e-8> sd_home;      // Standard deviation for home effect"                                              
 #>  [43] ""                                                                                                                        
 #>  [44] "      // priors part"                                                                                                    
 #>  [45] "      int<lower=1,upper=4> prior_dist_num;    // 1 gaussian, 2 t, 3 cauchy, 4 laplace"                                   
 #>  [46] "      int<lower=1,upper=4> prior_dist_sd_num; // 1 gaussian, 2 t, 3 cauchy, 4 laplace"                                   
 #>  [47] ""                                                                                                                        
-#>  [48] "      real hyper_df;"                                                                                                    
+#>  [48] "      real<lower=0> hyper_df;"                                                                                           
 #>  [49] "      real hyper_location;"                                                                                              
 #>  [50] ""                                                                                                                        
-#>  [51] "      real hyper_sd_df;"                                                                                                 
+#>  [51] "      real<lower=0> hyper_sd_df;"                                                                                        
 #>  [52] "      real hyper_sd_location;"                                                                                           
-#>  [53] "      real hyper_sd_scale;"                                                                                              
+#>  [53] "      real<lower=1e-8> hyper_sd_scale;"                                                                                  
 #>  [54] "    }"                                                                                                                   
 #>  [55] "    parameters{"                                                                                                         
 #>  [56] "      vector[nteams] att_raw;"                                                                                           
 #>  [57] "      vector[nteams] def_raw;"                                                                                           
-#>  [58] "      real<lower=0> sigma_att;"                                                                                          
-#>  [59] "      real<lower=0> sigma_def;"                                                                                          
+#>  [58] "      real<lower=1e-8> sigma_att;"                                                                                       
+#>  [59] "      real<lower=1e-8> sigma_def;"                                                                                       
 #>  [60] "      real home;"                                                                                                        
 #>  [61] "      real rho;"                                                                                                         
 #>  [62] "      real gamma;"                                                                                                       
@@ -1139,7 +1139,7 @@ mcmc_areas(gl_posterior, pars = c("sigma_att", "sigma_att_t")) +
 ```
 
 <div class="figure" style="text-align: center">
-<img src="comparing_priors-1.png" alt="plot of chunk comparing_priors" width="750px" />
+<img src="comparing_priors-1.png" alt="plot of chunk comparing_priors" width="700px" />
 <p class="caption">plot of chunk comparing_priors</p>
 </div>
 
@@ -1213,10 +1213,10 @@ print(fit2_stan, pars = c(
 #> # A tibble: 4 × 10
 #>   variable    mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>      <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home       0.275  0.277 0.068 0.07   0.158  0.38   1.02   285.      254. 
-#> 2 rho       -1.76  -1.70  0.349 0.343 -2.40  -1.30   1.02   377.      197. 
-#> 3 sigma_att  0.047  0.045 0.012 0.015  0.031  0.066  1.88     2.99     60.0
-#> 4 sigma_def  0.055  0.054 0.014 0.017  0.035  0.082  1.70     3.28     12.4
+#> 1 home       0.28   0.286 0.069 0.072  0.168  0.387  1.00   521.      285. 
+#> 2 rho       -1.76  -1.71  0.367 0.301 -2.39  -1.30   1.00   460.      251. 
+#> 3 sigma_att  0.048  0.047 0.009 0.007  0.035  0.066  1.22     7.20     11.4
+#> 4 sigma_def  0.058  0.056 0.012 0.012  0.042  0.08   1.30     5.56     24.1
 ```
 
 From the printed summary, we may note that the degree of goals' correlation seems to be again very small here. Moreover, the Gelman-Rubin statistic for $\sigma_{\text{att}}$ is relatively high, whereas the effective sample sizes for $\sigma_{\text{att}}$ and $\sigma_{\text{def}}$ are quite low. This is suggesting possible inefficiencies during the HMC sampling and that a *model-reparametrization* could be suited and effective at this stage.  Another option is to play a bit with the prior specification for $\sigma_{\text{att}}$ and $\sigma_{\text{def}}$, for instance by specifying a prior inducing less shrinkage in the team-specific abilities.
@@ -1252,9 +1252,9 @@ print(fit3_stan, pars = c(
 #> # A tibble: 3 × 10
 #>   variable   mean median    sd   mad    q5   q95  rhat ess_bulk ess_tail
 #>   <chr>     <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home      0.398  0.399 0.047 0.05  0.322 0.48   1.03   100.      216. 
-#> 2 sigma_att 0.052  0.051 0.01  0.01  0.037 0.07   1.41     4.46     53.0
-#> 3 sigma_def 0.065  0.061 0.021 0.021 0.035 0.106  1.76     3.14     13.5
+#> 1 home      0.407  0.408 0.052 0.056 0.32  0.494  1.01   412.      231. 
+#> 2 sigma_att 0.049  0.046 0.014 0.015 0.032 0.075  1.85     3.04     36.9
+#> 3 sigma_def 0.053  0.05  0.011 0.011 0.039 0.074  1.31     7.03     19.3
 ```
 
 
@@ -1300,9 +1300,9 @@ print(fit3_stan_t, pars = c(
 #> # A tibble: 3 × 10
 #>   variable   mean median    sd   mad    q5   q95  rhat ess_bulk ess_tail
 #>   <chr>     <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home      0.399  0.399 0.047 0.047 0.324 0.477  1.03    85.0     296. 
-#> 2 sigma_att 0.035  0.032 0.014 0.013 0.019 0.062  1.75     3.13     11.7
-#> 3 sigma_def 0.059  0.058 0.011 0.011 0.043 0.079  1.34     4.99     34.3
+#> 1 home      0.41   0.411 0.043 0.041 0.333 0.48   1.03   131.      208. 
+#> 2 sigma_att 0.033  0.032 0.008 0.009 0.022 0.046  1.47     3.98     53.3
+#> 3 sigma_def 0.037  0.04  0.015 0.019 0.014 0.06   2.10     2.77     22.4
 ```
 
 As we may conclude, the situation has been only slightly improved.
@@ -1412,10 +1412,10 @@ print(fit_stan_rank,
 #> # A tibble: 4 × 10
 #>   variable    mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>      <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 home       0.159  0.16  0.069 0.067  0.043  0.267  1.00  1423.     1155. 
-#> 2 rho       -1.10  -1.09  0.166 0.162 -1.39  -0.852  1.00   985.     1283. 
-#> 3 sigma_att  0.036  0.035 0.027 0.029  0.001  0.085  1.28     5.36     11.8
-#> 4 sigma_def  0.038  0.036 0.023 0.024  0.005  0.078  1.14    10.7      13.0
+#> 1 home       0.159  0.159 0.068 0.064  0.047  0.272  1      2342.    1669. 
+#> 2 rho       -1.10  -1.09  0.162 0.163 -1.38  -0.849  1      2388.    1576. 
+#> 3 sigma_att  0.025  0.02  0.02  0.015  0.004  0.064  1.06     16.1     42.5
+#> 4 sigma_def  0.03   0.026 0.02  0.022  0.005  0.066  1.18     12.9     44.1
 ```
 
 
@@ -1437,7 +1437,7 @@ foot_abilities(object = fit1_mle, data = italy_2000)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="abilities-1.png" alt="plot of chunk abilities" width="750px" /><img src="abilities-2.png" alt="plot of chunk abilities" width="750px" />
+<img src="abilities-1.png" alt="plot of chunk abilities" width="700px" /><img src="abilities-2.png" alt="plot of chunk abilities" width="700px" />
 <p class="caption">plot of chunk abilities</p>
 </div>
 
@@ -1453,7 +1453,7 @@ foot_abilities(fit2_stan, italy_2000)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="abilities_dyn-1.png" alt="plot of chunk abilities_dyn" width="750px" />
+<img src="abilities_dyn-1.png" alt="plot of chunk abilities_dyn" width="700px" />
 <p class="caption">plot of chunk abilities_dyn</p>
 </div>
 
@@ -1485,7 +1485,7 @@ pp_foot(
 ```
 
 <div class="figure" style="text-align: center">
-<img src="pp_foot-1.png" alt="plot of chunk pp_foot" width="750px" />
+<img src="pp_foot-1.png" alt="plot of chunk pp_foot" width="700px" />
 <p class="caption">plot of chunk pp_foot</p>
 </div>
 
@@ -1493,13 +1493,13 @@ pp_foot(
 #> 
 #> $pp_table
 #>   goal diff. Bayesian p-value
-#> 1         -3            0.340
-#> 2         -2            0.877
-#> 3         -1            0.981
-#> 4          0            0.045
-#> 5          1            0.264
-#> 6          2            0.075
-#> 7          3            0.910
+#> 1         -3            0.326
+#> 2         -2            0.870
+#> 3         -1            0.988
+#> 4          0            0.041
+#> 5          1            0.265
+#> 6          2            0.109
+#> 7          3            0.924
 
 pp_foot(
   object = fit1_stan, data = italy_2000,
@@ -1509,7 +1509,7 @@ pp_foot(
 ```
 
 <div class="figure" style="text-align: center">
-<img src="pp_foot-2.png" alt="plot of chunk pp_foot" width="750px" />
+<img src="pp_foot-2.png" alt="plot of chunk pp_foot" width="700px" />
 <p class="caption">plot of chunk pp_foot</p>
 </div>
 
@@ -1545,7 +1545,7 @@ ppc_dens_overlay(goal_diff, sims$y_rep[, , 1] - sims$y_rep[, , 2], bw = 0.5) +
 ```
 
 <div class="figure" style="text-align: center">
-<img src="pp_checks-1.png" alt="plot of chunk pp_checks" width="750px" />
+<img src="pp_checks-1.png" alt="plot of chunk pp_checks" width="700px" />
 <p class="caption">plot of chunk pp_checks</p>
 </div>
 
@@ -1598,14 +1598,14 @@ foot_prob(
 )
 #> $prob_table
 #>        home_team away_team prob_h prob_d prob_a         mlo
-#> 1 Reggina Calcio  AC Milan  0.347  0.252  0.401 1-1 (0.116)
+#> 1 Reggina Calcio  AC Milan  0.323  0.248   0.43 1-1 (0.101)
 #> 
 #> $prob_plot
 ```
 
 
 <div class="figure" style="text-align: center">
-<img src="foot_prob_weekly_predict-1.png" alt="plot of chunk foot_prob_weekly_predict" width="750px" />
+<img src="foot_prob_weekly_predict-1.png" alt="plot of chunk foot_prob_weekly_predict" width="700px" />
 <p class="caption">plot of chunk foot_prob_weekly_predict</p>
 </div>
 
@@ -1632,48 +1632,48 @@ where $(\tilde{x}^{(s)}, \tilde{y}^{(s)})$ represents the $s$-th MCMC pair of th
 foot_round_robin(object = fit4_stan, data = italy_2000)
 #> $round_table
 #>              Home           Away Home_prob Observed
-#> 1   Hellas Verona     Bologna FC     0.392        -
-#> 2           Inter     Bologna FC     0.428        -
+#> 1   Hellas Verona     Bologna FC     0.338        -
+#> 2           Inter     Bologna FC     0.438        -
 #> 3  Udinese Calcio     SSC Napoli     0.495        -
-#> 4  ACF Fiorentina     SSC Napoli     0.510        -
-#> 5        US Lecce     Lazio Roma     0.245        -
-#> 6           Inter     Lazio Roma     0.285        -
-#> 7  Brescia Calcio        AS Bari     0.698        -
-#> 8  Reggina Calcio        AS Bari     0.632        -
-#> 9  Udinese Calcio Vicenza Calcio     0.375        -
-#> 10 Brescia Calcio Vicenza Calcio     0.542        -
-#> 11        AS Roma       Parma AC     0.362        -
-#> 12       US Lecce       Parma AC     0.208        -
-#> 13        AS Roma       AC Milan     0.470        -
-#> 14 Reggina Calcio       AC Milan     0.338        -
-#> 15  Hellas Verona     AC Perugia     0.448        -
-#> 16       Juventus     AC Perugia     0.662        -
-#> 17 ACF Fiorentina       Atalanta     0.462        -
-#> 18       Juventus       Atalanta     0.550        -
-#> 19     SSC Napoli        AS Roma     0.275        -
-#> 20        AS Bari        AS Roma     0.225        -
-#> 21     Lazio Roma Udinese Calcio     0.682        -
-#> 22       Atalanta Udinese Calcio     0.530        -
-#> 23     Bologna FC       US Lecce     0.512        -
+#> 4  ACF Fiorentina     SSC Napoli     0.535        -
+#> 5        US Lecce     Lazio Roma     0.235        -
+#> 6           Inter     Lazio Roma     0.295        -
+#> 7  Brescia Calcio        AS Bari     0.627        -
+#> 8  Reggina Calcio        AS Bari     0.590        -
+#> 9  Udinese Calcio Vicenza Calcio     0.392        -
+#> 10 Brescia Calcio Vicenza Calcio     0.510        -
+#> 11        AS Roma       Parma AC     0.392        -
+#> 12       US Lecce       Parma AC     0.220        -
+#> 13        AS Roma       AC Milan     0.510        -
+#> 14 Reggina Calcio       AC Milan     0.318        -
+#> 15  Hellas Verona     AC Perugia     0.365        -
+#> 16       Juventus     AC Perugia     0.568        -
+#> 17 ACF Fiorentina       Atalanta     0.425        -
+#> 18       Juventus       Atalanta     0.527        -
+#> 19     SSC Napoli        AS Roma     0.230        -
+#> 20        AS Bari        AS Roma     0.255        -
+#> 21     Lazio Roma Udinese Calcio     0.728        -
+#> 22       Atalanta Udinese Calcio     0.555        -
+#> 23     Bologna FC       US Lecce     0.557        -
 #> 24 Vicenza Calcio       US Lecce     0.530        -
-#> 25       AC Milan Brescia Calcio     0.455        -
-#> 26     AC Perugia Brescia Calcio     0.322        -
-#> 27     SSC Napoli  Hellas Verona     0.410        -
-#> 28       Parma AC  Hellas Verona     0.632        -
-#> 29     AC Perugia Reggina Calcio     0.432        -
-#> 30       Atalanta Reggina Calcio     0.507        -
+#> 25       AC Milan Brescia Calcio     0.510        -
+#> 26     AC Perugia Brescia Calcio     0.390        -
+#> 27     SSC Napoli  Hellas Verona     0.488        -
+#> 28       Parma AC  Hellas Verona     0.640        -
+#> 29     AC Perugia Reggina Calcio     0.525        -
+#> 30       Atalanta Reggina Calcio     0.438        -
 #> 31     Lazio Roma ACF Fiorentina     0.637        -
-#> 32       AC Milan ACF Fiorentina     0.613        -
-#> 33     Bologna FC       Juventus     0.355        -
-#> 34 Vicenza Calcio       Juventus     0.332        -
-#> 35        AS Bari          Inter     0.370        -
-#> 36       Parma AC          Inter     0.608        -
+#> 32       AC Milan ACF Fiorentina     0.632        -
+#> 33     Bologna FC       Juventus     0.320        -
+#> 34 Vicenza Calcio       Juventus     0.275        -
+#> 35        AS Bari          Inter     0.288        -
+#> 36       Parma AC          Inter     0.620        -
 #> 
 #> $round_plot
 ```
 
 <div class="figure" style="text-align: center">
-<img src="foot_roundrobin-1.png" alt="plot of chunk foot_roundrobin" width="750px" />
+<img src="foot_roundrobin-1.png" alt="plot of chunk foot_roundrobin" width="700px" />
 <p class="caption">plot of chunk foot_roundrobin</p>
 </div>
 
@@ -1699,7 +1699,7 @@ foot_rank(object = fit1_stan, data = italy_2000)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="rank_pred1-1.png" alt="plot of chunk rank_pred1" width="750px" />
+<img src="rank_pred1-1.png" alt="plot of chunk rank_pred1" width="700px" />
 <p class="caption">plot of chunk rank_pred1</p>
 </div>
 
@@ -1714,7 +1714,7 @@ foot_rank(
 ```
 
 <div class="figure" style="text-align: center">
-<img src="rank_pred1-2.png" alt="plot of chunk rank_pred1" width="750px" />
+<img src="rank_pred1-2.png" alt="plot of chunk rank_pred1" width="700px" />
 <p class="caption">plot of chunk rank_pred1</p>
 </div>
 
@@ -1731,7 +1731,7 @@ foot_rank(object = fit4_stan, data = italy_2000)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="rank_pred2-1.png" alt="plot of chunk rank_pred2" width="750px" />
+<img src="rank_pred2-1.png" alt="plot of chunk rank_pred2" width="700px" />
 <p class="caption">plot of chunk rank_pred2</p>
 </div>
 
@@ -1747,7 +1747,7 @@ foot_rank(
 ```
 
 <div class="figure" style="text-align: center">
-<img src="rank_pred2-2.png" alt="plot of chunk rank_pred2" width="750px" />
+<img src="rank_pred2-2.png" alt="plot of chunk rank_pred2" width="700px" />
 <p class="caption">plot of chunk rank_pred2</p>
 </div>
 
@@ -1760,7 +1760,7 @@ foot_rank(
 ```
 
 <div class="figure" style="text-align: center">
-<img src="rank_pred2-3.png" alt="plot of chunk rank_pred2" width="750px" />
+<img src="rank_pred2-3.png" alt="plot of chunk rank_pred2" width="700px" />
 <p class="caption">plot of chunk rank_pred2</p>
 </div>
 
@@ -1844,25 +1844,25 @@ compare_results_models <- compare_foot(
 print(compare_results_models, digits = 3)
 #> Predictive Performance Metrics
 #>        Model   RPS accuracy brier pseudoR2   ACP
-#>     biv_pois 0.252    0.342 0.711    0.313 0.350
-#>  double_pois 0.254    0.379 0.711    0.310 0.363
+#>     biv_pois 0.255    0.353 0.716    0.311 0.350
+#>  double_pois 0.256    0.368 0.715    0.309 0.361
 #> 
 #> Confusion Matrices
 #> Model: biv_pois 
 #> 
 #>           Actual
 #> Predicted  Home Win Draw Away Win
-#>   Home Win       49   27       32
+#>   Home Win       51   28       32
 #>   Draw            0    0        0
-#>   Away Win       40   26       16
+#>   Away Win       38   25       16
 #> 
 #> Model: double_pois 
 #> 
 #>           Actual
 #> Predicted  Home Win Draw Away Win
-#>   Home Win       59   33       35
+#>   Home Win       57   33       35
 #>   Draw            0    0        0
-#>   Away Win       30   20       13
+#>   Away Win       32   20       13
 ```
 
 
@@ -1908,10 +1908,10 @@ loo3_t <- fit3_stan_t$fit$loo()
 loo_compare(loo1, loo1_t, loo2, loo3, loo3_t)
 #>        elpd_diff se_diff
 #> model1  0.0       0.0   
-#> model2 -1.0       0.4   
-#> model3 -3.2       2.4   
-#> model4 -7.0       4.0   
-#> model5 -7.0       4.1
+#> model2 -0.6       0.4   
+#> model3 -1.2       2.5   
+#> model4 -5.7       4.0   
+#> model5 -6.4       4.1
 ```
 
 According to the above model LOOIC comparisons, the weekly-dynamic double Poisson models  attain the lowest LOOIC values and are then the favored models in terms of predictive accuracy. The static model's ```fit1_stan``` final looic is suggesting that the assumption of static team-specific parameters is too restrictive and oversimplified to capture teams' skills over time and make reliable predictions. Anyway, from model checking we have the suggestion that even the static model has a reliable goodness of fit and could be used for some simplified analysis not requiring complex dynamic patterns.

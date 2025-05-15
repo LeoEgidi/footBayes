@@ -27,11 +27,11 @@ knitr::opts_chunk$set(
   fig.align = "center",
   warning = FALSE,
   message = FALSE,
-  fig.asp = 0.625,
+  fig.asp = 0.600,
   fig.height = 10,       # Reduced height
-  fig.width = 8,        # Reduced width
-  out.width = "750px",  # Reduced output width
-  dpi = 100,
+  fig.width = 7,        # Reduced width
+  out.width = "700px",  # Reduced output width
+  dpi = 96,
   global.par = TRUE,
   dev = "png",
   dev.args = list(pointsize = 10),
