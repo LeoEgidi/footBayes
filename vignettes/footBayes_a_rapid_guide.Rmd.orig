@@ -639,7 +639,7 @@ To start with some analysis, let's now ```italy```  data about the Italian Serie
 
 - The likelihood approach: the ```mle_foot``` function returns the MLE estimates along with 95\% profile-likelihood deviance confidence intervals (by default) and Wald-type confidence intervals. The user can specify the desired confidence interval with the optional argument ```interval = c("profile", "Wald")```.
 
-- The Bayesian approach: the ```stan_foot``` function produces an Hamiltonian Monte Carlo posterior sampling by using the underlying ```rstan``` ecosystem. The user can choose the number of iterations (```iter```), the number of Markov chains (```chains```), and other optional arguments values. The output is an object of class ```stanFoot```.
+- The Bayesian approach: the ```stan_foot``` function produces posterior sampling by using the underlying ```cmdstan``` ecosystem. The user can choose the number of iterations (```iter_sampling```), the number of Markov chains (```chains```), and other optional arguments values. The output is an object of class ```stanFoot```.
 
 At this stage, we are currently ignoring any time-dependence in our parameters, considering them to be **static** across distinct match-times.
 
@@ -1262,7 +1262,7 @@ foot_rank(
 
 ## Comparing Football Prediction Models using ```compare_foot```
 
-Evaluating the performance of these models is crucial to understand their predictive power and reliability. The ```compare_foot``` function provides a comprehensive way to compare different models or probability matrices using metrics like accuracy, Brier score, ranked probability score (RPS), Pseudo $R^2$, and average coverage probability (ACP). It also offers the option to compute confusion matrices for a detailed performance analysis.
+Evaluating the performance of these models is crucial to understand their predictive power and reliability. The ```compare_foot``` function provides a comprehensive way to compare different models or probability matrices using metrics like accuracy, Brier score, ranked probability score (RPS), Pseudo $R^2$, and average of correct probabilities (ACP). It also offers the option to compute confusion matrices for a detailed performance analysis.
 
 ```{r compare_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE}
 italy_2020_2021_fit <- italy %>%

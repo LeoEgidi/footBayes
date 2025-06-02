@@ -1,3 +1,9 @@
+# footBayes 2.0.1
+* Updated vignette.
+* Correct typo in foot_compare() description.
+* Correct typo in pp_foot() description.
+
+
 # footBayes 2.0.0
 
 * Migration from `rstan` interface to `CmdStanR` interface.

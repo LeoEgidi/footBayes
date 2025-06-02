@@ -19,7 +19,7 @@
 #'     \item \code{"accuracy"}: Computes the accuracy of each model.
 #'     \item \code{"brier"}: Computes the Brier score of each model.
 #'     \item \code{"RPS"}: Computes the ranked probability score (RPS) for each model.
-#'     \item \code{"ACP"}: Computes the average coverage probability (ACP) for each model.
+#'     \item \code{"ACP"}: Computes the average of correct probabilities (ACP) for each model.
 #'     \item \code{"pseudoR2"}: Computes the Pseudo \eqn{R^2}, defined as the geometric mean of the probabilities assigned to the actual results.
 #'   }
 #'   Default is \code{c("accuracy", "brier", "ACP", "pseudoR2", "RPS")}, computing the specified metrics.
