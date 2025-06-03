@@ -13,19 +13,24 @@ data {
       real<lower=1e-8> sd_home;      // Standard deviation for home effect
     }
     parameters {
-      vector[nteams] logStrength;          // Log strength parameters for each team (static)
+      vector[nteams] logStrength_raw;          // Log strength parameters for each team (static)
       real logTie;             // Log tie parameter
       real home;                  // Home team effect parameter
     }
 
     transformed parameters {
       real adj_h_eff;
+      vector[nteams] logStrength;
+
       adj_h_eff = home * ind_home;
+
+      // Sum-to-zero constraint for log-strength parameters
+      logStrength = logStrength_raw - mean(logStrength_raw);
     }
 
     model {
       // Priors for strengths
-      logStrength ~ normal(mean_logStrength, sd_logStrength);
+      logStrength_raw ~ normal(mean_logStrength, sd_logStrength);
 
       // Prior for tie parameter
       logTie ~ normal(mean_logTie, sd_logTie);
