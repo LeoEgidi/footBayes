@@ -13,7 +13,7 @@ data{
       array[N_prev] int instants_prev;
       array[N] int instants_rank;
       int ntimes_rank;                 // dynamic periods for ranking
-      matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
+      matrix[ntimes_rank,nteams] ranking;      // eventual ranking
       int<lower=0, upper=1> ind_home;
       real mean_home;              // Mean for home effect
       real<lower=1e-8> sd_home;      // Standard deviation for home effect
