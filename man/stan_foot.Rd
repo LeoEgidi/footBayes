@@ -10,6 +10,9 @@ stan_foot(
   predict = 0,
   ranking,
   dynamic_type,
+  dynamic_weight = FALSE,
+  dynamic_par = list(common_sd = FALSE, spike = normal(200, 0.1), slab = normal(0, 10),
+    spike_prob = 0.2),
   prior_par = list(ability = normal(0, NULL), ability_sd = cauchy(0, 5), home = normal(0,
     5)),
   home_effect = TRUE,
@@ -53,6 +56,17 @@ stan_foot(
 \itemize{
   \item \code{"weekly"}: Weekly dynamic parameters.
   \item \code{"seasonal"}: Seasonal dynamic parameters.
+}}
+
+\item{dynamic_weight}{A logical value indicating whether to use a weighted dynamic model
+with a commensurate prior for the dynamic attack and defense parameters (default \code{FALSE}).}
+
+\item{dynamic_par}{List of hyperparameters for dynamic models. Elements:
+\itemize{
+  \item \code{common_sd}: A logical value indicating whether to use shared evolution variance across attack/defense (Owen, 2011). Default \code{FALSE}.
+  \item \code{spike}: Half-normal prior \code{normal(location=0, scale)} for spike component. Default \code{normal(200, 0.1)}.
+  \item \code{slab}: Half-normal prior \code{normal(location=0, scale)} for slab component. Default \code{normal(0, 10)}.
+  \item \code{spike_prob}: Probability of spike. Default \code{0.2}.
 }}
 
 \item{prior_par}{A list specifying the prior distributions for the parameters of interest:
@@ -159,7 +173,7 @@ ranking).
 
 These model rely on the assumption of static parameters.
 However, we could assume dynamics in the attach/defence
-abilities (Owen, 2011; Egidi et al., 2018, Macrì Demartino et al., 2024) in terms of weeks or seasons through the argument
+abilities (Owen, 2011; Egidi et al., 2018, Macri Demartino et al., 2024) in terms of weeks or seasons through the argument
 \code{dynamic_type}. In such a framework, for a given
 number of times \eqn{1, \ldots, \mathcal{T}}, the models
 above would be unchanged, but the priors for the abilities

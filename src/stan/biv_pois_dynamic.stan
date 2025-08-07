@@ -41,6 +41,7 @@ functions{
       array[N_prev] int instants_prev;
       matrix[ntimes_rank,nteams] ranking;
       int<lower=0, upper=1> ind_home;
+      int<lower=0, upper=1> ind_common_sigma;
       real mean_home;              // Mean for home effect
       real<lower=1e-8> sd_home;      // Standard deviation for home effect
 
@@ -54,16 +55,36 @@ functions{
       real<lower=0> hyper_sd_df;
       real hyper_sd_location;
       real<lower=1e-8> hyper_sd_scale;
+
+      // commensurate prior
+      int<lower=0, upper=1> ind_comm_prior;
+      real mu_spike;
+      real<lower=0> sd_spike;
+      real mu_slab;
+      real<lower=0> sd_slab;
+      real<lower=0, upper=1> p_spike;
+
     }
+
+    transformed data {
+      real lognc_spike = normal_lccdf(0 | mu_spike, sd_spike); // \Phi(mu_spike / sd_spike)
+      real lognc_slab  = normal_lccdf(0 | mu_slab, sd_slab); // \Phi(mu_slab / sd_slab)
+    }
+
     parameters{
-      matrix[ntimes, nteams] att_raw;        // raw attack ability
-      matrix[ntimes, nteams] def_raw;        // raw defense ability
+      matrix[ntimes, nteams] att_raw;        // Raw attack ability
+      matrix[ntimes, nteams] def_raw;        // Raw defense ability
       real rho;
       real home;
-      real<lower=1e-8> sigma_att;
-      real<lower=1e-8> sigma_def;
       real gamma;
+      array[(ind_comm_prior|| ind_common_sigma) ? 0 : 1] real<lower=1e-8> sigma_att; // Evolution variance Egidi (2018)
+      array[(ind_comm_prior|| ind_common_sigma) ? 0 : 1] real<lower=1e-8> sigma_def; // Evolution variance Egidi (2018)
+      array[(ind_comm_prior|| !ind_common_sigma) ? 0 : 1] real<lower=1e-8> sigma_common; // Evolution variance Owen (2011)
+      vector<lower=0>[ind_comm_prior ? ntimes : 0] comm_prec_att;  // Commensurability parameter
+      vector<lower=0>[ind_comm_prior ? ntimes : 0] comm_prec_def;  // Commensurability parameter
     }
+
+
     transformed parameters{
       real adj_h_eff;                   // Adjusted home effect
       matrix[ntimes, nteams] att;            // attack abilities
@@ -115,41 +136,121 @@ functions{
                          (gamma/2)*(ranking[instants_rank[n], team1[n]]-ranking[instants_rank[n], team2[n]]));
         theta_corr[n] = exp(rho);
       }
+
+
+      vector[ind_comm_prior ? ntimes : 0] comm_sd_att = inv_sqrt(comm_prec_att);   // SD for commensurate prior
+      vector[ind_comm_prior ? ntimes : 0] comm_sd_def = inv_sqrt(comm_prec_def);   // SD for commensurate prior
+
+
     }
+
     model{
-      // log-priors for team-specific abilities
-      for (h in 1:(nteams)){
-        if (prior_dist_num == 1 ){
-          att_raw[,h]~multi_normal(mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
-          def_raw[,h]~multi_normal(mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+
+if(ind_comm_prior == 1){
+        for (i in 1:ntimes) {
+          // Att
+          target += log_mix(
+            p_spike
+            , normal_lpdf(comm_prec_att[i] | mu_spike, sd_spike) - lognc_spike
+            , normal_lpdf(comm_prec_att[i] | mu_slab, sd_slab) - lognc_slab
+          );
+          // Def
+          target += log_mix(
+            p_spike
+            , normal_lpdf(comm_prec_def[i] | mu_spike, sd_spike) - lognc_spike
+            , normal_lpdf(comm_prec_def[i] | mu_slab, sd_slab) - lognc_slab
+         );
         }
-        else if (prior_dist_num == 2 ){
-          att_raw[,h]~multi_student_t(hyper_df, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
-          def_raw[,h]~multi_student_t(hyper_df, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+
+        // log-priors for team-specific abilities
+        for (h in 1:(nteams)){
+          for (i in 1:ntimes){
+            if (prior_dist_num == 1 ){
+              target+= normal_lpdf(att_raw[i,h]| mu_att[i,h], comm_sd_att[i]);
+              target+= normal_lpdf(def_raw[i,h]| mu_def[i,h], comm_sd_def[i]);
+            }
+            else if (prior_dist_num == 2 ){
+              target+= student_t_lpdf(att_raw[i,h]| hyper_df, mu_att[i,h], comm_sd_att[i]);
+              target+= student_t_lpdf(def_raw[i,h]| hyper_df, mu_def[i,h], comm_sd_def[i]);
+            }
+            else if (prior_dist_num == 3 ){
+              target+= student_t_lpdf(att_raw[i,h]| 1, mu_att[i,h], comm_sd_att[i]);
+              target+= student_t_lpdf(def_raw[i,h]| 1, mu_def[i,h], comm_sd_def[i]);
+            }
+          }
         }
-        else if (prior_dist_num == 3 ){
-          att_raw[,h]~multi_student_t(1, mu_att[,h], diag_matrix(rep_vector(square(sigma_att), ntimes)));
-          def_raw[,h]~multi_student_t(1, mu_def[,h], diag_matrix(rep_vector(square(sigma_def), ntimes)));
+
+      }
+      else{
+        // First order autoregressive model Owen (2011)
+        // log-priors for team-specific abilities
+        for (h in 1:(nteams)){
+          for (i in 1:ntimes){
+            if (prior_dist_num == 1 ){
+              if(ind_common_sigma == 0) {
+              target+= normal_lpdf(att_raw[i,h]| mu_att[i,h], sigma_att[1]);
+              target+= normal_lpdf(def_raw[i,h]| mu_def[i,h], sigma_def[1]);
+              } else {
+              target+= normal_lpdf(att_raw[i,h]| mu_att[i,h], sigma_common[1]);
+              target+= normal_lpdf(def_raw[i,h]| mu_def[i,h], sigma_common[1]);
+              }
+            }
+            else if (prior_dist_num == 2 ){
+              if(ind_common_sigma == 0) {
+              target+= student_t_lpdf(att_raw[i,h]| hyper_df, mu_att[i,h], sigma_att[1]);
+              target+= student_t_lpdf(def_raw[i,h]| hyper_df, mu_def[i,h], sigma_def[1]);
+              } else{
+              target+= student_t_lpdf(att_raw[i,h]| hyper_df, mu_att[i,h], sigma_common[1]);
+              target+= student_t_lpdf(def_raw[i,h]| hyper_df, mu_def[i,h], sigma_common[1]);
+              }
+            }
+            else if (prior_dist_num == 3 ){
+              if(ind_common_sigma == 0) {
+              target+= student_t_lpdf(att_raw[i,h]| 1, mu_att[i,h], sigma_att[1]);
+              target+= student_t_lpdf(def_raw[i,h]| 1, mu_def[i,h], sigma_def[1]);
+              } else{
+              target+= student_t_lpdf(att_raw[i,h]| 1, mu_att[i,h], sigma_common[1]);
+              target+= student_t_lpdf(def_raw[i,h]| 1, mu_def[i,h], sigma_common[1]);
+              }
+            }
+          }
         }
+        // log-hyperpriors for sd parameters
+          if (prior_dist_sd_num == 1 ){
+            if(ind_common_sigma == 0) {
+              target+=normal_lpdf(sigma_att[1]|hyper_sd_location, hyper_sd_scale);
+              target+=normal_lpdf(sigma_def[1]|hyper_sd_location, hyper_sd_scale);
+            } else {
+                target+=normal_lpdf(sigma_common[1]|hyper_sd_location, hyper_sd_scale);
+              }
+          }
+          else if (prior_dist_sd_num == 2){
+            if(ind_common_sigma == 0) {
+              target+=student_t_lpdf(sigma_att[1]|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+              target+=student_t_lpdf(sigma_def[1]|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+            } else {
+                target+=student_t_lpdf(sigma_common[1]|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
+              }
+          }
+          else if (prior_dist_sd_num == 3){
+            if(ind_common_sigma == 0) {
+              target+=cauchy_lpdf(sigma_att[1]|hyper_sd_location, hyper_sd_scale);
+              target+=cauchy_lpdf(sigma_def[1]|hyper_sd_location, hyper_sd_scale);
+            } else {
+              target+=cauchy_lpdf(sigma_common[1]|hyper_sd_location, hyper_sd_scale);
+              }
+          }
+          else if (prior_dist_sd_num == 4){
+            if(ind_common_sigma == 0) {
+              target+=double_exponential_lpdf(sigma_att[1]|hyper_sd_location, hyper_sd_scale);
+              target+=double_exponential_lpdf(sigma_def[1]|hyper_sd_location, hyper_sd_scale);
+            }
+            else {
+              target+=double_exponential_lpdf(sigma_common[1]|hyper_sd_location, hyper_sd_scale);
+            }
+          }
       }
 
-      // log-hyperpriors for sd parameters
-      if (prior_dist_sd_num == 1 ){
-        target+=normal_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
-        target+=normal_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
-      }
-      else if (prior_dist_sd_num == 2){
-        target+=student_t_lpdf(sigma_att|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
-        target+=student_t_lpdf(sigma_def|hyper_sd_df, hyper_sd_location, hyper_sd_scale);
-      }
-      else if (prior_dist_sd_num == 3){
-        target+=cauchy_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
-        target+=cauchy_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
-      }
-      else if (prior_dist_sd_num == 4){
-        target+=double_exponential_lpdf(sigma_att|hyper_sd_location, hyper_sd_scale);
-        target+=double_exponential_lpdf(sigma_def|hyper_sd_location, hyper_sd_scale);
-      }
 
       // log-priors fixed effects
       target+=normal_lpdf(home|mean_home,sd_home);

@@ -33,6 +33,15 @@
 #'     \item \code{"weekly"}: Weekly dynamic parameters.
 #'     \item \code{"seasonal"}: Seasonal dynamic parameters.
 #'   }
+#' @param dynamic_weight A logical value indicating whether to use a weighted dynamic model
+#'   with a commensurate prior for the dynamic attack and defense parameters (default \code{FALSE}).
+#' @param dynamic_par List of hyperparameters for dynamic models. Elements:
+#'   \itemize{
+#'     \item \code{common_sd}: A logical value indicating whether to use shared evolution variance across attack/defense (Owen, 2011). Default \code{FALSE}.
+#'     \item \code{spike}: Half-normal prior \code{normal(location=0, scale)} for spike component. Default \code{normal(200, 0.1)}.
+#'     \item \code{slab}: Half-normal prior \code{normal(location=0, scale)} for slab component. Default \code{normal(0, 10)}.
+#'     \item \code{spike_prob}: Probability of spike. Default \code{0.2}.
+#'   }
 #' @param prior_par A list specifying the prior distributions for the parameters of interest:
 #'   \itemize{
 #'     \item \code{ability}: Prior distribution for team-specific abilities. Possible distributions are \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}. Default is \code{normal(0, NULL)}.
@@ -128,7 +137,7 @@
 #'
 #' These model rely on the assumption of static parameters.
 #' However, we could assume dynamics in the attach/defence
-#' abilities (Owen, 2011; Egidi et al., 2018, Macrì Demartino et al., 2024) in terms of weeks or seasons through the argument
+#' abilities (Owen, 2011; Egidi et al., 2018, Macri Demartino et al., 2024) in terms of weeks or seasons through the argument
 #' \code{dynamic_type}. In such a framework, for a given
 #' number of times \eqn{1, \ldots, \mathcal{T}}, the models
 #' above would be unchanged, but the priors for the abilities
@@ -331,6 +340,13 @@ stan_foot <- function(data,
                       predict = 0,
                       ranking,
                       dynamic_type,
+                      dynamic_weight = FALSE,
+                      dynamic_par = list(
+                        common_sd = FALSE,
+                        spike = normal(200, 0.1),
+                        slab = normal(0, 10),
+                        spike_prob = 0.2
+                      ),
                       prior_par = list(
                         ability = normal(0, NULL),
                         ability_sd = cauchy(0, 5),
@@ -661,6 +677,112 @@ stan_foot <- function(data,
     }
   }
 
+
+  #   ____________________________________________________________________________
+  #   Dynamic Weight Check                                                    ####
+
+  if (!is.logical(dynamic_weight) || length(dynamic_weight) != 1) {
+    stop("'dynamic_weight' must be a single logical value (TRUE or FALSE).")
+  }
+
+  if (dynamic_weight == TRUE && missing(dynamic_type)) {
+    stop("'dynamic_weight' requires specifying a dynamic model via 'dynamic_type' argument.")
+  }
+
+  # Validate dynamic_par names
+  allowed_dynamic_par_names <- c(
+    "common_sd", "spike_prob", "spike",
+    "slab"
+  )
+
+  allowed_dynamic_par_names <- setdiff(names(dynamic_par), allowed_dynamic_par_names)
+  if (length(allowed_dynamic_par_names) > 0) {
+    stop(paste("Unknown elements in 'dynamic_par':", paste(allowed_dynamic_par_names, collapse = ", ")))
+  }
+
+  if (!is.list(dynamic_par)) {
+    stop("'dynamic_par' must be a list.")
+  }
+
+
+  # Set default parameters
+  default_dynamic_par <- list(
+    common_sd = FALSE,
+    spike = normal(200, 0.1),
+    slab = normal(0, 10),
+    spike_prob = 0.2
+  )
+
+  # Merge with defaults
+  dynamic_par <- utils::modifyList(default_dynamic_par, dynamic_par)
+
+  # Extract prior parameters from the priors list
+  spike_prior <- dynamic_par$spike
+  spike_mean <- spike_prior$location
+  spike_sd <- spike_prior$scale
+
+  slab_prior <- dynamic_par$slab
+  slab_mean <- slab_prior$location
+  slab_sd <- slab_prior$scale
+
+  spike_prob <- dynamic_par$spike_prob
+  common_sd <- dynamic_par$common_sd
+
+
+  # Validate that spike-and-slab priors are half‐normal
+  if (spike_prior$dist != "normal" || slab_prior$dist != "normal") {
+    stop(
+      "Arguments spike and slab must be normal priors. "
+    )
+  }
+
+  # Validate that the location (i.e. the “half” in half‑normal) is non‑negative
+  if (spike_prior$location < 0 || slab_prior$location < 0) {
+    stop(
+      "The location parameter for spike and slab arguments",
+      "must be greater 0."
+    )
+  }
+
+  # Validate that spike_prob is a proper probability
+  if (!is.numeric(spike_prob) || spike_prob < 0 || spike_prob > 1) {
+    stop(
+      "Argument spike_prob must be a single numeric value between 0 and 1 "
+    )
+  }
+
+  # # Merge with defaults
+  # dynamic_par <- utils::modifyList(default_spike_slab, dynamic_par)
+  #
+  # # Extract prior parameters from the dynamic_par list
+  # spike_prob <- dynamic_par$spike_prob
+  # spike_mean <- dynamic_par$spike_mean
+  # spike_sd <- dynamic_par$spike_sd
+  # slab_mean <- dynamic_par$slab_mean
+  # slab_sd <- dynamic_par$slab_sd
+  # common_sd <- dynamic_par$common_sd
+
+  if (common_sd) {
+    ind_common_sd <- 1
+  } else {
+    ind_common_sd <- 0
+  }
+
+  # Not allowed common sd for att and def with weighted dynamic models
+  if (dynamic_weight && common_sd) {
+    stop(
+      "Invalid argument combination: `dynamic_weight = TRUE` is not compatible with `common_sd = TRUE`.\n",
+      "When using a weighted dynamic model, attack and defense evolution variances are specified separately.",
+    )
+  }
+
+  # Not allowed common_sd for student_t model
+  if (model == "student_t" && common_sd) {
+    stop(
+      "Invalid argument combination: `common_sd = TRUE` is not valid for the `student_t` model.\n",
+      "Please set `common_sd = FALSE` when using the student_t model."
+    )
+  }
   #   ____________________________________________________________________________
   #   Home Effect Check                                                       ####
 
@@ -849,7 +971,13 @@ stan_foot <- function(data,
     nu = user_dots$nu,
     ind_home = ind_home,
     mean_home = mean_home,
-    sd_home = sd_home
+    sd_home = sd_home,
+    ind_comm_prior = 0,
+    p_spike = spike_prob,
+    mu_spike = spike_mean,
+    sd_spike = spike_sd,
+    mu_slab = slab_mean,
+    sd_slab = slab_sd
   )
 
   if (!missing(dynamic_type)) {
@@ -857,6 +985,12 @@ stan_foot <- function(data,
     data_stan$instants <- instants
     data_stan$time <- time
     data_stan$instants_prev <- if (N_prev > 0) instants_prev else integer(0)
+    data_stan$ind_common_sigma <- ind_common_sd
+  }
+
+  if (dynamic_weight == TRUE) {
+    data_stan$ind_comm_prior <- 1
+    data_stan$ind_common_sigma <- 0
   }
 
   # Construct the final Stan model filename

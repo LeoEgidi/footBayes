@@ -30,6 +30,14 @@ data {
   real<lower=0> hyper_sd_df;
   real hyper_sd_location;
   real<lower=1e-8> hyper_sd_scale;
+
+  // commensurate prior
+  int<lower=0, upper=1> ind_comm_prior;
+  real mu_spike;
+  real<lower=0> sd_spike;
+  real mu_slab;
+  real<lower=0> sd_slab;
+  real<lower=0, upper=1> p_spike;
 }
 transformed data {
   vector[N] diff_y = y[,1] - y[,2];  // modeled data

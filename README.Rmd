@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 # footBayes <img src="man/figures/logo.png" width = 180 align="right" />
 
 [![CRAN Version](https://www.r-pkg.org/badges/version/footBayes)](https://cran.r-project.org/package=footBayes)
+![Dev Version](https://img.shields.io/badge/build-2.1.0-blue?style=flat&logo=devdotto&label=Dev.%20Vers.)
 [![R-CMD-check.yaml](https://github.com/LeoEgidi/footBayes/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/LeoEgidi/footBayes/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/LeoEgidi/footBayes/graph/badge.svg)](https://app.codecov.io/gh/LeoEgidi/footBayes)
 [![Downloads](https://cranlogs.r-pkg.org/badges/footBayes?color=brightgreen)](https://CRAN.R-project.org/package=footBayes)
