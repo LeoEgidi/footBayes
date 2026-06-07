@@ -37,7 +37,6 @@ data {
   real<lower=0> sd_spike;
   real mu_slab;
   real<lower=0> sd_slab;
-  real<lower=0, upper=1> p_spike;
 }
 transformed data {
   vector[N] diff_y = y[,1] - y[,2];  // modeled data

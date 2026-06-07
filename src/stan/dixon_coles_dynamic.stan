@@ -1,43 +1,53 @@
 functions{
-  real skellam_lpmf(int k, real lambda1, real lambda2) {
-    return -(lambda1 + lambda2) + (k/2) * log(lambda1/lambda2) +
-      log_modified_bessel_first_kind(abs(k), 2 * sqrt(lambda1 * lambda2));
+  // Dixon-Coles diagonal inflation adjustment
+  real dc_inflation(int home_goals, int away_goals, real lambda_home, real lambda_away, real rho) {
+    if (home_goals == 0 && away_goals == 0) {
+      return 1.0 - lambda_home * lambda_away * rho;
+    } else if (home_goals == 0 && away_goals == 1) {
+      return 1.0 + lambda_home * rho;
+    } else if (home_goals == 1 && away_goals == 0) {
+      return 1.0 + lambda_away * rho;
+    } else if (home_goals == 1 && away_goals == 1) {
+      return 1.0 - rho;
+    } else {
+      return 1.0;
+    }
   }
 
-  real zero_infl_skellam_lpmf(int k, real lambda1, real lambda2, real p) {
-    real base_prob;
-    real prob;
+  // Dixon-Coles log-likelihood for a single match
+  real dixon_coles_lpmf(array[] int y, real lambda_home, real lambda_away, real rho) {
     real log_prob;
+    real inflation;
 
-    base_prob = exp(skellam_lpmf(k | lambda1, lambda2));
+    // Independent Poisson log-probabilities
+    log_prob = poisson_lpmf(y[1] | lambda_home) + poisson_lpmf(y[2] | lambda_away);
 
-    if (k == 0)
-      prob = p + (1 - p) * base_prob;
-    else
-      prob = (1 - p) * base_prob;
-
-    log_prob = log(prob);
+    // Diagonal inflation adjustment
+    inflation = dc_inflation(y[1], y[2], lambda_home, lambda_away, rho);
+    if (inflation <= 0) reject("Invalid inflation factor");
+    // Add log of inflation factor
+    log_prob += log(inflation);
 
     return log_prob;
   }
 }
 
 data{
-  int N;
+  int N;   // number of games
   int<lower=0> N_prev;
-  array[N] int diff_y;
+  array[N,2] int y;
   int nteams;
   array[N] int team1;
   array[N] int team2;
   array[N_prev] int team1_prev;
   array[N_prev] int team2_prev;
+  int ntimes_rank;             // ranking periods
   int ntimes;                 // dynamic periods
   array[ntimes] int time;
+  array[N] int instants_rank;       // ranking instants
   array[N] int instants;
   array[N_prev] int instants_prev;
-  array[N] int instants_rank;
-  int ntimes_rank;                 // dynamic periods for ranking
-  matrix[ntimes_rank,nteams] ranking;      // eventual fifa/uefa ranking
+  matrix[ntimes_rank,nteams] ranking;
   int<lower=0, upper=1> ind_home;
   int<lower=0, upper=1> ind_common_sigma;
   real mean_home;              // Mean for home effect
@@ -71,7 +81,7 @@ transformed data {
   real lognc_slab  = normal_lccdf(0 | mu_slab, sd_slab);
 }
 
-parameters {
+parameters{
   // Non-centered parameterization for commensurate prior
   matrix[ind_comm_prior ? ntimes : 0, ind_comm_prior ? nteams : 0] att_raw_std;  // standard normal
   matrix[ind_comm_prior ? ntimes : 0, ind_comm_prior ? nteams : 0] def_raw_std;  // standard normal
@@ -80,6 +90,7 @@ parameters {
   matrix[ind_comm_prior ? 0 : ntimes, ind_comm_prior ? 0 : nteams] att_raw_centered;
   matrix[ind_comm_prior ? 0 : ntimes, ind_comm_prior ? 0 : nteams] def_raw_centered;
 
+  real<lower=-0.2, upper=0.2> rho; // Dixon-Coles diagonal inflation parameter
   vector[ntimes] home;
   real gamma;
   array[ind_comm_prior ? nteams : 0] real<lower=0, upper=1> prob_spike;
@@ -99,9 +110,6 @@ parameters {
   // Commensurate prior parameters
   array[ind_comm_prior ? ntimes : 0, ind_comm_prior ? nteams : 0] real<lower=0> comm_prec_att;
   array[ind_comm_prior ? ntimes : 0, ind_comm_prior ? nteams : 0] real<lower=0> comm_prec_def;
-
-  // Zero-inflation parameter
-  real<lower=0, upper=1> prob_of_draws;
 }
 
 transformed parameters{
@@ -198,6 +206,7 @@ transformed parameters{
 
   adj_h_eff = home * ind_home;
 
+  // Goal scoring intensities
   for (n in 1:N) {
     theta_home[n] = exp(adj_h_eff[instants[n]] + att[instants[n], team1[n]] + def[instants[n], team2[n]] +
                      (gamma/2)*(ranking[instants_rank[n], team1[n]] - ranking[instants_rank[n], team2[n]]));
@@ -372,31 +381,33 @@ model{
   for (t in 1:ntimes) {
     target += normal_lpdf(home[t] | mean_home, sd_home);
   }
+  target += normal_lpdf(rho | 0, 0.10);  // Prior for diagonal inflation
   target += normal_lpdf(gamma | 0, 1);
-  target += uniform_lpdf(prob_of_draws | 0, 1);
 
-  // Zero-inflated Skellam likelihood
+  // Dixon-Coles likelihood with diagonal inflation
   for (n in 1:N) {
-    target += zero_infl_skellam_lpmf(diff_y[n] | theta_home[n], theta_away[n], prob_of_draws);
+    target += dixon_coles_lpmf(y[n,] | theta_home[n], theta_away[n], rho);
   }
 }
 
 generated quantities {
   array[N,2] int y_rep;
-  array[N] int diff_y_rep;
   vector[N] log_lik;
+  array[N] int diff_y_rep;
+  array[N_prev,2] int y_prev;
   real max_rate = 1e9;
   vector[N_prev] theta_home_prev;
   vector[N_prev] theta_away_prev;
-  array[N_prev,2] int y_prev;
-  array[N_prev] int diff_y_prev;
 
   // In-sample replications
   for (n in 1:N) {
+    // Sample from independent Poissons
     y_rep[n,1] = poisson_rng(fmin(theta_home[n], max_rate));
     y_rep[n,2] = poisson_rng(fmin(theta_away[n], max_rate));
     diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-    log_lik[n] = zero_infl_skellam_lpmf(diff_y[n] | theta_home[n], theta_away[n], prob_of_draws);
+
+    // Log-likelihood with diagonal inflation
+    log_lik[n] = dixon_coles_lpmf(y[n,] | theta_home[n], theta_away[n], rho);
   }
 
   // Out-of-sample predictions
@@ -410,10 +421,10 @@ generated quantities {
                                def[instants_prev[n], team1_prev[n]] -
                                (gamma/2)*(ranking[instants_rank[N], team1_prev[n]] -
                                           ranking[instants_rank[N], team2_prev[n]]));
+
+      // Sample from independent Poissons
       y_prev[n,1] = poisson_rng(fmin(theta_home_prev[n], max_rate));
       y_prev[n,2] = poisson_rng(fmin(theta_away_prev[n], max_rate));
-      diff_y_prev[n] = y_prev[n,1] - y_prev[n,2];
     }
   }
 }
-

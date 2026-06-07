@@ -1,7 +1,8 @@
 #' Fit football models with Maximum Likelihood
 #'
 #' Fits football goal-based models using maximum likelihood estimation.
-#' Supported models include: double Poisson, bivariate Poisson, Skellam, and Student's t.
+#' Supported models include: double Poisson, bivariate Poisson, Dixon-Coles,
+#' negative binomial, Skellam, and Student's t.
 #'
 #' @param data A data frame containing match data with columns:
 #'   \itemize{
@@ -15,12 +16,14 @@
 #'   \itemize{
 #'     \item \code{"double_pois"}: Double Poisson model.
 #'     \item \code{"biv_pois"}: Bivariate Poisson model.
+#'     \item \code{"dixon_coles"}: Dixon-Coles model.
+#'     \item \code{"neg_bin"}: Negative Binomial model.
 #'     \item \code{"skellam"}: Skellam model.
 #'     \item \code{"student_t"}: Student's t model.
 #'     }
 #' @param predict An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.
 #'
-#' @param maxit An integer specifying the maximum number of optimizer iterations  default is 1000).
+#' @param maxit An integer specifying the maximum number of optimizer iterations default is 1000).
 #' @param method A character specifying the optimization method. Options are
 #'   \itemize{
 #'     \item \code{"Nelder-Mead"}.
@@ -42,11 +45,13 @@
 #'
 #' @return A named list containing:
 #' \itemize{
-#'   \item{\code{att}}: A matrix of attack ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
-#'   \item{\code{def}}: A matrix of defence ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
+#'   \item{\code{att}}: A matrix of attack ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"}, \code{"dixon_coles"}, \code{"neg_bin"} and \code{"skellam"} models).
+#'   \item{\code{def}}: A matrix of defence ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"}, \code{"dixon_coles"}, \code{"neg_bin"} and \code{"skellam"} models).
 #'   \item{\code{abilities}}: A matrix of combined ability, with MLE and 95\% confidence intervals (for \code{"student_t"} only).
 #'   \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals for the home effect estimate.
 #'   \item{\code{corr}}: A matrix with MLE and 95\% confidence intervals for the bivariate Poisson correlation parameter (for \code{"biv_pois"} only).
+#'   \item{\code{rho}}: A matrix with MLE and 95\% confidence intervals for the Dixon-Coles dependence parameter (for \code{"dixon_coles"} only).
+#'   \item{\code{overdispersion}}: A matrix with MLE and 95\% confidence intervals for the home and away overdispersion parameters (for \code{"neg_bin"} only).
 #'   \item{\code{model}}: The name of the fitted model (character).
 #'   \item{\code{predict}}: The number of out-of-sample matches used for prediction (integer).
 #'   \item{\code{sigma_y}}: The scale parameter used in the Student t likelihood (for \code{"student_t"} only).
@@ -68,6 +73,10 @@
 #' @references
 #' Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
 #' results. Journal of Applied Statistics 37(2), 253-264.
+#'
+#' Dixon, M. J. and Coles, S. G. (1997). Modelling association football scores and
+#' inefficiencies in the football betting market. Journal of the Royal Statistical Society:
+#' Series C (Applied Statistics) 46(2), 265-280.
 #'
 #' Egidi, L., Pauli, F., and Torelli, N. (2018). Combining historical data
 #' and bookmakers' odds in modelling football scores. Statistical Modelling, 18(5-6), 436-459.
@@ -104,10 +113,8 @@
 #' )
 #' }
 #'
-#' @importFrom extraDistr dbvpois dskellam
-#' @importFrom metRology dt.scaled
+#' @importFrom stats optim setNames
 #' @importFrom numDeriv hessian
-#' @importFrom magrittr "%>%"
 #' @export
 #'
 
@@ -184,37 +191,15 @@ mle_foot <- function(data,
     "double_pois",
     "biv_pois",
     "skellam",
-    "student_t"
+    "student_t",
+    "dixon_coles",
+    "neg_bin"
   ))
 
 
 
   #   ____________________________________________________________________________
   #   Predict checks                                                          ####
-
-  # if (missing(predict)) { # check on predict
-  #   predict <- 0
-  #   N <- dim(data)[1]
-  #   N_prev <- 0
-  #   type <- "fit"
-  # } else if (predict == 0) {
-  #   predict <- 0
-  #   N <- dim(data)[1]
-  #   N_prev <- 0
-  #   type <- "fit"
-  # } else if (is.numeric(predict)) {
-  #   if (predict %% 1 != 0) {
-  #     warning("Please, use integer numbers for the argument 'predict'!
-  #             The input has been rounded to the closes integer number.")
-  #     predict <- round(predict)
-  #   }
-  #   N <- dim(data)[1] - predict
-  #   N_prev <- predict
-  #   type <- "prev"
-  # } else if (!is.numeric(predict)) {
-  #   stop("The number of out-of-sample matches is ill posed!
-  #        Pick up an integer number.")
-  # }
 
   if (!is.numeric(predict) || predict < 0 || predict %% 1 != 0) {
     stop("The argument 'predict' must be a non-negative integer.")
@@ -248,272 +233,130 @@ mle_foot <- function(data,
   team_away <- match(data$away_team, teams)
   team1 <- team_home[1:N]
   team2 <- team_away[1:N]
-  team1_prev <- team_home[(N + 1):(N + N_prev)]
-  team2_prev <- team_away[(N + 1):(N + N_prev)]
-
-  # optim requires parameters to be supplied as a vector
-  # we'll unlist the parameters then relist in the function
-  relist_params <- function(parameters) {
-    parameter_list <- list(
-      # att = attack rating
-      att = parameters %>%
-        .[grepl("att", names(.))] %>%
-        append(prod(sum(.), -1), .) %>% # sum-to-zero constraints
-        `names<-`(teams),
-      # def = defence rating
-      def = parameters %>%
-        .[grepl("def", names(.))] %>%
-        append(prod(sum(.), -1), .) %>% # sum-to-zero constraints
-        `names<-`(teams),
-      # home = home field advantage
-      home = parameters["home"],
-      # const = correl. parameter (biv pois)
-      const = parameters["const"],
-      # ability = team abilities (student_t)
-      # ability = parameters %>%
-      #   .[grepl("ability", names(.))] %>%
-      #   append(prod(sum(.), -1), .) %>%  # sum-to-zero constraints
-      #   `names<-`(teams),
-      # sigma_y = student_t sd
-      sigma_y = parameters["sigma_y"]
-    )
-
-    return(parameter_list)
+  # Out-of-sample team indices
+  if (N_prev > 0) {
+    team1_prev <- team_home[(N + 1):(N + N_prev)]
+    team2_prev <- team_away[(N + 1):(N + N_prev)]
+  } else {
+    team1_prev <- integer(0)
+    team2_prev <- integer(0)
   }
 
 
   #   ____________________________________________________________________________
-  #   Likelihood functions                                                    ####
+  #   Parameter specification                                                 ####
 
-  # double poisson
-  double_pois_lik <- function(parameters, y1, y2, team1, team2) {
-    param_list <- relist_params(parameters)
-    att <- param_list$att
-    def <- param_list$def
-    home <- param_list$home
+  # Teams are subject to a sum-to-zero identifiability constraint: the first
+  # team is dropped from the optimisation and reconstructed afterwards as minus
+  # the sum of the remaining ones
+  free_teams <- teams[-1]
 
-    theta_1 <- exp(home + att[team1] + def[team2])
-    theta_2 <- exp(att[team2] + def[team1])
-    home_log_lik <- dpois(y1, lambda = theta_1, log = TRUE)
-    away_log_lik <- dpois(y2, lambda = theta_2, log = TRUE)
-    return(-sum(home_log_lik + away_log_lik))
-  }
-
-  # bivariate poisson
-  biv_pois_lik <- function(parameters, y1, y2, team1, team2) {
-    param_list <- relist_params(parameters)
-    att <- param_list$att
-    def <- param_list$def
-    home <- param_list$home
-    const <- param_list$const
-
-    theta_1 <- exp(home + att[team1] + def[team2])
-    theta_2 <- exp(att[team2] + def[team1])
-    theta_3 <- exp(const)
-    log_lik <- dbvpois(y1, y2,
-      a = theta_1,
-      b = theta_2, c = theta_3,
-      log = TRUE
+  # Team-level location parameters. Poisson-type models use separate attack and
+  # defence ratings; the Student's t model is defined on the goal difference and
+  # therefore admits a single ability rating per team
+  if (model == "student_t") {
+    loc_init <- setNames(rep(0, nteams - 1), paste0("ability.", free_teams))
+  } else {
+    loc_init <- c(
+      setNames(rep(0, nteams - 1), paste0("att.", free_teams)),
+      setNames(rep(0, nteams - 1), paste0("def.", free_teams))
     )
-
-    return(-sum(log_lik))
   }
 
-  # skellam
-  skellam_lik <- function(parameters, y1, y2, team1, team2) {
-    param_list <- relist_params(parameters)
-    att <- param_list$att
-    def <- param_list$def
-    home <- param_list$home
+  # Model-specific extra (scalar) parameters with their initial values. The
+  # negative binomial dispersions are parameterised on the log scale
+  extra_init <- switch(model,
+    biv_pois    = c(const = 1),
+    dixon_coles = c(rho = 0),
+    neg_bin     = c(phi1 = log(10), phi2 = log(10)),
+    numeric(0)
+  )
+  extra_par_names <- names(extra_init)
 
-    theta_1 <- exp(home + att[team1] + def[team2])
-    theta_2 <- exp(att[team2] + def[team1])
-    log_lik <- dskellam(y1 - y2,
-      mu1 = theta_1,
-      mu2 = theta_2, log = TRUE
-    )
-
-    return(-sum(log_lik))
-  }
-
-  # student t
-  student_t_lik <- function(parameters, y1, y2, team1, team2) {
-    param_list <- relist_params(parameters)
-    ability <- param_list$att + param_list$def
-    home <- param_list$home
-    sigma_y <- as.numeric(param_list$sigma_y)
-
-    log_lik <- dt.scaled(
-      x = y1 - y2, df = 7,
-      mean = home + ability[team1] - ability[team2],
-      sd = sigma_y,
-      log = TRUE
-    )
-
-    return(-sum(log_lik))
-  }
+  # Full vector of free parameters passed to optim()
+  init_par <- c(loc_init, home = 2, extra_init)
 
 
   #   ____________________________________________________________________________
   #   Model fitting                                                           ####
 
-  # parameters initialization
-  # (remove the first team from the attack and defence ratings)
-  equal_parameters <- list(
-    att = rep(0, length(teams) - 1) %>% `names<-`(teams[2:length(teams)]),
-    def = rep(0, length(teams) - 1) %>% `names<-`(teams[2:length(teams)]),
-    home = 2,
-    const = 1, # for bivariate poisson
-    sigma_y = sigma_y # for student_t
+  # Bind the model-specific negative log-likelihood, capturing the team labels
+  # (and the fixed scale for the Student's t model). The wrapper exposes the
+  # uniform signature fn(parameters, y1, y2, team1, team2) expected by optim(),
+  # numDeriv::hessian() and the profiling routine; the likelihood bodies and the
+  # parameter-unpacking helpers live in utils_foot.R.
+  fn <- switch(model,
+    double_pois = function(parameters, y1, y2, team1, team2) mle_double_pois_lik(parameters, y1, y2, team1, team2, teams),
+    biv_pois    = function(parameters, y1, y2, team1, team2) mle_biv_pois_lik(parameters, y1, y2, team1, team2, teams),
+    skellam     = function(parameters, y1, y2, team1, team2) mle_skellam_lik(parameters, y1, y2, team1, team2, teams),
+    student_t   = function(parameters, y1, y2, team1, team2) mle_student_t_lik(parameters, y1, y2, team1, team2, teams, sigma_y),
+    dixon_coles = function(parameters, y1, y2, team1, team2) mle_dixon_coles_lik(parameters, y1, y2, team1, team2, teams),
+    neg_bin     = function(parameters, y1, y2, team1, team2) mle_neg_bin_lik(parameters, y1, y2, team1, team2, teams)
   )
-
-
-  # MLE fit
-
-  likelihoods <- list(
-    double_pois = double_pois_lik,
-    biv_pois    = biv_pois_lik,
-    skellam     = skellam_lik,
-    student_t   = student_t_lik
-  )
-
   mle_fit <- optim(
-    par = unlist(equal_parameters),
-    fn = likelihoods[[model]],
-    team1 = team1, team2 = team2,
-    y1 = y1, y2 = y2,
-    method = method,
-    hessian = hessian,
-    control = list(maxit = maxit)
+    par = init_par, fn = fn,
+    team1 = team1, team2 = team2, y1 = y1, y2 = y2,
+    method = method, hessian = hessian, control = list(maxit = maxit)
   )
-
-  # Compute likelihood confidence intervals
-  fn <- likelihoods[[model]]
-  mle_value <- -fn(mle_fit$par,
-    team1 = team1,
-    team2 = team2,
-    y1 = y1, y2 = y2
-  )
-
-  ci <- matrix(NA, (2 * nteams), 2)
-  # Profile likelihood intervals (default)
-  if (interval == "profile") {
-    index <- function(j) {
-      profile <- function(x) {
-        parameters <- mle_fit$par
-        parameters[j] <- x
-        return(-fn(parameters,
-          team1 = team1,
-          team2 = team2,
-          y1 = y1, y2 = y2
-        ))
-      }
-      # defining likelihood inverse for the profile likelihood ci's
-      profile <- Vectorize(profile, "x")
-      h <- mle_value - pchisq(0.95, 1) / 2
-      # curve(profile(x), -1,1)
-      # abline(h = h , col="red")
-      x <- seq(-5, 5, 0.01)
-      f_v <- profile(x)
-      return(c(min(x[f_v >= h]), max(x[f_v >= h])))
-    }
-
-    ci_out <- sapply(c(1:(2 * nteams)), index)
-    ci <- t(ci_out)
-
-    # Wald-type intervals (only if hessian = TRUE)
-  } else if (interval == "Wald") {
-    ci[1:(2 * nteams - 2), 1] <- round(mle_fit$par[1:(2 * nteams - 2)] - 1.96 * sqrt(diag(solve(mle_fit$hessian[1:(2 * nteams - 2), 1:(2 * nteams - 2)]))), 2)
-    ci[1:(2 * nteams - 2), 2] <- round(mle_fit$par[1:(2 * nteams - 2)] + 1.96 * sqrt(diag(solve(mle_fit$hessian[1:(2 * nteams - 2), 1:(2 * nteams - 2)]))), 2)
-    ci[2 * nteams - 1, 1] <- round(mle_fit$par[2 * nteams - 1] - 1.96 * sqrt(solve(mle_fit$hessian[2 * nteams - 1, 2 * nteams - 1])), 2)
-    ci[2 * nteams - 1, 2] <- round(mle_fit$par[2 * nteams - 1] + 1.96 * sqrt(solve(mle_fit$hessian[2 * nteams - 1, 2 * nteams - 1])), 2)
-    if (model == "biv_pois") {
-      hessian <- hessian(
-        func = fn, x = unlist(equal_parameters), team1 = team1, team2 = team2,
-        y1 = y1, y2 = y2
-      )
-      # ci[2*nteams, 1] <- mle_fit$par[2*nteams]-1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
-      # ci[2*nteams, 2] <- mle_fit$par[2*nteams]+1.96*sqrt(solve(mle_fit$hessian[2*nteams, 2*nteams]))
-      ci[2 * nteams, 1] <- mle_fit$par[2 * nteams] - 1.96 * sqrt(solve(hessian[2 * nteams, 2 * nteams]))
-      ci[2 * nteams, 2] <- mle_fit$par[2 * nteams] + 1.96 * sqrt(solve(hessian[2 * nteams, 2 * nteams]))
-    }
-  }
-
-  # Extract parameters and reparametrization for the first team
-  att <- c(
-    -sum(as.vector(mle_fit$par %>%
-      .[grepl("att", names(.))])),
-    as.vector(mle_fit$par %>%
-      .[grepl("att", names(.))])
-  )
-  def <- c(
-    -sum(as.vector(mle_fit$par %>%
-      .[grepl("def", names(.))])),
-    as.vector(mle_fit$par %>%
-      .[grepl("def", names(.))])
-  )
-  home <- as.numeric(mle_fit$par %>%
-    .[grepl("home", names(.))])
-  corr_par <- round(exp(as.numeric(mle_fit$par %>%
-    .[grepl("const", names(.))])), 2)
-  abilities <- c(
-    -sum(as.vector(mle_fit$par %>%
-      .[grepl("att", names(.))]) +
-      as.vector(mle_fit$par %>%
-        .[grepl("def", names(.))])),
-    as.vector(mle_fit$par %>%
-      .[grepl("att", names(.))]) +
-      as.vector(mle_fit$par %>%
-        .[grepl("def", names(.))])
-  )
-  # Final tables
-  att_est <- def_est <- abilities_est <- matrix(NA, nteams, 3)
-  home_est <- corr_est <- matrix(NA, 1, 3)
-
-  att_est[1, 1] <- round(att[1], 2)
-  att_est[1, 2] <- round(att[1], 2)
-  att_est[1, 3] <- round(att[1], 2)
-  def_est[1, 1] <- round(def[1], 2)
-  def_est[1, 2] <- round(def[1], 2)
-  def_est[1, 3] <- round(def[1], 2)
-  abilities_est[1, 1] <- round(abilities[1], 2)
-  abilities_est[1, 2] <- round(abilities[1], 2)
-  abilities_est[1, 3] <- round(abilities[1], 2)
-  att_est[2:nteams, 1] <- ci[1:(nteams - 1), 1]
-  att_est[2:nteams, 2] <- round(att[2:nteams], 2)
-  att_est[2:nteams, 3] <- ci[1:(nteams - 1), 2]
-  def_est[2:nteams, 1] <- ci[(nteams):(2 * nteams - 2), 1]
-  def_est[2:nteams, 2] <- round(def[2:nteams], 2)
-  def_est[2:nteams, 3] <- ci[(nteams):(2 * nteams - 2), 2]
-  abilities_est[2:nteams, 1] <- ci[1:(nteams - 1), 1] + ci[(nteams):(2 * nteams - 2), 1]
-  abilities_est[2:nteams, 2] <- round(abilities[2:nteams], 2)
-  abilities_est[2:nteams, 3] <- ci[1:(nteams - 1), 2] + ci[(nteams):(2 * nteams - 2), 2]
-  home_est[1, 2] <- round(home, 2)
-  home_est[1, 1] <- ci[2 * nteams - 1, 1]
-  home_est[1, 3] <- ci[2 * nteams - 1, 2]
-  corr_est[1, 2] <- round(corr_par, 2)
-  corr_est[1, 1] <- round(exp(ci[2 * nteams, 1]), 2)
-  corr_est[1, 3] <- round(exp(ci[2 * nteams, 2]), 2)
-  if (corr_est[1, 2] == 0) {
-    corr_est[1, 1] <- corr_est[1, 3] <- 0
-  }
-  rownames(att_est) <- teams
-  colnames(att_est) <- c("2.5%", "mle", "97.5%")
-  rownames(def_est) <- teams
-  colnames(def_est) <- c("2.5%", "mle", "97.5%")
-  rownames(abilities_est) <- teams
-  colnames(abilities_est) <- c("2.5%", "mle", "97.5%")
-  colnames(corr_est) <- c("2.5%", "mle", "97.5%")
-  colnames(home_est) <- c("2.5%", "mle", "97.5%")
-
+  par_hat <- mle_fit$par
+  par_names <- names(par_hat)
+  mle_value <- -fn(par_hat, team1 = team1, team2 = team2, y1 = y1, y2 = y2)
 
 
   #   ____________________________________________________________________________
-  #   Compute AIC and BIC                                                     ####
+  #   Confidence intervals                                                    ####
+
+  ci <- matrix(NA_real_, length(par_hat), 2,
+    dimnames = list(par_names, c("lower", "upper"))
+  )
+
+  if (interval == "profile") {
+    # "profile" option (default): conditional likelihood intervals — each
+    # parameter is varied with the others held fixed at their MLE. This is
+    # chosen for computational efficiency (no re-optimisation of the nuisance
+    # parameters) and yields intervals narrower than a full profile likelihood;
+    # use "Wald" when the correlation among parameters matters.
+    conditional_interval <- function(j) {
+      mle_conditional_interval(j, par_hat, fn, mle_value, team1, team2, y1, y2)
+    }
+    for (j in seq_along(par_hat)) {
+      ci[j, ] <- conditional_interval(j)
+    }
+  } else if (interval == "Wald") {
+    # Wald intervals from the inverse of the full observed information matrix.
+    # Because the parameter vector contains only the parameters that the model
+    # actually estimates, the information matrix is non-singular and retains the
+    # cross-correlations among parameters; the standard errors are the square
+    # roots of the diagonal of its inverse.
+    H <- hessian(func = fn, x = par_hat, team1 = team1, team2 = team2, y1 = y1, y2 = y2)
+    se <- sqrt(diag(solve(H)))
+    ci[, 1] <- par_hat - 1.96 * se
+    ci[, 2] <- par_hat + 1.96 * se
+  }
+
+
+  #   ____________________________________________________________________________
+  #   Output tables                                                           ####
+
+  # Thin wrappers that bind the local fit state (par_hat, par_names, ci, teams)
+  # and delegate to the table builders defined in utils_foot.R.
+  loc_table <- function(prefix, digits = 2) {
+    mle_loc_table(prefix, par_hat, par_names, ci, teams, digits)
+  }
+  scalar_table <- function(name, transform = identity, digits = 2, rows = NULL) {
+    mle_scalar_table(name, par_hat, ci, transform, digits, rows)
+  }
+
+  home_est <- scalar_table("home", digits = 2)
+
+
+  #   ____________________________________________________________________________
+  #   AIC and BIC                                                             ####
 
   logLik <- -mle_fit$value
-  k <- length(mle_fit$par)
-
+  # The number of effective parameters is exactly the length of the estimated
+  # parameter vector.
+  k <- length(par_hat)
   AIC <- 2 * k - 2 * logLik
   BIC <- k * log(N) - 2 * logLik
 
@@ -521,10 +364,9 @@ mle_foot <- function(data,
   #   ____________________________________________________________________________
   #   Output                                                                  ####
 
-
   if (model == "student_t") {
     return(list(
-      abilities = abilities_est,
+      abilities = loc_table("ability"),
       home_effect = home_est,
       model = model,
       predict = predict,
@@ -536,9 +378,11 @@ mle_foot <- function(data,
       bic = BIC
     ))
   } else if (model == "biv_pois") {
+    corr_est <- scalar_table("const", transform = exp, digits = 2)
+    if (corr_est[1, 2] == 0) corr_est[1, c(1, 3)] <- 0
     return(list(
-      att = att_est,
-      def = def_est,
+      att = loc_table("att"),
+      def = loc_table("def"),
       home_effect = home_est,
       corr = corr_est,
       model = model,
@@ -549,10 +393,43 @@ mle_foot <- function(data,
       aic = AIC,
       bic = BIC
     ))
+  } else if (model == "dixon_coles") {
+    return(list(
+      att = loc_table("att"),
+      def = loc_table("def"),
+      home_effect = home_est,
+      rho = scalar_table("rho", digits = 4),
+      model = model,
+      predict = predict,
+      team1_prev = team1_prev,
+      team2_prev = team2_prev,
+      logLik = logLik,
+      aic = AIC,
+      bic = BIC
+    ))
+  } else if (model == "neg_bin") {
+    overdispersion_est <- rbind(
+      scalar_table("phi1", transform = exp, digits = 4),
+      scalar_table("phi2", transform = exp, digits = 4)
+    )
+    rownames(overdispersion_est) <- c("phi1 (home)", "phi2 (away)")
+    return(list(
+      att = loc_table("att"),
+      def = loc_table("def"),
+      home_effect = home_est,
+      overdispersion = overdispersion_est,
+      model = model,
+      predict = predict,
+      team1_prev = team1_prev,
+      team2_prev = team2_prev,
+      logLik = logLik,
+      aic = AIC,
+      bic = BIC
+    ))
   } else {
     return(list(
-      att = att_est,
-      def = def_est,
+      att = loc_table("att"),
+      def = loc_table("def"),
       home_effect = home_est,
       model = model,
       predict = predict,

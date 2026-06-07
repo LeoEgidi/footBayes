@@ -136,11 +136,11 @@ compare_foot <- function(source,
 
   # Encode actual outcomes: 1 = Home Win, 2 = Draw, 3 = Away Win
   test_data$outcome <- ifelse(test_data$home_goals > test_data$away_goals, 1,
-    ifelse(test_data$home_goals == test_data$away_goals, 2, 3)
+                              ifelse(test_data$home_goals == test_data$away_goals, 2, 3)
   )
   test_data$outcome <- factor(test_data$outcome,
-    levels = 1:3,
-    labels = c("Home Win", "Draw", "Away Win")
+                              levels = 1:3,
+                              labels = c("Home Win", "Draw", "Away Win")
   )
   actual_outcomes <- test_data$outcome
 
@@ -308,8 +308,8 @@ compare_foot <- function(source,
       predicted_classes <- apply(prob_q_model, 1, which.max)
       confusion_matrices_results[[item_name]] <- table(
         Predicted = factor(predicted_classes,
-          levels = 1:3,
-          labels = c("Home Win", "Draw", "Away Win")
+                           levels = 1:3,
+                           labels = c("Home Win", "Draw", "Away Win")
         ),
         Actual = actual_outcomes
       )

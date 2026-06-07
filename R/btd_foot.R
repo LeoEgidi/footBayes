@@ -629,6 +629,6 @@ btd_foot <- function(data,
     alg_method = method
   )
 
-  class(output) <- "btdFoot"
+  class(output) <- c("btdFoot", "footBayes")
   return(output)
 }

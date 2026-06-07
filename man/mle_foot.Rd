@@ -29,13 +29,15 @@ mle_foot(
 \itemize{
   \item \code{"double_pois"}: Double Poisson model.
   \item \code{"biv_pois"}: Bivariate Poisson model.
+  \item \code{"dixon_coles"}: Dixon-Coles model.
+  \item \code{"neg_bin"}: Negative Binomial model.
   \item \code{"skellam"}: Skellam model.
   \item \code{"student_t"}: Student's t model.
   }}
 
 \item{predict}{An integer specifying the number of out-of-sample matches for prediction. If missing, the function fits the model to the entire dataset without making predictions.}
 
-\item{maxit}{An integer specifying the maximum number of optimizer iterations  default is 1000).}
+\item{maxit}{An integer specifying the maximum number of optimizer iterations default is 1000).}
 
 \item{method}{A character specifying the optimization method. Options are
   \itemize{
@@ -61,11 +63,13 @@ For further details see \code{{optim}} function in \code{\link[stats]{stats}} pa
 \value{
 A named list containing:
 \itemize{
-  \item{\code{att}}: A matrix of attack ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
-  \item{\code{def}}: A matrix of defence ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"} and \code{"skellam"} models).
+  \item{\code{att}}: A matrix of attack ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"}, \code{"dixon_coles"}, \code{"neg_bin"} and \code{"skellam"} models).
+  \item{\code{def}}: A matrix of defence ratings, with MLE and 95\% confidence intervals (for \code{"double_pois"}, \code{"biv_pois"}, \code{"dixon_coles"}, \code{"neg_bin"} and \code{"skellam"} models).
   \item{\code{abilities}}: A matrix of combined ability, with MLE and 95\% confidence intervals (for \code{"student_t"} only).
   \item{\code{home_effect}}: A matrix with with MLE and 95\% confidence intervals for the home effect estimate.
   \item{\code{corr}}: A matrix with MLE and 95\% confidence intervals for the bivariate Poisson correlation parameter (for \code{"biv_pois"} only).
+  \item{\code{rho}}: A matrix with MLE and 95\% confidence intervals for the Dixon-Coles dependence parameter (for \code{"dixon_coles"} only).
+  \item{\code{overdispersion}}: A matrix with MLE and 95\% confidence intervals for the home and away overdispersion parameters (for \code{"neg_bin"} only).
   \item{\code{model}}: The name of the fitted model (character).
   \item{\code{predict}}: The number of out-of-sample matches used for prediction (integer).
   \item{\code{sigma_y}}: The scale parameter used in the Student t likelihood (for \code{"student_t"} only).
@@ -78,7 +82,8 @@ A named list containing:
 }
 \description{
 Fits football goal-based models using maximum likelihood estimation.
-Supported models include: double Poisson, bivariate Poisson, Skellam, and Student's t.
+Supported models include: double Poisson, bivariate Poisson, Dixon-Coles,
+negative binomial, Skellam, and Student's t.
 }
 \details{
 MLE can be obtained only for static models, with no time-dependence.
@@ -107,6 +112,10 @@ mle_fit <- mle_foot(
 \references{
 Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
 results. Journal of Applied Statistics 37(2), 253-264.
+
+Dixon, M. J. and Coles, S. G. (1997). Modelling association football scores and
+inefficiencies in the football betting market. Journal of the Royal Statistical Society:
+Series C (Applied Statistics) 46(2), 265-280.
 
 Egidi, L., Pauli, F., and Torelli, N. (2018). Combining historical data
 and bookmakers' odds in modelling football scores. Statistical Modelling, 18(5-6), 436-459.

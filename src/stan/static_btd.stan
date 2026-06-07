@@ -30,14 +30,14 @@ data {
 
     model {
       // Priors for strengths
-      logStrength_raw ~ normal(mean_logStrength, sd_logStrength);
+      target+=normal_lpdf(logStrength_raw|mean_logStrength, sd_logStrength);
 
       // Prior for tie parameter
-      logTie ~ normal(mean_logTie, sd_logTie);
+      target+=normal_lpdf(logTie|mean_logTie, sd_logTie);
 
       // Prior for the home effect
 
-      home ~ normal(mean_home, sd_home);
+      target+=normal_lpdf(home|mean_home, sd_home);
 
       // Likelihood
       for (n in 1:N) {

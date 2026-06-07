@@ -11,8 +11,8 @@ stan_foot(
   ranking,
   dynamic_type,
   dynamic_weight = FALSE,
-  dynamic_par = list(common_sd = FALSE, spike = normal(200, 0.1), slab = normal(0, 10),
-    spike_prob = 0.2),
+  dynamic_par = list(common_sd = FALSE, kl_variance = FALSE, spike = normal(10, 0.1),
+    slab = normal(0, 3)),
   prior_par = list(ability = normal(0, NULL), ability_sd = cauchy(0, 5), home = normal(0,
     5)),
   home_effect = TRUE,
@@ -36,6 +36,7 @@ stan_foot(
 \itemize{
   \item \code{"double_pois"}: Double Poisson model.
   \item \code{"biv_pois"}: Bivariate Poisson model.
+  \item \code{"dixon_coles"}: Dixon-Coles model.
   \item \code{"neg_bin"}: Negative Binomial model.
   \item \code{"skellam"}: Skellam model.
   \item \code{"student_t"}: Student's t model.
@@ -64,9 +65,9 @@ with a commensurate prior for the dynamic attack and defense parameters (default
 \item{dynamic_par}{List of hyperparameters for dynamic models. Elements:
 \itemize{
   \item \code{common_sd}: A logical value indicating whether to use shared evolution variance across attack/defense (Owen, 2011). Default \code{FALSE}.
+  \item \code{kl_variance}: A logical value indicating whether to use time-varying variance with break inflation (Koopman & Lit, 2015). Default \code{FALSE}.
   \item \code{spike}: Half-normal prior \code{normal(location=0, scale)} for spike component. Default \code{normal(200, 0.1)}.
   \item \code{slab}: Half-normal prior \code{normal(location=0, scale)} for slab component. Default \code{normal(0, 10)}.
-  \item \code{spike_prob}: Probability of spike. Default \code{0.2}.
 }}
 
 \item{prior_par}{A list specifying the prior distributions for the parameters of interest:
@@ -113,7 +114,7 @@ An object of class \code{"stanFoot"}, which is a list containing:
 }
 \description{
 Fits football goal-based models using Stan via the CmdStan backend.
-Supported models include: double Poisson, bivariate Poisson, Skellam, Student's t, diagonal-inflated bivariate Poisson, zero-inflated Skellam, and negative Binomial.
+Supported models include: double Poisson, bivariate Poisson, Dixon-Coles, Skellam, Student's t, diagonal-inflated bivariate Poisson, zero-inflated Skellam, and negative Binomial.
 }
 \details{
 Let \eqn{(y^{H}_{n}, y^{A}_{n})} denote the
@@ -147,6 +148,23 @@ assigned some weakly-informative prior distributions:
 \deqn{def_T \sim \mathrm{N}(\mu_{def}, \sigma_{def}),}
 
 with hyperparameters \eqn{\mu_{att}, \sigma_{att}, \mu_{def}, \sigma_{def}}.
+
+The Dixon and Coles (1997) model keeps the two scoring rates
+\eqn{\lambda_{1n}, \lambda_{2n}} of the double Poisson model but
+multiplies the joint probability of low-scoring results by a
+dependence factor \eqn{\tau} to better capture the observed
+correlation in the \eqn{0\text{-}0, 1\text{-}0, 0\text{-}1} and
+\eqn{1\text{-}1} outcomes:
+
+\deqn{P(Y^H_n = y^H_n, Y^A_n = y^A_n) = \tau_{\lambda_{1n}, \lambda_{2n}}(y^H_n, y^A_n) \, \mathsf{Poisson}(y^H_n | \lambda_{1n}) \, \mathsf{Poisson}(y^A_n | \lambda_{2n}),}
+
+where
+
+\deqn{\tau_{\lambda_1, \lambda_2}(y^H, y^A) = \begin{cases} 1 - \lambda_1 \lambda_2 \rho & y^H = y^A = 0 \\ 1 + \lambda_1 \rho & y^H = 0, y^A = 1 \\ 1 + \lambda_2 \rho & y^H = 1, y^A = 0 \\ 1 - \rho & y^H = y^A = 1 \\ 1 & \text{otherwise,} \end{cases}}
+
+and \eqn{\rho} is the diagonal-inflation dependence parameter,
+assigned a weakly-informative \eqn{\mathrm{N}(0, 0.1)} prior and
+constrained to keep the adjustment factor positive.
 
 Instead of using the marginal number of goals,
 another alternative is to modelling directly
@@ -190,6 +208,14 @@ whereas for \eqn{\tau=1} we have:
 Of course, the identifiability constraint must be imposed for
 each time \eqn{\tau}.
 
+The Koopman and Lit (2015) approach extends the dynamic model by allowing
+the evolution variance to increase at structural break points (e.g., summer
+transfer windows). Specifically, the variance at time \eqn{\tau} is:
+
+\deqn{\sigma^2_{\kappa,\tau} = \sigma^2_{\kappa} + \sigma^2_{break} \times I(\tau \text{ follows summer break})}
+
+where \eqn{\kappa \in \{att, def\}} and \eqn{I(\cdot)} is an indicator function.
+
 The current version of the package allows for the fit of a
 diagonal-inflated bivariate Poisson and a zero-inflated Skellam model in the
 spirit of (Karlis & Ntzoufras, 2003) to better capture draw occurrences. See the vignette for further details.
@@ -199,143 +225,28 @@ spirit of (Karlis & Ntzoufras, 2003) to better capture draw occurrences. See the
 if (instantiate::stan_cmdstan_exists()) {
   library(dplyr)
 
-  # Example usage with ranking
+  # Example usage with Koopman & Lit (2015) approach
   data("italy")
   italy <- as_tibble(italy)
-  italy_2021 <- italy \%>\%
+  italy_multi <- italy \%>\%
     select(Season, home, visitor, hgoal, vgoal) \%>\%
-    filter(Season == "2021")
+    filter(Season \%in\% c("2018", "2019", "2020", "2021"))
 
+  colnames(italy_multi) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
 
-  teams <- unique(italy_2021$home)
-  n_rows <- 20
-
-  # Create fake ranking
-  ranking <- data.frame(
-    periods = rep(1, n_rows),
-    team = sample(teams, n_rows, replace = FALSE),
-    rank_points = sample(0:60, n_rows, replace = FALSE)
-  )
-
-  ranking <- ranking \%>\%
-    arrange(periods, desc(rank_points))
-
-
-  colnames(italy_2021) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
-
-  fit_with_ranking <- stan_foot(
-    data = italy_2021,
-    model = "diag_infl_biv_pois",
-    ranking = ranking,
-    home_effect = TRUE,
-    prior_par = list(
-      ability = student_t(4, 0, NULL),
-      ability_sd = cauchy(0, 3),
-      home = normal(1, 10)
-    ),
-    norm_method = "mad",
-    iter_sampling = 1000,
-    chains = 2,
-    parallel_chains = 2,
-    adapt_delta = 0.95,
-    max_treedepth = 15
-  )
-
-  # Print a summary of the model fit
-  print(fit_with_ranking, pars = c("att", "def"))
-
-
-
-  ### Use Italian Serie A from 2000 to 2002
-
-  data("italy")
-  italy <- as_tibble(italy)
-  italy_2000_2002 <- italy \%>\%
-    dplyr::select(Season, home, visitor, hgoal, vgoal) \%>\%
-    dplyr::filter(Season == "2000" | Season == "2001" | Season == "2002")
-
-  colnames(italy_2000_2002) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
-
-  ### Fit Stan models
-  ## no dynamics, no predictions
-
-  fit_1 <- stan_foot(
-    data = italy_2000_2002,
-    model = "double_pois"
-  ) # double poisson
-  print(fit_1, pars = c(
-    "home", "sigma_att",
-    "sigma_def"
-  ))
-
-  fit_2 <- stan_foot(
-    data = italy_2000_2002,
-    model = "biv_pois"
-  ) # bivariate poisson
-  print(fit_2, pars = c(
-    "home", "rho",
-    "sigma_att", "sigma_def"
-  ))
-
-  fit_3 <- stan_foot(
-    data = italy_2000_2002,
-    mode = "skellam"
-  ) # skellam
-  print(fit_3, pars = c(
-    "home", "sigma_att",
-    "sigma_def"
-  ))
-
-  fit_4 <- stan_foot(
-    data = italy_2000_2002,
-    model = "student_t"
-  ) # student_t
-  print(fit_4, pars = c("beta"))
-
-  ## seasonal dynamics, no prediction
-
-  fit_5 <- stan_foot(
-    data = italy_2000_2002,
-    model = "double_pois",
-    dynamic_type = "seasonal"
-  ) # double poisson
-  print(fit_5, pars = c(
-    "home", "sigma_att",
-    "sigma_def"
-  ))
-
-  ## seasonal dynamics, prediction for the last season
-
-  fit_6 <- stan_foot(
-    data = italy_2000_2002,
-    model = "double_pois",
+  # Fit with K&L variance inflation at summer breaks
+  fit_kl <- stan_foot(
+    data = italy_multi,
+    model = "biv_pois",
     dynamic_type = "seasonal",
-    predict = 170
-  ) # double poisson
-  print(fit_6, pars = c(
-    "home", "sigma_att",
-    "sigma_def"
-  ))
-
-  ## other priors' options
-  # double poisson with
-  # student_t priors for teams abilities
-  # and laplace prior for the hyper sds
-
-  fit_p <- stan_foot(
-    data = italy_2000_2002,
-    model = "double_pois",
-    prior_par = list(
-      ability = student_t(4, 0, NULL),
-      ability_sd = laplace(0, 1),
-      home = normal(1, 10)
-    )
+    dynamic_par = list(kl_variance = TRUE),
+    home_effect = TRUE,
+    iter_sampling = 1000,
+    chains = 4,
+    parallel_chains = 4
   )
 
-  print(fit_p, pars = c(
-    "home", "sigma_att",
-    "sigma_def"
-  ))
+  print(fit_kl, pars = c("sigma_att_kl", "sigma_def_kl", "sigma_break"))
 }
 }
 }
@@ -343,11 +254,19 @@ if (instantiate::stan_cmdstan_exists()) {
 Baio, G. and Blangiardo, M. (2010). Bayesian hierarchical model for the prediction of football
 results. Journal of Applied Statistics 37(2), 253-264.
 
+Dixon, M. J. and Coles, S. G. (1997). Modelling association football scores
+and inefficiencies in the football betting market. Journal of the Royal
+Statistical Society: Series C (Applied Statistics), 46(2), 265-280.
+
 Egidi, L., Pauli, F., and Torelli, N. (2018). Combining historical data
 and bookmakers' odds in modelling football scores. Statistical Modelling, 18(5-6), 436-459.
 
 Gelman, A. (2014). Stan goes to the World Cup. From
 "Statistical Modeling, Causal Inference, and Social Science" blog.
+
+Koopman, S. J. and Lit, R. (2015). A dynamic bivariate Poisson model for analysing and
+forecasting match results in the English Premier League. Journal of the Royal Statistical
+Society: Series A (Statistics in Society), 178(1), 167-186.
 
 Macrì Demartino, R., Egidi, L. and Torelli, N. Alternative ranking measures to predict
 international football results. Computational Statistics (2024), 1-19.

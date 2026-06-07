@@ -38,21 +38,21 @@ data {
   model {
       // Priors for initial strengths
       for (k in 1:nteams) {
-          logStrength[1, k] ~ normal(mean_logStrength, sd_logStrength);
+          target+=normal_lpdf(logStrength[1, k]| mean_logStrength, sd_logStrength);
       }
 
       // Prior for tie parameter
-      logTie ~ normal(mean_logTie, sd_logTie);
+      target+=normal_lpdf(logTie|mean_logTie, sd_logTie);
 
       // AR(1) process for strength parameters
       for (t_idx in 2:ntimes_rank) {
           for (k in 1:nteams) {
-              logStrength_raw[t_idx, k] ~ normal(logStrength_raw[t_idx - 1, k], sd_logStrength);
+             target+=normal_lpdf(logStrength_raw[t_idx, k]|logStrength_raw[t_idx - 1, k], sd_logStrength);
           }
       }
 
       // Prior for the home effect
-      home ~ normal(mean_home, sd_home);
+      target+=normal_lpdf(home|mean_home, sd_home);
 
       // Likelihood
       for (n in 1:N) {

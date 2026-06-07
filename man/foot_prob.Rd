@@ -42,6 +42,13 @@ simulation from the posterior predictive distribution of future (out-of-sample) 
 Specifically, matches are ordered from those in which the favorite team has the highest posterior probability
 of winning to those where the underdog is more likely to win. For MLE models
 fitted via the \code{mle_foot} the probabilities are computed by simulating from the MLE estimates.
+Supported MLE models include: \code{"double_pois"}, \code{"biv_pois"}, \code{"dixon_coles"},
+\code{"neg_bin"}, \code{"skellam"}, and \code{"student_t"}.
+
+For the Dixon-Coles model, predictions incorporate the low-score dependence
+adjustment via weighted resampling from independent Poisson simulations.
+For the negative binomial model, predictions use the NB2 parameterization
+with separate overdispersion parameters for home and away goals.
 }
 \examples{
 \dontrun{

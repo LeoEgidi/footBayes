@@ -20,7 +20,7 @@ foot_abilities(object, data, type = "both", teams = NULL)
   \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 }}
 
-\item{type}{Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}. Default is \code{"both"}.}
+\item{type}{Type of ability for models with separate attack/defence parameters: one among \code{"defense"}, \code{"attack"} or \code{"both"}. Default is \code{"both"}. Ignored for the \code{"student_t"} model which uses combined abilities.}
 
 \item{teams}{An optional character vector specifying team names to include. If \code{NULL}, all teams are included.}
 }
@@ -34,7 +34,11 @@ A \code{ggplot} object showing each selected team’s ability estimates:
 }
 \description{
 Depicts teams' abilities either from the Stan models fitted via the \code{stan_foot} function
-or from MLE models fitted via the \code{mle_foot} function.
+or from MLE models fitted via the \code{mle_foot} function. Supported MLE models include
+\code{"double_pois"}, \code{"biv_pois"}, \code{"dixon_coles"}, \code{"neg_bin"},
+\code{"skellam"}, and \code{"student_t"}. Models with separate attack and defence parameters
+(all except \code{"student_t"}) display attack and defence effects; the \code{"student_t"} model
+displays combined global abilities.
 }
 \examples{
 \dontrun{
@@ -87,6 +91,26 @@ if (instantiate::stan_cmdstan_exists()) {
   ) # bivariate poisson
   foot_abilities(fit5, italy_2000_2002)
 }
+
+### MLE models (no Stan required)
+
+data("italy")
+italy_2000 <- italy[italy$Season == "2000", ]
+italy_2000 <- data.frame(
+  periods = italy_2000$Season,
+  home_team = italy_2000$home,
+  away_team = italy_2000$visitor,
+  home_goals = italy_2000$hgoal,
+  away_goals = italy_2000$vgoal
+)
+
+## Dixon-Coles MLE
+mle_dc <- mle_foot(data = italy_2000, model = "dixon_coles")
+foot_abilities(mle_dc, italy_2000)
+
+## Negative Binomial MLE
+mle_nb <- mle_foot(data = italy_2000, model = "neg_bin")
+foot_abilities(mle_nb, italy_2000, type = "attack")
 }
 }
 \author{

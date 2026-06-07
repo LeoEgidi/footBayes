@@ -1,7 +1,11 @@
 #' Plot football abilities from Stan and MLE models
 #'
 #' Depicts teams' abilities either from the Stan models fitted via the \code{stan_foot} function
-#' or from MLE models fitted via the \code{mle_foot} function.
+#' or from MLE models fitted via the \code{mle_foot} function. Supported MLE models include
+#' \code{"double_pois"}, \code{"biv_pois"}, \code{"dixon_coles"}, \code{"neg_bin"},
+#' \code{"skellam"}, and \code{"student_t"}. Models with separate attack and defence parameters
+#' (all except \code{"student_t"}) display attack and defence effects; the \code{"student_t"} model
+#' displays combined global abilities.
 #'
 #'
 #' @param object An object either of class \code{stanFoot}, \code{CmdStanFit}, \code{stanfit}, or class
@@ -15,7 +19,7 @@
 #'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
 #'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 #'   }
-#' @param type Type of ability in Poisson models: one among \code{"defense"}, \code{"attack"} or \code{"both"}. Default is \code{"both"}.
+#' @param type Type of ability for models with separate attack/defence parameters: one among \code{"defense"}, \code{"attack"} or \code{"both"}. Default is \code{"both"}. Ignored for the \code{"student_t"} model which uses combined abilities.
 #' @param teams  An optional character vector specifying team names to include. If \code{NULL}, all teams are included.
 #'
 #' @return A \code{ggplot} object showing each selected team’s ability estimates:
@@ -78,6 +82,26 @@
 #'   ) # bivariate poisson
 #'   foot_abilities(fit5, italy_2000_2002)
 #' }
+#'
+#' ### MLE models (no Stan required)
+#'
+#' data("italy")
+#' italy_2000 <- italy[italy$Season == "2000", ]
+#' italy_2000 <- data.frame(
+#'   periods = italy_2000$Season,
+#'   home_team = italy_2000$home,
+#'   away_team = italy_2000$visitor,
+#'   home_goals = italy_2000$hgoal,
+#'   away_goals = italy_2000$vgoal
+#' )
+#'
+#' ## Dixon-Coles MLE
+#' mle_dc <- mle_foot(data = italy_2000, model = "dixon_coles")
+#' foot_abilities(mle_dc, italy_2000)
+#'
+#' ## Negative Binomial MLE
+#' mle_nb <- mle_foot(data = italy_2000, model = "neg_bin")
+#' foot_abilities(mle_nb, italy_2000, type = "attack")
 #' }
 #' @importFrom ggplot2 ggplot geom_ribbon geom_line facet_wrap lims scale_x_continuous labs
 #'   theme_bw theme scale_color_manual geom_errorbarh geom_vline position_dodge
@@ -390,7 +414,7 @@ foot_abilities <- function(object, data,
         df$team <- factor(df$team, levels = sel_teams[order(att_mean)])
         p <- ggplot(df, aes(x = .data$mean, y = .data$team, color = .data$effect)) +
           geom_errorbarh(aes(xmin = .data$lower, xmax = .data$upper),
-            height = 0.5, position = position_dodge(width = 0.5)
+                         height = 0.5, position = position_dodge(width = 0.5)
           ) +
           geom_point(position = position_dodge(width = 0.5), size = 2.3) +
           geom_vline(xintercept = 0, linetype = "twodash", color = "grey20") +
@@ -634,7 +658,7 @@ foot_abilities <- function(object, data,
         p <- ggplot(df, aes(x = .data$mean, y = .data$team, color = .data$effect)) +
           geom_vline(xintercept = 0, linetype = "twodash", color = "grey20") +
           geom_errorbarh(aes(xmin = .data$lower, xmax = .data$upper),
-            height = 0.2, position = position_dodge(width = 0.3)
+                         height = 0.2, position = position_dodge(width = 0.3)
           ) +
           geom_point(position = position_dodge(width = 0.3), size = 2) +
           labs(

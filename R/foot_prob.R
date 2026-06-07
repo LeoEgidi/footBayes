@@ -32,6 +32,13 @@
 #' Specifically, matches are ordered from those in which the favorite team has the highest posterior probability
 #' of winning to those where the underdog is more likely to win. For MLE models
 #' fitted via the \code{mle_foot} the probabilities are computed by simulating from the MLE estimates.
+#' Supported MLE models include: \code{"double_pois"}, \code{"biv_pois"}, \code{"dixon_coles"},
+#' \code{"neg_bin"}, \code{"skellam"}, and \code{"student_t"}.
+#'
+#' For the Dixon-Coles model, predictions incorporate the low-score dependence
+#' adjustment via weighted resampling from independent Poisson simulations.
+#' For the negative binomial model, predictions use the NB2 parameterization
+#' with separate overdispersion parameters for home and away goals.
 #'
 #'
 #' @author Leonardo Egidi \email{legidi@units.it} and Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}.
@@ -444,87 +451,44 @@ foot_prob <- function(object, data, home_team, away_team) {
   } else if (inherits(object, "list")) {
     model <- object$model
     predict <- object$predict
-    n.iter <- 200
     team1_prev <- object$team1_prev
     team2_prev <- object$team2_prev
     N_prev <- predict
 
-    prediction_routine <- function(team1_prev, team2_prev, att, def, home,
-                                   corr, ability, model, predict, n.iter) {
-      mean_home <- exp(home[1, 2] + att[team1_prev, 2] + def[team2_prev, 2])
-      mean_away <- exp(att[team2_prev, 2] + def[team1_prev, 2])
+    if (predict != 0) {
+      # Simulate goals using the shared utility function
+      n.iter <- 1000
+      sims_mle <- simulate_goals_mle(
+        model = model,
+        team1_prev = team1_prev,
+        team2_prev = team2_prev,
+        att = object$att,
+        def = object$def,
+        home = object$home_effect,
+        n_prev = N_prev,
+        n_iter = n.iter,
+        corr = object$corr,
+        ability = object$abilities,
+        sigma_y = object$sigma_y,
+        rho_par = object$rho,
+        overdispersion = object$overdispersion
+      )
 
-      if (model == "double_pois") {
-        x <- y <- matrix(NA, n.iter, predict)
-        for (n in 1:N_prev) {
-          x[, n] <- rpois(n.iter, mean_home[n])
-          y[, n] <- rpois(n.iter, mean_away[n])
-        }
-      } else if (model == "biv_pois") {
-        couple <- array(NA, c(n.iter, predict, 2))
-        for (n in 1:N_prev) {
-          couple[, n, ] <- rbvpois(n.iter,
-            a = mean_home[n],
-            b = mean_away[n],
-            c = corr[1, 2]
-          )
-        }
-        x <- couple[, , 1]
-        y <- couple[, , 2]
-      } else if (model == "skellam") {
-        diff_y <- matrix(NA, n.iter, predict)
-        for (n in 1:N_prev) {
-          diff_y[, n] <- rskellam(n.iter,
-            mu1 = mean_home[n],
-            mu2 = mean_away[n]
-          )
-        }
-        x <- diff_y
-        y <- matrix(0, n.iter, predict)
-      } else if (model == "student_t") {
-        sigma_y <- object$sigma_y
-        diff_y <- matrix(NA, n.iter, predict)
-        for (n in 1:N_prev) {
-          diff_y[, n] <- rt.scaled(n.iter,
-            df = 7,
-            mean = home[1, 2] + ability[team1_prev[n], 2] - ability[team2_prev[n], 2],
-            sd = sigma_y
-          )
-        }
-        x <- round(diff_y)
-        y <- matrix(0, n.iter, predict)
-      }
+      x <- sims_mle$x
+      y <- sims_mle$y
 
-      prob_func <- function(mat_x, mat_y) {
-        res <- mat_x - mat_y
-        prob_h <- apply(res, 2, function(x) sum(x > 0)) / n.iter
-        prob_d <- apply(res, 2, function(x) sum(x == 0)) / n.iter
-        prob_a <- apply(res, 2, function(x) sum(x < 0)) / n.iter
-        return(list(
-          prob_h = prob_h,
-          prob_d = prob_d,
-          prob_a = prob_a
-        ))
-      }
+      # Compute match outcome probabilities
+      res <- x - y
+      prob_h <- apply(res, 2, function(v) sum(v > 0)) / n.iter
+      prob_d <- apply(res, 2, function(v) sum(v == 0)) / n.iter
+      prob_a <- apply(res, 2, function(v) sum(v < 0)) / n.iter
 
-      conf <- prob_func(x, y)
-
-      tbl <- data.frame(
+      prob_matrix <- data.frame(
         home_team = teams[team1_prev[find_match]],
         away_team = teams[team2_prev[find_match]],
-        prob_h = conf$prob_h[find_match],
-        prob_d = conf$prob_d[find_match],
-        prob_a = conf$prob_a[find_match]
-      )
-      return(tbl)
-    }
-
-    if (predict != 0) {
-      prob_matrix <- prediction_routine(
-        team1_prev, team2_prev, object$att,
-        object$def, object$home,
-        object$corr, object$abilities, model, predict,
-        n.iter
+        prob_h = prob_h[find_match],
+        prob_d = prob_d[find_match],
+        prob_a = prob_a[find_match]
       )
     }
 
