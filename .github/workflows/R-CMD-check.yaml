@@ -54,6 +54,7 @@ jobs:
             MCMCglmm
             ape
             stan-dev/cmdstanr
+            wlandau/instantiate
             RcppEigen
             testthat
             emmeans
