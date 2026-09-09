@@ -30,7 +30,7 @@ If \code{visualize = "aggregated"}: a list with
 }
 
 If \code{visualize = "individual"}: A \code{ggplot} showing, for each selected team, the observed and
-simulated cumulative points over match‑days.
+simulated cumulative points over match-days.
 }
 \description{
 Posterior predictive plots and final rank table for football seasons.

@@ -27,7 +27,7 @@ or \code{"plot"}. Default is \code{"both"}.}
 If \code{output = "both"} a list with:
 \itemize{
   \item{\code{round_table}}: A data frame of matchups (\code{Home}, \code{Away}), observed scores, and \code{Home_prob} (median posterior probability of a home win).
-  \item{\code{round_plot}}: A \code{ggplot} heatmap of home‑win probabilities with observed scores overlaid.
+  \item{\code{round_plot}}: A \code{ggplot} heatmap of home-win probabilities with observed scores overlaid.
 }
 If \code{output = "table"} or \code{"plot"}, returns only that component.
 }

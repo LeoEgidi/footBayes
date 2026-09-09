@@ -74,8 +74,17 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
     team_map <- setNames(seq_along(teams_all), teams_all)
   }
 
+  # Parameter families whose last index refers to a team (in all the Stan models):
+  # the team index is replaced by the team name and filtered by 'teams'
+  team_families <- c(
+    "att", "def", "att_raw", "def_raw", "att_raw_std", "def_raw_std",
+    "att_raw_centered", "def_raw_centered", "mu_att", "mu_def",
+    "comm_prec_att", "comm_prec_def", "comm_sd_att", "comm_sd_def",
+    "prob_spike", "alpha", "ability"
+  )
+
   # Parameters to exclude from name replacement
-  exclude_params <- all_param_names[!all_param_names %in% c("att_raw", "def_raw", "att", "def")]
+  exclude_params <- all_param_names[!all_param_names %in% team_families]
 
   # Extract posterior summaries
   cat("Posterior summaries for model parameters:\n")
@@ -86,42 +95,24 @@ print.stanFoot <- function(x, pars = NULL, teams = NULL, digits = 3, true_names 
     stan_summary <- x$fit$summary(variables = unique(final_pars))
   }
 
-  is_dynamic <- x$stan_data$ntimes > 1
+  is_dynamic <- isTRUE(x$stan_data$ntimes > 1)
 
-  # If 'teams' is specified, filter parameters related to these teams
+  # If 'teams' is specified, keep the team-indexed parameters of the selected
+  # teams only, together with all the remaining (global) parameters, e.g.
+  # home, rho, sigma_att, sigma_common, sigma_break, nu, phi, ...
   if (!is.null(teams)) {
-    if (is_dynamic) {
-      # Dynamic model
-      patterns_team <- unlist(lapply(teams, function(team) {
-        idx <- team_map[[team]]
-        c(
-          paste0("^att_raw\\[\\d+,", idx, "\\]$"),
-          paste0("^def_raw\\[\\d+,", idx, "\\]$"),
-          paste0("^att\\[\\d+,", idx, "\\]$"),
-          paste0("^def\\[\\d+,", idx, "\\]$")
-        )
-      }))
-    } else {
-      # Static model
-      patterns_team <- unlist(lapply(teams, function(team) {
-        idx <- team_map[[team]]
-        c(
-          paste0("^att_raw\\[", idx, "\\]$"),
-          paste0("^def_raw\\[", idx, "\\]$"),
-          paste0("^att\\[", idx, "\\]$"),
-          paste0("^def\\[", idx, "\\]$")
-        )
-      }))
-    }
+    fam_regex <- paste0("^(", paste(team_families, collapse = "|"), ")\\[")
+    team_idx <- vapply(teams, function(team) team_map[[team]], numeric(1))
+    idx_regex <- paste0("(", paste(team_idx, collapse = "|"), ")")
 
-    # Define patterns for global parameters
-    patterns_global <- "^(home|rho|sigma_att|sigma_def|theta|y_rep|log_lik|gamma|beta|diff_y_rep|lp__|lp_approx__)$"
+    # The team is always the last index: any leading (time/ranking) indices are allowed
+    patterns_team <- paste0(fam_regex, "(\\d+,)*", idx_regex, "\\]$")
 
-    # Combine all patterns into a single string
-    combined_patterns <- paste(c(patterns_team, patterns_global), collapse = "|")
+    is_team_family <- grepl(fam_regex, stan_summary$variable)
+    keep <- !is_team_family | grepl(patterns_team, stan_summary$variable)
 
     # Filter 'stan_summary' to include both team-specific and global parameters
-    stan_summary <- stan_summary[grep(combined_patterns, as.factor(stan_summary$variable)), , drop = FALSE]
+    stan_summary <- stan_summary[keep, , drop = FALSE]
   }
 
   # Replace parameter names with team names if 'true_names' is TRUE

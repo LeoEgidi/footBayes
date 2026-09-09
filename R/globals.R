@@ -1,8 +1,4 @@
-#' Global variables
-#'
-#' Global variables
-#'
-#' @export
+# Global variables (silence R CMD check notes about non-standard evaluation)
 
 utils::globalVariables(c(
   "median", "quantile", "group_by", "summarise",

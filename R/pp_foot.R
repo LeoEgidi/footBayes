@@ -20,7 +20,7 @@
 #'   \item{\code{pp_plot}}: A \code{ggplot} object for the selected \code{type} of plot.
 #'   \item{\code{pp_table}}: A data frame of summary statistics:
 #'     \itemize{
-#'       \item For \code{"aggregated"}: Goal differences and their Bayesian p‑values.
+#'       \item For \code{"aggregated"}: Goal differences and their Bayesian p-values.
 #'       \item For \code{"matches"}: Nominal \code{1-alpha} and observed empirical Bayesian coverage.
 #'     }
 #' }

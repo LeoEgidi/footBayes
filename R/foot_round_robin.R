@@ -25,7 +25,7 @@
 #' If \code{output = "both"} a list with:
 #' \itemize{
 #'   \item{\code{round_table}}: A data frame of matchups (\code{Home}, \code{Away}), observed scores, and \code{Home_prob} (median posterior probability of a home win).
-#'   \item{\code{round_plot}}: A \code{ggplot} heatmap of home‑win probabilities with observed scores overlaid.
+#'   \item{\code{round_plot}}: A \code{ggplot} heatmap of home-win probabilities with observed scores overlaid.
 #' }
 #' If \code{output = "table"} or \code{"plot"}, returns only that component.
 #'
@@ -266,7 +266,7 @@ foot_round_robin <- function(object, data, teams = NULL, output = "both") {
       stringsAsFactors = FALSE
     )
 
-    # keep only rows where Home ≠ Away
+    # keep only rows where Home != Away
     tbl <- tbl[tbl$Home != tbl$Away, ]
     rownames(tbl) <- NULL
   } else {
@@ -279,7 +279,7 @@ foot_round_robin <- function(object, data, teams = NULL, output = "both") {
       stringsAsFactors = FALSE
     )
 
-    # keep only rows where Home ≠ Away AND Home_prob ≠ 0
+    # keep only rows where Home != Away AND Home_prob != 0
     tbl <- tbl[tbl$Home != tbl$Away & tbl$Home_prob != 0, ]
     rownames(tbl) <- NULL
   }

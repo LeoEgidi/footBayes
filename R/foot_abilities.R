@@ -22,7 +22,7 @@
 #' @param type Type of ability for models with separate attack/defence parameters: one among \code{"defense"}, \code{"attack"} or \code{"both"}. Default is \code{"both"}. Ignored for the \code{"student_t"} model which uses combined abilities.
 #' @param teams  An optional character vector specifying team names to include. If \code{NULL}, all teams are included.
 #'
-#' @return A \code{ggplot} object showing each selected team’s ability estimates:
+#' @return A \code{ggplot} object showing each selected team's ability estimates:
 #' \itemize{
 #'   \item For static Bayesian or MLE fits, horizontal error bars
 #'    (95\% intervals) and point estimates.

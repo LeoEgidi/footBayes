@@ -865,3 +865,279 @@ test_that("non-numeric scale in prior causes error", {
 })
 
 
+
+
+#   ____________________________________________________________________________
+#   Dynamic specifications: dynamic_par and dynamic_weight                  ####
+
+test_that("dynamic_par and dynamic_weight arguments are validated", {
+  skip_on_cran()
+  skip_if_not(stan_cmdstan_exists())
+
+  ##  ............................................................................
+  ##  Data                                                                    ####
+
+  data("england")
+  england <- as.data.frame(england)
+
+  # Two seasons, each split into two halves (periods 1-4)
+  england_2000_2001 <- england %>%
+    dplyr::filter(division == 1, Season %in% c("2000", "2001")) %>%
+    dplyr::arrange(Season, Date) %>%
+    dplyr::group_by(Season) %>%
+    dplyr::mutate(half = ifelse(dplyr::row_number() <= dplyr::n() / 2, 1, 2)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(periods = 2 * (as.numeric(Season) - 2000) + half) %>%
+    dplyr::select(periods,
+      home_team = home, away_team = visitor,
+      home_goals = hgoal, away_goals = vgoal
+    )
+
+  england_2004 <- england %>%
+    dplyr::filter(division == 1, Season == "2004") %>%
+    dplyr::select(Season, home, visitor, hgoal, vgoal)
+  colnames(england_2004) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+
+  ##  ............................................................................
+  ##  Tests                                                                   ####
+
+  # The experimental COM-Poisson model is not exposed
+  expect_error(
+    stan_foot(england_2000_2001, model = "com_pois", dynamic_type = "seasonal"),
+    "should be one of"
+  )
+
+  # dynamic_par must be a list with known names
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal",
+      dynamic_par = "common_sd"
+    ),
+    "'dynamic_par' must be a list"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal",
+      dynamic_par = list(spike_prob = 0.2)
+    ),
+    "Unknown elements in 'dynamic_par'"
+  )
+
+  # common_sd / kl_variance must be single logicals
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal",
+      dynamic_par = list(common_sd = "yes")
+    ),
+    "'common_sd' must be a single logical value"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal",
+      dynamic_par = list(kl_variance = c(TRUE, FALSE))
+    ),
+    "'kl_variance' must be a single logical value"
+  )
+
+  # periods_per_season must be a single integer >= 2
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal",
+      dynamic_par = list(kl_variance = TRUE, periods_per_season = 1)
+    ),
+    "'periods_per_season' must be a single integer"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal",
+      dynamic_par = list(kl_variance = TRUE, periods_per_season = 2.5)
+    ),
+    "'periods_per_season' must be a single integer"
+  )
+
+  # spike and slab must be normal priors with a positive scale
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal", dynamic_weight = TRUE,
+      dynamic_par = list(spike = cauchy(0, 1))
+    ),
+    "spike and slab must be normal priors"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal", dynamic_weight = TRUE,
+      dynamic_par = list(slab = normal(0, NULL))
+    ),
+    "positive scale"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal", dynamic_weight = TRUE,
+      dynamic_par = list(spike = normal(-1, 1))
+    ),
+    "greater than or equal to 0"
+  )
+
+  # dynamic_weight requires a dynamic model and is not valid for student_t
+  expect_error(
+    stan_foot(england_2000_2001, model = "double_pois", dynamic_weight = TRUE),
+    "'dynamic_weight' requires specifying a dynamic model"
+  )
+  expect_error(
+    stan_foot(england_2000_2001, model = "double_pois", dynamic_weight = "TRUE"),
+    "'dynamic_weight' must be a single logical value"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "student_t", dynamic_type = "seasonal", dynamic_weight = TRUE
+    ),
+    "`dynamic_weight = TRUE` is not valid for the `student_t` model"
+  )
+
+  # kl_variance requires seasonal dynamics with at least one summer break
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_par = list(kl_variance = TRUE)
+    ),
+    "'kl_variance' requires specifying a dynamic model"
+  )
+  expect_error(
+    stan_foot(england_2004,
+      model = "double_pois", dynamic_type = "weekly",
+      dynamic_par = list(kl_variance = TRUE)
+    ),
+    "requires `dynamic_type = \"seasonal\"`"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal",
+      dynamic_par = list(kl_variance = TRUE, periods_per_season = 4)
+    ),
+    "requires more than 'periods_per_season'"
+  )
+
+  # Mutually exclusive options
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal", dynamic_weight = TRUE,
+      dynamic_par = list(common_sd = TRUE)
+    ),
+    "not compatible with `common_sd = TRUE`"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal", dynamic_weight = TRUE,
+      dynamic_par = list(kl_variance = TRUE)
+    ),
+    "not compatible with `kl_variance = TRUE`"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "double_pois", dynamic_type = "seasonal",
+      dynamic_par = list(kl_variance = TRUE, common_sd = TRUE)
+    ),
+    "not compatible with `common_sd = TRUE`"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "student_t", dynamic_type = "seasonal",
+      dynamic_par = list(common_sd = TRUE)
+    ),
+    "not valid for the `student_t` model"
+  )
+  expect_error(
+    stan_foot(england_2000_2001,
+      model = "student_t", dynamic_type = "seasonal",
+      dynamic_par = list(kl_variance = TRUE)
+    ),
+    "not valid for the `student_t` model"
+  )
+})
+
+
+test_that("dynamic specifications fit and expose the expected parameters", {
+  skip_on_cran()
+  skip_if_not(stan_cmdstan_exists())
+
+  ##  ............................................................................
+  ##  Data                                                                    ####
+
+  data("england")
+  england <- as.data.frame(england)
+
+  # Two seasons, each split into two halves (periods 1-4)
+  england_2000_2001 <- england %>%
+    dplyr::filter(division == 1, Season %in% c("2000", "2001")) %>%
+    dplyr::arrange(Season, Date) %>%
+    dplyr::group_by(Season) %>%
+    dplyr::mutate(half = ifelse(dplyr::row_number() <= dplyr::n() / 2, 1, 2)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(periods = 2 * (as.numeric(Season) - 2000) + half) %>%
+    dplyr::select(periods,
+      home_team = home, away_team = visitor,
+      home_goals = hgoal, away_goals = vgoal
+    )
+
+  ##  ............................................................................
+  ##  Tests                                                                   ####
+
+  # Owen (2011): common evolution sd
+  fit_owen <- stan_foot(england_2000_2001,
+    model = "double_pois", dynamic_type = "seasonal",
+    dynamic_par = list(common_sd = TRUE),
+    method = "pathfinder", seed = 433
+  )
+  vars_owen <- fit_owen$fit$metadata()$stan_variables
+  expect_true("sigma_common" %in% vars_owen)
+  expect_false("sigma_att" %in% vars_owen)
+  expect_equal(fit_owen$stan_data$ind_common_sigma, 1)
+
+  # Koopman & Lit (2015): summer break before period 3 (periods_per_season = 2)
+  fit_kl <- stan_foot(england_2000_2001,
+    model = "double_pois", dynamic_type = "seasonal",
+    dynamic_par = list(kl_variance = TRUE),
+    method = "pathfinder", seed = 433
+  )
+  vars_kl <- fit_kl$fit$metadata()$stan_variables
+  expect_true(all(c("sigma_att_kl", "sigma_def_kl", "sigma_break") %in% vars_kl))
+  expect_equal(fit_kl$stan_data$is_summer_break, c(0L, 0L, 1L, 0L))
+  expect_equal(fit_kl$stan_data$ind_kl_sd, 1)
+
+  # Summer breaks are placed after every 'periods_per_season' periods,
+  # also when the last training season is incomplete (predict)
+  fit_kl_pred <- stan_foot(england_2000_2001,
+    model = "double_pois", dynamic_type = "seasonal", predict = 10,
+    dynamic_par = list(kl_variance = TRUE, periods_per_season = 2),
+    method = "pathfinder", seed = 433
+  )
+  expect_equal(fit_kl_pred$stan_data$is_summer_break, c(0L, 0L, 1L, 0L))
+
+  # Weighted dynamic model (commensurate priors): the optimization-based
+  # algorithms may fail on the spike-and-slab mixture, hence a short HMC run
+  fit_wdm <- stan_foot(england_2000_2001,
+    model = "double_pois", dynamic_type = "seasonal",
+    dynamic_weight = TRUE,
+    method = "MCMC", chains = 1, iter_sampling = 100, iter_warmup = 100,
+    refresh = 0, seed = 433
+  )
+  vars_wdm <- fit_wdm$fit$metadata()$stan_variables
+  expect_true(all(c("prob_spike", "comm_prec_att", "comm_sd_def") %in% vars_wdm))
+  expect_equal(fit_wdm$stan_data$ind_comm_prior, 1)
+  # default spike and slab hyperparameters
+  expect_equal(fit_wdm$stan_data$mu_spike, 9)
+  expect_equal(fit_wdm$stan_data$sd_spike, 1.5)
+  expect_equal(fit_wdm$stan_data$mu_slab, 0)
+  expect_equal(fit_wdm$stan_data$sd_slab, 3)
+
+  # Dixon-Coles in Stan (static and dynamic)
+  fit_dc <- stan_foot(england_2000_2001,
+    model = "dixon_coles",
+    method = "pathfinder", seed = 433
+  )
+  expect_true("rho" %in% fit_dc$fit$metadata()$stan_variables)
+  fit_dc_dyn <- stan_foot(england_2000_2001,
+    model = "dixon_coles", dynamic_type = "seasonal",
+    method = "pathfinder", seed = 433
+  )
+  expect_true("rho" %in% fit_dc_dyn$fit$metadata()$stan_variables)
+})

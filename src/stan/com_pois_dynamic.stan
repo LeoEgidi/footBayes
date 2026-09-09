@@ -1,3 +1,12 @@
+// ----------------------------------------------------------------------------
+// EXPERIMENTAL: dynamic Conway-Maxwell-Poisson (COM-Poisson) model.
+//
+// This model is kept in the package sources but it is NOT exposed through
+// stan_foot(): "com_pois" is not among the allowed values of the `model`
+// argument, a static counterpart (com_pois.stan) is not available, and the
+// Koopman & Lit (2015) variance inflation (ind_kl_sd / is_summer_break) is not
+// implemented here. It is retained for future development only.
+// ----------------------------------------------------------------------------
 functions {
   // COM-Poisson log probability mass function
   real com_poisson_lpmf(int y, real lambda, real nu) {

@@ -4,17 +4,22 @@
 # footBayes <img src="man/figures/logo.png" width = 180 align="right" />
 
 [![CRAN Version](https://www.r-pkg.org/badges/version/footBayes)](https://cran.r-project.org/package=footBayes)
+[![GitHub version](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FLeoEgidi%2FfootBayes%2Fmaster%2FDESCRIPTION&search=Version%3A%5Cs*(%5B0-9.%5D%2B)&replace=%241&label=GitHub%20version&color=blue)](https://github.com/LeoEgidi/footBayes)
 [![R-CMD-check.yaml](https://github.com/LeoEgidi/footBayes/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/LeoEgidi/footBayes/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/LeoEgidi/footBayes/graph/badge.svg)](https://app.codecov.io/gh/LeoEgidi/footBayes)
 [![Downloads](https://cranlogs.r-pkg.org/badges/footBayes?color=brightgreen)](https://CRAN.R-project.org/package=footBayes)
 
 The goal of `footBayes` is to propose a complete workflow to:
 
--   Fit the most well-known football models, including the double Poisson, bivariate Poisson, Skellam, and Student‑t distributions. It supports both maximum likelihood estimation (MLE) and Bayesian inference. For Bayesian methods, it incorporates several techniques: MCMC sampling with Hamiltonian Monte Carlo, variational inference using either the Pathfinder algorithm or Automatic Differentiation Variational Inference (ADVI), and the Laplace approximation.
+-   Fit the most well-known football models, including the double Poisson, bivariate Poisson, Dixon-Coles, negative binomial, Skellam, Student-t, diagonal-inflated bivariate Poisson and zero-inflated Skellam distributions. It supports both maximum likelihood estimation (MLE) and Bayesian inference. For Bayesian methods, it incorporates several techniques: MCMC sampling with Hamiltonian Monte Carlo, variational inference using either the Pathfinder algorithm or Automatic Differentiation Variational Inference (ADVI), and the Laplace approximation.
+
+-   Model static or dynamic team abilities (weekly or seasonal), choosing among alternative evolution variances: separate attack/defence variances (Egidi et al., 2018), a common variance (Owen, 2011), variance inflation after the summer break (Koopman and Lit, 2015), and the weighted dynamic models with commensurate priors (Macrì Demartino, Egidi and Torelli, 2026).
+
+-   Estimate historical team strengths with a Bayesian Bradley-Terry-Davidson model and use them as a covariate in the goal-based models.
 
 -   Visualize the teams' abilities, the model checks, the rank-league reconstruction;
 
--   Predict out-of-sample matches.
+-   Predict out-of-sample matches and compare models through predictive metrics.
 
 ## Installation
 
@@ -29,7 +34,7 @@ install.packages("footBayes", type = "source")
 ```
 
 Please note that it is important to set `type = "source"`. Otherwise,
-the ‘CmdStan’ models in the package may not be compiled during
+the 'CmdStan' models in the package may not be compiled during
 installation.
 
 Alternatively to CRAN, you can install the development version from
@@ -44,7 +49,7 @@ devtools::install_github("leoegidi/footBayes")
 
 In what follows, a quick example to fit a Bayesian double Poisson model
 for the Italian Serie A (seasons 2000-2001, 2001-2002, 2002-2003),
-visualize the estimated teams’ abilities, and predict the last four
+visualize the estimated teams' abilities, and predict the last four
 match days for the season 2002-2003:
 
 ``` r

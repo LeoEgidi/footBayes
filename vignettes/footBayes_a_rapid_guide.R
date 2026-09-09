@@ -1,7 +1,7 @@
 params <-
-list(EVAL = FALSE)
+list(EVAL = TRUE)
 
-## ----setup,  include = FALSE---------------------------------------------------------------------
+## ----setup,  include = FALSE--------------------------------------------------
 NOT_CRAN <- identical(tolower(Sys.getenv("NOT_CRAN")), "true")
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -14,694 +14,428 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   fig.asp = 0.600,
-  fig.height = 10,       # Reduced height
-  fig.width = 7,        # Reduced width
-  out.width = "700px",  # Reduced output width
+  fig.height = 10,
+  fig.width = 7,
+  out.width = "700px",
   dpi = 96,
   global.par = TRUE,
   dev = "png",
   dev.args = list(pointsize = 10),
-  fig.path = ""  # Added this line to the standard setup chunk
-  )
+  fig.path = ""
+)
 
 
-## ----footBayes_inst_cran, echo =TRUE, eval = FALSE-----------------------------------------------
+## ----footBayes_inst_cran, echo = TRUE, eval = FALSE---------------------------
 # install.packages("footBayes", type = "source")
 
 
-## ----footBayes_inst, echo =TRUE, eval = FALSE----------------------------------------------------
-# library(devtools)
-# install_github("LeoEgidi/footBayes")
+## ----footBayes_inst, echo = TRUE, eval = FALSE--------------------------------
+# # install.packages("devtools")
+# devtools::install_github("LeoEgidi/footBayes")
 
 
-## ----libraries, echo = TRUE, eval = TRUE---------------------------------------------------------
+## ----libraries, echo = TRUE, eval = TRUE--------------------------------------
 library(footBayes)
-library(loo)
+library(dplyr)
 library(ggplot2)
-library(ggridges)
-library(dplyr)
 library(bayesplot)
+library(loo)
 
 
-## ----BTD_data, echo = TRUE, eval = TRUE----------------------------------------------------------
-library(dplyr)
-library(footBayes)
-
-data("italy")
-
-italy_2020_2021 <- italy %>%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
-  dplyr::filter(Season == "2020" | Season == "2021") %>%
-  dplyr::mutate(match_outcome = dplyr::case_when(
-    hgoal > vgoal ~ 1, # Home team wins
-    hgoal == vgoal ~ 2, # Draw
-    hgoal < vgoal ~ 3 # Away team wins
-  )) %>%
-  dplyr::mutate(periods = dplyr::case_when(
-    dplyr::row_number() <= 190 ~ 1,
-    dplyr::row_number() <= 380 ~ 2,
-    dplyr::row_number() <= 570 ~ 3,
-    TRUE ~ 4
-  )) %>% # Assign periods based on match number
-  dplyr::select(periods,
-    home_team = home,
-    away_team = visitor, match_outcome
-  )
+## ----settings, echo = TRUE, eval = TRUE---------------------------------------
+n_iter <- 1000
+n_chains <- 4
+seed <- 2026
 
 
-## ----BTD_model_1_dyn, message = FALSE, results='hide', echo = TRUE, eval = TRUE------------------
-# Dynamic Ranking Example with Median Rank Measure
-fit_result_dyn <- btd_foot(
-  data = italy_2020_2021,
-  dynamic_rank = TRUE,
-  rank_measure = "median",
-  iter_sampling = 1000,
-  # parallel_chains = 2,
-  chains = 2,
-  adapt_delta = 0.9,
-  max_treedepth = 12
-)
-
-
-## ----BTD_model_1_dyn_print, message = FALSE, echo = TRUE, eval = TRUE----------------------------
-print(fit_result_dyn,
-  display = "parameters",
-  pars = c("logStrength", "logTie"),
-  teams = c("AC Milan", "AS Roma")
-)
-
-
-## ----BTD_model_1_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------
-# Static Ranking Example with MAP Rank Measure
-fit_result_stat <- btd_foot(
-  data = italy_2020_2021,
-  dynamic_rank = FALSE,
-  rank_measure = "map",
-  iter_sampling = 1000,
-  # parallel_chains = 2,
-  chains = 2
-)
-
-
-## ----BTD_model_1_stat_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------
-print(fit_result_stat,
-  pars = c("logStrength", "logTie"),
-  teams = c("AC Milan", "AS Roma")
-)
-
-
-## ----BTD_model_2, message = FALSE, results='hide', echo = TRUE, eval = TRUE----------------------
-# Dynamic Ranking Example with Median Rank Measure
-fit_result_dyn_2 <- btd_foot(
-  data = italy_2020_2021,
-  home_effect = TRUE,
-  dynamic_rank = TRUE,
-  prior_par = list(
-    logStrength = normal(2, 10),
-    logTie = normal(-1.5, 5),
-    home = normal(0, 5)
-  ),
-  rank_measure = "median",
-  iter_sampling = 1000,
-  # parallel_chains = 2,
-  chains = 2,
-  adapt_delta = 0.9,
-  max_treedepth = 12
-)
-
-
-## ----BTD_model_2_dyn_print, message = FALSE, echo = TRUE, eval = TRUE----------------------------
-print(fit_result_dyn_2,
-  display = "parameters",
-  pars = c("logTie", "home")
-)
-
-
-## ----BTD_model_2_stat, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------
-# Static Ranking Example with MAP Rank Measure
-fit_result_stat_2 <- btd_foot(
-  data = italy_2020_2021,
-  home_effect = TRUE,
-  dynamic_rank = FALSE,
-  prior_par = list(
-    logStrength = normal(2, 10),
-    logTie = normal(0, 2.5),
-    home = normal(5, 3)
-  ),
-  rank_measure = "map",
-  iter_sampling = 1000,
-  # parallel_chains = 2,
-  chains = 2
-)
-
-
-## ----BTD_model_2_stat_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------
-print(fit_result_stat_2,
-  pars = c("logTie", "home")
-)
-
-
-## ----BTD_model_vi, message = FALSE, results='hide', echo = TRUE, eval = TRUE---------------------
-# Variational Inference Example
-fit_result_vi <- btd_foot(
-  data = italy_2020_2021,
-  dynamic_rank = TRUE,
-  rank_measure = "mean",
-  method = "VI"
-)
-
-
-
-## ----plot_btdPosterior_dyn, echo = TRUE, eval = TRUE, fig.show="hold"----------------------------
-# Dynamic Ranking
-
-plot_btdPosterior(fit_result_dyn)
-
-
-## ----plot_btdPosterior_stat, echo = TRUE, eval = TRUE, fig.show="hold"---------------------------
-# Static Ranking
-
-plot_btdPosterior(fit_result_stat)
-
-
-## ----plot_btdPosterior_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"----------------------
-# Dynamic Ranking
-
-plot_btdPosterior(fit_result_dyn,
-  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
-  ncol = 2
-)
-
-
-## ----plot_btdPosterior_teams_stat, echo = TRUE, eval = TRUE, fig.show="hold"---------------------
-# Static Ranking
-
-plot_btdPosterior(fit_result_stat,
-  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
-  ncol = 2
-)
-
-
-## ----plot_btdPosterior_teams_dyn_dens, echo = TRUE, eval = TRUE, fig.show="hold"-----------------
-# Dynamic Ranking
-
-plot_btdPosterior(fit_result_dyn,
-  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
-  plot_type = "density",
-  scales = "free_y"
-)
-
-
-## ----plot_btdPosterior_teams_stat_dens, echo = TRUE, eval = TRUE, fig.show="hold"----------------
-# Static Ranking
-
-plot_btdPosterior(fit_result_stat,
-  teams = c("AC Milan", "AS Roma", "Juventus", "Inter"),
-  plot_type = "density",
-  scales = "free_y"
-)
-
-
-## ----plot_logStrength_teams_dyn, echo = TRUE, eval = TRUE, fig.show="hold"-----------------------
-# Dynamic Ranking
-
-plot_logStrength(fit_result_dyn,
-  teams = c("AC Milan", "AS Roma", "Juventus", "Inter")
-)
-
-
-## ----static_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------------
-### Use Italian Serie A 2000/2001
-
-## with 'dplyr' environment
-#
-# library(dplyr)
-# italy <- as_tibble(italy)
-# italy_2000<- italy %>%
-#  dplyr::select(Season, home, visitor, hgoal,vgoal) #%>%
-#  dplyr::filter(Season=="2000")
-# italy_2000
-
-## alternatively, you can use the basic 'subsetting' code,
-## not using the 'dplyr' environment:
+## ----data_2000, echo = TRUE, eval = TRUE--------------------------------------
 data("italy")
 italy <- as.data.frame(italy)
-italy_2000 <- subset(
-  italy[, c(2, 3, 4, 6, 7)],
-  Season == "2000"
+
+italy_2000 <- italy %>%
+  filter(Season == "2000") %>%
+  arrange(Date) %>%
+  select(periods = Season, home_team = home, away_team = visitor,
+         home_goals = hgoal, away_goals = vgoal)
+
+head(italy_2000)
+
+
+## ----data_2018, echo = TRUE, eval = TRUE--------------------------------------
+italy_2018_2021 <- italy %>%
+  filter(Season %in% c("2018", "2019", "2020", "2021")) %>%
+  arrange(Season, Date) %>%
+  group_by(Season) %>%
+  mutate(half = if_else(row_number() <= n() / 2, 1, 2)) %>%
+  ungroup() %>%
+  mutate(periods = 2 * (as.numeric(Season) - 2018) + half) %>%
+  select(periods, home_team = home, away_team = visitor,
+         home_goals = hgoal, away_goals = vgoal)
+
+table(italy_2018_2021$periods)
+
+
+## ----mle_fit, echo = TRUE, eval = TRUE----------------------------------------
+mle_models <- c("double_pois", "biv_pois", "dixon_coles",
+                "neg_bin", "skellam", "student_t")
+
+mle_fits <- lapply(mle_models, function(m) {
+  mle_foot(data = italy_2000, model = m, interval = "Wald")
+})
+names(mle_fits) <- mle_models
+
+mle_table <- data.frame(
+  model = mle_models,
+  logLik = sapply(mle_fits, function(f) round(f$logLik, 2)),
+  AIC = sapply(mle_fits, function(f) round(f$aic, 2)),
+  BIC = sapply(mle_fits, function(f) round(f$bic, 2))
 )
+mle_table
 
-colnames(italy_2000) <- c("periods", "home_team", "away_team", "home_goals", "away_goals")
+
+## ----mle_pars, echo = TRUE, eval = TRUE---------------------------------------
+mle_fits$biv_pois$home_effect
+mle_fits$biv_pois$corr
+mle_fits$dixon_coles$rho
+mle_fits$neg_bin$overdispersion[, "mle"]
 
 
-### Fit Stan models
-## no dynamics, no predictions
-## 4 Markov chains, 'n_iter' iterations each
-
-n_iter <- 200 # number of MCMC iterations after the burn-in
-fit1_stan <- stan_foot(
+## ----static_fit, message = FALSE, results = 'hide', echo = TRUE, eval = TRUE----
+fit_bp <- stan_foot(
   data = italy_2000,
   model = "biv_pois",
-  chains = 4,
-  # parallel_chains = 4,
-  iter_sampling = n_iter
-) # biv poisson
-
-
-## ----static_fit_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------------
-## Print of model summary for parameters:
-
-print(fit1_stan,
-  pars = c(
-    "home", "rho", "sigma_att",
-    "sigma_def", "att", "def"
-  ),
-  teams = c("AC Milan", "AS Roma")
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
 )
 
 
-## ----static_fit_corr, echo =TRUE, eval = TRUE----------------------------------------------------
-## Marginal posterior with bayesplot
+## ----static_fit_print, message = FALSE, echo = TRUE, eval = TRUE--------------
+print(fit_bp,
+  pars = c("home", "rho", "sigma_att", "sigma_def", "att", "def"),
+  teams = c("AS Roma", "Juventus", "AC Milan")
+)
 
-posterior1 <- fit1_stan$fit$draws(format = "matrix")
-mcmc_areas(posterior1, pars = c(
-  "home", "rho",
-  "sigma_att", "sigma_def"
-)) +
+
+## ----static_fit_areas, echo = TRUE, eval = TRUE-------------------------------
+posterior_bp <- fit_bp$fit$draws(format = "matrix")
+mcmc_areas(posterior_bp, pars = c("home", "rho", "sigma_att", "sigma_def")) +
   theme_bw()
 
 
-## ----stan_extract, echo = TRUE, eval = TRUE------------------------------------------------------
-### Model's code extraction
+## ----static_fit_dc_nb, message = FALSE, results = 'hide', echo = TRUE, eval = TRUE----
+fit_dc <- stan_foot(
+  data = italy_2000,
+  model = "dixon_coles",
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
 
-fit1_stan$stan_code
+fit_nb <- stan_foot(
+  data = italy_2000,
+  model = "neg_bin",
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
 
 
-## ----stan_foot_model_pth, message = FALSE, results='hide', echo = TRUE, eval = TRUE--------------
-# Pathfinder algorithm example
-fit1_stan_path <- stan_foot(
+## ----static_fit_dc_nb_print, message = FALSE, echo = TRUE, eval = TRUE--------
+print(fit_dc, pars = c("home", "rho"))
+print(fit_nb, pars = c("home", "phi1", "phi2"))
+
+
+## ----static_fit_priors, message = FALSE, results = 'hide', echo = TRUE, eval = TRUE----
+fit_bp_t <- stan_foot(
   data = italy_2000,
   model = "biv_pois",
-  method = "pathfinder"
-) # biv poisson
-
-
-
-## ----static_fit2, echo = TRUE, eval = TRUE-------------------------------------------------------
-### Fit MLE models
-## no dynamics, no predictions
-## Wald intervals
-
-fit1_mle <- mle_foot(
-  data = italy_2000,
-  model = "biv_pois",
-  interval = "Wald"
-) # mle biv poisson
-fit1_mle$home_effect
-
-
-## ----static_fit_priors, message = FALSE, results='hide', echo =TRUE, eval = TRUE-----------------
-### Fit Stan models
-## changing priors
-## student-t for team-specific abilities, laplace for sds
-
-fit1_stan_t <- stan_foot(
-  data = italy_2000,
-  model = "biv_pois",
-  chains = 4,
   prior_par = list(
     ability = student_t(4, 0, NULL),
     ability_sd = laplace(0, 1),
     home = normal(0, 10)
   ),
-  # parallel_chains = 4,
-  iter_sampling = n_iter
-) # biv poisson
-
-
-## ----comparing_priors, eval = TRUE---------------------------------------------------------------
-## comparing posteriors
-
-posterior1_t <- fit1_stan_t$fit$draws(format = "matrix")
-model_names <- c("Default", "Stud+Laplace")
-color_scheme_set(scheme = "gray")
-gl_posterior <- cbind(
-  posterior1[, "sigma_att"],
-  posterior1_t[, "sigma_att"]
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
 )
-colnames(gl_posterior) <- c("sigma_att", "sigma_att_t")
-mcmc_areas(gl_posterior, pars = c("sigma_att", "sigma_att_t")) +
-  xaxis_text(on = TRUE, size = ggplot2::rel(2.9)) +
-  yaxis_text(on = TRUE, size = ggplot2::rel(2.9)) +
-  scale_y_discrete(labels = ((parse(text = model_names)))) +
-  ggtitle("Att/def sds") +
-  theme(plot.title = element_text(hjust = 0.5, size = rel(2.6))) +
+
+
+## ----comparing_priors, echo = TRUE, eval = TRUE-------------------------------
+posterior_bp_t <- fit_bp_t$fit$draws(format = "matrix")
+sigma_att_post <- cbind(
+  posterior_bp[, "sigma_att"],
+  posterior_bp_t[, "sigma_att"]
+)
+colnames(sigma_att_post) <- c("Default", "Student-t + Laplace")
+
+color_scheme_set("gray")
+mcmc_areas(sigma_att_post) +
+  ggtitle("Posterior of sigma_att under two prior specifications") +
   theme_bw()
 
 
-## ----dynamic_fit,message = FALSE, results='hide', echo =TRUE, eval = TRUE------------------------
-### Fit Stan models
-## seasonal dynamics, no predictions
-## 2 Markov chains, 'n_iter' iterations each
+## ----static_fit_pathfinder, message = FALSE, results = 'hide', echo = TRUE, eval = TRUE----
+fit_bp_pf <- stan_foot(
+  data = italy_2000,
+  model = "biv_pois",
+  method = "pathfinder",
+  seed = seed
+)
 
-fit2_stan <- stan_foot(
+
+## ----static_fit_pathfinder_print, message = FALSE, echo = TRUE, eval = TRUE----
+print(fit_bp_pf, pars = c("home", "rho", "sigma_att", "sigma_def"))
+
+
+## ----weekly_fit, message = FALSE, results = 'hide', echo = TRUE, eval = TRUE----
+fit_weekly <- stan_foot(
   data = italy_2000,
   model = "biv_pois",
   dynamic_type = "weekly",
-  # parallel_chains = 2,
-  chains = 2,
-  iter_sampling = n_iter
-) # biv poisson
+  predict = 36,
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
 
 
-## ----dynamic_fit_print, message = FALSE, echo = TRUE, eval = TRUE--------------------------------
-print(fit2_stan, pars = c(
-  "home", "rho", "sigma_att",
-  "sigma_def"
-))
+## ----weekly_fit_print, message = FALSE, echo = TRUE, eval = TRUE--------------
+print(fit_weekly, pars = c("rho", "sigma_att", "sigma_def"))
 
 
-## ----weekly_fit, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------------------
-### Fit Stan models
-## weekly dynamics, no predictions
-## 2 chains, 'n_iter' iterations each
+## ----weekly_abilities, echo = TRUE, eval = TRUE-------------------------------
+foot_abilities(fit_weekly, italy_2000,
+  teams = c("AS Roma", "Juventus", "Lazio Roma", "AC Milan", "AS Bari", "SSC Napoli")
+)
 
-fit3_stan <- stan_foot(
-  data = italy_2000,
+
+## ----seasonal_fits, message = FALSE, results = 'hide', echo = TRUE, eval = TRUE----
+# separate evolution sds (Egidi et al., 2018)
+fit_dyn <- stan_foot(
+  data = italy_2018_2021,
   model = "double_pois",
-  dynamic_type = "weekly",
-  # parallel_chains = 2,
-  chains = 2,
-  iter_sampling = n_iter
-) # double poisson
+  dynamic_type = "seasonal",
+  predict = 190,
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
 
-
-## ----weekly_fit_print, message = FALSE, echo = TRUE, eval = TRUE---------------------------------
-print(fit3_stan, pars = c(
-  "home", "sigma_att",
-  "sigma_def"
-))
-
-
-## ----weekly_fit_t, message = FALSE, results='hide', echo = TRUE, eval = TRUE---------------------
-### Fit Stan models
-## weekly dynamics, no predictions
-## 2 chains, 'n_iter' iterations each
-
-fit3_stan_t <- stan_foot(
-  data = italy_2000,
+# common evolution sd (Owen, 2011)
+fit_dyn_owen <- stan_foot(
+  data = italy_2018_2021,
   model = "double_pois",
-  prior_par = list(
-    ability = student_t(4, 0, NULL),
-    ability_sd = cauchy(0, 25),
-    home = normal(0, 5)
-  ),
-  dynamic_type = "weekly",
-  # parallel_chains = 2,
-  chains = 2,
-  iter_sampling = n_iter
-) # double poisson
+  dynamic_type = "seasonal",
+  dynamic_par = list(common_sd = TRUE),
+  predict = 190,
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
+
+# variance inflation after the summer break (Koopman & Lit, 2015)
+fit_dyn_kl <- stan_foot(
+  data = italy_2018_2021,
+  model = "double_pois",
+  dynamic_type = "seasonal",
+  dynamic_par = list(kl_variance = TRUE, periods_per_season = 2),
+  predict = 190,
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
+
+# weighted dynamic model (Macrì Demartino et al., 2026)
+fit_dyn_wdm <- stan_foot(
+  data = italy_2018_2021,
+  model = "double_pois",
+  dynamic_type = "seasonal",
+  dynamic_weight = TRUE,
+  dynamic_par = list(spike = normal(9, 1.5), slab = normal(0, 3)),
+  predict = 190,
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
 
 
-## ----weekly_fit_t_print, message = FALSE, echo = TRUE, eval = TRUE-------------------------------
-print(fit3_stan_t, pars = c(
-  "home", "sigma_att",
-  "sigma_def"
-))
+## ----seasonal_fits_print, message = FALSE, echo = TRUE, eval = TRUE-----------
+print(fit_dyn, pars = c("sigma_att", "sigma_def"))
+print(fit_dyn_owen, pars = "sigma_common")
+fit_dyn_kl$stan_data$is_summer_break
+print(fit_dyn_kl, pars = c("sigma_att_kl", "sigma_def_kl", "sigma_break"))
 
 
-## ----btd_foot_and_stan_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE-----------
-# Dynamic Bradley-Terry-Davidson model
+## ----seasonal_wdm_print, message = FALSE, echo = TRUE, eval = TRUE------------
+print(fit_dyn_wdm,
+  pars = "prob_spike",
+  teams = c("Juventus", "AC Milan", "SSC Napoli", "Atalanta", "AS Roma")
+)
 
-data("italy")
 
-italy_2020_2021_rank <- italy %>%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
-  dplyr::filter(Season == "2020" | Season == "2021") %>%
-  dplyr::mutate(match_outcome = dplyr::case_when(
-    hgoal > vgoal ~ 1, # Home team wins
-    hgoal == vgoal ~ 2, # Draw
-    hgoal < vgoal ~ 3 # Away team wins
+## ----seasonal_abilities, echo = TRUE, eval = TRUE, fig.show = "hold"----------
+foot_abilities(fit_dyn, italy_2018_2021,
+  teams = c("Juventus", "Inter", "AC Milan", "SSC Napoli")
+)
+
+
+## ----btd_data, echo = TRUE, eval = TRUE---------------------------------------
+italy_2018_2021_btd <- italy_2018_2021 %>%
+  filter(periods <= 7) %>%
+  mutate(match_outcome = case_when(
+    home_goals > away_goals ~ 1,
+    home_goals == away_goals ~ 2,
+    home_goals < away_goals ~ 3
   )) %>%
-  dplyr::filter(dplyr::row_number() <= 570) %>%
-  dplyr::mutate(periods = dplyr::case_when(
-    dplyr::row_number() <= 190 ~ 1,
-    dplyr::row_number() <= 380 ~ 2,
-    dplyr::row_number() <= 570 ~ 3
-  )) %>%
-  dplyr::select(periods,
-    home_team = home,
-    away_team = visitor, match_outcome
-  )
+  select(periods, home_team, away_team, match_outcome)
 
 
-
+## ----btd_fit, message = FALSE, results = 'hide', echo = TRUE, eval = TRUE-----
 fit_btd_dyn <- btd_foot(
-  data = italy_2020_2021_rank,
+  data = italy_2018_2021_btd,
   dynamic_rank = TRUE,
+  home_effect = TRUE,
   rank_measure = "median",
-  iter_sampling = 1000,
-  # parallel_chains = 2,
-  chains = 2,
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
   adapt_delta = 0.9,
-  max_treedepth = 12
+  max_treedepth = 12,
+  seed = seed
 )
 
-# Dynamic Bivariate Poisson Model
-
-italy_2020_2021_fit <- italy %>%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
-  dplyr::filter(Season == "2020" | Season == "2021") %>%
-  dplyr::filter(dplyr::row_number() <= 570) %>%
-  dplyr::mutate(periods = dplyr::case_when(
-    dplyr::row_number() <= 190 ~ 1,
-    dplyr::row_number() <= 380 ~ 2,
-    dplyr::row_number() <= 570 ~ 3
-  )) %>% # Assign periods based on match number
-  dplyr::select(periods,
-    home_team = home,
-    away_team = visitor, home_goals = hgoal, away_goals = vgoal
-  )
+fit_btd_stat <- btd_foot(
+  data = italy_2018_2021_btd,
+  dynamic_rank = FALSE,
+  home_effect = TRUE,
+  rank_measure = "map",
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
 
 
+## ----btd_print, message = FALSE, echo = TRUE, eval = TRUE---------------------
+print(fit_btd_dyn,
+  display = "parameters",
+  pars = c("logStrength", "logTie", "home"),
+  teams = c("Juventus", "Inter")
+)
+print(fit_btd_stat, display = "rankings")
 
-fit_stan_rank <- stan_foot(
-  data = italy_2020_2021_fit,
-  model = "biv_pois",
+
+## ----plot_btdPosterior_dyn, echo = TRUE, eval = TRUE--------------------------
+plot_btdPosterior(fit_btd_dyn,
+  teams = c("Juventus", "Inter", "AC Milan", "SSC Napoli"),
+  ncol = 2
+)
+
+
+## ----plot_btdPosterior_stat_dens, echo = TRUE, eval = TRUE--------------------
+plot_btdPosterior(fit_btd_stat,
+  teams = c("Juventus", "Inter", "AC Milan", "SSC Napoli"),
+  plot_type = "density",
+  scales = "free_y"
+)
+
+
+## ----plot_logStrength, echo = TRUE, eval = TRUE-------------------------------
+plot_logStrength(fit_btd_dyn,
+  teams = c("Juventus", "Inter", "AC Milan", "SSC Napoli")
+)
+
+
+## ----seasonal_fit_rank, message = FALSE, results = 'hide', echo = TRUE, eval = TRUE----
+fit_dyn_rank <- stan_foot(
+  data = italy_2018_2021,
+  model = "double_pois",
   ranking = fit_btd_dyn,
-  predict = 180,
-  prior_par = list(
-    ability = student_t(4, 0, NULL),
-    ability_sd = cauchy(0, 25),
-    home = normal(0, 5)
-  ),
-  dynamic_type = "season",
-  chains = 2,
-  # parallel_chains = 2,
-  iter_sampling = 1000
+  dynamic_type = "seasonal",
+  predict = 190,
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
 )
 
 
-## ----btd_foot_and_stan_foot_print, message = FALSE, echo = TRUE, eval = TRUE---------------------
-print(fit_stan_rank,
-  pars = c("home", "rho", "sigma_att", "sigma_def")
-)
+## ----seasonal_fit_rank_print, message = FALSE, echo = TRUE, eval = TRUE-------
+print(fit_dyn_rank, pars = c("gamma", "sigma_att", "sigma_def"))
 
 
-## ----abilities, echo = TRUE, eval = TRUE, fig.show="hold"----------------------------------------
-## Plotting abilities: credible and confidence 95% intervals
-
-foot_abilities(object = fit1_stan, data = italy_2000)
-foot_abilities(object = fit1_mle, data = italy_2000)
+## ----pp_foot, echo = TRUE, eval = TRUE----------------------------------------
+pp_foot(object = fit_bp, data = italy_2000, type = "aggregated")
+pp_foot(object = fit_bp, data = italy_2000, type = "matches")
 
 
-## ----abilities_dyn, echo = TRUE, eval = TRUE, fig.show="hold"------------------------------------
-## Plotting abilities: credible and confidence 95% intervals
-
-foot_abilities(fit2_stan, italy_2000)
-
-
-## ----pp_foot, echo = TRUE, eval = TRUE-----------------------------------------------------------
-## PP checks: aggregated goal's differences and ordered goal differences
-
-pp_foot(
-  object = fit1_stan, data = italy_2000,
-  type = "aggregated"
-)
-
-pp_foot(
-  object = fit1_stan, data = italy_2000,
-  type = "matches"
-)
-
-
-## ----pp_checks, echo = TRUE, eval = TRUE---------------------------------------------------------
-## PPC densities overlay with the bayesplot package
-
-# extracting the replications
-draws_raw <- fit1_stan$fit$draws()
-draws <- posterior::as_draws_rvars(draws_raw)
-sims <- list()
-sims$y_rep <- posterior::draws_of(draws[["y_rep"]])
-
+## ----pp_checks, echo = TRUE, eval = TRUE--------------------------------------
+draws_bp <- posterior::as_draws_rvars(fit_bp$fit$draws())
+y_rep <- posterior::draws_of(draws_bp[["y_rep"]])
 goal_diff <- italy_2000$home_goals - italy_2000$away_goals
 
-# plotting data density vs replications densities
-
-ppc_dens_overlay(goal_diff, sims$y_rep[, , 1] - sims$y_rep[, , 2], bw = 0.5) +
+ppc_dens_overlay(goal_diff, y_rep[, , 1] - y_rep[, , 2], bw = 0.5) +
   theme_bw()
 
 
-## ----weekly_predict,message = FALSE, results='hide', echo=TRUE, eval = TRUE----------------------
-### Fit Stan models
-## weekly dynamics, predictions of last four weeks
-## 2 chains 'n_iter' iterations each
-
-fit4_stan <- stan_foot(
-  data = italy_2000,
-  model = "biv_pois",
-  predict = 36,
-  dynamic_type = "weekly",
-  # parallel_chains = 2,
-  chains = 2,
-  iter_sampling = n_iter
-) # biv poisson
-
-
-## ----foot_prob_weekly_predict, echo = TRUE, eval = TRUE, fig.show="hold"-------------------------
+## ----foot_prob, echo = TRUE, eval = TRUE--------------------------------------
 foot_prob(
-  object = fit4_stan, data = italy_2000,
-  home_team = "Reggina Calcio",
-  away_team = "AC Milan"
+  object = fit_weekly, data = italy_2000,
+  home_team = "Reggina Calcio", away_team = "AC Milan"
 )
 
 
-## ----foot_roundrobin, echo=TRUE, eval = TRUE-----------------------------------------------------
-## Home win out-of-sample probabilities
-
-foot_round_robin(object = fit4_stan, data = italy_2000)
+## ----foot_round_robin, echo = TRUE, eval = TRUE-------------------------------
+foot_round_robin(object = fit_weekly, data = italy_2000)
 
 
-## ----rank_pred1, echo=TRUE, eval = TRUE----------------------------------------------------------
-## Rank league reconstruction
+## ----rank_insample, echo = TRUE, eval = TRUE----------------------------------
+foot_rank(object = fit_bp, data = italy_2000, visualize = "aggregated")
 
-# aggregated plot
 
-foot_rank(object = fit1_stan, data = italy_2000)
-
-# team-specific plot
-
+## ----rank_outsample, echo = TRUE, eval = TRUE---------------------------------
+foot_rank(object = fit_weekly, data = italy_2000, visualize = "aggregated")
 foot_rank(
-  object = fit1_stan, data = italy_2000,
+  object = fit_weekly, data = italy_2000,
+  teams = c("AS Roma", "Juventus", "Lazio Roma", "AC Milan"),
   visualize = "individual"
 )
 
 
-## ----rank_pred2, echo=TRUE, eval = TRUE----------------------------------------------------------
-## Rank predictions for individual teams
+## ----compare_foot, message = FALSE, echo = TRUE, eval = TRUE------------------
+italy_2021_test <- italy_2018_2021 %>%
+  filter(periods == 8)
 
-# aggregated plot
-
-foot_rank(object = fit4_stan, data = italy_2000)
-
-# team-specific plot
-
-foot_rank(
-  object = fit4_stan, data = italy_2000,
-  teams = c("AC Milan", "AS Roma"),
-  visualize = "individual"
-)
-
-foot_rank(
-  object = fit4_stan, data = italy_2000,
-  visualize = "individual"
-)
-
-
-## ----compare_foot, message = FALSE, results='hide', echo = TRUE, eval = TRUE---------------------
-italy_2020_2021_fit <- italy %>%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
-  dplyr::filter(Season == "2020" | Season == "2021") %>%
-  dplyr::mutate(periods = dplyr::case_when(
-    dplyr::row_number() <= 190 ~ 1,
-    dplyr::row_number() <= 380 ~ 2,
-    dplyr::row_number() <= 570 ~ 3,
-    TRUE ~ 4
-  )) %>% # Assign periods based on match number
-  dplyr::select(periods,
-    home_team = home,
-    away_team = visitor, home_goals = hgoal, away_goals = vgoal
-  )
-
-
-fit_comp_1 <- stan_foot(
-  data = italy_2020_2021_fit,
-  model = "biv_pois",
-  home_effect = TRUE,
-  predict = 190,
-  dynamic_type = "season",
-  # parallel_chains = 4,
-  iter_sampling = n_iter
-)
-
-fit_comp_2 <- stan_foot(
-  data = italy_2020_2021_fit,
-  model = "double_pois",
-  home_effect = TRUE,
-  predict = 190,
-  dynamic_type = "season",
-  # parallel_chains = 4,
-  iter_sampling = n_iter
-)
-
-
-italy_2020_2021_test <- italy %>%
-  dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
-  dplyr::filter(Season == "2014" | Season == "2015") %>%
-  dplyr::mutate(periods = dplyr::case_when(
-    dplyr::row_number() <= 190 ~ 1,
-    dplyr::row_number() <= 380 ~ 2,
-    dplyr::row_number() <= 570 ~ 3,
-    TRUE ~ 4
-  )) %>%
-  dplyr::filter(dplyr::row_number() > 570) %>%
-  dplyr::select(periods,
-    home_team = home,
-    away_team = visitor,
-    home_goals = hgoal,
-    away_goals = vgoal
-  )
-
-
-## ----compare_foot_print, message = FALSE, echo = TRUE, eval = TRUE-------------------------------
-compare_results_models <- compare_foot(
+compare_results <- compare_foot(
   source = list(
-    biv_pois = fit_comp_1,
-    double_pois = fit_comp_2
+    egidi = fit_dyn,
+    owen = fit_dyn_owen
   ),
-  test_data = italy_2020_2021_test,
-  metric = c("accuracy", "brier", "ACP", "pseudoR2", "RPS"),
-  conf_matrix = TRUE
+  test_data = italy_2021_test,
+  metric = c("accuracy", "brier", "RPS", "pseudoR2", "ACP"),
+  conf_matrix = FALSE
 )
 
-
-print(compare_results_models, digits = 3)
-
-
-## ----loo, echo = TRUE, eval = TRUE---------------------------------------------------------------
-### Model comparisons
-## LOOIC, loo function
-
-# compute loo
-
-loo1 <- fit1_stan$fit$loo()
-loo1_t <- fit1_stan_t$fit$loo()
-loo2 <- fit2_stan$fit$loo()
-loo3 <- fit3_stan$fit$loo()
-loo3_t <- fit3_stan_t$fit$loo()
+print(compare_results, digits = 3)
 
 
-# compare three looic
+## ----loo, echo = TRUE, eval = TRUE--------------------------------------------
+loo_list <- list(
+  biv_pois = fit_bp$fit$loo(),
+  biv_pois_t_priors = fit_bp_t$fit$loo(),
+  dixon_coles = fit_dc$fit$loo(),
+  neg_bin = fit_nb$fit$loo()
+)
 
-loo_compare(loo1, loo1_t, loo2, loo3, loo3_t)
+loo_compare(loo_list)
 

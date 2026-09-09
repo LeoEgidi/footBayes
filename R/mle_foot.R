@@ -311,7 +311,7 @@ mle_foot <- function(data,
   )
 
   if (interval == "profile") {
-    # "profile" option (default): conditional likelihood intervals — each
+    # "profile" option (default): conditional likelihood intervals - each
     # parameter is varied with the others held fixed at their MLE. This is
     # chosen for computational efficiency (no re-optimisation of the nuisance
     # parameters) and yields intervals narrower than a full profile likelihood;

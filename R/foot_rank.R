@@ -22,7 +22,7 @@
 #' }
 #'
 #' If \code{visualize = "individual"}: A \code{ggplot} showing, for each selected team, the observed and
-#' simulated cumulative points over match‑days.
+#' simulated cumulative points over match-days.
 #'
 #' @details
 #'

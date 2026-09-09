@@ -25,7 +25,7 @@ foot_abilities(object, data, type = "both", teams = NULL)
 \item{teams}{An optional character vector specifying team names to include. If \code{NULL}, all teams are included.}
 }
 \value{
-A \code{ggplot} object showing each selected team’s ability estimates:
+A \code{ggplot} object showing each selected team's ability estimates:
 \itemize{
   \item For static Bayesian or MLE fits, horizontal error bars
    (95\% intervals) and point estimates.

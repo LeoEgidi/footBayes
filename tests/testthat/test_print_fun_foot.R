@@ -520,3 +520,102 @@ test_that("print.compareFoot prints confusion matrices", {
 })
 
 
+
+
+test_that("print.stanFoot with 'teams' keeps the global parameters of the dynamic specifications", {
+  # Dummy CmdStanFit mimicking a dynamic model with K&L and commensurate-prior parameters
+  variables <- c(
+    "att[1,1]", "att[1,2]", "att[2,1]", "att[2,2]",
+    "def[1,1]", "def[1,2]", "def[2,1]", "def[2,2]",
+    "prob_spike[1]", "prob_spike[2]",
+    "comm_sd_att[1,1]", "comm_sd_att[1,2]",
+    "home[1]", "home[2]", "sigma_common", "sigma_att_kl", "sigma_break", "nu", "lp__"
+  )
+  # As in CmdStanR, metadata()$stan_variables holds the base names only
+  stan_variables <- c(
+    "att", "def", "prob_spike", "comm_sd_att", "home",
+    "sigma_common", "sigma_att_kl", "sigma_break", "nu", "lp__"
+  )
+  dummy_fit_stan <- list(
+    metadata = function() list(stan_variables = stan_variables),
+    summary = function(variables = NULL) {
+      data.frame(
+        variable = variables_all,
+        mean = seq_along(variables_all),
+        sd = seq_along(variables_all),
+        stringsAsFactors = FALSE
+      )
+    },
+    code = function() "stan_code_dummy"
+  )
+  variables_all <- variables
+  class(dummy_fit_stan) <- "CmdStanFit"
+
+  dummy_stanFoot <- list(
+    fit = dummy_fit_stan,
+    data = data.frame(
+      home_team = c("Team A", "Team B"),
+      away_team = c("Team B", "Team A"),
+      home_goals = c(1, 2),
+      away_goals = c(0, 3),
+      stringsAsFactors = FALSE
+    ),
+    stan_data = list(ntimes = 2),
+    stan_args = list(),
+    alg_method = "MCMC"
+  )
+  class(dummy_stanFoot) <- "stanFoot"
+
+  output <- capture.output(print(dummy_stanFoot, teams = "Team B"))
+
+  # Team-indexed parameters of the selected team only, with the team name
+  expect_true(any(grepl("att\\[1, Team B\\]", output)))
+  expect_true(any(grepl("prob_spike\\[Team B\\]", output)))
+  expect_true(any(grepl("comm_sd_att\\[1, Team B\\]", output)))
+  expect_false(any(grepl("Team A", output)))
+  expect_false(any(grepl("att\\[1,1\\]", output)))
+
+  # All the global parameters are kept
+  for (par in c("home\\[1\\]", "sigma_common", "sigma_att_kl", "sigma_break", "nu", "lp__")) {
+    expect_true(any(grepl(par, output)), info = par)
+  }
+})
+
+test_that("print.stanFoot with 'teams' works for static models without 'ntimes' in stan_data", {
+  variables_all <- c("att[1]", "att[2]", "def[1]", "def[2]", "home", "rho", "sigma_att", "sigma_def")
+  stan_variables <- c("att", "def", "home", "rho", "sigma_att", "sigma_def")
+  dummy_fit_stan <- list(
+    metadata = function() list(stan_variables = stan_variables),
+    summary = function(variables = NULL) {
+      data.frame(
+        variable = variables_all,
+        mean = seq_along(variables_all),
+        sd = seq_along(variables_all),
+        stringsAsFactors = FALSE
+      )
+    },
+    code = function() "stan_code_dummy"
+  )
+  class(dummy_fit_stan) <- "CmdStanFit"
+
+  dummy_stanFoot <- list(
+    fit = dummy_fit_stan,
+    data = data.frame(
+      home_team = c("Team A", "Team B"),
+      away_team = c("Team B", "Team A"),
+      home_goals = c(1, 2),
+      away_goals = c(0, 3),
+      stringsAsFactors = FALSE
+    ),
+    stan_data = list(N = 2),
+    stan_args = list(),
+    alg_method = "MCMC"
+  )
+  class(dummy_stanFoot) <- "stanFoot"
+
+  output <- capture.output(print(dummy_stanFoot, teams = "Team A"))
+  expect_true(any(grepl("att\\[Team A\\]", output)))
+  expect_false(any(grepl("Team B", output)))
+  expect_true(any(grepl("rho", output)))
+  expect_true(any(grepl("sigma_def", output)))
+})
