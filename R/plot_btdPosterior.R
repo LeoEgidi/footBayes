@@ -90,8 +90,8 @@
 #' }
 #' }
 #' @importFrom ggplot2 ggplot aes labs geom_boxplot facet_wrap theme_bw theme
-#' element_text geom_line geom_segment geom_ribbon scale_fill_manual
-#' scale_y_discrete expansion after_stat
+#' @importFrom ggplot2 element_text geom_line geom_segment geom_ribbon scale_fill_manual
+#' @importFrom ggplot2 scale_y_discrete expansion after_stat
 #' @importFrom rstan extract
 #' @importFrom ggridges stat_density_ridges
 #' @importFrom stats approx

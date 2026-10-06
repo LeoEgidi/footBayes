@@ -11,7 +11,7 @@ Authors@R: c(person(given = "Leonardo",
                       family = "Macrì Demartino",
                       role = "aut"),
                person(given = "Vasilis",
-                      family = "Palaskas.",
+                      family = "Palaskas",
                       role = "aut"))
 Maintainer: Leonardo Egidi <legidi@units.it>
 License: GPL-2
@@ -26,7 +26,7 @@ Description: This is the first package allowing for the estimation,
              (Owen, 2011), variance inflation after the summer break
              (Koopman and Lit, 2015) <doi:10.1111/rssa.12042>, and weighted dynamic
              models with commensurate priors
-             (Macrì Demartino, Egidi and Torelli, 2026) <doi:10.1093/jrsssc/qlag032>.
+             (Macrì-Demartino, Egidi and Torelli, 2026) <doi:10.1093/jrsssc/qlag032>.
              Historical team strengths can be estimated through a Bayesian
              Bradley-Terry-Davidson model and used as a covariate.
              For Bayesian methods, it incorporates several techniques:
@@ -54,8 +54,8 @@ Suggests:
     bayesplot,
     cmdstanr (>= 0.6.0)
 Additional_repositories: https://stan-dev.r-universe.dev/
-RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 LazyData: true
 BuildManual: yes
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.0

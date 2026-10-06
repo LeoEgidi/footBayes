@@ -158,5 +158,5 @@ nlist <- function(...) {
   if (length(args)) {
     return(as_nlist(args))
   }
-  structure(list(), .Names = character(0), class = "nlist")
+  structure(list(), names = character(0), class = "nlist")
 }

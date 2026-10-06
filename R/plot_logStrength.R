@@ -61,7 +61,7 @@
 #' }
 #'
 #' @importFrom ggplot2 ggplot aes labs geom_line geom_point geom_segment theme_bw
-#' theme element_text guides guide_legend
+#' @importFrom ggplot2 theme element_text guides guide_legend
 #' @importFrom rlang .data
 #' @export
 

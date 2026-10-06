@@ -19,83 +19,99 @@ export(pp_foot)
 export(stan_foot)
 export(student_t)
 import(matrixStats)
-importFrom(dplyr,across)
-importFrom(dplyr,arrange)
-importFrom(dplyr,distinct)
-importFrom(dplyr,group_by)
-importFrom(dplyr,mutate)
-importFrom(dplyr,select)
-importFrom(dplyr,summarise)
-importFrom(dplyr,ungroup)
-importFrom(dplyr,where)
-importFrom(extraDistr,dbvpois)
-importFrom(extraDistr,dskellam)
-importFrom(extraDistr,rbvpois)
-importFrom(extraDistr,rskellam)
-importFrom(ggplot2,aes)
-importFrom(ggplot2,after_stat)
-importFrom(ggplot2,annotate)
-importFrom(ggplot2,dup_axis)
-importFrom(ggplot2,element_blank)
-importFrom(ggplot2,element_text)
-importFrom(ggplot2,expansion)
-importFrom(ggplot2,facet_wrap)
-importFrom(ggplot2,geom_boxplot)
-importFrom(ggplot2,geom_errorbarh)
-importFrom(ggplot2,geom_line)
-importFrom(ggplot2,geom_point)
-importFrom(ggplot2,geom_rect)
-importFrom(ggplot2,geom_ribbon)
-importFrom(ggplot2,geom_segment)
-importFrom(ggplot2,geom_text)
-importFrom(ggplot2,geom_tile)
-importFrom(ggplot2,geom_vline)
-importFrom(ggplot2,ggplot)
-importFrom(ggplot2,ggtitle)
-importFrom(ggplot2,guide_legend)
-importFrom(ggplot2,guides)
-importFrom(ggplot2,labs)
-importFrom(ggplot2,lims)
-importFrom(ggplot2,position_dodge)
-importFrom(ggplot2,rel)
-importFrom(ggplot2,scale_color_manual)
-importFrom(ggplot2,scale_colour_manual)
-importFrom(ggplot2,scale_fill_gradient)
-importFrom(ggplot2,scale_fill_manual)
-importFrom(ggplot2,scale_x_continuous)
-importFrom(ggplot2,scale_x_discrete)
-importFrom(ggplot2,scale_y_continuous)
-importFrom(ggplot2,scale_y_discrete)
-importFrom(ggplot2,theme)
-importFrom(ggplot2,theme_bw)
-importFrom(ggplot2,unit)
-importFrom(ggplot2,xlab)
-importFrom(ggplot2,ylab)
-importFrom(ggplot2,ylim)
+importFrom(dplyr,
+  across,
+  arrange,
+  distinct,
+  group_by,
+  mutate,
+  select,
+  summarise,
+  ungroup,
+  where
+)
+importFrom(extraDistr,
+  dbvpois,
+  dskellam,
+  rbvpois,
+  rskellam
+)
+importFrom(ggplot2,
+  aes,
+  after_stat,
+  annotate,
+  dup_axis,
+  element_blank,
+  element_text,
+  expansion,
+  facet_wrap,
+  geom_boxplot,
+  geom_errorbarh,
+  geom_line,
+  geom_point,
+  geom_rect,
+  geom_ribbon,
+  geom_segment,
+  geom_text,
+  geom_tile,
+  geom_vline,
+  ggplot,
+  ggtitle,
+  guide_legend,
+  guides,
+  labs,
+  lims,
+  position_dodge,
+  rel,
+  scale_color_manual,
+  scale_colour_manual,
+  scale_fill_gradient,
+  scale_fill_manual,
+  scale_x_continuous,
+  scale_x_discrete,
+  scale_y_continuous,
+  scale_y_discrete,
+  theme,
+  theme_bw,
+  unit,
+  xlab,
+  ylab,
+  ylim
+)
 importFrom(ggridges,stat_density_ridges)
 importFrom(instantiate,stan_package_model)
 importFrom(magrittr,"%>%")
-importFrom(matrixStats,colMedians)
-importFrom(matrixStats,colQuantiles)
-importFrom(matrixStats,colVars)
-importFrom(metRology,dt.scaled)
-importFrom(metRology,rt.scaled)
+importFrom(matrixStats,
+  colMedians,
+  colQuantiles,
+  colVars
+)
+importFrom(metRology,
+  dt.scaled,
+  rt.scaled
+)
 importFrom(numDeriv,hessian)
-importFrom(posterior,as_draws_rvars)
-importFrom(posterior,draws_of)
+importFrom(posterior,
+  as_draws_rvars,
+  draws_of
+)
 importFrom(reshape2,melt)
 importFrom(rlang,.data)
 importFrom(rstan,extract)
-importFrom(stats,approx)
-importFrom(stats,density)
-importFrom(stats,dnbinom)
-importFrom(stats,dpois)
-importFrom(stats,median)
-importFrom(stats,optim)
-importFrom(stats,qchisq)
-importFrom(stats,quantile)
-importFrom(stats,rnbinom)
-importFrom(stats,rpois)
-importFrom(stats,setNames)
-importFrom(tidyr,pivot_longer)
-importFrom(tidyr,pivot_wider)
+importFrom(stats,
+  approx,
+  density,
+  dnbinom,
+  dpois,
+  median,
+  optim,
+  qchisq,
+  quantile,
+  rnbinom,
+  rpois,
+  setNames
+)
+importFrom(tidyr,
+  pivot_longer,
+  pivot_wider
+)
