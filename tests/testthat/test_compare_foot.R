@@ -77,6 +77,22 @@ test_that("compare_foot removes NA rows from probability matrix", {
   )
 })
 
+test_that("NA rows in a probability matrix do not affect the other elements of source", {
+  matrix_prob_na <- matrix_prob
+  matrix_prob_na[2, 2] <- NA
+
+  alone <- compare_foot(source = list(good = matrix_prob), test_data = test_data)$metrics
+  expect_warning(
+    both <- compare_foot(
+      source = list(prob_with_na = matrix_prob_na, good = matrix_prob),
+      test_data = test_data
+    )$metrics,
+    "contains 1 rows with NAs"
+  )
+
+  expect_equal(both[both$Model == "good", -1], alone[, -1], ignore_attr = TRUE)
+})
+
 
 test_that("compare_foot normalizes probability matrix rows not summing to 1", {
   # Create a probability matrix that does NOT sum to 1 by scaling each row by 2.

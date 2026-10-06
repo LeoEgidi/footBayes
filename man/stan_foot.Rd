@@ -51,7 +51,10 @@ stan_foot(
   \item \code{periods}: Time periods corresponding to the rankings (integer >= 1).
   \item \code{team}: Team names matching those in \code{data} (character string).
   \item \code{rank_points}: Ranking points for each team (numeric).
-}}
+}
+The ranking points are matched to the teams of \code{data} by name, so the order of the rows does
+not matter. Every team of \code{data} must have exactly one value in each ranking period; teams of
+the ranking that are not in \code{data} are ignored.}
 
 \item{dynamic_type}{A character string specifying the type of dynamics in the model. Options are:
 \itemize{
@@ -62,7 +65,8 @@ stan_foot(
 \item{dynamic_weight}{A logical value indicating whether to fit the weighted dynamic model of
 Macrì Demartino, Egidi and Torelli (2026), where the evolution of the attack and defence abilities
 is governed by team- and period-specific commensurate priors with spike-and-slab hyperpriors
-(default \code{FALSE}). It requires \code{dynamic_type} and it is not available for the
+(default \code{FALSE}). It requires \code{dynamic_type} and a normal prior for the abilities
+(\code{prior_par$ability = normal(...)}), and it is not available for the
 \code{"student_t"} model. See Details.}
 
 \item{dynamic_par}{A list of options for the evolution variance of the dynamic models
@@ -87,8 +91,8 @@ are mutually exclusive.}
 
 \item{prior_par}{A list specifying the prior distributions for the parameters of interest:
   \itemize{
-    \item \code{ability}: Prior distribution for team-specific abilities. Possible distributions are \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}. Default is \code{normal(0, NULL)}.
-    \item \code{ability_sd}:  Prior distribution for the team-specific standard deviations. See the \code{prior} argument for more details. Default is \code{cauchy(0, 5)}.
+    \item \code{ability}: Prior distribution for team-specific abilities. Possible distributions are \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}. Default is \code{normal(0, NULL)}. In the dynamic models the prior is the distribution of the period-to-period increments of the abilities; with \code{dynamic_weight = TRUE} only \code{normal} is allowed. For \code{student_t}, \code{cauchy} and \code{laplace} the evolution standard deviations are scale parameters, not standard deviations of the increments.
+    \item \code{ability_sd}:  Prior distribution for the team-specific standard deviations. Possible distributions are \code{normal}, \code{student_t}, \code{cauchy}, \code{laplace}. Default is \code{cauchy(0, 5)}.
     \item \code{home}: Prior distribution for the home effect (\code{home}). Applicable only if \code{home_effect = TRUE}. Only normal priors are allowed. Default is \code{normal(0, 5)}.
   }
 
@@ -99,7 +103,7 @@ are mutually exclusive.}
 \item{norm_method}{A character string specifying the method used to normalize team-specific ranking points. Options are:
 \itemize{
   \item \code{"none"}: No normalization (default).
-  \item \code{"standard"}: Standardization (mean 0, standard deviation 1).
+  \item \code{"standard"}: Standardization to mean 0 and standard deviation 0.5, i.e. the points minus their mean, divided by twice their standard deviation.
   \item \code{"mad"}: Median Absolute Deviation normalization.
   \item \code{"min_max"}: Min-max scaling to [0,1].
 }}
@@ -177,7 +181,7 @@ where
 
 \deqn{\tau_{\lambda_1, \lambda_2}(y^H, y^A) = \begin{cases} 1 - \lambda_1 \lambda_2 \rho & y^H = y^A = 0 \\ 1 + \lambda_1 \rho & y^H = 0, y^A = 1 \\ 1 + \lambda_2 \rho & y^H = 1, y^A = 0 \\ 1 - \rho & y^H = y^A = 1 \\ 1 & \text{otherwise,} \end{cases}}
 
-and \eqn{\rho} is the diagonal-inflation dependence parameter,
+and \eqn{\rho} is the low-score dependence parameter,
 assigned a weakly-informative \eqn{\mathrm{N}(0, 0.1)} prior and
 constrained to keep the adjustment factor positive.
 
@@ -252,9 +256,18 @@ four alternative ways, through the arguments \code{dynamic_par} and \code{dynami
     \code{comm_prec_att}, \code{comm_prec_def}, \code{comm_sd_att} and \code{comm_sd_def}).
 }
 
-The current version of the package allows for the fit of a
-diagonal-inflated bivariate Poisson and a zero-inflated Skellam model in the
-spirit of (Karlis & Ntzoufras, 2003) to better capture draw occurrences. See the vignette for further details.
+To better capture draw occurrences, the package also allows for the fit of a
+diagonal-inflated bivariate Poisson and a zero-inflated Skellam model.
+The diagonal-inflated bivariate Poisson model (Karlis & Ntzoufras, 2003) is a mixture
+of a bivariate Poisson and a distribution over the draws:
+
+\deqn{P(Y^H_n = x, Y^A_n = y) = (1 - p) \, \mathsf{BivPoisson}(x, y | \lambda_{1n}, \lambda_{2n}, \lambda_{3n}) + p \, \theta_x \, I(x = y),}
+
+where \eqn{p} is the probability of the inflation component (parameter \code{prob_of_draws},
+with a \eqn{\mathrm{U}(0, 1)} prior) and \eqn{\theta_j}, \eqn{j = 0, \ldots, 3}, is a discrete
+distribution over the draws 0-0, 1-1, 2-2 and 3-3 (parameter \code{draw_dist}, with a uniform
+Dirichlet prior); draws with more than three goals per team are not inflated.
+See the vignette for further details.
 }
 \examples{
 \dontrun{

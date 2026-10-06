@@ -230,31 +230,10 @@ model{
       }
     }
 
-    // Standard normal prior on standardized parameters
-    // Non-centered parameterization
-    if (prior_dist_num == 1) {
-      // Normal case: z ~ N(0,1)
-      target += std_normal_lpdf(to_vector(att_raw_std));
-      target += std_normal_lpdf(to_vector(def_raw_std));
-    }
-    else if (prior_dist_num == 2) {
-      // Student-t case: z ~ t(df, 0, 1)
-      for (h in 1:nteams) {
-        for (i in 1:ntimes) {
-          target += student_t_lpdf(att_raw_std[i,h] | hyper_df, 0, 1);
-          target += student_t_lpdf(def_raw_std[i,h] | hyper_df, 0, 1);
-        }
-      }
-    }
-    else if (prior_dist_num == 3) {
-      // Cauchy case (t with df=1)
-      for (h in 1:nteams) {
-        for (i in 1:ntimes) {
-          target += student_t_lpdf(att_raw_std[i,h] | 1, 0, 1);
-          target += student_t_lpdf(def_raw_std[i,h] | 1, 0, 1);
-        }
-      }
-    }
+    // Standard normal prior on standardized parameters (non-centered
+    // parameterization): the weighted dynamic model has a normal kernel
+    target += std_normal_lpdf(to_vector(att_raw_std));
+    target += std_normal_lpdf(to_vector(def_raw_std));
   }
   // ========================================
   // Koopman & Lit (2015) Approach
@@ -273,6 +252,10 @@ model{
         else if (prior_dist_num == 3) {
           target += student_t_lpdf(att_raw[i,h] | 1, mu_att[i,h], sigma_att_t[i]);
           target += student_t_lpdf(def_raw[i,h] | 1, mu_def[i,h], sigma_def_t[i]);
+        }
+        else if (prior_dist_num == 4) {
+          target += double_exponential_lpdf(att_raw[i,h] | mu_att[i,h], sigma_att_t[i]);
+          target += double_exponential_lpdf(def_raw[i,h] | mu_def[i,h], sigma_def_t[i]);
         }
       }
     }
@@ -329,6 +312,15 @@ model{
           } else {
             target += student_t_lpdf(att_raw[i,h] | 1, mu_att[i,h], sigma_common[1]);
             target += student_t_lpdf(def_raw[i,h] | 1, mu_def[i,h], sigma_common[1]);
+          }
+        }
+        else if (prior_dist_num == 4) {
+          if (ind_common_sigma == 0) {
+            target += double_exponential_lpdf(att_raw[i,h] | mu_att[i,h], sigma_att[1]);
+            target += double_exponential_lpdf(def_raw[i,h] | mu_def[i,h], sigma_def[1]);
+          } else {
+            target += double_exponential_lpdf(att_raw[i,h] | mu_att[i,h], sigma_common[1]);
+            target += double_exponential_lpdf(def_raw[i,h] | mu_def[i,h], sigma_common[1]);
           }
         }
       }

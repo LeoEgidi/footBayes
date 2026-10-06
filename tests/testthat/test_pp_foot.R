@@ -50,6 +50,45 @@ test_that("pp_foot returns proper output for aggregated type", {
   expect_equal(names(result$pp_table), c("goal diff.", "Bayesian p-value"))
 })
 
+test_that("pp_foot aggregated type uses the in-sample matches only", {
+  skip_on_cran()
+  skip_if_not(stan_cmdstan_exists())
+
+  ##  ............................................................................
+  ##  Data                                                                    ####
+
+  data("england")
+  england <- as.data.frame(england)
+
+  england_2004 <- england %>%
+    dplyr::filter(division == 1) %>%
+    dplyr::select(Season, home, visitor, hgoal, vgoal) %>%
+    dplyr::filter(Season == "2004")
+
+  colnames(england_2004) <- c(
+    "periods", "home_team", "away_team",
+    "home_goals", "away_goals"
+  )
+
+  ##  ............................................................................
+  ##  Tests                                                                   ####
+
+  model <- stan_foot(
+    data = england_2004,
+    model = "double_pois",
+    predict = 20,
+    iter_sampling = 200,
+    chains = 2,
+    seed = 433
+  )
+
+  in_sample <- england_2004[seq_len(nrow(england_2004) - 20), ]
+  expect_equal(
+    pp_foot(object = model, data = england_2004, type = "aggregated")$pp_table,
+    pp_foot(object = model, data = in_sample, type = "aggregated")$pp_table
+  )
+})
+
 
 
 #   ____________________________________________________________________________

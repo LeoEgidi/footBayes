@@ -1,32 +1,39 @@
 # footBayes 2.1.0
 
-## New models
+### New models
 
-* Add the Dixon-Coles model (`"dixon_coles"`) in `stan_foot()`, both static and dynamic, with the low-score dependence parameter `rho` following Dixon and Coles (1997).
-* Add the Dixon-Coles model (`"dixon_coles"`) in `mle_foot()` with low-score dependence adjustment (rho parameter).
-* Add the static Negative Binomial model (`"neg_bin"`) in `mle_foot()` with NB2 parameterization and separate home/away overdispersion parameters.
+* Add the Dixon-Coles model (`"dixon_coles"`) to `stan_foot()`, static and dynamic, and to `mle_foot()`.
+* Add the negative binomial model (`"neg_bin"`) to `mle_foot()`.
 
-## New dynamic specifications in `stan_foot()`
+### Dynamic models in `stan_foot()`
 
-* Add the `dynamic_par` argument to choose the evolution variance of the dynamic models:
-  `common_sd = TRUE` for a single evolution standard deviation shared by attack and defence (Owen, 2011);
-  `kl_variance = TRUE` for the variance inflation in the periods following a summer break (Koopman and Lit, 2015), with the new option `periods_per_season` (default 2) declaring how many consecutive periods form one season.
-* Add the `dynamic_weight` argument for the Bayesian weighted dynamic models with team- and period-specific commensurate priors and spike-and-slab hyperpriors (Macrì Demartino, Egidi and Torelli, 2026, JRSS-C). The spike and slab hyperparameters are set through `dynamic_par$spike` and `dynamic_par$slab`, with defaults `normal(9, 1.5)` and `normal(0, 3)` as in the paper.
-* Incompatible combinations (`dynamic_weight`, `common_sd`, `kl_variance`, and the `student_t` model) now stop with an informative error. `kl_variance = TRUE` requires `dynamic_type = "seasonal"` and more than `periods_per_season` training periods.
-* Dynamic Stan models rewritten with a non-centered parameterization for the commensurate prior.
+* Add `dynamic_par` to choose the evolution variance: a common variance (`common_sd`, Owen, 2011) or a variance inflation after the summer break (`kl_variance` and `periods_per_season`, Koopman and Lit, 2015).
+* Add `dynamic_weight` for the weighted dynamic models with commensurate priors (Macrì Demartino, Egidi and Torelli, 2026), with spike and slab hyperpriors set through `dynamic_par$spike` and `dynamic_par$slab`.
 
-## Other changes
+### Other changes
 
-* `print.stanFoot()` with the `teams` argument now keeps all the global parameters (e.g. `sigma_common`, `sigma_break`, `nu`, `phi`, `prob_spike`) instead of a fixed list, and replaces the team index with the team name in all the team-indexed parameters.
-* Refactor MLE prediction logic: extract `simulate_goals_mle()` utility into `utils_foot.R`.
-* Update `foot_prob()` to support `"dixon_coles"` and `"neg_bin"` MLE predictions.
-* Update `foot_abilities()` documentation to reflect all six supported MLE models.
-* Refactor profile likelihood and Wald confidence interval computation in `mle_foot()` to dynamically handle model-specific extra parameters.
-* Fix AIC/BIC computation in `mle_foot()` to count only effective parameters per model.
-* Fix `foot_prob()` referencing `object$home` instead of `object$home_effect` for MLE models.
-* Identifiability constraint in the Bradley-Terry-Davidson Stan models.
-* The experimental dynamic Conway-Maxwell-Poisson Stan model is kept in the sources but it is not exposed through `stan_foot()`.
-* Vignette rewritten: single running example, new section on the dynamic specifications, model comparison with `compare_foot()` and `loo`, and a fix in the `compare_foot()` example (the test set now matches the fitted seasons).
+* `print.stanFoot()` with `teams` keeps all the global parameters and shows the team names in the team-indexed parameters.
+* `foot_prob()` supports the `"dixon_coles"` and `"neg_bin"` MLE models.
+* Add an identifiability constraint to the Bradley-Terry-Davidson Stan models.
+* Extend the confidence intervals of `mle_foot()` to the model-specific parameters and move the MLE simulations to the internal `simulate_goals_mle()`.
+* Rewrite the vignette.
+
+### Bug fixes
+
+* Fix the likelihood of the static bivariate Poisson model.
+* Draw `y_rep` and `y_prev` of the bivariate Poisson models from the bivariate Poisson distribution.
+* Rewrite the diagonal-inflated bivariate Poisson model as in Karlis and Ntzoufras (2003), with the new parameter `draw_dist` for the draws.
+* Return `diff_y_prev` in the bivariate Poisson and diagonal-inflated bivariate Poisson models.
+* Fix the AIC and BIC of `mle_foot()` to count only the free parameters of each model.
+* Fix `foot_prob()` for MLE models, which used `object$home` instead of `object$home_effect`.
+* Fix `compare_foot()` with `NA` rows in a probability matrix, which misaligned the outcomes of the following elements of `source`.
+* Match `ranking` in `stan_foot()` to the teams by name instead of by position, with informative errors for missing or duplicated teams.
+* Fix the observed frequencies in `pp_foot(type = "aggregated")` for models fitted with `predict > 0`.
+
+### Documentation
+
+* Update `foot_abilities()` for the six MLE models.
+* Fix the documentation of `italy`, `priors`, `btd_foot()`, `compare_foot()`, `plot_logStrength()` and of `norm_method` and `rho` in `stan_foot()`.
 
 # footBayes 2.0.1
 

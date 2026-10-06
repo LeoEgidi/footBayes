@@ -62,7 +62,7 @@ An object of class \code{"btdFoot"}, which is a list containing:
       \itemize{
         \item \code{periods}: The time period.
         \item \code{team}: The team name.
-        \item \code{rank_points}: The estimated strength of the team based on the chosen \code{rank_measure}.
+        \item \code{log_strengths}: The estimated log-strength of the team based on the chosen \code{rank_measure}.
       }
     \item \code{data}: The input data.
     \item \code{stan_data}: The data list passed to Stan.

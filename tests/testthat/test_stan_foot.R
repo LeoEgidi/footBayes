@@ -768,6 +768,83 @@ test_that("ranking with non-numeric rank_points causes error", {
   )
 })
 
+test_that("ranking points are matched to the teams by name", {
+  skip_on_cran()
+  skip_if_not(stan_cmdstan_exists())
+
+  ##  ............................................................................
+  ##  Data                                                                    ####
+
+  # Home teams appear in the order A, C, B, D
+  data_valid <- data.frame(
+    periods    = rep(1, 6),
+    home_team  = c("A", "C", "B", "D", "A", "B"),
+    away_team  = c("B", "D", "C", "A", "C", "D"),
+    home_goals = c(1, 0, 2, 1, 3, 0),
+    away_goals = c(0, 0, 1, 2, 1, 1)
+  )
+  # Ranking in alphabetical order, plus a team that is not in the data
+  ranking_valid <- data.frame(
+    periods = 1,
+    team = c("A", "B", "C", "D", "E"),
+    rank_points = c(10, 20, 30, 40, 50)
+  )
+
+  ##  ............................................................................
+  ##  Tests                                                                   ####
+
+  fit <- stan_foot(
+    data = data_valid, model = "double_pois", ranking = ranking_valid,
+    iter_sampling = 100, chains = 1, seed = 433
+  )
+  expect_equal(as.vector(fit$stan_data$ranking[1, ]), c(10, 30, 20, 40))
+})
+
+test_that("ranking with missing teams, duplicated rows or missing periods causes error", {
+  skip_if_not(stan_cmdstan_exists())
+
+  ##  ............................................................................
+  ##  Data                                                                    ####
+
+  data_valid <- data.frame(
+    periods    = c(1, 1, 2, 2),
+    home_team  = c("A", "B", "A", "B"),
+    away_team  = c("B", "A", "B", "A"),
+    home_goals = c(1, 0, 2, 1),
+    away_goals = c(0, 0, 1, 2)
+  )
+
+  ##  ............................................................................
+  ##  Tests                                                                   ####
+
+  # Team B has no ranking points
+  expect_error(
+    stan_foot(
+      data = data_valid, model = "double_pois", dynamic_type = "seasonal",
+      ranking = data.frame(periods = c(1, 2), team = "A", rank_points = c(10, 15))
+    ),
+    "have no ranking points in 'ranking': B"
+  )
+
+  # Team A has two ranking points in period 1
+  expect_error(
+    stan_foot(
+      data = data_valid, model = "double_pois", dynamic_type = "seasonal",
+      ranking = data.frame(periods = c(1, 1, 1, 2, 2), team = c("A", "A", "B", "A", "B"), rank_points = 1:5)
+    ),
+    "more than one row for the same team and period"
+  )
+
+  # Team B has no ranking points in period 2
+  expect_error(
+    stan_foot(
+      data = data_valid, model = "double_pois", dynamic_type = "seasonal",
+      ranking = data.frame(periods = c(1, 1, 2), team = c("A", "B", "A"), rank_points = c(10, 20, 15))
+    ),
+    "no ranking points in some periods"
+  )
+})
+
 test_that("ranking_map with wrong length causes error", {
   skip_if_not(stan_cmdstan_exists())
 

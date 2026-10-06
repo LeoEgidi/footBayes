@@ -78,6 +78,8 @@ model {
       alpha[, h] ~ multi_student_t(hyper_df, mu_alpha[, h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
     } else if (prior_dist_num == 3) {
       alpha[, h] ~ multi_student_t(1, mu_alpha[, h], diag_matrix(rep_vector(square(sigma_alpha), ntimes)));
+    } else if (prior_dist_num == 4) {
+      target += double_exponential_lpdf(alpha[, h] | mu_alpha[, h], sigma_alpha);
     }
   }
 

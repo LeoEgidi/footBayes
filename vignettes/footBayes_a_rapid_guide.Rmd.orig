@@ -328,7 +328,7 @@ print(fit_bp,
 )
 ```
 
-The $\hat{R}$ statistics are close to 1 and the effective sample sizes are not problematic: HMC sampling reached convergence. As expected, the home effect is positive (posterior mean about 0.3): if two teams have the same abilities, the average number of goals of the home team is $\lambda_1 = \exp\{0.3\} \approx 1.35$, against $\lambda_2 = 1$ for the away team. The covariance parameter $\rho$ is negative, corresponding to $\lambda_3 = \exp\{\rho\} \approx 0.17$: the goals' correlation in the 2000/2001 Serie A is low but not negligible, in agreement with the maximum likelihood estimate. AS Roma, the champion of that season, has the highest attack ability among the three teams displayed, whereas Juventus has the best (lowest) defence.
+The $\hat{R}$ statistics are close to 1 and the effective sample sizes are not problematic: HMC sampling reached convergence. As expected, the home effect is positive (posterior mean about 0.3): for two teams with average abilities, the average number of goals of the home team is $\lambda_1 = \exp\{0.3\} \approx 1.35$, against $\lambda_2 = 1$ for the away team. The covariance parameter $\rho$ is negative, corresponding to $\lambda_3 = \exp\{\rho\} \approx 0.16$: the goals' correlation in the 2000/2001 Serie A is low but not negligible, in agreement with the maximum likelihood estimate. AS Roma, the champion of that season, has the highest attack ability among the three teams displayed, whereas Juventus has the best (lowest) defence.
 
 The marginal posterior distributions can be depicted with the `bayesplot` package, extracting the draws from the `CmdStanFit` object:
 
@@ -412,7 +412,7 @@ mcmc_areas(sigma_att_post) +
   theme_bw()
 ```
 
-The Student-$t$ + Laplace specification induces a smaller group-level variability, i.e. a larger shrinkage of the abilities towards the grand mean.
+The posterior of $\sigma_{\text{att}}$ is concentrated on smaller values under the Student-$t$ + Laplace specification. Note, however, that under a Student-$t$ prior $\sigma_{\text{att}}$ is a scale parameter and the standard deviation of the abilities is $\sqrt{2} \, \sigma_{\text{att}}$ for 4 degrees of freedom: the implied group-level variability is therefore similar under the two specifications.
 
 ## Alternative algorithms
 
@@ -454,7 +454,7 @@ fit_weekly <- stan_foot(
 print(fit_weekly, pars = c("rho", "sigma_att", "sigma_def"))
 ```
 
-In the dynamic models the home effect is period-specific as well (`home[t]`), hence we display the evolution standard deviations only. They are small, as within a single season the abilities change slowly from one match day to the next; however, their $\hat{R}$ values are well above 1.1 and their effective sample sizes are tiny: the sampler struggles to explore the posterior of the evolution scales in the weekly model, a well-known issue of centred random-walk parameterizations when the evolution variance is small, and a longer run, a larger `adapt_delta` or a more informative prior on `ability_sd` would be advisable before drawing conclusions. The `foot_abilities` function depicts the posterior median and the 50% and 95% credible intervals of the attack (red) and defence (blue) abilities over the match days, for all the teams or for those selected through the `teams` argument:
+In the dynamic models the home effect is period-specific as well (`home[t]`), hence we display the evolution standard deviations only. They are small, as within a single season the abilities change slowly from one match day to the next; however, their $\hat{R}$ values are well above 1 (1.25 for `sigma_att` and 1.09 for `sigma_def`) and their effective sample sizes are tiny: the sampler struggles to explore the posterior of the evolution scales in the weekly model, a well-known issue of centred random-walk parameterizations when the evolution variance is small, and a longer run, a larger `adapt_delta` or a more informative prior on `ability_sd` would be advisable before drawing conclusions. The `foot_abilities` function depicts the posterior median and the 50% and 95% credible intervals of the attack (red) and defence (blue) abilities over the match days, for all the teams or for those selected through the `teams` argument:
 
 ```{r weekly_abilities, echo = TRUE, eval = TRUE}
 foot_abilities(fit_weekly, italy_2000,
@@ -709,14 +709,14 @@ and check whether these replications are close to the observed data: these are t
 
 - an aggregated plot of the observed frequencies of the goal differences $Z_n = X_n - Y_n$ against the replicated ones (`type = "aggregated"`);
 
-- a plot of the match-ordered goal differences with their 50% and 95% credible intervals (`type = "matches"`).
+- a plot of the match-ordered goal differences with their posterior predictive intervals, at the level set by the `coverage` argument (95% by default) (`type = "matches"`).
 
 ```{r pp_foot, echo = TRUE, eval = TRUE}
 pp_foot(object = fit_bp, data = italy_2000, type = "aggregated")
 pp_foot(object = fit_bp, data = italy_2000, type = "matches")
 ```
 
-In the first plot, blue lines denote the observed frequencies and yellow jittered points the replicated ones: the goal differences are decently captured by the static bivariate Poisson model, with the draws (goal difference equal to 0) only slightly underestimated. In the second plot, the ordered observed goal differences fall within their posterior predictive intervals. Other checks can be obtained with the `bayesplot` package from the in-sample replications `y_rep` stored in the `CmdStanFit` object, e.g. the overlay of the density of the observed goal differences with the replicated ones:
+In the first plot, blue segments denote the observed frequencies and orange jittered points the replicated ones: the goal differences are decently captured by the static bivariate Poisson model, with the draws (goal difference equal to 0) only slightly underestimated and the away wins by one goal overestimated. In the second plot, almost all the ordered observed goal differences (94%) fall within their 95% posterior predictive intervals. Other checks can be obtained with the `bayesplot` package from the in-sample replications `y_rep` stored in the `CmdStanFit` object, e.g. the overlay of the density of the observed goal differences with the replicated ones:
 
 ```{r pp_checks, echo = TRUE, eval = TRUE}
 draws_bp <- posterior::as_draws_rvars(fit_bp$fit$draws())
@@ -808,7 +808,7 @@ Lower Brier and RPS values and higher accuracy, pseudo-$R^2$ and ACP values deno
 
 ## Information criteria with `loo`
 
-Predictive information criteria such as the leave-one-out cross-validation criterion (LOOIC) and the WAIC [@vehtari2016practical] are available through the `loo` package, since all the Stan models store the pointwise log-likelihood. The lower the value, the better the estimated predictive accuracy. We compare the static models fitted to the 2000/2001 season:
+Predictive information criteria such as the leave-one-out cross-validation criterion (LOOIC) and the WAIC [@vehtari2016practical] are available through the `loo` package, since all the Stan models store the pointwise log-likelihood. The higher the expected log predictive density (elpd), or the lower the LOOIC, the better the estimated predictive accuracy. We compare the static models fitted to the 2000/2001 season:
 
 ```{r loo, echo = TRUE, eval = TRUE}
 loo_list <- list(
@@ -821,6 +821,6 @@ loo_list <- list(
 loo_compare(loo_list)
 ```
 
-The bivariate Poisson model, with either prior specification, and the Dixon-Coles model are equivalent in terms of expected log predictive density, since their differences are within the standard errors, whereas the negative binomial model is clearly worse: in the 2000/2001 Serie A the overdispersion is not needed, and the extra dispersion parameters are penalized.
+Models are sorted from the best one, and `elpd_diff` and `se_diff` are the difference in elpd with respect to the best model and its standard error; `p_worse` is the probability that a model predicts worse than the best one, and `diag_diff` flags the comparisons in which this probability is not reliable, e.g. when the difference is small. The bivariate Poisson model has the highest elpd, and the differences with the same model with the alternative priors and with the Dixon-Coles model are small ($|\text{elpd\_diff}| < 4$), whereas the negative binomial model is clearly worse (about 2.7 standard errors below the best model): in the 2000/2001 Serie A the overdispersion is not needed.
 
 # References

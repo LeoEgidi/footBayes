@@ -1,47 +1,46 @@
-functions{
-
+functions {
   real bipois_lpmf(array[] int r, real mu1, real mu2, real mu3) {
-    real ss;
-    real log_s;
-    real mus;
-    int miny;
-
-    miny = min(r[1], r[2]);
-
-    // k=0 term with correct normalization
-    ss = poisson_lpmf(r[1] | mu1) + poisson_lpmf(r[2] | mu2) - mu3;
-
-    if(miny > 0) {
-      mus = log(mu3) - log(mu1) - log(mu2);
-      log_s = ss;
-
-      for(k in 1:miny) {
-        log_s = log_s + log(r[1] - k + 1) + mus +
-                log(r[2] - k + 1) - log(k);
+    int miny = min(r[1], r[2]);
+    real ss = poisson_lpmf(r[1] | mu1) + poisson_lpmf(r[2] | mu2) - mu3;
+    if (miny > 0) {
+      real mus = log(mu3) - log(mu1) - log(mu2);
+      real log_s = ss;
+      for (k in 1:miny) {
+        log_s += log(r[1] - k + 1) + log(r[2] - k + 1) - log(k) + mus;
         ss = log_sum_exp(ss, log_s);
       }
     }
     return ss;
   }
 
-  real diag_infl_bipois_lpmf(array[] int r, real mu1, real mu2, real mu3, real p) {
-    real base_prob;
-    real prob;
-    real log_prob;
+  // Diagonal-inflated bivariate Poisson (Karlis and Ntzoufras, 2003):
+  // with probability p the result is a draw j-j, with j = 0, ..., J drawn from
+  // the discrete distribution draw_dist (Pr(j-j) = draw_dist[j + 1]);
+  // with probability 1 - p the result follows a bivariate Poisson.
+  real diag_infl_bipois_lpmf(array[] int r, real mu1, real mu2, real mu3,
+                             real p, vector draw_dist) {
+    real lp_bp = log1m(p) + bipois_lpmf(r | mu1, mu2, mu3);
+    if (r[1] == r[2] && r[1] < num_elements(draw_dist)) {
+      return log_sum_exp(log(p) + log(draw_dist[r[1] + 1]), lp_bp);
+    }
+    return lp_bp;
+  }
 
-    base_prob = exp(bipois_lpmf(r | mu1, mu2, mu3));
-
-    if (r[1] == r[2])
-      prob = p + (1 - p) * base_prob;
-    else
-      prob = (1 - p) * base_prob;
-
-    log_prob = log(prob);
-
-    return log_prob;
+  array[] int diag_infl_bipois_rng(real mu1, real mu2, real mu3,
+                                   real p, vector draw_dist) {
+    array[2] int r;
+    if (bernoulli_rng(p)) {
+      int j = categorical_rng(draw_dist) - 1;
+      r[1] = j;
+      r[2] = j;
+    } else {
+      int x3 = poisson_rng(mu3);
+      r[1] = poisson_rng(mu1) + x3;
+      r[2] = poisson_rng(mu2) + x3;
+    }
+    return r;
   }
 }
-
 data{
   int N;   // number of games
   int<lower=0> N_prev;
@@ -89,6 +88,7 @@ data{
 transformed data {
   real lognc_spike = normal_lccdf(0 | mu_spike, sd_spike);
   real lognc_slab  = normal_lccdf(0 | mu_slab, sd_slab);
+  int J = 3;                         // inflated draws: 0-0, 1-1, 2-2, 3-3
 }
 
 parameters {
@@ -121,8 +121,9 @@ parameters {
   array[ind_comm_prior ? ntimes : 0, ind_comm_prior ? nteams : 0] real<lower=0> comm_prec_att;
   array[ind_comm_prior ? ntimes : 0, ind_comm_prior ? nteams : 0] real<lower=0> comm_prec_def;
 
-  // Diagonal inflation parameter
-  real<lower=0, upper=1> prob_of_draws;
+  // Diagonal inflation parameters
+  real<lower=0, upper=1> prob_of_draws;  // probability of the inflation component
+  simplex[J + 1] draw_dist;              // Pr(j-j | inflation), j = 0, ..., J
 }
 
 transformed parameters{
@@ -253,31 +254,10 @@ model{
       }
     }
 
-    // Standard normal prior on standardized parameters
-    // Non-centered parameterization
-    if (prior_dist_num == 1) {
-      // Normal case: z ~ N(0,1)
-      target += std_normal_lpdf(to_vector(att_raw_std));
-      target += std_normal_lpdf(to_vector(def_raw_std));
-    }
-    else if (prior_dist_num == 2) {
-      // Student-t case: z ~ t(df, 0, 1)
-      for (h in 1:nteams) {
-        for (i in 1:ntimes) {
-          target += student_t_lpdf(att_raw_std[i,h] | hyper_df, 0, 1);
-          target += student_t_lpdf(def_raw_std[i,h] | hyper_df, 0, 1);
-        }
-      }
-    }
-    else if (prior_dist_num == 3) {
-      // Cauchy case (t with df=1)
-      for (h in 1:nteams) {
-        for (i in 1:ntimes) {
-          target += student_t_lpdf(att_raw_std[i,h] | 1, 0, 1);
-          target += student_t_lpdf(def_raw_std[i,h] | 1, 0, 1);
-        }
-      }
-    }
+    // Standard normal prior on standardized parameters (non-centered
+    // parameterization): the weighted dynamic model has a normal kernel
+    target += std_normal_lpdf(to_vector(att_raw_std));
+    target += std_normal_lpdf(to_vector(def_raw_std));
   }
   // ========================================
   // Koopman & Lit (2015) Approach
@@ -296,6 +276,10 @@ model{
         else if (prior_dist_num == 3) {
           target += student_t_lpdf(att_raw[i,h] | 1, mu_att[i,h], sigma_att_t[i]);
           target += student_t_lpdf(def_raw[i,h] | 1, mu_def[i,h], sigma_def_t[i]);
+        }
+        else if (prior_dist_num == 4) {
+          target += double_exponential_lpdf(att_raw[i,h] | mu_att[i,h], sigma_att_t[i]);
+          target += double_exponential_lpdf(def_raw[i,h] | mu_def[i,h], sigma_def_t[i]);
         }
       }
     }
@@ -354,6 +338,15 @@ model{
             target += student_t_lpdf(def_raw[i,h] | 1, mu_def[i,h], sigma_common[1]);
           }
         }
+        else if (prior_dist_num == 4) {
+          if (ind_common_sigma == 0) {
+            target += double_exponential_lpdf(att_raw[i,h] | mu_att[i,h], sigma_att[1]);
+            target += double_exponential_lpdf(def_raw[i,h] | mu_def[i,h], sigma_def[1]);
+          } else {
+            target += double_exponential_lpdf(att_raw[i,h] | mu_att[i,h], sigma_common[1]);
+            target += double_exponential_lpdf(def_raw[i,h] | mu_def[i,h], sigma_common[1]);
+          }
+        }
       }
     }
     // Hyperpriors for sd parameters
@@ -398,45 +391,58 @@ model{
   target += normal_lpdf(rho | 0, 1);
   target += normal_lpdf(gamma | 0, 1);
   target += uniform_lpdf(prob_of_draws | 0, 1);
+  target += dirichlet_lpdf(draw_dist | rep_vector(1, J + 1));
 
   // Diagonal-inflated bivariate Poisson likelihood
   for (n in 1:N) {
-    target += diag_infl_bipois_lpmf(y[n,] | theta_home[n], theta_away[n], theta_corr[n], prob_of_draws);
+    target += diag_infl_bipois_lpmf(y[n] | theta_home[n], theta_away[n], theta_corr[n],
+                                    prob_of_draws, draw_dist);
   }
 }
 
-generated quantities{
-  array[N,2] int y_rep;
-  vector[N] log_lik;
+generated quantities {
+  array[N, 2] int y_rep;
   array[N] int diff_y_rep;
-  array[N_prev,2] int y_prev;
-  real max_rate = 1e9;
+  vector[N] log_lik;
+  array[N_prev, 2] int y_prev;
+  array[N_prev] int diff_y_prev;
   vector[N_prev] theta_home_prev;
   vector[N_prev] theta_away_prev;
   vector[N_prev] theta_corr_prev;
 
-  // In-sample replications
-  for (n in 1:N) {
-    y_rep[n,1] = poisson_rng(fmin((theta_home[n] + theta_corr[n]), max_rate));
-    y_rep[n,2] = poisson_rng(fmin((theta_away[n] + theta_corr[n]), max_rate));
-    diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-    log_lik[n] = diag_infl_bipois_lpmf(y[n,] | theta_home[n], theta_away[n], theta_corr[n], prob_of_draws);
-  }
+  // max_rate
+  {
+    real max_rate = 1e9;
 
-  // Out-of-sample predictions
-  if (N_prev > 0) {
-    for (n in 1:N_prev) {
-      theta_home_prev[n] = exp(adj_h_eff[instants_prev[n]] + att[instants_prev[n], team1_prev[n]] +
-                               def[instants_prev[n], team2_prev[n]] +
-                               (gamma/2)*(ranking[instants_rank[N], team1_prev[n]] -
-                                          ranking[instants_rank[N], team2_prev[n]]));
-      theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]] +
-                               def[instants_prev[n], team1_prev[n]] -
-                               (gamma/2)*(ranking[instants_rank[N], team1_prev[n]] -
-                                          ranking[instants_rank[N], team2_prev[n]]));
-      theta_corr_prev[n] = exp(rho);
-      y_prev[n,1] = poisson_rng(fmin((theta_home_prev[n] + theta_corr_prev[n]), max_rate));
-      y_prev[n,2] = poisson_rng(fmin((theta_away_prev[n] + theta_corr_prev[n]), max_rate));
+    // in-sample replications
+    for (n in 1:N) {
+      y_rep[n] = diag_infl_bipois_rng(fmin(theta_home[n], max_rate),
+                                      fmin(theta_away[n], max_rate),
+                                      fmin(theta_corr[n], max_rate),
+                                      prob_of_draws, draw_dist);
+      diff_y_rep[n] = y_rep[n, 1] - y_rep[n, 2];
+      log_lik[n] = diag_infl_bipois_lpmf(y[n] | theta_home[n], theta_away[n], theta_corr[n],
+                                         prob_of_draws, draw_dist);
+    }
+
+    // out-of-sample predictions
+    if (N_prev > 0) {
+      int t_last = max(instants_rank);
+      for (n in 1:N_prev) {
+        real rank_diff = ranking[t_last, team1_prev[n]]
+                         - ranking[t_last, team2_prev[n]];
+        int t = instants_prev[n];
+        theta_home_prev[n] = exp(adj_h_eff[t] + att[t, team1_prev[n]] + def[t, team2_prev[n]]
+                                 + (gamma / 2) * rank_diff);
+        theta_away_prev[n] = exp(att[t, team2_prev[n]] + def[t, team1_prev[n]]
+                                 - (gamma / 2) * rank_diff);
+        theta_corr_prev[n] = exp(rho);
+        y_prev[n] = diag_infl_bipois_rng(fmin(theta_home_prev[n], max_rate),
+                                         fmin(theta_away_prev[n], max_rate),
+                                         fmin(theta_corr_prev[n], max_rate),
+                                         prob_of_draws, draw_dist);
+        diff_y_prev[n] = y_prev[n, 1] - y_prev[n, 2];
+      }
     }
   }
 }

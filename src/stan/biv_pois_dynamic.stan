@@ -233,31 +233,10 @@ model{
       }
     }
 
-    // Standard normal prior on standardized parameters
-    // Non-centered parameterization
-    if (prior_dist_num == 1) {
-      // Normal case: z ~ N(0,1)
-      target += std_normal_lpdf(to_vector(att_raw_std));
-      target += std_normal_lpdf(to_vector(def_raw_std));
-    }
-    else if (prior_dist_num == 2) {
-      // Student-t case: z ~ t(df, 0, 1)
-      for (h in 1:nteams) {
-        for (i in 1:ntimes) {
-          target += student_t_lpdf(att_raw_std[i,h] | hyper_df, 0, 1);
-          target += student_t_lpdf(def_raw_std[i,h] | hyper_df, 0, 1);
-        }
-      }
-    }
-    else if (prior_dist_num == 3) {
-      // Cauchy case (t with df=1)
-      for (h in 1:nteams) {
-        for (i in 1:ntimes) {
-          target += student_t_lpdf(att_raw_std[i,h] | 1, 0, 1);
-          target += student_t_lpdf(def_raw_std[i,h] | 1, 0, 1);
-        }
-      }
-    }
+    // Standard normal prior on standardized parameters (non-centered
+    // parameterization): the weighted dynamic model has a normal kernel
+    target += std_normal_lpdf(to_vector(att_raw_std));
+    target += std_normal_lpdf(to_vector(def_raw_std));
   }
   // ========================================
   // Koopman & Lit (2015) Approach
@@ -276,6 +255,10 @@ model{
         else if (prior_dist_num == 3) {
           target += student_t_lpdf(att_raw[i,h] | 1, mu_att[i,h], sigma_att_t[i]);
           target += student_t_lpdf(def_raw[i,h] | 1, mu_def[i,h], sigma_def_t[i]);
+        }
+        else if (prior_dist_num == 4) {
+          target += double_exponential_lpdf(att_raw[i,h] | mu_att[i,h], sigma_att_t[i]);
+          target += double_exponential_lpdf(def_raw[i,h] | mu_def[i,h], sigma_def_t[i]);
         }
       }
     }
@@ -334,6 +317,15 @@ model{
             target += student_t_lpdf(def_raw[i,h] | 1, mu_def[i,h], sigma_common[1]);
           }
         }
+        else if (prior_dist_num == 4) {
+          if (ind_common_sigma == 0) {
+            target += double_exponential_lpdf(att_raw[i,h] | mu_att[i,h], sigma_att[1]);
+            target += double_exponential_lpdf(def_raw[i,h] | mu_def[i,h], sigma_def[1]);
+          } else {
+            target += double_exponential_lpdf(att_raw[i,h] | mu_att[i,h], sigma_common[1]);
+            target += double_exponential_lpdf(def_raw[i,h] | mu_def[i,h], sigma_common[1]);
+          }
+        }
       }
     }
     // Hyperpriors for sd parameters
@@ -384,38 +376,48 @@ model{
   }
 }
 
-generated quantities{
-  array[N,2] int y_rep;
-  vector[N] log_lik;
+generated quantities {
+  array[N, 2] int y_rep;
   array[N] int diff_y_rep;
-  array[N_prev,2] int y_prev;
-  real max_rate = 1e9;
+  vector[N] log_lik;
+  array[N_prev, 2] int y_prev;
+  array[N_prev] int diff_y_prev;
   vector[N_prev] theta_home_prev;
   vector[N_prev] theta_away_prev;
   vector[N_prev] theta_corr_prev;
 
-  // In-sample replications
-  for (n in 1:N) {
-    y_rep[n,1] = poisson_rng(fmin((theta_home[n] + theta_corr[n]), max_rate));
-    y_rep[n,2] = poisson_rng(fmin((theta_away[n] + theta_corr[n]), max_rate));
-    diff_y_rep[n] = y_rep[n,1] - y_rep[n,2];
-    log_lik[n] = bipois_lpmf(y[n,] | theta_home[n], theta_away[n], theta_corr[n]);
-  }
+  // max_rate
+  {
+    real max_rate = 1e9;
 
-  // Out-of-sample predictions
-  if (N_prev > 0) {
-    for (n in 1:N_prev) {
-      theta_home_prev[n] = exp(adj_h_eff[instants_prev[n]] + att[instants_prev[n], team1_prev[n]] +
-                               def[instants_prev[n], team2_prev[n]] +
-                               (gamma/2)*(ranking[instants_rank[N], team1_prev[n]] -
-                                          ranking[instants_rank[N], team2_prev[n]]));
-      theta_away_prev[n] = exp(att[instants_prev[n], team2_prev[n]] +
-                               def[instants_prev[n], team1_prev[n]] -
-                               (gamma/2)*(ranking[instants_rank[N], team1_prev[n]] -
-                                          ranking[instants_rank[N], team2_prev[n]]));
-      theta_corr_prev[n] = exp(rho);
-      y_prev[n,1] = poisson_rng(fmin((theta_home_prev[n] + theta_corr_prev[n]), max_rate));
-      y_prev[n,2] = poisson_rng(fmin((theta_away_prev[n] + theta_corr_prev[n]), max_rate));
+    // in-sample replications
+    for (n in 1:N) {
+      int x3 = poisson_rng(fmin(theta_corr[n], max_rate));
+      y_rep[n, 1] = poisson_rng(fmin(theta_home[n], max_rate)) + x3;
+      y_rep[n, 2] = poisson_rng(fmin(theta_away[n], max_rate)) + x3;
+      diff_y_rep[n] = y_rep[n, 1] - y_rep[n, 2];
+      log_lik[n] = bipois_lpmf(y[n] | theta_home[n], theta_away[n], theta_corr[n]);
+    }
+
+    // out-of-sample predictions
+    if (N_prev > 0) {
+      int t_last = max(instants_rank);
+      for (n in 1:N_prev) {
+        real rank_diff = ranking[t_last, team1_prev[n]]
+                         - ranking[t_last, team2_prev[n]];
+        int t = instants_prev[n];
+        int x3;
+        theta_home_prev[n] = exp(adj_h_eff[t] + att[t, team1_prev[n]] + def[t, team2_prev[n]]
+                                 + (gamma / 2) * rank_diff);
+        theta_away_prev[n] = exp(att[t, team2_prev[n]] + def[t, team1_prev[n]]
+                                 - (gamma / 2) * rank_diff);
+        theta_corr_prev[n] = exp(rho);
+        x3 = poisson_rng(fmin(theta_corr_prev[n], max_rate));
+        y_prev[n, 1] = poisson_rng(fmin(theta_home_prev[n], max_rate)) + x3;
+        y_prev[n, 2] = poisson_rng(fmin(theta_away_prev[n], max_rate)) + x3;
+        diff_y_prev[n] = y_prev[n, 1] - y_prev[n, 2];
+      }
     }
   }
 }
+

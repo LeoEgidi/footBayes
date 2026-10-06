@@ -12,6 +12,7 @@
 #'     \item \code{home_goals}: Goals scored by the home team (integer >= 0).
 #'     \item \code{away_goals}: Goals scored by the away team (integer >= 0).
 #'   }
+#'   If the model was fitted with \code{predict > 0}, the in-sample matches are used.
 #' @param type  Type of plots, one among \code{"aggregated"} or \code{"matches"}. Default is \code{"aggregated"}.
 #' @param coverage Argument to specify the width \eqn{1-\alpha} of posterior probability intervals. Default is 0.95.
 #'
@@ -146,7 +147,7 @@ pp_foot <- function(object, data,
 
 
     freq_rel_obs <- sapply(esiti_short, function(x) {
-      sum(goal_diff == x) / ngames_train
+      sum(goal_diff[seq_len(ngames_train)] == x) / ngames_train
     })
 
     frame <- data.frame(valori = esiti_short, rel = freq_rel_frame_add[, 2])

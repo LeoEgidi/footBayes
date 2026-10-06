@@ -39,13 +39,13 @@ This prior specification is just a duplicate
 of some of the priors used by the \pkg{rstanarm} package.
 
 These prior distributions can be passed to the
-\code{stan_foot} function, through the arguments \code{prior} and \code{prior_sd}.
+\code{stan_foot} function, through the elements \code{ability} and \code{ability_sd} of the argument \code{prior_par}.
 See  the vignette \href{http://mc-stan.org/rstanarm/articles/priors.html}{\emph{Prior
   Distributions for rstanarm Models}} for further details (to view the priors used for an existing model see
   \href{https://mc-stan.org/rstanarm/reference/prior_summary.stanreg.html}{prior_summary}).
   The default priors used in the \pkg{stan_foot} modeling function
   are intended to be \emph{weakly informative} in that they provide moderate
-  regularlization and help stabilize computation.
+  regularization and help stabilize computation.
 
 You can choose between: \code{normal}, \code{cauchy}, \code{laplace}, \code{student_t}.
 }

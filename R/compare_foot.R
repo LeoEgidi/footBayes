@@ -1,6 +1,6 @@
 #' Compare Football Models using Various Metrics
 #'
-#' Compares multiple football models or directly provided probability matrices based on specified metrics (accuracy, Brier score, ranked probability score, Pseudo \eqn{R^2}, average coverage probability), using a test dataset. Additionally, computes the confusion matrices. The function returns an object of class \code{compareFoot}.
+#' Compares multiple football models or directly provided probability matrices based on specified metrics (accuracy, Brier score, ranked probability score, Pseudo \eqn{R^2}, average of correct probabilities), using a test dataset. Additionally, computes the confusion matrices. The function returns an object of class \code{compareFoot}.
 #'
 #' @param source A named list containing either:
 #'   \itemize{
@@ -24,7 +24,7 @@
 #'   }
 #'   Default is \code{c("accuracy", "brier", "ACP", "pseudoR2", "RPS")}, computing the specified metrics.
 #' @param conf_matrix A logical value indicating whether to generate a confusion matrix comparing predicted outcomes against actual outcomes for each model or probability matrix. Default is \code{FALSE}.
-#' @return An object of class \code{compare_foot_output}, which is a list containing:
+#' @return An object of class \code{compareFoot}, which is a list containing:
 #'   \itemize{
 #'     \item \code{metrics}: A data frame containing the metric values for each model or probability matrix.
 #'     \item \code{confusion_matrix}: Confusion matrices for each model or probability matrix.
@@ -159,6 +159,7 @@ compare_foot <- function(source,
   for (item_name in names(source)) {
     item <- source[[item_name]]
     model_results <- list()
+    outcomes <- actual_outcomes # observed outcomes used for this item only
 
     if (inherits(item, c("stanFoot", "stanfit", "CmdStanFit"))) {
       if (inherits(item, "stanfit")) {
@@ -247,9 +248,9 @@ compare_foot <- function(source,
       na_rows <- apply(prob_q_model, 1, function(x) any(is.na(x)))
       if (any(na_rows)) {
         num_na <- sum(na_rows)
-        warning(sprintf("Probability matrix '%s' contains %d rows with NAs. These rows will be removed from evaluation.", item_name, num_na))
+        warning(sprintf("Probability matrix '%s' contains %d rows with NAs. These rows will be removed from its evaluation, so its metrics are computed on %d matches only.", item_name, num_na, N_prev - num_na))
         prob_q_model <- prob_q_model[!na_rows, , drop = FALSE]
-        actual_outcomes <- actual_outcomes[!na_rows]
+        outcomes <- outcomes[!na_rows]
         if (nrow(prob_q_model) == 0) {
           warning(sprintf("After removing NA rows, no data remains for matrix '%s'. Skipping.", item_name))
           next
@@ -272,17 +273,17 @@ compare_foot <- function(source,
     cum_pred <- t(apply(prob_q_model, 1, cumsum))
 
     n <- nrow(prob_q_model)
-    idx <- cbind(seq_len(n), as.numeric(actual_outcomes))
+    idx <- cbind(seq_len(n), as.numeric(outcomes))
 
     #   ____________________________________________________________________________
     #   Compute selected metrics                                               ####
 
     if ("RPS" %in% metric) {
-      model_results$RPS <- round(compute_RPS(cum_pred, actual_outcomes), 4)
+      model_results$RPS <- round(compute_RPS(cum_pred, outcomes), 4)
     }
     if ("accuracy" %in% metric) {
       predicted_outcomes <- apply(prob_q_model, 1, which.max)
-      model_results$accuracy <- round(mean(predicted_outcomes == as.numeric(actual_outcomes)), 4)
+      model_results$accuracy <- round(mean(predicted_outcomes == as.numeric(outcomes)), 4)
     }
     if ("brier" %in% metric) {
       brier_res <- matrix(0, n, 3)
@@ -311,7 +312,7 @@ compare_foot <- function(source,
                            levels = 1:3,
                            labels = c("Home Win", "Draw", "Away Win")
         ),
-        Actual = actual_outcomes
+        Actual = outcomes
       )
     }
 

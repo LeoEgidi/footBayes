@@ -13,7 +13,7 @@
 #' @return A \code{ggplot} object:
 #' \itemize{
 #'   \item Dynamic BTD: A lineplot for the \code{log_strengths} over each period, colored by team.
-#'   \item Static BTD: An horizontal barplot for each team.
+#'   \item Static BTD: A horizontal segment-and-dot plot of the \code{log_strengths}, one row per team, sorted by log-strength.
 #' }
 #'
 #' @author Roberto Macrì Demartino \email{roberto.macridemartino@deams.units.it}.

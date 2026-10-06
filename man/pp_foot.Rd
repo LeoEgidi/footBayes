@@ -16,7 +16,8 @@ pp_foot(object, data, type = "aggregated", coverage = 0.95)
   \item \code{away_team}: Away team's name (character string).
   \item \code{home_goals}: Goals scored by the home team (integer >= 0).
   \item \code{away_goals}: Goals scored by the away team (integer >= 0).
-}}
+}
+If the model was fitted with \code{predict > 0}, the in-sample matches are used.}
 
 \item{type}{Type of plots, one among \code{"aggregated"} or \code{"matches"}. Default is \code{"aggregated"}.}
 
