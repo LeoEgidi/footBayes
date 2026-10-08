@@ -1,0 +1,40 @@
+---
+title: "Articles"
+toc: false
+---
+
+## Getting started
+
+How to install `footBayes`, the models it provides and the data used in the examples.
+
+[Get started with footBayes](get-started.qmd)
+: Installation, the overall workflow, the data format and the two datasets used in the articles.
+
+## Models and inference
+
+The goal-based models and how to fit them by maximum likelihood and in a Bayesian framework, with static or dynamic team abilities, and how to estimate historical team strengths.
+
+[Goal-based models in a nutshell](goal-based-models.qmd)
+: The models of the package, their parameters, the prior distributions and the inference algorithms.
+
+[Static models](static-models.qmd)
+: Maximum likelihood and Bayesian fits with constant team abilities, prior sensitivity and approximate algorithms.
+
+[Dynamic models](dynamic-models.qmd)
+: Weekly and seasonal team abilities and the four specifications of the evolution variance.
+
+[Historical strengths: the Bradley-Terry-Davidson model](bradley-terry-davidson.qmd)
+: Team strengths from match outcomes with `btd_foot()`, and their use as a covariate in `stan_foot()`.
+
+## Checking, predicting and comparing
+
+How to check the fitted models, predict out-of-sample matches and the final league table, and compare competing models.
+
+[Model checking](model-checking.qmd)
+: Posterior predictive checks of the goal differences with `pp_foot()` and `bayesplot`.
+
+[Predictions](predictions.qmd)
+: Match probabilities, home win probabilities and league table predictions.
+
+[Model comparison](model-comparison.qmd)
+: Predictive metrics on a test set with `compare_foot()`, and information criteria with `loo`.

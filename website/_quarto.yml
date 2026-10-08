@@ -1,0 +1,129 @@
+project:
+  type: website
+  pre-render: _prerender.R
+  render:
+    - index.qmd
+    - articles/*.qmd
+    - reference/*.qmd
+    - news.qmd
+    - authors.qmd
+
+website:
+  title: "footBayes"
+  description: "Fitting Bayesian and MLE football models in R"
+  site-url: https://leoegidi.github.io/footBayes/
+  repo-url: https://github.com/LeoEgidi/footBayes
+  favicon: images/logo.png
+  page-navigation: true
+  navbar:
+    logo: images/logo.png
+    left:
+      - text: "Get started"
+        href: articles/get-started.qmd
+      - text: "Articles"
+        menu:
+          - text: "Overview"
+            href: articles/index.qmd
+          - text: "---"
+          - articles/goal-based-models.qmd
+          - articles/static-models.qmd
+          - articles/dynamic-models.qmd
+          - text: "Bradley-Terry-Davidson"
+            href: articles/bradley-terry-davidson.qmd
+          - text: "---"
+          - articles/model-checking.qmd
+          - articles/predictions.qmd
+          - articles/model-comparison.qmd
+      - text: "Functions Reference"
+        href: reference/index.qmd
+      - text: "Changelog"
+        href: news.qmd
+      - text: "Authors & citation"
+        href: authors.qmd
+    right:
+      - icon: github
+        href: https://github.com/LeoEgidi/footBayes
+        aria-label: GitHub
+  sidebar:
+    - title: "Articles"
+      style: docked
+      contents:
+        - articles/index.qmd
+        - section: "Getting started"
+          contents:
+            - articles/get-started.qmd
+        - section: "Models and inference"
+          contents:
+            - articles/goal-based-models.qmd
+            - articles/static-models.qmd
+            - articles/dynamic-models.qmd
+            - articles/bradley-terry-davidson.qmd
+        - section: "Checking, predicting and comparing"
+          contents:
+            - articles/model-checking.qmd
+            - articles/predictions.qmd
+            - articles/model-comparison.qmd
+    - title: "Functions Reference"
+      style: docked
+      contents:
+        - reference/index.qmd
+        - section: "Model fitting"
+          contents:
+            - text: "stan_foot()"
+              href: reference/stan_foot.qmd
+            - text: "mle_foot()"
+              href: reference/mle_foot.qmd
+            - text: "btd_foot()"
+              href: reference/btd_foot.qmd
+            - text: "Priors"
+              href: reference/priors.qmd
+        - section: "Abilities and strengths"
+          contents:
+            - text: "foot_abilities()"
+              href: reference/foot_abilities.qmd
+            - text: "plot_btdPosterior()"
+              href: reference/plot_btdPosterior.qmd
+            - text: "plot_logStrength()"
+              href: reference/plot_logStrength.qmd
+        - section: "Checks and predictions"
+          contents:
+            - text: "pp_foot()"
+              href: reference/pp_foot.qmd
+            - text: "foot_prob()"
+              href: reference/foot_prob.qmd
+            - text: "foot_rank()"
+              href: reference/foot_rank.qmd
+            - text: "foot_round_robin()"
+              href: reference/foot_round_robin.qmd
+        - section: "Model comparison"
+          contents:
+            - text: "compare_foot()"
+              href: reference/compare_foot.qmd
+        - section: "Print methods"
+          contents:
+            - text: "print.stanFoot()"
+              href: reference/print.stanFoot.qmd
+            - text: "print.btdFoot()"
+              href: reference/print.btdFoot.qmd
+            - text: "print.compareFoot()"
+              href: reference/print.compareFoot.qmd
+        - section: "Datasets"
+          contents:
+            - text: "italy"
+              href: reference/italy.qmd
+            - text: "england"
+              href: reference/england.qmd
+  page-footer:
+    left: "Developed by Leonardo Egidi, Roberto Macrì Demartino and Vasilis Palaskas. Released under the GPL-2 license."
+    right: "Built with [Quarto](https://quarto.org)."
+
+format:
+  html:
+    theme:
+      light: [cosmo, styles.scss]
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+    html-math-method: mathjax
+    lang: en

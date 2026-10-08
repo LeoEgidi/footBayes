@@ -1,0 +1,33 @@
+---
+title: "Authors and citation"
+---
+
+## Authors
+
+- **Leonardo Egidi**, author and maintainer. University of Trieste.
+- **Roberto Macrì Demartino**, author. University of Trieste.
+- **Vasilis Palaskas**, author.
+
+## Citation
+
+If you use `footBayes` in your work, please cite the package:
+
+> Egidi L., Macrì Demartino R. and Palaskas V. (2026). *footBayes: Fitting Bayesian and MLE Football Models*. R package version 2.1.0. <https://CRAN.R-project.org/package=footBayes>
+
+```bibtex
+@Manual{footBayes,
+  title  = {footBayes: Fitting Bayesian and MLE Football Models},
+  author = {Leonardo Egidi and Roberto {Macr\`i Demartino} and Vasilis Palaskas},
+  year   = {2026},
+  note   = {R package version 2.1.0},
+  url    = {https://CRAN.R-project.org/package=footBayes},
+}
+```
+
+The models implemented in the package are described in:
+
+> Egidi L., Pauli F. and Torelli N. (2018). Combining historical data and bookmakers' odds in modelling football scores. *Statistical Modelling*, 18(5-6), 436--459. [doi:10.1177/1471082X18798414](https://doi.org/10.1177/1471082X18798414)
+
+> Macrì Demartino R., Egidi L. and Torelli N. (2024). Alternative ranking measures to predict international football results. *Computational Statistics*.
+
+> Macrì Demartino R., Egidi L. and Torelli N. (2026). Bayesian weighted discrete-time dynamic models for association football prediction. *Journal of the Royal Statistical Society Series C: Applied Statistics*, qlag032. [doi:10.1093/jrsssc/qlag032](https://doi.org/10.1093/jrsssc/qlag032)

@@ -1,0 +1,294 @@
+---
+title: "Model comparison"
+---
+
+::: {.callout-note collapse="true"}
+## Setup
+
+The examples use the static models fitted in [Static models](static-models.qmd) and the seasonal dynamic models fitted in [Dynamic models](dynamic-models.qmd):
+
+```r
+library(footBayes)
+library(dplyr)
+library(ggplot2)
+library(bayesplot)
+library(loo)
+
+n_iter <- 1000
+n_chains <- 4
+seed <- 2026
+
+data("italy")
+italy <- as.data.frame(italy)
+
+italy_2000 <- italy %>%
+  filter(Season == "2000") %>%
+  arrange(Date) %>%
+  select(periods = Season, home_team = home, away_team = visitor,
+         home_goals = hgoal, away_goals = vgoal)
+
+italy_2018_2021 <- italy %>%
+  filter(Season %in% c("2018", "2019", "2020", "2021")) %>%
+  arrange(Season, Date) %>%
+  group_by(Season) %>%
+  mutate(half = if_else(row_number() <= n() / 2, 1, 2)) %>%
+  ungroup() %>%
+  mutate(periods = 2 * (as.numeric(Season) - 2018) + half) %>%
+  select(periods, home_team = home, away_team = visitor,
+         home_goals = hgoal, away_goals = vgoal)
+
+fit_bp <- stan_foot(
+  data = italy_2000,
+  model = "biv_pois",
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
+
+fit_bp_t <- stan_foot(
+  data = italy_2000,
+  model = "biv_pois",
+  prior_par = list(
+    ability = student_t(4, 0, NULL),
+    ability_sd = laplace(0, 1),
+    home = normal(0, 10)
+  ),
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
+
+fit_dc <- stan_foot(
+  data = italy_2000,
+  model = "dixon_coles",
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
+
+fit_nb <- stan_foot(
+  data = italy_2000,
+  model = "neg_bin",
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
+
+fit_dyn <- stan_foot(
+  data = italy_2018_2021,
+  model = "double_pois",
+  dynamic_type = "seasonal",
+  predict = 190,
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
+
+fit_dyn_owen <- stan_foot(
+  data = italy_2018_2021,
+  model = "double_pois",
+  dynamic_type = "seasonal",
+  dynamic_par = list(common_sd = TRUE),
+  predict = 190,
+  chains = n_chains,
+  parallel_chains = n_chains,
+  iter_sampling = n_iter,
+  seed = seed
+)
+```
+:::
+
+Once several models have been fitted, the natural question is which one predicts better. This article shows the two tools available for comparing `footBayes` models. They answer the question in different ways:
+
+| Tool | What is compared | Data used for the comparison | Models that can be compared |
+|:--|:--|:--|:--|
+| `compare_foot()` | Home win, draw and away win probabilities of future matches, through accuracy, Brier score, RPS, pseudo-$R^2$ and ACP | A test set of matches left out of the fit | Any model with out-of-sample predictions, and user-supplied probability matrices |
+| `loo()` and `loo_compare()` (package `loo`) | Expected log predictive density of the observed results, estimated by leave-one-out cross-validation | The same matches used to fit the models | Bayesian models fitted to the same data and describing the same observed quantity |
+
+## Two ways of comparing models
+
+`compare_foot()` is a **hold-out** comparison: the models are fitted leaving the last matches out-of-sample (argument `predict` of `stan_foot()`, see [Predictions](predictions.qmd)), and their predictions of these matches are compared with the observed results. The comparison is made on the **three-way outcome** of each match (home win, draw, away win), which every goal-based model can predict. Consequently, models for the goal counts, models for the goal difference and external probabilities (for instance, derived from betting odds) can all be compared on the same test set. The price is that only the outcome is evaluated, not the exact score, and that the test set is usually small.
+
+In contrast, the information criteria of the `loo` package [@vehtari2016practical] use **all the matches** to which the models were fitted, and evaluate the predictive density of the whole observed result, i.e. of the score for the models of the goal counts. Leave-one-out cross-validation would require refitting each model once per match; `loo` approximates it from a single fit, using the pointwise log-likelihood stored by the Stan models. The comparison is only meaningful between models fitted to the same matches and describing the same observed quantity.
+
+## Predictive performance with `compare_foot`
+
+### From fitted models to outcome probabilities
+
+For a model fitted with `predict > 0`, `compare_foot()` extracts the simulated results of the out-of-sample matches (`y_prev`, or `diff_y_prev` for the Student-$t$ model, which only simulates the goal difference). It then computes, for each match $i$, the proportions of the $S$ posterior draws ending in a home win, a draw and an away win:
+
+$$p_{i1} = \frac{1}{S} \sum_{s=1}^S I(\tilde{x}_i^{(s)} > \tilde{y}_i^{(s)}), \quad p_{i2} = \frac{1}{S} \sum_{s=1}^S I(\tilde{x}_i^{(s)} = \tilde{y}_i^{(s)}), \quad p_{i3} = \frac{1}{S} \sum_{s=1}^S I(\tilde{x}_i^{(s)} < \tilde{y}_i^{(s)}).$$
+
+For the Student-$t$ model, whose simulated goal differences are continuous, the differences are rounded to the nearest integer before being classified as a home win ($> 0$), a draw ($= 0$) or an away win ($< 0$).
+
+The observed result of match $i$ is coded as $o_{ij} = 1$ if outcome $j$ occurred and $o_{ij} = 0$ otherwise, with $j = 1$ (home win), $2$ (draw), $3$ (away win); $j_i$ denotes the observed outcome and $N$ the number of matches in the test set.
+
+### The metrics
+
+| Metric | `metric =` | Definition | Range | Better if |
+|:--|:--|:--|:--|:--|
+| Accuracy | `"accuracy"` | Proportion of matches whose most probable outcome is the observed one | $[0, 1]$ | higher |
+| Brier score | `"brier"` | Mean squared distance between the predicted probabilities and the observed outcome | $[0, 2]$ | lower |
+| Ranked probability score | `"RPS"` | As the Brier score, but on the cumulative probabilities of the ordered outcomes | $[0, 1]$ | lower |
+| Pseudo-$R^2$ | `"pseudoR2"` | Geometric mean of the probabilities assigned to the observed outcomes | $[0, 1]$ | higher |
+| Average of the correct probabilities | `"ACP"` | Arithmetic mean of the probabilities assigned to the observed outcomes | $[0, 1]$ | higher |
+
+In formulas, the package computes:
+
+\begin{align}
+\text{accuracy} & = \frac{1}{N} \sum_{i=1}^N I\Big(\arg\max_j p_{ij} = j_i\Big), \\
+\text{Brier} & = \frac{1}{N} \sum_{i=1}^N \sum_{j=1}^3 (p_{ij} - o_{ij})^2, \\
+\text{RPS} & = \frac{1}{N} \sum_{i=1}^N \frac{1}{2} \sum_{r=1}^{2} \Big( \sum_{j=1}^r p_{ij} - \sum_{j=1}^r o_{ij} \Big)^2, \\
+\text{pseudo-}R^2 & = \exp\Big( \frac{1}{N} \sum_{i=1}^N \log p_{i j_i} \Big) = \Big( \prod_{i=1}^N p_{i j_i} \Big)^{1/N}, \\
+\text{ACP} & = \frac{1}{N} \sum_{i=1}^N p_{i j_i}.
+\end{align}
+
+A few remarks:
+
+- the **accuracy** only uses the most probable outcome of each match, and ignores how confident the prediction is. In case of ties, the first outcome in the order home win, draw, away win is taken;
+- the **Brier score** and the **RPS** use the whole vector of probabilities. The RPS [@epstein1969scoring] treats the outcomes as ordered, with the draw between the home and the away win: when the home team wins, probability assigned to the draw is penalized less than probability assigned to the away win. The factor $1/2$ is the reciprocal of the number of outcomes minus one;
+- the **pseudo-$R^2$** and the **ACP** only use the probability of the observed outcome. Being a geometric mean, the pseudo-$R^2$ is never larger than the ACP and is much more sensitive to matches in which the observed outcome received a very small probability (a probability of zero is replaced by the machine precision before taking the logarithm).
+
+A useful reference is the forecast that assigns probability $1/3$ to every outcome: its Brier score is $2/3 \approx 0.667$, and its pseudo-$R^2$ and ACP are both $1/3 \approx 0.333$, whatever the observed results.
+
+### Comparing two dynamic models
+
+We compare the two seasonal double Poisson models with constant evolution variances fitted in [Dynamic models](dynamic-models.qmd): `fit_dyn`, with separate standard deviations for the evolution of the attack and defence abilities [@egidi2018combining], and `fit_dyn_owen`, with a common standard deviation [@owen2011dynamic]. Both models were fitted with `predict = 190`, i.e. leaving the last half-season of 2021/2022 out-of-sample. The test set is made of the same 190 matches, which in `italy_2018_2021` are those with `periods == 8`:
+
+``` r
+italy_2021_test <- italy_2018_2021 %>%
+  filter(periods == 8)
+
+compare_results <- compare_foot(
+  source = list(
+    egidi = fit_dyn,
+    owen = fit_dyn_owen
+  ),
+  test_data = italy_2021_test,
+  metric = c("accuracy", "brier", "RPS", "pseudoR2", "ACP"),
+  conf_matrix = FALSE
+)
+
+print(compare_results, digits = 3)
+#> Predictive Performance Metrics
+#>  Model   RPS accuracy brier pseudoR2   ACP
+#>  egidi 0.206    0.490 0.618    0.356 0.409
+#>   owen 0.206    0.505 0.617    0.357 0.411
+```
+
+The arguments:
+
+- `source` is a **named list** of the models to compare; the names (here `egidi` and `owen`) are used as labels in the `Model` column;
+- `test_data` contains the observed results of the out-of-sample matches, in the columns `home_team`, `away_team`, `home_goals` and `away_goals`;
+- `metric` selects the metrics (by default all five are computed);
+- `conf_matrix = TRUE` would also return the confusion matrices (see below).
+
+The printed table has one row per model and one column per metric. The columns always appear in the order RPS, accuracy, Brier, pseudo-$R^2$, ACP, whatever the order given in `metric`. The `digits` argument of the `print` method sets the number of decimals (default 3); since `compare_foot()` stores the metrics rounded to four decimals, more digits do not add precision. The unformatted values are in the `metrics` element, a data frame.
+
+How to read the results:
+
+- the **accuracy** values of 0.490 and 0.505 correspond to 93 and 96 matches out of 190 whose most probable outcome was the observed one;
+- the **Brier scores** (0.618 and 0.617) are lower, and the **pseudo-$R^2$** (0.356 and 0.357) and **ACP** (0.409 and 0.411) are higher, than those of the uniform forecast (0.667 and 0.333), so both models carry information about the outcomes. Football results nevertheless remain hard to predict, and on average the observed outcome received a probability of about 0.41;
+- the two models have the same **RPS** (0.206) at three decimals, and the common-variance model is marginally better on the other four metrics.
+
+The differences are in the third decimal and amount to three correctly predicted matches over a half-season: the two specifications are practically equivalent. `compare_foot()` returns point values only, without standard errors, so small differences on a test set of this size should not be over-interpreted.
+
+### Other ways of calling the function
+
+The confusion matrices, requested with `conf_matrix = TRUE`, cross-tabulate the most probable outcome of each match (rows, `Predicted`) with the observed outcome (columns, `Actual`), and are printed after the metrics, one per model. The `source` list can also contain matrices of probabilities, for instance obtained from betting odds or from a model fitted outside `footBayes`; these are compared with the fitted models on the same test set:
+
+```r
+# a subset of the metrics, with the confusion matrices
+compare_foot(
+  source = list(egidi = fit_dyn, owen = fit_dyn_owen),
+  test_data = italy_2021_test,
+  metric = c("RPS", "brier"),
+  conf_matrix = TRUE
+)
+
+# a fitted model against a 190 x 3 matrix of probabilities `prob_matrix`
+# (columns: home win, draw, away win; rows in the order of italy_2021_test)
+compare_foot(
+  source = list(egidi = fit_dyn, external = prob_matrix),
+  test_data = italy_2021_test
+)
+```
+
+The `source` list accepts any number of elements, e.g. the other dynamic specifications of [Dynamic models](dynamic-models.qmd), or a model with the Bradley-Terry-Davidson ranking as a covariate.
+
+### Requirements on `source` and `test_data`
+
+- **Matching by position.** The predictions are matched with the rows of `test_data` by position only: `compare_foot()` checks that the number of predicted matches equals `nrow(test_data)`, but it does not use the team names to align them. `test_data` must therefore contain the out-of-sample matches in the order used for the fit, i.e. the last `predict` rows of the data, like `italy_2021_test` above. A model whose number of predicted matches differs from `nrow(test_data)` is skipped with a warning.
+- **Fitted models.** The models can be `stanFoot` objects returned by `stan_foot()`, or `CmdStanFit` and `stanfit` objects, and must contain out-of-sample predictions: a model fitted without `predict` has no `y_prev` and is skipped with a warning. The output of `mle_foot()` is not accepted.
+- **Probability matrices.** Each matrix must have one row per row of `test_data` and exactly three columns, in the order home win, draw, away win. Rows containing missing values are removed from the evaluation, and rows that do not sum to one are normalized; both cases produce a warning.
+- If no element of `source` is valid, the function stops with an error.
+
+## Information criteria with `loo`
+
+### Expected log predictive density, LOOIC and WAIC
+
+The predictive accuracy of a Bayesian model on new data can be measured by the **expected log pointwise predictive density** (elpd). Its leave-one-out cross-validation estimate is
+
+$$\text{elpd}_{\text{loo}} = \sum_{i=1}^N \log p(y_i \mid y_{-i}), \qquad p(y_i \mid y_{-i}) = \int p(y_i \mid \boldsymbol{\theta}) \, \pi(\boldsymbol{\theta} \mid y_{-i}) \, d\boldsymbol{\theta},$$
+
+where $y_{-i}$ denotes the data without the $i$-th observation: each observation is predicted by the model fitted to all the others. The `loo` package computes it from a single fit by applying Pareto smoothed importance sampling (PSIS) to the posterior draws of the pointwise log-likelihood $\log p(y_i \mid \boldsymbol{\theta}^{(s)})$ [@vehtari2016practical]. The **LOOIC** is the same quantity on the deviance scale, $\text{LOOIC} = -2 \, \text{elpd}_{\text{loo}}$. The **WAIC** is an alternative approximation,
+
+$$\text{WAIC} = -2 \Big( \sum_{i=1}^N \log \Big( \frac{1}{S} \sum_{s=1}^S p(y_i \mid \boldsymbol{\theta}^{(s)}) \Big) - \sum_{i=1}^N \text{Var}_s \big( \log p(y_i \mid \boldsymbol{\theta}^{(s)}) \big) \Big),$$
+
+which @vehtari2016practical found to be less robust than PSIS-LOO in finite samples with weak priors or influential observations. A higher elpd, i.e. a lower LOOIC or WAIC, denotes a better estimated predictive accuracy.
+
+All the Stan models of `footBayes` store the pointwise log-likelihood in the generated quantity `log_lik`, with one element per in-sample match. For the models of the goal counts, `log_lik[n]` is the log-probability of the observed score of match $n$; for the Skellam and Student-$t$ models it refers to the observed goal difference, and for the Bradley-Terry-Davidson models to the observed outcome. For a model fitted with MCMC (the default `method` of `stan_foot()`), the `fit` element of the `stanFoot` object is a `cmdstanr` fit. Its `$loo()` method reads `log_lik` by default and returns a `loo` object, whose printout reports `elpd_loo`, `p_loo` (an estimate of the effective number of parameters) and `looic`, with their standard errors, and the Pareto $k$ diagnostics of the importance sampling.
+
+### Comparing the static models
+
+We compare the four static models fitted to the 2000/2001 season: the bivariate Poisson model with the default priors and with the Student-$t$ + Laplace priors of [Static models](static-models.qmd), the Dixon-Coles model and the negative binomial model. All of them describe the scores of the same 306 matches:
+
+``` r
+loo_list <- list(
+  biv_pois = fit_bp$fit$loo(),
+  biv_pois_t_priors = fit_bp_t$fit$loo(),
+  dixon_coles = fit_dc$fit$loo(),
+  neg_bin = fit_nb$fit$loo()
+)
+
+loo_compare(loo_list)
+#>              model elpd_diff se_diff p_worse       diag_diff diag_elpd
+#>           biv_pois       0.0     0.0      NA                          
+#>  biv_pois_t_priors      -0.8     0.4    0.98 |elpd_diff| < 4          
+#>        dixon_coles      -3.6     3.7    0.83 |elpd_diff| < 4          
+#>            neg_bin     -10.9     4.1    1.00
+```
+
+`loo_compare()` sorts the models by $\text{elpd}_{\text{loo}}$, from the best to the worst, and reports the names of the list in the `model` column:
+
+- `elpd_diff` is the difference between the $\text{elpd}_{\text{loo}}$ of each model and that of the best model, which is in the first row with a difference of 0; all the other differences are therefore negative;
+- `se_diff` is the standard error of this difference, computed from the match-by-match differences of the two models. It is smaller than the standard errors of the individual $\text{elpd}_{\text{loo}}$ values, since some matches are easy or hard to predict for all the models;
+- `p_worse` is the probability that the model has a worse predictive performance than the best one, computed with a normal approximation from `elpd_diff` and `se_diff` (`NA` for the best model);
+- `diag_diff` flags the comparisons in which this normal approximation is not well calibrated, namely small data (`N < 100`) or very similar models (`|elpd_diff| < 4`); in these cases `p_worse` is likely to be too large;
+- `diag_elpd` reports the number of high Pareto $k$ values of the PSIS approximation of each model, if any; it is empty here.
+
+A difference is relevant when it is large both in absolute terms and with respect to its standard error. The documentation of `loo` (see `?loo::loo-glossary`) treats models with `|elpd_diff| < 4` as having very similar predictive performance; for larger differences, `elpd_diff` should be compared with `se_diff`.
+
+The bivariate Poisson model with the default priors has the highest elpd. Changing the priors costs only 0.8 units of elpd. Although this is twice its standard error and `p_worse` is 0.98, the difference is negligible in absolute terms; it is flagged by `diag_diff`, so `p_worse` is likely too large. The prior specification therefore has practically no effect on the predictive accuracy. The difference with the Dixon-Coles model (−3.6) is also below 4, and smaller than its standard error (3.7). The negative binomial model is the only one that is clearly worse: its difference of −10.9 is larger than 4 and about 2.7 times its standard error. The overdispersion it allows does not improve the predictions of the left-out matches, in agreement with the mild overdispersion found in [Static models](static-models.qmd) and with the AIC of the maximum likelihood fits, which ranks these three models in the same order.
+
+Other ways of computing and comparing the criteria:
+
+```r
+# WAIC, from the matrix of the pointwise log-likelihood (draws x matches)
+waic(fit_bp$fit$draws("log_lik", format = "matrix"))
+
+# the two dynamic models compared above with compare_foot
+loo_compare(list(egidi = fit_dyn$fit$loo(), owen = fit_dyn_owen$fit$loo()))
+```
+
+### Caveats
+
+- **Same matches.** The elpd is a sum over the in-sample matches, so the models must be fitted to the same data. `loo_compare()` stops with an error if the models have a different number of observations, as is the case for two models fitted to the same data with different values of `predict`.
+- **Same observed quantity.** Models for the goal counts (double and bivariate Poisson, Dixon-Coles, negative binomial, diagonal-inflated bivariate Poisson) evaluate the probability of the score, models for the goal difference (Skellam, zero-inflated Skellam, Student-$t$) that of the goal difference, and the Bradley-Terry-Davidson models that of the outcome. Their elpd values are not comparable, even on the same matches, and `loo_compare()` cannot detect this, since the number of observations is the same. To compare models of different types, use `compare_foot()` on the outcome probabilities.
+- **Reliability of the approximation.** If `loo()` warns about high Pareto $k$ values, the PSIS estimate is not reliable for some matches; see the `loo` documentation for the diagnostics and the possible remedies.
+- **Leave-one-out is not forecasting.** For dynamic models, the prediction of a left-out match still uses the matches played after it. The elpd therefore measures how well the model describes the observed seasons, whereas the hold-out comparison of `compare_foot()` evaluates genuine forecasts of future matches. The two tools are complementary.

@@ -1,0 +1,252 @@
+---
+title: "Get started with footBayes"
+---
+
+Modeling football outcomes has become extremely popular in recent years, and several statistical models have been proposed to describe the number of goals scored by two competing teams. The `footBayes` package collects the best-known **goal-based models** in a single, coherent workflow. Models are fitted either by maximum likelihood or in a Bayesian framework through the Stan platform [@stan] via the `CmdStanR` interface [@cmdstanr_2024], and the same set of functions can then be used to **interpret** the estimates, **check** the models, **predict** future matches and **compare** competing models.
+
+This article is the entry point of the documentation. It describes the overall workflow and the models available, explains how to install the package and its Stan back end, and shows how to prepare the data in the format required by the fitting functions. Finally, it builds the two datasets used in all the other articles.
+
+## The workflow
+
+A typical analysis with `footBayes` goes through the following steps. Each step relies on a small set of functions and is covered by a dedicated article:
+
+| Step | Functions | What it does | Article |
+|:--|:--|:--|:--|
+| 1. Prepare the data | `data()`, `dplyr` verbs | Builds a data frame with the five columns required by the fitting functions | [Data](#data), below |
+| 2. Fit | [`mle_foot()`](../reference/mle_foot.qmd), [`stan_foot()`](../reference/stan_foot.qmd), [`btd_foot()`](../reference/btd_foot.qmd) | Fits a goal-based model by maximum likelihood (static abilities) or in a Bayesian framework (static or dynamic abilities, user-defined priors); fits the Bradley-Terry-Davidson model | [Static models](static-models.qmd), [Dynamic models](dynamic-models.qmd), [Bradley-Terry-Davidson](bradley-terry-davidson.qmd) |
+| 3. Inspect | `print()`, [`foot_abilities()`](../reference/foot_abilities.qmd), [`plot_btdPosterior()`](../reference/plot_btdPosterior.qmd), [`plot_logStrength()`](../reference/plot_logStrength.qmd) | Posterior summaries of the parameters; attack and defence abilities of the teams (over time, for the dynamic models); historical log-strengths | [Static models](static-models.qmd), [Dynamic models](dynamic-models.qmd), [Bradley-Terry-Davidson](bradley-terry-davidson.qmd) |
+| 4. Check | [`pp_foot()`](../reference/pp_foot.qmd) | Graphical posterior predictive checks on the goal differences | [Model checking](model-checking.qmd) |
+| 5. Predict | [`foot_prob()`](../reference/foot_prob.qmd), [`foot_round_robin()`](../reference/foot_round_robin.qmd), [`foot_rank()`](../reference/foot_rank.qmd) | Outcome and score probabilities of out-of-sample matches, home win probabilities in a round-robin grid, predicted final league table | [Predictions](predictions.qmd) |
+| 6. Compare | [`compare_foot()`](../reference/compare_foot.qmd), `loo` package | Predictive metrics on a test set (accuracy, Brier score, RPS, pseudo-$R^2$, ACP); information criteria (LOOIC, WAIC) | [Model comparison](model-comparison.qmd) |
+
+Two remarks on how the steps are connected:
+
+- predictions are requested **when the model is fitted**: the `predict` argument of `stan_foot()` and `mle_foot()` leaves the last `predict` rows of the data out-of-sample, and the functions of step 5 work on these matches (see [Predictions](predictions.qmd));
+- by default, the Bayesian estimates are obtained with Hamiltonian Monte Carlo, but `stan_foot()` also offers variational inference (ADVI or Pathfinder) and the Laplace approximation through its `method` argument (see [Goal-based models in a nutshell](goal-based-models.qmd)).
+
+The theory behind the models is summarized in [Goal-based models in a nutshell](goal-based-models.qmd).
+
+## The models
+
+The table below summarizes the models available in the package, the value of the `model` argument that selects each of them, and their estimation routes: maximum likelihood (`mle_foot`, static models only) and Bayesian estimation with `stan_foot` for static and dynamic team abilities.
+
+| Model | `model` | `mle_foot` | `stan_foot` (static) | `stan_foot` (dynamic) |
+|:--|:--|:--:|:--:|:--:|
+| Double Poisson [@maher1982modelling; @baio2010bayesian] | `"double_pois"` | yes | yes | yes |
+| Bivariate Poisson [@karlis2003analysis] | `"biv_pois"` | yes | yes | yes |
+| Dixon-Coles [@dixon1997modelling] | `"dixon_coles"` | yes | yes | yes |
+| Negative binomial [@reep_1971] | `"neg_bin"` | yes | yes | yes |
+| Skellam [@karlis2009bayesian] | `"skellam"` | yes | yes | yes |
+| Student-$t$ [@gelman2014stan] | `"student_t"` | yes | yes | yes |
+| Diagonal-inflated bivariate Poisson [@karlis2003analysis] | `"diag_infl_biv_pois"` | - | yes | yes |
+| Zero-inflated Skellam [@karlis2009bayesian] | `"zero_infl_skellam"` | - | yes | yes |
+
+In the dynamic case, the attack and defence abilities are allowed to evolve over weeks or seasons. The package offers **four alternative specifications of the evolution variance**: the separate attack/defence variances of @egidi2018combining, the common variance of @owen2011dynamic, the variance inflation after the summer break of @koopman2015dynamic, and the **weighted dynamic models** with commensurate priors of @macridemartino2026weighted.
+
+The predictive performance of goal-based models may be further improved by incorporating historical information about team strengths. For this purpose, the package also implements a Bayesian **Bradley-Terry-Davidson** (BTD) model [@davidson1970; @demartino2024alternative], whose posterior log-strengths can be used as an additional covariate in the goal-based models.
+
+The package is developed at [https://github.com/LeoEgidi/footBayes](https://github.com/LeoEgidi/footBayes).
+
+## Installation and setup
+
+### Prerequisites: `cmdstanr` and `CmdStan`
+
+The Bayesian functions of the package (`stan_foot()` and `btd_foot()`) run the Stan models through two components:
+
+- the R package [`cmdstanr`](https://mc-stan.org/cmdstanr/), which is not available on CRAN (`footBayes` reminds the user of this with a message when it is loaded);
+- the command-line interface to Stan, [`CmdStan`](https://mc-stan.org/users/interfaces/cmdstan.html), which compiles and runs the models.
+
+Using the `footBayes` package therefore requires installing both. You may follow the instructions in [Getting started with CmdStanR](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) to install them. `cmdstanr` can be installed from the Stan R-universe repository, which is also declared in the `DESCRIPTION` file of `footBayes`:
+
+```r
+install.packages("cmdstanr",
+  repos = c("https://stan-dev.r-universe.dev", getOption("repos"))
+)
+```
+
+Install `cmdstanr` and `CmdStan` **before** `footBayes`, since the Stan models of the package are compiled when the package itself is installed (see below). The maximum likelihood function `mle_foot()` does not use Stan: its estimates are obtained by numerical optimization in R.
+
+### Installing `footBayes`
+
+You can install the released version of `footBayes` from CRAN with:
+
+``` r
+install.packages("footBayes", type = "source")
+```
+
+Setting `type = "source"` is important: otherwise, the Stan models of the package may not be compiled during installation. `footBayes` compiles all its Stan models **once, at installation time**, through the `instantiate` package; this step is part of building the package from source. When a model is fitted, `stan_foot()` and `btd_foot()` retrieve the pre-compiled model, so that no compilation is needed at each call.
+
+Alternatively, you can install the development version from GitHub with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("LeoEgidi/footBayes")
+```
+
+### Checking that CmdStan is available
+
+You can check whether CmdStan is available with the same function used in the examples of the help pages of the package:
+
+```r
+instantiate::stan_cmdstan_exists()
+```
+
+If it returns `FALSE`, `CmdStan` is not installed or cannot be found, and the Bayesian functions cannot be used; `mle_foot()` still works.
+
+### Packages and settings used in the articles
+
+We load the package together with a few others used throughout the articles:
+
+``` r
+library(footBayes)
+library(dplyr)
+library(ggplot2)
+library(bayesplot)
+library(loo)
+```
+
+`dplyr` is used to prepare the data, `ggplot2` to customize the plots (the plots produced by `footBayes` are `ggplot` objects), `bayesplot` to depict posterior distributions and further predictive checks from the draws, and `loo` to compute information criteria.
+
+Throughout the articles the Bayesian models are fitted with HMC using `n_chains` Markov chains of `n_iter` sampling iterations each (after as many warmup iterations); a fixed seed makes the results reproducible.
+
+``` r
+n_iter <- 1000
+n_chains <- 4
+seed <- 2026
+```
+
+Four chains of 1000 sampling iterations, with as many warmup iterations, are also the defaults of `stan_foot()`, whereas the seed is random unless it is specified. In the articles the chains are run in parallel through the `parallel_chains` argument. Each article with examples starts with a collapsed **Setup** block that repeats the code needed to reproduce it, beginning with the code of this section.
+
+## Data
+
+### The `italy` and `england` datasets
+
+The package ships with two datasets of historical match results:
+
+| Dataset | Content | Size | Columns |
+|:--|:--|:--|:--|
+| [`italy`](../reference/italy.qmd) | All the matches of the Italian top tier (Serie A) up to the 2021/2022 season | 27684 matches, 8 columns | `Date`, `Season`, `home`, `visitor`, `FT`, `hgoal`, `vgoal`, `tier` |
+| [`england`](../reference/england.qmd) | All the matches of the top four tiers of English football, from 1888/1889 to 2021/2022 | 203956 matches, 12 columns | the columns of `italy`, plus `division`, `totgoal`, `goaldif`, `result` |
+
+In both datasets each row is a match: `Season` is the **starting year** of the season (e.g. 2000 for 2000/2001), `home` and `visitor` are the two teams, `hgoal` and `vgoal` their goals, `FT` the full-time result as a string (e.g. `"2-1"`) and `tier` the level of the football pyramid (always 1 for `italy`). These datasets are not in the format required by the fitting functions, and need to be reshaped as described below.
+
+### Data format required by the fitting functions
+
+The fitting functions `stan_foot()` and `mle_foot()`, as well as the functions that take the same `data` to post-process their output, require a data frame with the following columns (in this order):
+
+| Column | Type | Content |
+|:--|:--|:--|
+| `periods` | integer $\geq 1$ | time period of each match (see below) |
+| `home_team` | character | name of the home team |
+| `away_team` | character | name of the away team |
+| `home_goals` | integer $\geq 0$ | goals scored by the home team |
+| `away_goals` | integer $\geq 0$ | goals scored by the away team |
+
+A few practical rules follow from the way the package uses these columns:
+
+- the columns are looked up by name, and an error is raised if one of them is missing or if the goals are not numeric. The order matters as well: if the data frame has more than five columns, a warning is issued, and some of the post-processing functions (`pp_foot()`, `foot_rank()`, `foot_round_robin()`) read the goals from the fourth and fifth columns;
+- the rows must be sorted in **chronological order**: with `predict > 0` the last `predict` rows are left out-of-sample, and the dynamic models derive the time of each match from the order of the rows;
+- the list of teams is taken from the `home_team` column, so every team must play at least one home match in the data.
+
+The meaning of `periods` depends on the type of team abilities, selected through the `dynamic_type` argument of `stan_foot()`:
+
+| Abilities | `dynamic_type` | How `periods` is used |
+|:--|:--|:--|
+| Static | missing (and always in `mle_foot()`) | Not used by the fit: the abilities are the same for all the matches. Any value can be used, e.g. the season. |
+| Weekly | `"weekly"` | `periods` must take a **single value** (one season), otherwise an error is raised. The match days are not read from `periods`: the rows, in their order, are split into consecutive blocks of $T/2$ matches, where $T$ is the number of teams, and each block is a match day. Hence the number of training matches must be a multiple of $T/2$. |
+| Seasonal | `"seasonal"` | Each distinct value of `periods` is a time period, and the periods are numbered in order of appearance, so the values do not need to be consecutive integers but the rows must be grouped by period in chronological order. With a single distinct value a warning is issued and no dynamics is used. Out-of-sample matches in a period after the last training period use the abilities of the last training period. |
+
+The `btd_foot()` function uses a different format, with the columns `periods`, `home_team`, `away_team` and `match_outcome` (1 for a home win, 2 for a draw, 3 for an away win); it is described in [Bradley-Terry-Davidson](bradley-terry-davidson.qmd).
+
+### The working datasets
+
+All the articles use two working datasets extracted from `italy`.
+
+#### Serie A 2000/2001: `italy_2000`
+
+The first one is the **Serie A 2000/2001** season ($T = 18$ teams, 306 matches), which we use for the static models and for the weekly dynamics within a single season. It is built in four steps:
+
+1. load `italy` and convert it to a plain data frame;
+2. keep the 2000/2001 season (`Season == "2000"`, the starting year);
+3. sort the matches by date (`arrange(Date)`), so that the rows are in chronological order. For this season, the 306 sorted matches form 34 consecutive blocks of $T/2 = 9$ matches, each of which is a complete match day, as required by the weekly dynamic models;
+4. select and rename the columns in the required order. Since the data cover a single season, `periods` is simply the season, i.e. the constant 2000: it is not used by the static models, and it satisfies the single-value requirement of the weekly models.
+
+``` r
+data("italy")
+italy <- as.data.frame(italy)
+
+italy_2000 <- italy %>%
+  filter(Season == "2000") %>%
+  arrange(Date) %>%
+  select(periods = Season, home_team = home, away_team = visitor,
+         home_goals = hgoal, away_goals = vgoal)
+
+head(italy_2000)
+#>   periods      home_team      away_team home_goals away_goals
+#> 1    2000 Udinese Calcio Brescia Calcio          4          2
+#> 2    2000        AS Roma     Bologna FC          2          0
+#> 3    2000     AC Perugia       US Lecce          1          1
+#> 4    2000 Reggina Calcio          Inter          2          1
+#> 5    2000     SSC Napoli       Juventus          1          2
+#> 6    2000       AC Milan Vicenza Calcio          2          0
+```
+
+`italy_2000` is used in [Static models](static-models.qmd), in the weekly part of [Dynamic models](dynamic-models.qmd), in [Model checking](model-checking.qmd), in [Predictions](predictions.qmd) and for the information criteria in [Model comparison](model-comparison.qmd).
+
+#### Serie A 2018/2019 - 2021/2022: `italy_2018_2021`
+
+The second one covers the **four seasons 2018/2019 - 2021/2022** (28 distinct teams, 1520 matches), which we use for the seasonal dynamics and for the model comparison. Each season has 20 teams and 380 matches, and it is split into **two half-seasons**, so that `periods` ranges from 1 to 8.
+
+**Why half-seasons.** With one period per season, the abilities of the seasonal models could change only from one season to the next. Splitting each season into two halves allows them to change in the middle of the season as well. This is the coding used in @macridemartino2026weighted, since the winter transfer window and the summer break are the moments in which team compositions change the most. It is also the default coding of the variance inflation model of @koopman2015dynamic (`dynamic_par = list(kl_variance = TRUE)`): to locate the summer breaks, the package assumes that each season is made of `periods_per_season` consecutive periods, at least 2 and by default 2, i.e. two half-seasons. Finally, the last half-season is a natural out-of-sample set: in [Dynamic models](dynamic-models.qmd) the models are fitted to the first seven half-seasons and the last 190 matches are left out-of-sample; these matches are then used as the test set in [Model comparison](model-comparison.qmd).
+
+The dataset is built in five steps:
+
+1. keep the four seasons 2018 to 2021;
+2. sort the matches by season and, within each season, by date;
+3. within each season (`group_by(Season)`), assign the first half of the matches in chronological order, i.e. the first `n() / 2` = 190, to the first half-season (`half = 1`) and the remaining 190 to the second one (`half = 2`);
+4. compute `periods = 2 * (Season - 2018) + half`, which numbers the half-seasons consecutively across the four seasons, as in the table below;
+5. select and rename the columns in the required order.
+
+| Season | First half | Second half |
+|:--|:--:|:--:|
+| 2018/2019 | 1 | 2 |
+| 2019/2020 | 3 | 4 |
+| 2020/2021 | 5 | 6 |
+| 2021/2022 | 7 | 8 |
+
+With this coding, a summer break precedes periods 3, 5 and 7.
+
+``` r
+italy_2018_2021 <- italy %>%
+  filter(Season %in% c("2018", "2019", "2020", "2021")) %>%
+  arrange(Season, Date) %>%
+  group_by(Season) %>%
+  mutate(half = if_else(row_number() <= n() / 2, 1, 2)) %>%
+  ungroup() %>%
+  mutate(periods = 2 * (as.numeric(Season) - 2018) + half) %>%
+  select(periods, home_team = home, away_team = visitor,
+         home_goals = hgoal, away_goals = vgoal)
+
+table(italy_2018_2021$periods)
+#> 
+#>   1   2   3   4   5   6   7   8 
+#> 190 190 190 190 190 190 190 190
+```
+
+As expected, each of the eight half-seasons contains 190 matches. Note that the split is based on the number of matches, not on the match days: in some seasons a few teams play 18 or 20 of the first 190 matches instead of 19.
+
+`italy_2018_2021` is used in the seasonal part of [Dynamic models](dynamic-models.qmd), in [Bradley-Terry-Davidson](bradley-terry-davidson.qmd) and in [Model comparison](model-comparison.qmd).
+
+#### Other leagues and seasons
+
+The same steps apply to any other season or league. For instance, the 2021/2022 season of the English top tier is obtained from `england` by filtering on `Season` and `tier`:
+
+```r
+data("england")
+
+england_2021 <- england %>%
+  filter(Season == 2021, tier == 1) %>%
+  arrange(Date) %>%
+  select(periods = Season, home_team = home, away_team = visitor,
+         home_goals = hgoal, away_goals = vgoal)
+```

@@ -1,0 +1,217 @@
+---
+title: "Goal-based models in a nutshell"
+---
+
+This article presents the statistical models behind `stan_foot()` and `mle_foot()`: how the team abilities enter the scoring rates, which distributions can be chosen for the goals or for the goal difference, which prior distributions are used, how the abilities can change over time and which inference algorithms are available. For each model it describes the feature of football data the model is designed for, and the names under which its parameters appear in the output of the package. The models are fitted in practice in [Static models](static-models.qmd) and [Dynamic models](dynamic-models.qmd), and the fitted models are checked, used for prediction and compared in [Model checking](model-checking.qmd), [Predictions](predictions.qmd) and [Model comparison](model-comparison.qmd).
+
+## The models at a glance
+
+The model is selected through the `model` argument of `stan_foot()` (and of `mle_foot()`). All the models except the Student-$t$ share the parameters `home`, `att`, `def`, `sigma_att`, `sigma_def` and `gamma`, described in the next section; the table lists the parameters that each model adds.
+
+| Model | `model` | Response | Additional parameters | Designed for | `mle_foot()` |
+|:--|:--|:--|:--|:--|:--|
+| Double Poisson | `"double_pois"` | goals $(X_n, Y_n)$ | none | baseline: independent goal counts | yes |
+| Bivariate Poisson | `"biv_pois"` | goals | `rho` | positive correlation between the goals of the two teams | yes |
+| Dixon-Coles | `"dixon_coles"` | goals | `rho` | dependence in the low scores 0-0, 1-0, 0-1, 1-1 | yes |
+| Negative binomial | `"neg_bin"` | goals | `phi1`, `phi2` | overdispersion: goals more variable than Poisson | yes |
+| Diagonal-inflated bivariate Poisson | `"diag_infl_biv_pois"` | goals | `rho`, `prob_of_draws`, `draw_dist` | excess of draws | no |
+| Skellam | `"skellam"` | goal difference $Z_n$ | none | goal difference instead of the score | yes |
+| Zero-inflated Skellam | `"zero_infl_skellam"` | goal difference | `prob_of_draws` | goal difference with an excess of draws | no |
+| Student-$t$ | `"student_t"` | goal difference, as continuous | `beta`, `alpha`, `sigma_a`, `sigma_alpha`, `sigma_y` | goal difference driven by a single ability, possibly a ranking | yes |
+
+Note that `rho` has a different meaning in the bivariate Poisson and in the Dixon-Coles models, and that the Student-$t$ model has a single `ability` per team instead of `att` and `def`.
+
+## Scoring rates and team abilities
+
+Let $(x_n, y_n)$ denote the number of goals scored by the home and the away team in the $n$-th match, $n = 1, \ldots, N$, and let $h_n, a_n \in \{1, \ldots, T\}$ denote the home and the away team, respectively. All the goal-based models in the package, except the Student-$t$ model for the goal difference, share the same log-linear structure for the **scoring rates** $\lambda_{1n}, \lambda_{2n}$ of the home and the away team:
+
+\begin{align}
+\log(\lambda_{1n}) & = \text{home} + \text{att}_{h_n} + \text{def}_{a_n} + \frac{\gamma}{2} \, \omega_n\\
+\log(\lambda_{2n}) & = \text{att}_{a_n} + \text{def}_{h_n} - \frac{\gamma}{2} \, \omega_n,
+\end{align}
+
+where $\text{home}$ is the **home effect**, i.e. the well-known advantage of the team hosting the game; $\text{att}_t$ and $\text{def}_t$ are the **attack** and the **defence** abilities of team $t$, $t = 1, \ldots, T$; $\omega_n = \text{rank\_points}_{h_n} - \text{rank\_points}_{a_n}$ is the difference between the **ranking points** of the two teams (an optional covariate, see [Bradley-Terry-Davidson](bradley-terry-davidson.qmd)), and $\gamma$ is the corresponding coefficient. The higher the attack and the lower the defence ability, the stronger the team. To achieve identifiability, a **sum-to-zero** constraint is imposed on the attack and defence abilities:
+
+\begin{equation}
+\sum_{t=1}^{T} \text{att}_{t} = 0, \qquad \sum_{t=1}^{T} \text{def}_{t} = 0.
+\end{equation}
+
+Since the abilities are on the log scale and sum to zero, $\text{att}_t = 0$ is the attack of an average team, and $\exp\{\text{att}_t\}$ is the factor by which team $t$ multiplies the scoring rate of an average attack against the same opponent. Similarly, a team with $\text{def}_t < 0$ concedes fewer goals than an average defence. For two teams with the same abilities (and no ranking), $\lambda_{1n} / \lambda_{2n} = \exp\{\text{home}\}$.
+
+The symbols correspond to the following parameters in the output of `stan_foot()`:
+
+- $\text{home}$ is `home`. It is included unless `home_effect = FALSE`, in which case the home effect is removed from the scoring rates;
+- $\text{att}_t$ and $\text{def}_t$ are `att` and `def`, printed with the team names, e.g. `att[AS Roma]`. The prior is assigned to the unconstrained parameters `att_raw` and `def_raw`, and the sum-to-zero constraint is obtained by subtracting their mean, $\text{att}_t = \text{att\_raw}_t - \frac{1}{T}\sum_{s=1}^T \text{att\_raw}_s$ (and similarly for the defence);
+- $\gamma$ is `gamma`, and $\omega_n$ is computed from the `ranking` argument, either a `btdFoot` object or a data frame with the columns `periods`, `team` and `rank_points`, optionally normalized through `norm_method`. When `ranking` is not supplied, $\omega_n = 0$ for every match and `gamma` has no effect on the scoring rates.
+
+## Distributions for the goals
+
+**Double Poisson.** The simplest assumption is that the two goal counts are conditionally independent Poisson random variables [@maher1982modelling; @baio2010bayesian]:
+
+\begin{equation}
+X_n \sim \mathsf{Poisson}(\lambda_{1n}), \qquad Y_n \sim \mathsf{Poisson}(\lambda_{2n}).
+\end{equation}
+
+Given the scoring rates, the goals of one team carry no information about the goals of the opponent. The model has no parameters other than those of the scoring rates. It is the natural benchmark for the models below, which reduce to it for particular values of their additional parameters ($\lambda_3 = 0$ for the bivariate Poisson, $\rho = 0$ for Dixon-Coles, $\phi_1, \phi_2 \to \infty$ for the negative binomial).
+
+**Bivariate Poisson.** In team sports it is reasonable to assume that the two goal counts are **correlated**, since the two teams interact during the game: a team leading 1-0 in the last ten minutes may relax, whereas the opponent takes more risks in an effort to draw. @karlis2003analysis capture a positive correlation through the bivariate Poisson distribution: if $X_r$, $r = 1, 2, 3$, are independent Poisson random variables with rates $\lambda_r$, then $X = X_1 + X_3$ and $Y = X_2 + X_3$ jointly follow a bivariate Poisson distribution $\text{BP}(\lambda_1, \lambda_2, \lambda_3)$ with joint probability function
+
+\begin{equation}
+\text{Pr}(X = x, Y = y) = \exp\{-(\lambda_1 + \lambda_2 + \lambda_3)\} \frac{\lambda_1^x}{x!} \frac{\lambda_2^y}{y!} \sum_{k=0}^{\min(x, y)} \binom{x}{k} \binom{y}{k} k! \left(\frac{\lambda_3}{\lambda_1 \lambda_2}\right)^k,
+\end{equation}
+
+marginal means $\text{E}(X) = \lambda_1 + \lambda_3$, $\text{E}(Y) = \lambda_2 + \lambda_3$, and $\text{cov}(X, Y) = \lambda_3$. In the package the covariance is constant across matches, $\lambda_{3n} = \exp\{\rho\}$, with $\rho$ assigned a $\mathrm{N}(0, 1)$ prior; when $\lambda_3 = 0$ the model reduces to the double Poisson.
+
+The parameter `rho` in the output of `stan_foot()` is therefore the logarithm of the covariance: for instance, the posterior mean $\rho \approx -1.82$ obtained in [Static models](static-models.qmd#bayesian-estimation-with-stan_foot) corresponds to $\lambda_3 = \exp\{-1.82\} \approx 0.16$. `mle_foot()` reports $\lambda_3$ itself, in the `corr` element. Since the marginal means include $\lambda_3$, the home effect and the abilities of this model are not directly comparable with those of the other models.
+
+**Dixon-Coles.** @dixon1997modelling keep the two independent Poisson rates but correct the joint probability of the four low-scoring results, which the double Poisson model typically under- or over-estimates:
+
+\begin{equation}
+\text{Pr}(X_n = x, Y_n = y) = \tau_{\lambda_{1n}, \lambda_{2n}}(x, y) \, \mathsf{Poisson}(x \mid \lambda_{1n}) \, \mathsf{Poisson}(y \mid \lambda_{2n}),
+\end{equation}
+
+where
+
+\begin{equation}
+\tau_{\lambda_1, \lambda_2}(x, y) = \begin{cases} 1 - \lambda_1 \lambda_2 \rho & \text{if } (x, y) = (0, 0) \\ 1 + \lambda_1 \rho & \text{if } (x, y) = (0, 1) \\ 1 + \lambda_2 \rho & \text{if } (x, y) = (1, 0) \\ 1 - \rho & \text{if } (x, y) = (1, 1) \\ 1 & \text{otherwise}, \end{cases}
+\end{equation}
+
+and $\rho$ is the low-score dependence parameter, constrained so that the adjustment factor is positive. In the Bayesian version, the parameter is assigned a $\mathrm{N}(0, 0.1)$ prior and restricted to the interval $(-0.2, 0.2)$.
+
+With $\rho < 0$ the draws 0-0 and 1-1 become more likely, and the results 1-0 and 0-1 less likely, than under the double Poisson model; $\rho > 0$ has the opposite effect, and $\rho = 0$ gives back the double Poisson model. All the other scores keep their Poisson probabilities. In the output of both `stan_foot()` and `mle_foot()` this parameter is `rho`.
+
+**Negative binomial.** Goal counts are often **overdispersed** with respect to the Poisson distribution. The negative binomial model keeps the same scoring rates as means and adds two dispersion parameters, $\phi_1$ for the home and $\phi_2$ for the away goals (NB2 parameterization, $\text{Var}(X_n) = \lambda_{1n} + \lambda_{1n}^2 / \phi_1$), each assigned a half-normal $\mathrm{N}^+(0, 5)$ prior.
+
+The model is appropriate when the goal counts vary more than a Poisson distribution with the same mean allows, for instance when some matches end with many more goals than their scoring rates suggest. As $\phi_1, \phi_2 \to \infty$ the variance tends to the mean and the model reduces to the double Poisson. Large values of `phi1` and `phi2` (in `mle_foot()`, the `overdispersion` element) therefore indicate little or no overdispersion, as found for the Serie A 2000/2001 in [Static models](static-models.qmd).
+
+**Diagonal-inflated bivariate Poisson.** Goal-based models often underestimate the probability of a **draw**, which corresponds to the diagonal of the score probability table. @karlis2003analysis add an inflation component on the diagonal:
+
+\begin{equation}
+\text{Pr}(X = x, Y = y) = \begin{cases} (1-p) \, \text{BP}(\lambda_1, \lambda_2, \lambda_3) & \text{if } x \ne y \\ (1-p) \, \text{BP}(\lambda_1, \lambda_2, \lambda_3) + p \, D(x, \eta) & \text{if } x = y, \end{cases}
+\end{equation}
+
+where $D(x, \eta)$ is a discrete distribution with parameter vector $\eta$ and $p$ is the inflation probability (`prob_of_draws`).
+
+In `stan_foot()`, $D$ is the discrete distribution that @karlis2003analysis suggest for football data: $D(j) = \theta_j$ for the draws $j$-$j$, $j = 0, 1, 2, 3$, with $\sum_{j=0}^{3} \theta_j = 1$; draws with more than three goals per team, very rare in football, are not inflated. The probability of a draw $j$-$j$ is therefore $p \, \theta_j + (1 - p) \, \text{BP}(j, j \mid \lambda_1, \lambda_2, \lambda_3)$ for $j \le 3$, and the overall probability of a draw is $p + (1 - p) \Pr_{\text{BP}}(X = Y)$. The parameters in the output are `rho` (with $\lambda_3 = \exp\{\rho\}$ as in the bivariate Poisson model), `prob_of_draws` ($p$, with a uniform prior on $(0, 1)$) and `draw_dist` ($\theta_0, \ldots, \theta_3$, printed as `draw_dist[1]` to `draw_dist[4]`, with a uniform Dirichlet prior). With a single season of data the draws in excess of the bivariate Poisson ones are few, and `draw_dist` is weakly identified: its posterior may remain close to the uniform prior. This model is available in `stan_foot()` only.
+
+## Distributions for the goal difference
+
+Instead of modelling the two goal counts, one may model the goal difference $Z_n = X_n - Y_n$ directly.
+
+This is a natural choice when the interest is in the result of the match (win, draw or loss, and by how many goals) rather than in the exact score. The price is that the total number of goals is not modelled: a 0-0 and a 3-3 both give $Z_n = 0$. For the same reason, the likelihood of these models is defined on a different response, and it cannot be compared with that of the models for the goal counts (see [Static models](static-models.qmd#maximum-likelihood)).
+
+**Skellam.** If $X_n$ and $Y_n$ are independent Poisson random variables, the difference follows a Poisson-difference or Skellam distribution [@karlis2009bayesian], $Z_n \sim \text{Skellam}(\lambda_{1n}, \lambda_{2n})$, with the same scoring rates as above. The **zero-inflated Skellam** adds an inflation probability $p$ for the zero goal difference, i.e. for the draws:
+
+\begin{equation}
+\text{Pr}(Z_n = z) = p \, I(z = 0) + (1 - p) \, \text{Skellam}(z \mid \lambda_{1n}, \lambda_{2n}).
+\end{equation}
+
+The Skellam model has the same parameters as the double Poisson model (`home`, `att`, `def`, `sigma_att`, `sigma_def`, `gamma`). The zero-inflated version adds `prob_of_draws`, with a uniform prior on $(0, 1)$, and is available in `stan_foot()` only.
+
+**Student-$t$.** Following @gelman2014stan, the goal difference can be modelled with a continuous, heavy-tailed distribution:
+
+\begin{equation}
+Z_n \sim t(\nu, \text{home} + \text{ab}_{h_n} - \text{ab}_{a_n}, \sigma_y), \qquad \text{ab}_t = \beta \, \text{rank\_points}_t + \alpha_t \, \sigma_a,
+\end{equation}
+
+where $\text{ab}_t$ is the overall ability of team $t$ (a single ability replaces attack and defence), $\nu = 7$ degrees of freedom by default and $\alpha_t$ are team-specific random effects.
+
+The model treats the goal difference as a continuous quantity: the expected goal difference is $\text{home} + \text{ab}_{h_n} - \text{ab}_{a_n}$. The heavy tails of the Student-$t$ distribution accommodate the occasional large wins. Since the model relies on a single ability per team, it is a natural choice when a ranking of the teams is available. The symbols correspond to the following parameters in the output of `stan_foot()`:
+
+- $\text{home}$ is `home`, $\text{ab}_t$ is `ability`, $\beta$ is `beta`, $\alpha_t$ is `alpha`, $\sigma_a$ is `sigma_a` and $\sigma_y$ is `sigma_y`;
+- $\text{rank\_points}_t$ comes from the `ranking` argument; without a ranking, $\text{ab}_t = \alpha_t \, \sigma_a$;
+- $\nu$ is not estimated: it is 7 unless a different value is passed to `stan_foot()` as an additional argument, e.g. `nu = 4`;
+- $\alpha_t$ has the prior selected for the abilities, with standard deviation `sigma_alpha` (see below), whereas $\beta \sim \mathrm{N}(0, 2.5)$ and $\sigma_y \sim \mathrm{N}^+(0, 2.5)$.
+
+In `mle_foot()` the degrees of freedom are fixed to 7 and the scale $\sigma_y$ is fixed to the value of the `sigma_y` argument (1 by default). Since the model does not describe the two goal counts, `foot_prob()` returns only the probabilities of the three outcomes (see [Predictions](predictions.qmd)).
+
+## Prior distributions
+
+In the Bayesian framework the team-specific abilities are assumed **exchangeable** and assigned weakly-informative priors,
+
+\begin{align}
+\text{att}_t & \sim \mathrm{N}(\mu_{\text{att}}, \sigma_{\text{att}}) \\
+\text{def}_t & \sim \mathrm{N}(\mu_{\text{def}}, \sigma_{\text{def}}), \qquad t = 1, \ldots, T,
+\end{align}
+
+with **hyperparameters** $\mu_{\text{att}}, \mu_{\text{def}}$ (fixed to 0 by default) and group-level standard deviations $\sigma_{\text{att}}, \sigma_{\text{def}} \sim \mathsf{Cauchy}^+(0, 5)$, where $\mathsf{Cauchy}^+$ denotes the half-Cauchy distribution. The home effect is assigned a $\mathrm{N}(0, 5)$ prior. As shown in [Static models](static-models.qmd#changing-the-default-priors), the `prior_par` argument allows the user to change these priors, choosing among the Gaussian (`normal`), Student-$t$ (`student_t`), Cauchy (`cauchy`) and Laplace (`laplace`) families.
+
+The group-level standard deviations `sigma_att` and `sigma_def` are estimated from the data, and they control how different the teams are allowed to be. A small $\sigma_{\text{att}}$ means that the attack abilities are similar and their estimates are pulled towards the average (*shrinkage*), whereas a large $\sigma_{\text{att}}$ lets each team's attack be estimated mostly from its own matches.
+
+The `prior_par` argument is a list with up to three elements; the elements not supplied keep their default:
+
+| Element | Parameters | Families | Default |
+|:--|:--|:--|:--|
+| `ability` | $\text{att}_t$, $\text{def}_t$ (Student-$t$ model: $\alpha_t$) | `normal()`, `student_t()`, `cauchy()`, `laplace()` | `normal(0, NULL)` |
+| `ability_sd` | `sigma_att`, `sigma_def` (Student-$t$ model: `sigma_a`, `sigma_alpha`; dynamic models: also `sigma_common`, `sigma_att_kl`, `sigma_def_kl`, `sigma_break`) | `normal()`, `student_t()`, `cauchy()`, `laplace()` | `cauchy(0, 5)` |
+| `home` | `home` | `normal()` only | `normal(0, 5)` |
+
+A few remarks on these elements:
+
+- the location of `ability` is the common value of $\mu_{\text{att}}$ and $\mu_{\text{def}}$, whereas its scale must be left as `NULL`, since the scales are the estimated standard deviations $\sigma_{\text{att}}, \sigma_{\text{def}}$ (a numeric scale is ignored, with a warning);
+- the standard deviations are positive, hence the `ability_sd` prior is truncated to positive values (e.g. the default `cauchy(0, 5)` is a half-Cauchy); if its scale is `NULL`, it is set to 1;
+- `cauchy(location, scale)` is a shortcut for `student_t(1, location, scale)`; see the [priors](../reference/priors.qmd) reference page.
+
+The priors of the model-specific parameters are fixed and cannot be changed through `prior_par`:
+
+| Parameter | Models | Prior |
+|:--|:--|:--|
+| `gamma` | all except Student-$t$ | $\mathrm{N}(0, 1)$ |
+| `rho` | bivariate Poisson, diagonal-inflated bivariate Poisson | $\mathrm{N}(0, 1)$ |
+| `rho` | Dixon-Coles | $\mathrm{N}(0, 0.1)$, restricted to $(-0.2, 0.2)$ |
+| `phi1`, `phi2` | negative binomial | $\mathrm{N}^+(0, 5)$ |
+| `prob_of_draws` | diagonal-inflated bivariate Poisson, zero-inflated Skellam | $\mathsf{Uniform}(0, 1)$ |
+| `draw_dist` | diagonal-inflated bivariate Poisson | $\mathsf{Dirichlet}(1, 1, 1, 1)$ |
+| `beta` | Student-$t$ | $\mathrm{N}(0, 2.5)$ |
+| `sigma_y` | Student-$t$ | $\mathrm{N}^+(0, 2.5)$ |
+
+## Static and dynamic abilities
+
+The models above assume **static** abilities: each team performs equally well over the whole period covered by the data. However, teams' performance is *dynamic* and changes across seasons, if not across weeks: rosters change during the summer and winter transfer windows, key players get injured, coaches are dismissed after poor results, and so on. Following @owen2011dynamic and @egidi2018combining, the package allows the attack and defence abilities to evolve over a set of discrete periods $\tau = 1, \ldots, \mathcal{T}$ (weeks within a season, or seasons and half-seasons) through **auto-regressive priors of order 1**:
+
+\begin{align}
+\text{att}_{t, \tau} & \sim \mathrm{N}(\text{att}_{t, \tau-1}, \sigma_{\text{att}}) \\
+\text{def}_{t, \tau} & \sim \mathrm{N}(\text{def}_{t, \tau-1}, \sigma_{\text{def}}), \qquad \tau = 2, \ldots, \mathcal{T},
+\end{align}
+
+whereas for $\tau = 1$ the static priors above are used. The sum-to-zero constraint is imposed in each period. The **evolution standard deviations** $\sigma_{\text{att}}, \sigma_{\text{def}}$ govern how much the abilities are allowed to change from one period to the next. The package offers four alternative ways to specify them, presented in [Dynamic models](dynamic-models.qmd#seasonal-dynamics-and-the-evolution-variance).
+
+The prior centres the ability of each period on the ability of the previous one: a small evolution standard deviation means that the abilities change slowly, and that each period borrows much information from the past. The periods are selected through the `dynamic_type` argument of `stan_foot()`: `"weekly"` for match days within a single season, and `"seasonal"` for the values of the `periods` column of the data. In the output, `att` and `def` are then indexed by period and team. For all the models except the Student-$t$, the home effect is period-specific too, with one `home` parameter per period, each assigned the `home` prior. The four specifications of the evolution variance correspond to the following arguments and parameters:
+
+| Evolution variance | Arguments | Parameters |
+|:--|:--|:--|
+| separate for attack and defence [@egidi2018combining] | default | `sigma_att`, `sigma_def` |
+| common to attack and defence [@owen2011dynamic] | `dynamic_par = list(common_sd = TRUE)` | `sigma_common` |
+| inflated after the summer break [@koopman2015dynamic] | `dynamic_par = list(kl_variance = TRUE)` | `sigma_att_kl`, `sigma_def_kl`, `sigma_break` |
+| team- and period-specific, weighted [@macridemartino2026weighted] | `dynamic_weight = TRUE` | `prob_spike`, `comm_prec_att`, `comm_prec_def`, `comm_sd_att`, `comm_sd_def` |
+
+The last three options are mutually exclusive, and none of them is available for the Student-$t$ model.
+
+## Inference
+
+**Maximum likelihood.** Given the parameter vector $\boldsymbol{\theta}$, the maximum likelihood estimate (MLE) $\hat{\boldsymbol{\theta}} = \text{argmax}_{\theta \in \Theta} L(\boldsymbol{\theta})$ is obtained by numerical optimization. The 95% confidence intervals are computed either with the Wald approximation, $\hat{\boldsymbol{\theta}} \pm 1.96 \, \text{se}(\hat{\boldsymbol{\theta}})$, or from the likelihood of one parameter at a time. The package allows the maximum likelihood approach for **static** models only: MLE becomes computationally expensive and less reliable as the parameter space grows, which happens with dynamic abilities.
+
+In `mle_foot()` the optimizer is chosen through the `method` argument (`"BFGS"` by default, see `stats::optim()`), and the type of interval through the `interval` argument:
+
+- `"Wald"`: the standard errors are obtained from the inverse of the observed information matrix;
+- `"profile"` (default): for each parameter $\theta_j$, the interval contains the values for which $2\{\ell(\hat{\boldsymbol{\theta}}) - \ell(\theta_j, \hat{\boldsymbol{\theta}}_{-j})\} \le \chi^2_{1, 0.95}$, where $\ell$ is the log-likelihood and the other parameters are **held fixed at their MLE** $\hat{\boldsymbol{\theta}}_{-j}$. These conditional intervals are cheaper to compute than full profile-likelihood intervals, which would re-maximize over $\boldsymbol{\theta}_{-j}$, but they are narrower, since they ignore the uncertainty about the other parameters. The Wald intervals, in contrast, account for the correlation among the parameters.
+
+`mle_foot()` fits six of the models, all except the diagonal-inflated bivariate Poisson and the zero-inflated Skellam; see [Static models](static-models.qmd#maximum-likelihood) for an example.
+
+**Bayesian inference.** The Bayesian analysis draws inferential conclusions from the joint posterior distribution
+
+$$\pi(\boldsymbol{\theta} \mid \mathcal{D}) \propto p(\mathcal{D} \mid \boldsymbol{\theta}) \, \pi(\boldsymbol{\theta}),$$
+
+where $\mathcal{D} = (x_n, y_n)_{n = 1, \ldots, N}$ denotes the observed data, $p(\mathcal{D} \mid \boldsymbol{\theta})$ is the sampling distribution and $\pi(\boldsymbol{\theta})$ the joint prior. The posterior does not have a closed form and is approximated by simulation. The package relies on Stan and offers four algorithms, selected through the `method` argument of `stan_foot` and `btd_foot`:
+
+- `"MCMC"` (default): **Hamiltonian Monte Carlo** (HMC) sampling, which mitigates the random-walk behaviour of Gibbs and Metropolis-Hastings samplers; see @betancourt2017conceptual and the [CmdStan user's guide](https://mc-stan.org/docs/cmdstan-guide/mcmc_config.html).
+
+- `"VI"`: **Automatic Differentiation Variational Inference** (ADVI), which optimizes the Evidence Lower Bound via stochastic gradient ascent [@kucukelbir2017automatic].
+
+- `"pathfinder"`: the **Pathfinder** algorithm, which follows a quasi-Newton optimization path and returns draws from the Gaussian approximation minimizing the Kullback-Leibler divergence to the posterior [@Pathfinder].
+
+- `"laplace"`: the **Laplace approximation** around the posterior mode in the unconstrained space.
+
+MCMC is the most accurate option and the one used for model checking and comparison. The other algorithms are faster approximations, useful for quick exploratory fits.
+
+The four options call, respectively, the `$sample()`, `$variational()`, `$pathfinder()` and `$laplace()` methods of `cmdstanr`. Any further argument passed to `stan_foot()` is forwarded to the selected method (e.g. `chains`, `iter_sampling`, `adapt_delta` for MCMC, or `draws` for the approximate algorithms). With `method = "MCMC"` the defaults are 4 chains of 1000 sampling iterations, preceded by as many warm-up iterations, with `adapt_delta = 0.8` and `max_treedepth = 10`. The algorithm used is stored in the `alg_method` element of the fitted object. Since the approximate algorithms do not produce Markov chains, the `print` method reports no $\hat{R}$ or effective sample sizes for them; an example with Pathfinder is given in [Static models](static-models.qmd#alternative-algorithms).
