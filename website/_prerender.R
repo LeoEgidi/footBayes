@@ -91,6 +91,12 @@ rd_to_qmd <- function(rd_file) {
     }
   }))
 
+  # Quarto loads MathJax only when it finds Markdown math, and the math above
+  # is inside raw HTML: a hidden empty formula makes it load MathJax
+  if (grepl("class=\"math ", html, fixed = TRUE)) {
+    body <- c(body, "::: {style=\"display: none;\"}", "$\\,$", ":::", "")
+  }
+
   c("---", paste("title:", yaml_string(title)), "---", "", generated, "", body)
 }
 
